@@ -1,4 +1,4 @@
-# WDP301 - SE1833-NJ - Group 5 - Project - travelbooking.com
+# SEP490 Project 
 
 ## Table of Contents
 
