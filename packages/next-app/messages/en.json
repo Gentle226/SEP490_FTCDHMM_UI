@@ -1,0 +1,62 @@
+{
+  "base": {
+    "components": {
+      "DatePicker": {
+        "placeholder": "Pick a date"
+      },
+      "DateRangePicker": {
+        "placeholder": "Pick a date range"
+      },
+      "TimePicker": {
+        "placeholder": "Pick a time",
+        "setToNow": "Set to now",
+        "hours": "Hours",
+        "minutes": "Minutes",
+        "seconds": "Seconds",
+        "period": "Period"
+      },
+      "TimeRangePicker": {
+        "placeholder": "Pick a time range"
+      },
+      "DateTimePicker": {
+        "placeholder": "Pick a date and time",
+        "includeTime": "Include time"
+      },
+      "DateTimeRangePicker": {
+        "placeholder": "Pick a date and time range",
+        "fromDateAt": "From {date} at",
+        "toDateAt": "To {date} at",
+        "includeTime": "Include time"
+      }
+    }
+  },
+  "modules": {
+    "auth": {
+      "components": {
+        "LoginForm": {
+          "fields": {
+            "email": {
+              "label": "Email",
+              "placeholder": "Enter your email",
+              "errors": {
+                "too_small": "Email is required",
+                "invalid_string": "Invalid email address"
+              }
+            },
+            "password": {
+              "label": "Password",
+              "placeholder": "Enter your password",
+              "errors": {
+                "too_small": "Password is required"
+              }
+            }
+          },
+          "errors": {
+            "401": "Email or password is incorrect"
+          }
+        }
+      },
+      "pages": {}
+    }
+  }
+}

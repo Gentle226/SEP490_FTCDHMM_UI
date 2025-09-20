@@ -1,3 +1,6 @@
+packages:
+  - packages/*
+nodeLinker: hoisted
 onlyBuiltDependencies:
   - core-js-pure
   - esbuild

@@ -17,6 +17,12 @@
 /.next/
 /out/
 
+# storybook and build/cache
+storybook-static/
+dist/
+packages/next-app/node_modules/.cache/
+.cache/
+
 # production
 /build
 
