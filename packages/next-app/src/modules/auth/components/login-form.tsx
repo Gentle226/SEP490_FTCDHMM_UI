@@ -47,9 +47,26 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
           <AlertCircleIcon />
           <AlertTitle>Không thể đăng nhập</AlertTitle>
           <AlertDescription>
-            {error instanceof AxiosError && error.status === HttpStatusCode.Unauthorized
-              ? 'Email hoặc mật khẩu không chính xác.'
-              : 'Đã xảy ra lỗi bất ngờ khi đăng ký. Vui lòng thử lại sau.'}
+            {(() => {
+              if (error instanceof AxiosError) {
+                const status = error.status ?? error.response?.status;
+                const message = (error.response?.data as { message: string })?.message as
+                  | string
+                  | undefined;
+
+                if (status === HttpStatusCode.BadRequest) {
+                  if (message === 'Email chưa được xác thực')
+                    return 'Vui lòng xác thực email trước khi đăng nhập.';
+                  if (message === 'Tài khoản đã bị khóa')
+                    return 'Tài khoản đã bị khóa. Vui lòng thử lại sau.';
+                  if (message === 'Email hoặc mật khẩu chưa chính xác')
+                    return 'Email hoặc mật khẩu chưa chính xác.';
+                }
+                if (status === HttpStatusCode.Unauthorized)
+                  return 'Email hoặc mật khẩu chưa chính xác.';
+              }
+              return 'Đã xảy ra lỗi bất ngờ. Vui lòng thử lại sau.';
+            })()}
           </AlertDescription>
         </Alert>
       )}

@@ -57,3 +57,4 @@ messages/*.d.json.ts
 
 packages/next-app/.next/
 packages/next-app/node_modules/
+packages/next-app/messages/*.d.json.ts

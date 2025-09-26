@@ -26,8 +26,52 @@ export const registerSchema = z.object({
 
 export type RegisterSchema = z.infer<typeof registerSchema>;
 
+export const verifyEmailOtpSchema = z.object({
+  email: z.string().trim().email(),
+  code: z.string().trim().nonempty(),
+});
+export type VerifyEmailOtpSchema = z.infer<typeof verifyEmailOtpSchema>;
+
+export const resendOtpSchema = z.object({
+  email: z.string().trim().email(),
+  purpose: z
+    .enum(['confirm', 'confirmemail', 'forgot', 'forgotpassword', 'reset'])
+    .default('confirm'),
+});
+export type ResendOtpSchema = z.infer<typeof resendOtpSchema>;
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().email(),
+});
+export type ForgotPasswordSchema = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordWithOtpSchema = z
+  .object({
+    email: z.string().trim().email(),
+    code: z.string().trim().nonempty(),
+    newPassword: z.string().trim().min(8),
+    reNewPassword: z.string().trim().min(8),
+  })
+  .refine((v) => v.newPassword === v.reNewPassword, {
+    message: 'Mật khẩu xác nhận không khớp',
+    path: ['reNewPassword'],
+  });
+export type ResetPasswordWithOtpSchema = z.infer<typeof resetPasswordWithOtpSchema>;
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().trim().min(8),
+    newPassword: z.string().trim().min(8),
+    reNewPassword: z.string().trim().min(8),
+  })
+  .refine((v) => v.newPassword === v.reNewPassword, {
+    message: 'Mật khẩu xác nhận không khớp',
+    path: ['reNewPassword'],
+  });
+export type ChangePasswordSchema = z.infer<typeof changePasswordSchema>;
+
 export enum Role {
   CUSTOMER = 'CUSTOMER',
-  HOTEL_OWNER = 'HOTEL_OWNER',
+  MODERATOR = 'MODERATOR',
   ADMIN = 'ADMIN',
 }

@@ -4,15 +4,14 @@ import { useMutation } from '@tanstack/react-query';
 import axios, { AxiosError, HttpStatusCode } from 'axios';
 import { AlertCircleIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { z } from 'zod';
 
 import { Alert, AlertDescription, AlertTitle } from '@/base/components/ui/alert';
 import { Form } from '@/base/components/ui/form';
-import { Gender, UpdateUserSchema, gender, updateUserSchema, userService } from '@/modules/users';
 
 import { authService } from '../services/auth.service';
-import { RegisterSchema, registerSchema } from '../types';
+import { RegisterSchema, ResendOtpSchema, registerSchema, verifyEmailOtpSchema } from '../types';
 
 interface RegisterFormProps {
   onRegisterSuccess?: () => void;
@@ -22,6 +21,7 @@ interface RegisterFormProps {
 export function RegisterForm({ onRegisterSuccess, onStepChange }: RegisterFormProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
+  const [registeredEmail, setRegisteredEmail] = useState<string>('');
 
   const {
     mutate: triggerRegister,
@@ -29,34 +29,11 @@ export function RegisterForm({ onRegisterSuccess, onStepChange }: RegisterFormPr
     isPending: step1Loading,
   } = useMutation({
     mutationFn: (payload: RegisterSchema) => authService.register(payload),
-    onSuccess: async ({ data }) => {
-      await axios.post('/api/auth/set-cookie', {
-        data: {
-          ...data,
-          user: {
-            ...data.user,
-            fullName: data.user.fullName && encodeURIComponent(data.user.fullName),
-          },
-        },
-      });
-
-      // Move to step 2 to collect additional info instead of navigating to homepage
+    onSuccess: (_data, variables) => {
+      setRegisteredEmail(variables.email);
+      // Move to step 2 to verify OTP
       setStep(2);
       onStepChange?.(2);
-    },
-  });
-
-  const {
-    mutate: triggerUpdateUser,
-    error: step2Error,
-    isPending: step2Loading,
-  } = useMutation({
-    mutationFn: (payload: UpdateUserSchema) => userService.updateUserProfile(payload),
-    onSuccess: async () => {
-      // Navigate to homepage after completing profile setup
-      router.replace('/');
-      onRegisterSuccess?.();
-      onStepChange?.(3);
     },
   });
 
@@ -66,21 +43,23 @@ export function RegisterForm({ onRegisterSuccess, onStepChange }: RegisterFormPr
         <RegisterStep1
           loading={step1Loading}
           error={step1Error}
-          onStepComplete={({ email, password }) => {
-            triggerRegister({ email, password });
+          onStepComplete={({ email, password, confirmPassword }) => {
+            triggerRegister({
+              email,
+              password,
+              rePassword: confirmPassword,
+            } as unknown as RegisterSchema);
           }}
         />
       );
     case 2:
       return (
-        <RegisterStep2
-          loading={step2Loading}
-          error={step2Error}
-          onStepComplete={({ fullName, gender }) => {
-            triggerUpdateUser({
-              fullName,
-              gender,
-            });
+        <VerifyEmailStep
+          email={registeredEmail}
+          onVerified={() => {
+            router.replace('/');
+            onRegisterSuccess?.();
+            onStepChange?.(3);
           }}
         />
       );
@@ -92,7 +71,7 @@ export function RegisterForm({ onRegisterSuccess, onStepChange }: RegisterFormPr
 type RegisterStep1Props = {
   loading?: boolean;
   error?: Error | null;
-  onStepComplete?: (data: { email: string; password: string }) => void;
+  onStepComplete?: (data: { email: string; password: string; confirmPassword: string }) => void;
 };
 
 function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
@@ -151,58 +130,74 @@ function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
   );
 }
 
-type RegisterFormStep2Props = {
-  error?: Error | null;
-  loading?: boolean;
-  onStepComplete?: (data: { fullName: string; gender?: Gender }) => void;
+type VerifyEmailStepProps = {
+  email: string;
+  onVerified?: () => void;
 };
 
-function RegisterStep2({ loading, onStepComplete, error }: RegisterFormStep2Props) {
+function VerifyEmailStep({ email, onVerified }: VerifyEmailStepProps) {
+  const {
+    mutate: verifyOtp,
+    isPending,
+    error,
+  } = useMutation({
+    mutationFn: (payload: { code: string }) =>
+      authService.verifyEmailOtp({ email, code: payload.code }),
+    onSuccess: () => onVerified?.(),
+  });
+
+  const [cooldown, setCooldown] = useState(30);
+  useEffect(() => {
+    setCooldown(30);
+  }, [email]);
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => setCooldown((c) => c - 1), 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
+
+  const { mutate: resendCode, isPending: isResending } = useMutation({
+    mutationFn: async () => {
+      const payload: ResendOtpSchema = { email, purpose: 'confirm' };
+      return authService.resendOtp(payload);
+    },
+    onSuccess: () => setCooldown(30),
+  });
   return (
     <div className="space-y-2">
       {error && (
         <Alert variant="danger" className="bg-danger/10">
           <AlertCircleIcon />
-          <AlertTitle>Không thể cập nhật thông tin</AlertTitle>
+          <AlertTitle>Xác minh thất bại</AlertTitle>
           <AlertDescription>
-            Đã xảy ra lỗi bất ngờ khi cập nhật thông tin. Vui lòng thử lại sau.
+            Mã không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu mã mới hoặc thử lại sau.
           </AlertDescription>
         </Alert>
       )}
       <Form
-        loading={loading}
+        loading={isPending}
         className="flex flex-col gap-4"
-        schema={updateUserSchema
-          .pick({
-            fullName: true,
-            gender: true,
-          })
-          .required({
-            fullName: true,
-          })}
+        schema={verifyEmailOtpSchema.pick({ code: true })}
         fields={[
           {
-            name: 'fullName',
+            name: 'code',
             type: 'text',
-            label: 'Tên đầy đủ',
-            placeholder: '',
-          },
-          {
-            name: 'gender',
-            type: 'select',
-            label: 'Giới tính',
-            placeholder: 'Chọn giới tính',
-            searchable: false,
-            clearable: false,
-            options: Object.entries(gender).map(([value, label]) => ({
-              value,
-              label,
-            })),
+            label: 'Mã xác thực',
+            placeholder: 'Nhập mã xác thực đã gửi đến email',
           },
         ]}
-        renderSubmitButton={(Button) => <Button>Tiếp tục</Button>}
-        onSuccessSubmit={(data) => onStepComplete?.(data)}
+        renderSubmitButton={(Button) => <Button>Xác thực</Button>}
+        onSuccessSubmit={(data: { code: string }) => verifyOtp({ code: data.code })}
       />
+
+      <button
+        type="button"
+        className="disabled:text-muted-foreground text-sm text-blue-600 hover:underline disabled:cursor-not-allowed"
+        disabled={cooldown > 0 || isResending}
+        onClick={() => resendCode()}
+      >
+        {cooldown > 0 ? `Resend code (${cooldown}s)` : isResending ? 'Sending…' : 'Resend code'}
+      </button>
     </div>
   );
 }
