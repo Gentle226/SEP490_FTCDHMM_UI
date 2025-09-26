@@ -19,10 +19,22 @@ export type LoginSuccessResponse = SuccessResponse<{
 
 export type RefreshTokenSuccessResponse = LoginSuccessResponse;
 
-export const registerSchema = z.object({
-  email: z.string().trim().nonempty('Email không được để trống').email('Email không hợp lệ'),
-  password: z.string().trim().min(8, 'Mật khẩu phải có tối thiểu 8 ký tự'),
-});
+export const registerSchema = z
+  .object({
+    email: z.string().trim().nonempty('Email không được để trống').email('Email không hợp lệ'),
+    password: z
+      .string()
+      .trim()
+      .min(8, 'Mật khẩu phải có tối thiểu 8 ký tự')
+      .regex(/(?=.*[A-Z])/, 'Mật khẩu phải có ít nhất một chữ hoa (A-Z)')
+      .regex(/(?=.*[0-9])/, 'Mật khẩu phải có ít nhất một số (0-9)')
+      .regex(/(?=.*[^A-Za-z0-9])/, 'Mật khẩu phải có ít nhất một ký tự đặc biệt'),
+    rePassword: z.string().trim().nonempty('Mật khẩu xác nhận không được để trống'),
+  })
+  .refine((v) => v.password === v.rePassword, {
+    message: 'Mật khẩu xác nhận không khớp',
+    path: ['rePassword'],
+  });
 
 export type RegisterSchema = z.infer<typeof registerSchema>;
 

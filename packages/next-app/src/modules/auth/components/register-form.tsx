@@ -5,7 +5,6 @@ import axios, { AxiosError, HttpStatusCode } from 'axios';
 import { AlertCircleIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { z } from 'zod';
 
 import { Alert, AlertDescription, AlertTitle } from '@/base/components/ui/alert';
 import { Form } from '@/base/components/ui/form';
@@ -43,12 +42,8 @@ export function RegisterForm({ onRegisterSuccess, onStepChange }: RegisterFormPr
         <RegisterStep1
           loading={step1Loading}
           error={step1Error}
-          onStepComplete={({ email, password, confirmPassword }) => {
-            triggerRegister({
-              email,
-              password,
-              rePassword: confirmPassword,
-            } as unknown as RegisterSchema);
+          onStepComplete={(data) => {
+            triggerRegister(data);
           }}
         />
       );
@@ -71,7 +66,7 @@ export function RegisterForm({ onRegisterSuccess, onStepChange }: RegisterFormPr
 type RegisterStep1Props = {
   loading?: boolean;
   error?: Error | null;
-  onStepComplete?: (data: { email: string; password: string; confirmPassword: string }) => void;
+  onStepComplete?: (data: { email: string; password: string; rePassword: string }) => void;
 };
 
 function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
@@ -82,27 +77,42 @@ function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
           <AlertCircleIcon />
           <AlertTitle>Không thể đăng ký</AlertTitle>
           <AlertDescription>
-            {error instanceof AxiosError && error.status === HttpStatusCode.Conflict
-              ? 'Email đã được đăng ký. Vui lòng sử dụng email khác.'
-              : 'Đã xảy ra lỗi bất ngờ khi đăng ký. Vui lòng thử lại sau.'}
+            {(() => {
+              if (error instanceof AxiosError) {
+                const status = error.status ?? error.response?.status;
+                const responseData = error.response?.data as {
+                  success?: boolean;
+                  errors?: string[];
+                };
+
+                if (status === HttpStatusCode.Conflict) {
+                  return 'Email đã được đăng ký. Vui lòng sử dụng email khác.';
+                }
+
+                if (status === HttpStatusCode.BadRequest && responseData?.errors) {
+                  return (
+                    <div className="space-y-1">
+                      <div>Mật khẩu không đáp ứng yêu cầu:</div>
+                      <ul className="list-inside list-disc space-y-1">
+                        {responseData.errors.map((errorMsg, index) => (
+                          <li key={index} className="text-sm">
+                            {errorMsg}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                }
+              }
+              return 'Đã xảy ra lỗi bất ngờ khi đăng ký. Vui lòng thử lại sau.';
+            })()}
           </AlertDescription>
         </Alert>
       )}
       <Form
         loading={loading}
         className="flex flex-col gap-4"
-        schema={registerSchema
-          .pick({
-            email: true,
-            password: true,
-          })
-          .extend({
-            confirmPassword: z.string().trim().nonempty('Mật khẩu xác nhận không được để trống'),
-          })
-          .refine(({ password, confirmPassword }) => password === confirmPassword, {
-            message: 'Mật khẩu xác nhận không khớp với mật khẩu mới',
-            path: ['confirmPassword'],
-          })}
+        schema={registerSchema}
         fields={[
           {
             name: 'email',
@@ -117,7 +127,7 @@ function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
             placeholder: '',
           },
           {
-            name: 'confirmPassword',
+            name: 'rePassword',
             type: 'password',
             label: 'Xác nhận mật khẩu',
             placeholder: '',
