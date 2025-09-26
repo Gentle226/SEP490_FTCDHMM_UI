@@ -54,3 +54,6 @@ next-env.d.ts
 *storybook.log
 
 messages/*.d.json.ts
+
+packages/next-app/.next/
+packages/next-app/node_modules/
