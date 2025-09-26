@@ -37,8 +37,8 @@ class AuthService extends HttpClient {
     await axios.delete('/api/auth/delete-cookie');
   }
 
-  public verifyEmailOtp(payload: VerifyEmailOtpSchema) {
-    return this.post<unknown>('api/Auth/verify-email-otp', payload);
+  public verifyEmailOtp(payload: VerifyEmailOtpSchema, purpose: string = 'confirm') {
+    return this.post<unknown>(`api/Auth/verify-email-otp?purpose=${purpose}`, payload);
   }
 
   public resendOtp({ purpose = 'confirm', ...payload }: ResendOtpSchema) {
