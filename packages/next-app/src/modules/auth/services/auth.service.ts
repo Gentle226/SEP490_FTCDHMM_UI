@@ -5,7 +5,6 @@ import {
   ChangePasswordSchema,
   ForgotPasswordSchema,
   LoginSchema,
-  LoginSuccessResponse,
   RegisterSchema,
   ResendOtpSchema,
   ResetPasswordWithOtpSchema,
@@ -22,9 +21,13 @@ class AuthService extends HttpClient {
   }
 
   public async login(payload: LoginSchema) {
-    const res = await this.post<LoginSuccessResponse>('api/Auth/login', payload);
+    const res = await this.post<{ token: string }>('api/Auth/login', payload);
 
-    await axios.post('/api/auth/set-cookie', res);
+    // Transform the response to match what the cookie API expects
+    await axios.post('/api/auth/set-cookie', {
+      accessToken: res.token,
+      refreshToken: res.token, // Using the same token for now, you might want to implement refresh tokens later
+    });
 
     return res;
   }
