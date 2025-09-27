@@ -66,7 +66,14 @@ export function RegisterForm({ onRegisterSuccess, onStepChange }: RegisterFormPr
 type RegisterStep1Props = {
   loading?: boolean;
   error?: Error | null;
-  onStepComplete?: (data: { email: string; password: string; rePassword: string }) => void;
+  onStepComplete?: (data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    rePassword: string;
+    phoneNumber: string;
+  }) => void;
 };
 
 function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
@@ -82,7 +89,9 @@ function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
                 const status = error.status ?? error.response?.status;
                 const responseData = error.response?.data as {
                   success?: boolean;
-                  errors?: string[];
+                  errors?: string[] | string | Record<string, string[]>;
+                  message?: string;
+                  code?: string;
                 };
 
                 if (status === HttpStatusCode.Conflict) {
@@ -90,11 +99,25 @@ function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
                 }
 
                 if (status === HttpStatusCode.BadRequest && responseData?.errors) {
+                  // Handle different error formats
+                  let errorMessages: string[] = [];
+
+                  if (Array.isArray(responseData.errors)) {
+                    errorMessages = responseData.errors;
+                  } else if (typeof responseData.errors === 'string') {
+                    errorMessages = [responseData.errors];
+                  } else if (typeof responseData.errors === 'object') {
+                    // Handle ASP.NET Core model validation errors format
+                    errorMessages = Object.values(responseData.errors)
+                      .flat()
+                      .filter((msg): msg is string => typeof msg === 'string');
+                  }
+
                   return (
                     <div className="space-y-1">
-                      <div>Mật khẩu không đáp ứng yêu cầu:</div>
+                      <div>Thông tin không hợp lệ:</div>
                       <ul className="list-inside list-disc space-y-1">
-                        {responseData.errors.map((errorMsg, index) => (
+                        {errorMessages.map((errorMsg, index) => (
                           <li key={index} className="text-sm">
                             {errorMsg}
                           </li>
@@ -102,6 +125,11 @@ function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
                       </ul>
                     </div>
                   );
+                }
+
+                // Handle AppException format from middleware
+                if (responseData?.message) {
+                  return responseData.message;
                 }
               }
               return 'Đã xảy ra lỗi bất ngờ khi đăng ký. Vui lòng thử lại sau.';
@@ -115,22 +143,40 @@ function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
         schema={registerSchema}
         fields={[
           {
+            name: 'firstName',
+            type: 'text',
+            label: 'Họ',
+            placeholder: 'Nhập họ của bạn',
+          },
+          {
+            name: 'lastName',
+            type: 'text',
+            label: 'Tên',
+            placeholder: 'Nhập tên của bạn',
+          },
+          {
             name: 'email',
             type: 'text',
             label: 'Email',
-            placeholder: '',
+            placeholder: 'Nhập email của bạn',
+          },
+          {
+            name: 'phoneNumber',
+            type: 'text',
+            label: 'Số điện thoại',
+            placeholder: 'Nhập số điện thoại của bạn',
           },
           {
             name: 'password',
             type: 'password',
             label: 'Mật khẩu',
-            placeholder: '',
+            placeholder: 'Nhập mật khẩu',
           },
           {
             name: 'rePassword',
             type: 'password',
             label: 'Xác nhận mật khẩu',
-            placeholder: '',
+            placeholder: 'Nhập lại mật khẩu',
           },
         ]}
         renderSubmitButton={(Button) => <Button>Tiếp tục</Button>}

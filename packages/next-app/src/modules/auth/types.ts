@@ -21,15 +21,28 @@ export type RefreshTokenSuccessResponse = LoginSuccessResponse;
 
 export const registerSchema = z
   .object({
+    firstName: z
+      .string()
+      .trim()
+      .nonempty('Họ không được để trống')
+      .max(50, 'Họ không được quá 50 ký tự'),
+    lastName: z
+      .string()
+      .trim()
+      .nonempty('Tên không được để trống')
+      .max(50, 'Tên không được quá 50 ký tự'),
     email: z.string().trim().nonempty('Email không được để trống').email('Email không hợp lệ'),
     password: z
       .string()
       .trim()
-      .min(8, 'Mật khẩu phải có tối thiểu 8 ký tự')
-      .regex(/(?=.*[A-Z])/, 'Mật khẩu phải có ít nhất một chữ hoa (A-Z)')
-      .regex(/(?=.*[0-9])/, 'Mật khẩu phải có ít nhất một số (0-9)')
-      .regex(/(?=.*[^A-Za-z0-9])/, 'Mật khẩu phải có ít nhất một ký tự đặc biệt'),
+      .min(6, 'Mật khẩu phải có tối thiểu 6 ký tự')
+      .max(100, 'Mật khẩu không được quá 100 ký tự'),
     rePassword: z.string().trim().nonempty('Mật khẩu xác nhận không được để trống'),
+    phoneNumber: z
+      .string()
+      .trim()
+      .nonempty('Số điện thoại không được để trống')
+      .regex(/^0\d{8,9}$/, 'Số điện thoại phải bắt đầu bằng 0 và có 9-10 chữ số'),
   })
   .refine((v) => v.password === v.rePassword, {
     message: 'Mật khẩu xác nhận không khớp',
