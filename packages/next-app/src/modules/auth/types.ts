@@ -29,8 +29,20 @@ export const registerSchema = z
     password: z
       .string()
       .trim()
-      .min(6, 'Mật khẩu phải có tối thiểu 6 ký tự')
-      .max(100, 'Mật khẩu không được quá 100 ký tự'),
+      .min(8, 'Mật khẩu phải có tối thiểu 8 ký tự')
+      .max(100, 'Mật khẩu không được quá 100 ký tự')
+      .refine((val) => /[a-z]/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một chữ thường',
+      })
+      .refine((val) => /[A-Z]/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một chữ hoa',
+      })
+      .refine((val) => /\d/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một chữ số',
+      })
+      .refine((val) => /[@$!%*?&]/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một ký tự đặc biệt (@$!%*?&)',
+      }),
     rePassword: z.string().trim().nonempty('Mật khẩu xác nhận không được để trống'),
     phoneNumber: z
       .string()

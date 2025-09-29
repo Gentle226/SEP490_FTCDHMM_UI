@@ -1,13 +1,18 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import axios, { AxiosError, HttpStatusCode } from 'axios';
 import { AlertCircleIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 import { Alert, AlertDescription, AlertTitle } from '@/base/components/ui/alert';
+import { Button } from '@/base/components/ui/button';
 import { Form } from '@/base/components/ui/form';
+import { Input } from '@/base/components/ui/input';
+import { Label } from '@/base/components/ui/label';
 
 import { authService } from '../services/auth.service';
 import { RegisterSchema, ResendOtpSchema, registerSchema, verifyEmailOtpSchema } from '../types';
@@ -77,8 +82,20 @@ type RegisterStep1Props = {
 };
 
 function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterSchema>({
+    resolver: zodResolver(registerSchema),
+  });
+
+  const onSubmit = (data: RegisterSchema) => {
+    onStepComplete?.(data);
+  };
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       {error && (
         <Alert variant="danger" className="bg-danger/10">
           <AlertCircleIcon />
@@ -137,51 +154,96 @@ function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
           </AlertDescription>
         </Alert>
       )}
-      <Form
-        loading={loading}
-        className="flex flex-col gap-4"
-        schema={registerSchema}
-        fields={[
-          {
-            name: 'firstName',
-            type: 'text',
-            label: 'Họ',
-            placeholder: 'Nhập họ của bạn',
-          },
-          {
-            name: 'lastName',
-            type: 'text',
-            label: 'Tên',
-            placeholder: 'Nhập tên của bạn',
-          },
-          {
-            name: 'email',
-            type: 'text',
-            label: 'Email',
-            placeholder: 'Nhập email của bạn',
-          },
-          {
-            name: 'phoneNumber',
-            type: 'text',
-            label: 'Số điện thoại',
-            placeholder: 'Nhập số điện thoại của bạn',
-          },
-          {
-            name: 'password',
-            type: 'password',
-            label: 'Mật khẩu',
-            placeholder: 'Nhập mật khẩu',
-          },
-          {
-            name: 'rePassword',
-            type: 'password',
-            label: 'Xác nhận mật khẩu',
-            placeholder: 'Nhập lại mật khẩu',
-          },
-        ]}
-        renderSubmitButton={(Button) => <Button>Tiếp tục</Button>}
-        onSuccessSubmit={(data) => onStepComplete?.(data)}
-      />
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Họ và Tên trên cùng một hàng - sử dụng flex để không ảnh hưởng width của form */}
+        <div className="flex gap-3">
+          <div className="flex-1 space-y-2">
+            <Label htmlFor="firstName">Họ</Label>
+            <Input
+              id="firstName"
+              type="text"
+              placeholder="Nhập họ"
+              disabled={loading}
+              {...register('firstName')}
+            />
+            {errors.firstName && <p className="text-sm text-red-500">{errors.firstName.message}</p>}
+          </div>
+          <div className="flex-1 space-y-2">
+            <Label htmlFor="lastName">Tên</Label>
+            <Input
+              id="lastName"
+              type="text"
+              placeholder="Nhập tên"
+              disabled={loading}
+              {...register('lastName')}
+            />
+            {errors.lastName && <p className="text-sm text-red-500">{errors.lastName.message}</p>}
+          </div>
+        </div>
+
+        {/* Email */}
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="text"
+            placeholder="Nhập email của bạn"
+            disabled={loading}
+            {...register('email')}
+          />
+          {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
+        </div>
+
+        {/* Số điện thoại */}
+        <div className="space-y-2">
+          <Label htmlFor="phoneNumber">Số điện thoại</Label>
+          <Input
+            id="phoneNumber"
+            type="text"
+            placeholder="Nhập số điện thoại của bạn"
+            disabled={loading}
+            {...register('phoneNumber')}
+          />
+          {errors.phoneNumber && (
+            <p className="text-sm text-red-500">{errors.phoneNumber.message}</p>
+          )}
+        </div>
+
+        {/* Mật khẩu */}
+        <div className="space-y-2">
+          <Label htmlFor="password">Mật khẩu</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="Tối thiểu 8 ký tự, có chữ hoa, số và ký tự đặc biệt"
+            disabled={loading}
+            {...register('password')}
+          />
+          {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
+        </div>
+
+        {/* Xác nhận mật khẩu */}
+        <div className="space-y-2">
+          <Label htmlFor="rePassword">Xác nhận mật khẩu</Label>
+          <Input
+            id="rePassword"
+            type="password"
+            placeholder="Nhập lại mật khẩu"
+            disabled={loading}
+            {...register('rePassword')}
+          />
+          {errors.rePassword && <p className="text-sm text-red-500">{errors.rePassword.message}</p>}
+        </div>
+
+        <Button
+          type="submit"
+          disabled={loading}
+          className="w-full border-[#99b94a] bg-[#99b94a] hover:bg-[#7a8f3a]"
+        >
+          {loading ? 'Đang xử lý...' : 'Tiếp tục'}
+        </Button>
+      </form>
     </div>
   );
 }
@@ -242,17 +304,21 @@ function VerifyEmailStep({ email, onVerified }: VerifyEmailStepProps) {
             placeholder: 'Nhập mã xác thực đã gửi đến email',
           },
         ]}
-        renderSubmitButton={(Button) => <Button>Xác thực</Button>}
+        renderSubmitButton={(Button) => (
+          <Button className="w-full border-[#99b94a] bg-[#99b94a] hover:bg-[#7a8f3a]">
+            Xác thực
+          </Button>
+        )}
         onSuccessSubmit={(data: { code: string }) => verifyOtp({ code: data.code })}
       />
 
       <button
         type="button"
-        className="disabled:text-muted-foreground text-sm text-blue-600 hover:underline disabled:cursor-not-allowed"
+        className="disabled:text-muted-foreground text-sm text-[#99b94a] hover:text-[#7a8f3a] hover:underline disabled:cursor-not-allowed"
         disabled={cooldown > 0 || isResending}
         onClick={() => resendCode()}
       >
-        {cooldown > 0 ? `Resend code (${cooldown}s)` : isResending ? 'Sending…' : 'Resend code'}
+        {cooldown > 0 ? `Gửi lại mã (${cooldown}s)` : isResending ? 'Đang gửi…' : 'Gửi lại mã'}
       </button>
     </div>
   );
