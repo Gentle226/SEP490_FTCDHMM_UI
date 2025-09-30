@@ -96,7 +96,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
     isPending: isVerifyingOtp,
     error: verifyOtpError,
   } = useMutation({
-    mutationFn: (payload: VerifyEmailOtpSchema) => authService.verifyEmailOtp(payload, 'reset'),
+    mutationFn: (payload: VerifyEmailOtpSchema) => authService.verifyEmailOtpForReset(payload, 'reset'),
     onSuccess: (response: { token: string }) => {
       setResetToken(response.token);
       setCurrentStep('password');
@@ -126,29 +126,26 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
   const renderError = (error: any) => {
     if (!error) return null;
 
-    let message = 'An unexpected error occurred. Please try again later.';
+    let message = 'Đã xảy ra lỗi. Vui lòng thử lại sau.';
 
     if (error instanceof AxiosError) {
       const status = error.status ?? error.response?.status;
       const errorMessage = (error.response?.data as { message: string })?.message;
+      const errorCode = (error.response?.data as { code: string })?.code;
 
-      if (status === HttpStatusCode.BadRequest) {
-        if (errorMessage === 'Invalid OTP' || errorMessage === 'Invalid action') {
-          message = 'Invalid verification code. Please check and try again.';
-        } else if (errorMessage === 'OTP expired') {
-          message = 'Verification code has expired. Please request a new one.';
-        } else if (errorMessage === 'Email not found') {
-          message = 'No account found with this email address.';
-        } else {
-          message = errorMessage || message;
-        }
+      if (status === 408) {
+        message = 'Mật khẩu mới không thể giống mật khẩu cũ.';
+      } else if (errorCode === 'OTP_INVALID' || status === 406) {
+        message = 'Mã xác thực không hợp lệ hoặc đã hết hạn.';
+      } else {
+        message = errorMessage || message;
       }
     }
 
     return (
       <Alert variant="danger" className="bg-danger/10">
         <AlertCircleIcon />
-        <AlertTitle>Error</AlertTitle>
+        <AlertTitle>Đã xảy ra lỗi</AlertTitle>
         <AlertDescription>{message}</AlertDescription>
       </Alert>
     );
@@ -227,10 +224,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
             Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập bằng mật khẩu mới của
             mình.
           </p>
-          <Button
-            onClick={onBackToLogin}
-            className="w-full bg-[#99b94a] text-white"
-          >
+          <Button onClick={onBackToLogin} className="w-full bg-[#99b94a] text-white">
             Về trang đăng nhập
           </Button>
         </div>

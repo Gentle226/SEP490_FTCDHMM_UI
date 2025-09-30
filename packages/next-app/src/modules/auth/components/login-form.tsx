@@ -70,17 +70,15 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
                         const message = (error.response?.data as { message: string })?.message as
                           | string
                           | undefined;
-
-                        if (status === HttpStatusCode.BadRequest) {
-                          if (message === 'Email chưa được xác thực')
-                            return 'Vui lòng xác thực email trước khi đăng nhập.';
-                          if (message === 'Tài khoản đã bị khóa')
-                            return 'Tài khoản đã bị khóa. Vui lòng thử lại sau.';
-                          if (message === 'Email hoặc mật khẩu chưa chính xác')
-                            return 'Email hoặc mật khẩu chưa chính xác.';
+                        if (status === 404) {
+                          return 'Email hoặc mật khẩu không đúng.';
+                        } else if (status === 402) {
+                          return 'Email chưa được xác thực.';
+                        } else if (status === 403) {
+                          return 'Tài khoản đã bị khóa.';
+                        } else if (status === 410) {
+                          return 'Tài khoản không tồn tại.';
                         }
-                        if (status === HttpStatusCode.Unauthorized)
-                          return 'Email hoặc mật khẩu chưa chính xác.';
                       }
                       return 'Đã xảy ra lỗi bất ngờ. Vui lòng thử lại sau.';
                     })()}

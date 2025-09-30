@@ -59,14 +59,14 @@ export type RegisterSchema = z.infer<typeof registerSchema>;
 
 export const verifyEmailOtpSchema = z.object({
   email: z.string().trim().email(),
-  code: z.string().trim().nonempty(),
+  code: z.string().trim().nonempty('Mã OTP không được để trống'),
 });
 export type VerifyEmailOtpSchema = z.infer<typeof verifyEmailOtpSchema>;
 
 export const resendOtpSchema = z.object({
   email: z.string().trim().email(),
   purpose: z
-    .enum(['confirm', 'confirmemail', 'forgot', 'forgotpassword', 'reset'])
+    .enum(['confirm', 'confirmemail', 'ConfirmAccountEmail', 'forgot', 'forgotpassword', 'reset'])
     .default('confirm'),
 });
 export type ResendOtpSchema = z.infer<typeof resendOtpSchema>;

@@ -13,9 +13,14 @@ import { Button } from '@/base/components/ui/button';
 import { Form } from '@/base/components/ui/form';
 import { Input } from '@/base/components/ui/input';
 import { Label } from '@/base/components/ui/label';
+import {
+  RegisterSchema,
+  ResendOtpSchema,
+  registerSchema,
+  verifyEmailOtpSchema,
+} from '@/modules/auth/types';
 
 import { authService } from '../services/auth.service';
-import { RegisterSchema, ResendOtpSchema, registerSchema, verifyEmailOtpSchema } from '@/modules/auth/types';
 
 interface RegisterFormProps {
   onRegisterSuccess?: () => void;
@@ -57,9 +62,17 @@ export function RegisterForm({ onRegisterSuccess, onStepChange }: RegisterFormPr
         <VerifyEmailStep
           email={registeredEmail}
           onVerified={() => {
-            router.replace('/');
-            onRegisterSuccess?.();
+            setStep(3);
             onStepChange?.(3);
+          }}
+        />
+      );
+    case 3:
+      return (
+        <SuccessStep
+          onGoToLogin={() => {
+            router.replace('/auth/login');
+            onRegisterSuccess?.();
           }}
         />
       );
@@ -111,7 +124,7 @@ function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
                   code?: string;
                 };
 
-                if (status === HttpStatusCode.Conflict) {
+                if (status === 415) {
                   return 'Email đã được đăng ký. Vui lòng sử dụng email khác.';
                 }
 
@@ -276,7 +289,7 @@ function VerifyEmailStep({ email, onVerified }: VerifyEmailStepProps) {
 
   const { mutate: resendCode, isPending: isResending } = useMutation({
     mutationFn: async () => {
-      const payload: ResendOtpSchema = { email, purpose: 'confirm' };
+      const payload: ResendOtpSchema = { email, purpose: 'ConfirmAccountEmail' };
       return authService.resendOtp(payload);
     },
     onSuccess: () => setCooldown(30),
@@ -312,14 +325,53 @@ function VerifyEmailStep({ email, onVerified }: VerifyEmailStepProps) {
         onSuccessSubmit={(data: { code: string }) => verifyOtp({ code: data.code })}
       />
 
-      <button
-        type="button"
-        className="disabled:text-muted-foreground text-sm text-[#99b94a] hover:text-[#7a8f3a] hover:underline disabled:cursor-not-allowed"
-        disabled={cooldown > 0 || isResending}
-        onClick={() => resendCode()}
+      <div className="flex justify-center p-6">
+        <button
+          type="button"
+          className="disabled:text-muted-foreground text-sm text-[#99b94a] hover:text-[#7a8f3a] hover:underline disabled:cursor-not-allowed"
+          disabled={cooldown > 0 || isResending}
+          onClick={() => resendCode()}
+        >
+          {cooldown > 0 ? `Gửi lại mã (${cooldown}s)` : isResending ? 'Đang gửi…' : 'Gửi lại mã'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+type SuccessStepProps = {
+  onGoToLogin?: () => void;
+};
+
+function SuccessStep({ onGoToLogin }: SuccessStepProps) {
+  return (
+    <div className="space-y-6 text-center">
+      <div className="space-y-3">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+          <svg
+            className="h-8 w-8 text-green-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-xl font-semibold text-[#99b94a]">Đăng ký thành công!</h3>
+          <p className="text-gray-600">
+            Tài khoản của bạn đã được tạo và xác thực thành công. Bạn có thể đăng nhập ngay bây giờ.
+          </p>
+        </div>
+      </div>
+
+      <Button
+        onClick={onGoToLogin}
+        className="w-full border-[#99b94a] bg-[#99b94a] hover:bg-[#7a8f3a]"
       >
-        {cooldown > 0 ? `Gửi lại mã (${cooldown}s)` : isResending ? 'Đang gửi…' : 'Gửi lại mã'}
-      </button>
+        Đi đến trang đăng nhập
+      </Button>
     </div>
   );
 }

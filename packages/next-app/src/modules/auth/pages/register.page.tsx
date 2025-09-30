@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 
 import {
   Card,
@@ -13,6 +14,8 @@ import {
 import { RegisterForm } from '../components/register-form';
 
 export function RegisterPage() {
+  const [currentStep, setCurrentStep] = useState(1);
+
   return (
     <div className="bg-muted flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-md">
@@ -27,16 +30,18 @@ export function RegisterPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
-            <RegisterForm />
-            <div className="text-muted-foreground text-center text-sm">
-              Đã có tài khoản?{' '}
-              <Link
-                href="/auth/login"
-                className="text-[#99b94a] hover:text-[#7a8f3a] hover:underline"
-              >
-                Đăng nhập
-              </Link>
-            </div>
+            <RegisterForm onStepChange={setCurrentStep} />
+            {currentStep !== 3 && (
+              <div className="text-muted-foreground text-center text-sm">
+                Đã có tài khoản?{' '}
+                <Link
+                  href="/auth/login"
+                  className="text-[#99b94a] hover:text-[#7a8f3a] hover:underline"
+                >
+                  Đăng nhập
+                </Link>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
