@@ -15,8 +15,6 @@ import {
   ResetPasswordWithOtpSchema,
   VerifyEmailOtpSchema,
   forgotPasswordSchema,
-  resetPasswordWithOtpSchema,
-  verifyEmailOtpSchema,
 } from '@/modules/auth/types';
 
 import { authService } from '../services/auth.service';
@@ -28,12 +26,28 @@ const otpOnlySchema = z.object({
 
 const passwordOnlySchema = z
   .object({
-    newPassword: z.string().trim().min(8, 'Password must be at least 8 characters'),
-    reNewPassword: z.string().trim().min(8, 'Password confirmation is required'),
+    newPassword: z
+      .string()
+      .trim()
+      .min(8, 'Mật khẩu phải có tối thiểu 8 ký tự')
+      .max(100, 'Mật khẩu không được quá 100 ký tự')
+      .refine((val) => /[a-z]/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một chữ thường',
+      })
+      .refine((val) => /[A-Z]/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một chữ hoa',
+      })
+      .refine((val) => /\d/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một chữ số',
+      })
+      .refine((val) => /[@$!%*?&]/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một ký tự đặc biệt (@$!%*?&)',
+      }),
+    rePassword: z.string().trim().min(8, 'Mật khẩu xác nhận phải có tối thiểu 8 ký tự'),
   })
-  .refine((v) => v.newPassword === v.reNewPassword, {
-    message: 'Password confirmation does not match',
-    path: ['reNewPassword'],
+  .refine((v) => v.newPassword === v.rePassword, {
+    message: 'Mật khẩu xác nhận không khớp',
+    path: ['rePassword'],
   });
 
 type Step = 'email' | 'otp' | 'password' | 'success';
@@ -46,11 +60,12 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
   const [currentStep, setCurrentStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
+  const [resetToken, setResetToken] = useState('');
   const [countdown, setCountdown] = useState(0);
 
   // Start countdown timer
   const startCountdown = () => {
-    setCountdown(60);
+    setCountdown(30);
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -81,8 +96,9 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
     isPending: isVerifyingOtp,
     error: verifyOtpError,
   } = useMutation({
-    mutationFn: (payload: VerifyEmailOtpSchema) => authService.verifyEmailOtp(payload, 'forgot'),
-    onSuccess: () => {
+    mutationFn: (payload: VerifyEmailOtpSchema) => authService.verifyEmailOtpForReset(payload, 'reset'),
+    onSuccess: (response: { token: string }) => {
+      setResetToken(response.token);
       setCurrentStep('password');
     },
   });
@@ -110,29 +126,26 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
   const renderError = (error: any) => {
     if (!error) return null;
 
-    let message = 'An unexpected error occurred. Please try again later.';
+    let message = 'Đã xảy ra lỗi. Vui lòng thử lại sau.';
 
     if (error instanceof AxiosError) {
       const status = error.status ?? error.response?.status;
       const errorMessage = (error.response?.data as { message: string })?.message;
+      const errorCode = (error.response?.data as { code: string })?.code;
 
-      if (status === HttpStatusCode.BadRequest) {
-        if (errorMessage === 'Invalid OTP' || errorMessage === 'Invalid action') {
-          message = 'Invalid verification code. Please check and try again.';
-        } else if (errorMessage === 'OTP expired') {
-          message = 'Verification code has expired. Please request a new one.';
-        } else if (errorMessage === 'Email not found') {
-          message = 'No account found with this email address.';
-        } else {
-          message = errorMessage || message;
-        }
+      if (status === 408) {
+        message = 'Mật khẩu mới không thể giống mật khẩu cũ.';
+      } else if (errorCode === 'OTP_INVALID' || status === 406) {
+        message = 'Mã xác thực không hợp lệ hoặc đã hết hạn.';
+      } else {
+        message = errorMessage || message;
       }
     }
 
     return (
       <Alert variant="danger" className="bg-danger/10">
         <AlertCircleIcon />
-        <AlertTitle>Error</AlertTitle>
+        <AlertTitle>Đã xảy ra lỗi</AlertTitle>
         <AlertDescription>{message}</AlertDescription>
       </Alert>
     );
@@ -144,9 +157,9 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
         <div
           className={`flex h-8 w-8 items-center justify-center rounded-full ${
             currentStep === 'email'
-              ? 'bg-blue-500 text-white'
+              ? 'bg-green-500 text-white'
               : ['otp', 'password', 'success'].includes(currentStep)
-                ? 'bg-green-500 text-white'
+                ? 'bg-lime-500 text-white'
                 : 'bg-gray-200'
           }`}
         >
@@ -157,14 +170,14 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
           )}
         </div>
         <div
-          className={`h-0.5 w-16 ${['otp', 'password', 'success'].includes(currentStep) ? 'bg-green-500' : 'bg-gray-200'}`}
+          className={`h-0.5 w-16 ${['otp', 'password', 'success'].includes(currentStep) ? 'bg-lime-500' : 'bg-gray-200'}`}
         />
         <div
           className={`flex h-8 w-8 items-center justify-center rounded-full ${
             currentStep === 'otp'
-              ? 'bg-blue-500 text-white'
+              ? 'bg-green-500 text-white'
               : ['password', 'success'].includes(currentStep)
-                ? 'bg-green-500 text-white'
+                ? 'bg-lime-500 text-white'
                 : 'bg-gray-200'
           }`}
         >
@@ -175,14 +188,14 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
           )}
         </div>
         <div
-          className={`h-0.5 w-16 ${['password', 'success'].includes(currentStep) ? 'bg-green-500' : 'bg-gray-200'}`}
+          className={`h-0.5 w-16 ${['password', 'success'].includes(currentStep) ? 'bg-lime-500' : 'bg-gray-200'}`}
         />
         <div
           className={`flex h-8 w-8 items-center justify-center rounded-full ${
             currentStep === 'password'
-              ? 'bg-blue-500 text-white'
+              ? 'bg-green-500 text-white'
               : currentStep === 'success'
-                ? 'bg-green-500 text-white'
+                ? 'bg-lime-500 text-white'
                 : 'bg-gray-200'
           }`}
         >
@@ -202,14 +215,17 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
         {renderStepIndicator()}
         <div className="space-y-4">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle className="h-8 w-8 text-green-500" />
+            <CheckCircle className="h-8 w-8 text-[#99b94a]" />
           </div>
-          <h3 className="text-2xl font-semibold text-green-600">Password Reset Successful!</h3>
+          <h3 className="text-2xl font-semibold text-[#99b94a]">
+            Mật khẩu đã được đặt lại thành công!
+          </h3>
           <p className="text-gray-600">
-            Your password has been successfully reset. You can now sign in with your new password.
+            Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập bằng mật khẩu mới của
+            mình.
           </p>
-          <Button onClick={onBackToLogin} className="w-full">
-            Back to Sign In
+          <Button onClick={onBackToLogin} className="w-full bg-[#99b94a] text-white">
+            Về trang đăng nhập
           </Button>
         </div>
       </div>
@@ -224,10 +240,10 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
       {currentStep === 'email' && (
         <div className="space-y-4">
           <div className="text-center">
-            <h3 className="text-xl font-semibold">Forgot Password?</h3>
+            <h3 className="text-xl font-semibold text-[#99b94a]">Quên mật khẩu?</h3>
             <p className="mt-2 text-sm text-gray-600">
-              Enter your email address and we'll send you a verification code to reset your
-              password.
+              Nhập email của bạn và chúng tôi sẽ
+              <br /> gửi mã xác nhận để đặt lại mật khẩu.
             </p>
           </div>
 
@@ -242,11 +258,13 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
                 name: 'email',
                 type: 'text',
                 label: 'Email',
-                placeholder: 'Enter your email address',
+                placeholder: 'Nhập email của bạn',
                 disabled: isSendingCode,
               },
             ]}
-            renderSubmitButton={(Button) => <Button>Send Verification Code</Button>}
+            renderSubmitButton={(Button) => (
+              <Button className="bg-[#99b94a] text-white">Gửi mã xác minh</Button>
+            )}
             onSuccessSubmit={(data) => {
               setEmail(data.email);
               sendResetCode(data);
@@ -256,11 +274,11 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
           <Button
             variant="ghost"
             onClick={onBackToLogin}
-            className="w-full text-sm"
+            className="w-full text-sm text-[#99b94a] underline-offset-2 hover:text-[#7a8f3a]"
             disabled={isSendingCode}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Sign In
+            Về trang đăng nhập
           </Button>
         </div>
       )}
@@ -269,9 +287,10 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
       {currentStep === 'otp' && (
         <div className="space-y-4">
           <div className="text-center">
-            <h3 className="text-xl font-semibold">Verify Your Email</h3>
+            <h3 className="text-xl font-semibold text-[#99b94a]">Xác minh email của bạn</h3>
             <p className="mt-2 text-sm text-gray-600">
-              We've sent a 6-digit verification code to <strong>{email}</strong>
+              Chúng tôi đã gửi mã xác minh 6 chữ số đến{' '}
+              <strong className="text-[#99b94a]">{email}</strong>
             </p>
           </div>
 
@@ -286,12 +305,14 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
               {
                 name: 'code',
                 type: 'text',
-                label: 'Verification Code',
-                placeholder: 'Enter 6-digit code',
+                label: 'Mã xác minh',
+                placeholder: 'Nhập mã 6 chữ số',
                 disabled: isVerifyingOtp,
               },
             ]}
-            renderSubmitButton={(Button) => <Button>Verify Code</Button>}
+            renderSubmitButton={(Button) => (
+              <Button className="bg-[#99b94a] text-white">Xác minh mã</Button>
+            )}
             onSuccessSubmit={(data) => {
               const payload = { ...data, email };
               setCode(data.code);
@@ -301,15 +322,15 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
 
           <div className="text-center">
             {countdown > 0 ? (
-              <p className="text-sm text-gray-600">Resend code in {countdown} seconds</p>
+              <p className="text-sm text-gray-600">Gửi lại mã trong {countdown} giây</p>
             ) : (
               <Button
                 variant="ghost"
-                onClick={() => resendOtp({ email, purpose: 'forgot' })}
+                onClick={() => resendOtp({ email, purpose: 'reset' })}
                 disabled={isResendingOtp}
-                className="text-sm"
+                className="text-sm text-[#99b94a] underline-offset-2 hover:text-[#7a8f3a]"
               >
-                {isResendingOtp ? 'Sending...' : 'Resend Code'}
+                {isResendingOtp ? 'Đang gửi...' : 'Gửi lại mã'}
               </Button>
             )}
           </div>
@@ -317,11 +338,11 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
           <Button
             variant="ghost"
             onClick={() => setCurrentStep('email')}
-            className="w-full text-sm"
+            className="w-full text-sm text-[#99b94a] underline-offset-2 hover:text-[#7a8f3a]"
             disabled={isVerifyingOtp}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Change Email
+            Đổi email
           </Button>
         </div>
       )}
@@ -330,8 +351,10 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
       {currentStep === 'password' && (
         <div className="space-y-4">
           <div className="text-center">
-            <h3 className="text-xl font-semibold">Create New Password</h3>
-            <p className="mt-2 text-sm text-gray-600">Please enter your new password below.</p>
+            <h3 className="text-xl font-semibold text-[#99b94a]">Tạo mật khẩu mới</h3>
+            <p className="mt-2 text-sm text-gray-600">
+              Vui lòng nhập mật khẩu mới của bạn bên dưới.
+            </p>
           </div>
 
           {renderError(resetPasswordError)}
@@ -340,26 +363,28 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
             className="flex flex-col gap-4"
             loading={isResettingPassword}
             schema={passwordOnlySchema}
-            defaultValues={{ newPassword: '', reNewPassword: '' }}
+            defaultValues={{ newPassword: '', rePassword: '' }}
             fields={[
               {
                 name: 'newPassword',
                 type: 'password',
-                label: 'New Password',
-                placeholder: 'Enter new password (min. 8 characters)',
+                label: 'Mật khẩu mới',
+                placeholder: 'Nhập mật khẩu mới',
                 disabled: isResettingPassword,
               },
               {
-                name: 'reNewPassword',
+                name: 'rePassword',
                 type: 'password',
-                label: 'Confirm New Password',
-                placeholder: 'Confirm your new password',
+                label: 'Xác nhận mật khẩu mới',
+                placeholder: 'Xác nhận mật khẩu mới',
                 disabled: isResettingPassword,
               },
             ]}
-            renderSubmitButton={(Button) => <Button>Reset Password</Button>}
+            renderSubmitButton={(Button) => (
+              <Button className="bg-[#99b94a] text-white">Đặt lại mật khẩu</Button>
+            )}
             onSuccessSubmit={(data) => {
-              const payload = { ...data, email, code };
+              const payload = { ...data, email, token: resetToken };
               resetPassword(payload);
             }}
           />
@@ -367,11 +392,11 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
           <Button
             variant="ghost"
             onClick={() => setCurrentStep('otp')}
-            className="w-full text-sm"
+            className="w-full text-sm text-[#99b94a] underline-offset-2"
             disabled={isResettingPassword}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Verification
+            Quay lại bước xác minh mã
           </Button>
         </div>
       )}

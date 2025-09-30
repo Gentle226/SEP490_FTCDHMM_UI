@@ -6,14 +6,14 @@ export class RouteUtils {
   private static authRoutes = ['/auth/*path'];
 
   static isPrivateRoute(route: string) {
-    return this.privateRoutes.some((r) => pathToRegexp(r).regexp.test(route));
+    return this.privateRoutes.some((r) => pathToRegexp(r).test(route));
   }
 
   static isAuthRoute(route: string) {
-    return this.authRoutes.some((r) => pathToRegexp(r).regexp.test(route));
+    return this.authRoutes.some((r) => pathToRegexp(r).test(route));
   }
 
   static isManagerRoute(route: string) {
-    return this.managerRoutes.some((r) => pathToRegexp(r).regexp.test(route));
+    return this.managerRoutes.some((r) => pathToRegexp(r).test(route));
   }
 }

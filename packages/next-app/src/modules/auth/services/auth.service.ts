@@ -5,7 +5,6 @@ import {
   ChangePasswordSchema,
   ForgotPasswordSchema,
   LoginSchema,
-  LoginSuccessResponse,
   RegisterSchema,
   ResendOtpSchema,
   ResetPasswordWithOtpSchema,
@@ -22,9 +21,13 @@ class AuthService extends HttpClient {
   }
 
   public async login(payload: LoginSchema) {
-    const res = await this.post<LoginSuccessResponse>('api/Auth/login', payload);
+    const res = await this.post<{ token: string }>('api/Auth/login', payload);
 
-    await axios.post('/api/auth/set-cookie', res);
+    // Transform the response to match what the cookie API expects
+    await axios.post('/api/auth/set-cookie', {
+      accessToken: res.token,
+      refreshToken: res.token, // Using the same token for now, you might want to implement refresh tokens later
+    });
 
     return res;
   }
@@ -37,20 +40,27 @@ class AuthService extends HttpClient {
     await axios.delete('/api/auth/delete-cookie');
   }
 
-  public verifyEmailOtp(payload: VerifyEmailOtpSchema, purpose: string = 'confirm') {
-    return this.post<unknown>(`api/Auth/verify-email-otp?purpose=${purpose}`, payload);
+  public verifyEmailOtpForReset(payload: VerifyEmailOtpSchema, purpose: string = 'confirm') {
+    return this.post<{ token: string }>(
+      `api/auth/verify-otp-for-password-reset?purpose=${purpose}`,
+      payload,
+    );
+  }
+
+  public verifyEmailOtp(payload: VerifyEmailOtpSchema) {
+    return this.post<{ token: string }>(`api/auth/verify-email-otp`, payload);
   }
 
   public resendOtp({ purpose = 'confirm', ...payload }: ResendOtpSchema) {
-    return this.post<unknown>(`api/Auth/resend-otp?purpose=${purpose}`, payload);
+    return this.post<unknown>(`api/auth/resend-otp?purpose=${purpose}`, payload);
   }
 
   public forgotPassword(payload: ForgotPasswordSchema) {
-    return this.post<unknown>('api/Auth/forgot-password', payload);
+    return this.post<unknown>('api/auth/forgot-password', payload);
   }
 
   public resetPasswordWithOtp(payload: ResetPasswordWithOtpSchema) {
-    return this.post<unknown>('api/Auth/reset-password-with-otp', payload);
+    return this.post<unknown>('api/Auth/reset-password', payload);
   }
 
   public changePassword(payload: ChangePasswordSchema) {
