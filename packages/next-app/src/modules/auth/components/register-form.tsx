@@ -15,7 +15,7 @@ import { Input } from '@/base/components/ui/input';
 import { Label } from '@/base/components/ui/label';
 
 import { authService } from '../services/auth.service';
-import { RegisterSchema, ResendOtpSchema, registerSchema, verifyEmailOtpSchema } from '../types';
+import { RegisterSchema, ResendOtpSchema, registerSchema, verifyEmailOtpSchema } from '@/modules/auth/types';
 
 interface RegisterFormProps {
   onRegisterSuccess?: () => void;

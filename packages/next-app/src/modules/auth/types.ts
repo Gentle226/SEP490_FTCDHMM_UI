@@ -79,25 +79,57 @@ export type ForgotPasswordSchema = z.infer<typeof forgotPasswordSchema>;
 export const resetPasswordWithOtpSchema = z
   .object({
     email: z.string().trim().email(),
-    code: z.string().trim().nonempty(),
-    newPassword: z.string().trim().min(8),
-    reNewPassword: z.string().trim().min(8),
+    token: z.string().trim().nonempty(),
+    newPassword: z
+      .string()
+      .trim()
+      .min(8, 'Mật khẩu phải có tối thiểu 8 ký tự')
+      .max(100, 'Mật khẩu không được quá 100 ký tự')
+      .refine((val) => /[a-z]/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một chữ thường',
+      })
+      .refine((val) => /[A-Z]/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một chữ hoa',
+      })
+      .refine((val) => /\d/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một chữ số',
+      })
+      .refine((val) => /[@$!%*?&]/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một ký tự đặc biệt (@$!%*?&)',
+      }),
+    rePassword: z.string().trim().min(8, 'Mật khẩu xác nhận phải có tối thiểu 8 ký tự'),
   })
-  .refine((v) => v.newPassword === v.reNewPassword, {
+  .refine((v) => v.newPassword === v.rePassword, {
     message: 'Mật khẩu xác nhận không khớp',
-    path: ['reNewPassword'],
+    path: ['rePassword'],
   });
 export type ResetPasswordWithOtpSchema = z.infer<typeof resetPasswordWithOtpSchema>;
 
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().trim().min(8),
-    newPassword: z.string().trim().min(8),
-    reNewPassword: z.string().trim().min(8),
+    newPassword: z
+      .string()
+      .trim()
+      .min(8, 'Mật khẩu phải có tối thiểu 8 ký tự')
+      .max(100, 'Mật khẩu không được quá 100 ký tự')
+      .refine((val) => /[a-z]/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một chữ thường',
+      })
+      .refine((val) => /[A-Z]/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một chữ hoa',
+      })
+      .refine((val) => /\d/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một chữ số',
+      })
+      .refine((val) => /[@$!%*?&]/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một ký tự đặc biệt (@$!%*?&)',
+      }),
+    rePassword: z.string().trim().min(8),
   })
-  .refine((v) => v.newPassword === v.reNewPassword, {
+  .refine((v) => v.newPassword === v.rePassword, {
     message: 'Mật khẩu xác nhận không khớp',
-    path: ['reNewPassword'],
+    path: ['rePassword'],
   });
 export type ChangePasswordSchema = z.infer<typeof changePasswordSchema>;
 
