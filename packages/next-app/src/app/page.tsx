@@ -25,7 +25,11 @@ export default function HomePage() {
           <div className="mx-auto max-w-4xl">
             <div className="mb-6 rounded-lg bg-white p-6 shadow">
               <h2 className="mb-4 text-2xl font-semibold">
-                Hello, {user.fullName || `${user.firstName} ${user.lastName}` || user.email}!
+                Hello,{' '}
+                {user.fullName ||
+                  (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : null) ||
+                  user.email}
+                !
               </h2>
               <p className="mb-4 text-gray-600">
                 Your role: <span className="font-semibold text-blue-600">{user.role}</span>

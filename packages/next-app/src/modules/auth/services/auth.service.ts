@@ -109,6 +109,12 @@ class AuthService extends HttpClient {
     };
 
     console.log('User created from token:', user);
+    console.log('Name extraction debug:', {
+      fullName: extractClaim(decodedToken, 'fullName', 'full_name', 'name', 'display_name'),
+      firstName: extractClaim(decodedToken, 'firstName', 'first_name', 'given_name', 'fname'),
+      lastName: extractClaim(decodedToken, 'lastName', 'last_name', 'family_name', 'lname'),
+      allTokenKeys: Object.keys(decodedToken),
+    });
 
     // Transform the response to match what the cookie API expects
     const loginResponse: LoginSuccessResponse = {
