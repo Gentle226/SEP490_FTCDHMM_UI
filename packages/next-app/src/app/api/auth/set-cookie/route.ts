@@ -1,36 +1,39 @@
-import { cookies } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
+import { LoginSuccessResponse } from '@/modules/auth/types';
 
-export async function POST(request: NextRequest) {
-  try {
-    const { accessToken, refreshToken } = await request.json();
-    const cookieStore = await cookies();
+export async function POST(request: Request) {
+  const res = (await request.json()) as LoginSuccessResponse;
+  const { accessToken, refreshToken, user } = res.data;
 
-    if (!accessToken) {
-      return NextResponse.json({ message: 'Access token is required' }, { status: 400 });
-    }
+  const userString = JSON.stringify({
+    ...user,
+    ...(user.fullName && { fullName: encodeURIComponent(user.fullName) }),
+  });
 
-    // Set the access token cookie (expires in 1 hour)
-    cookieStore.set('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60,
-      path: '/',
-    });
+  console.log('Setting cookies:', {
+    hasAccessToken: !!accessToken,
+    hasRefreshToken: !!refreshToken,
+    hasUser: !!user,
+    userId: user?.id,
+    userRole: user?.role,
+    userStringLength: userString.length,
+    userStringPreview: userString.substring(0, 200) + '...',
+  });
 
-    // Set the refresh token cookie (expires in 30 days)
-    cookieStore.set('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30,
-      path: '/',
-    });
+  if (!accessToken)
+    return Response.json({ message: 'Access token not available.' }, { status: 400 });
 
-    return NextResponse.json({ message: 'Cookies set successfully' });
-  } catch (error) {
-    console.error('Set cookie error:', error);
-    return NextResponse.json({ message: 'Failed to set cookies' }, { status: 500 });
-  }
+  return Response.json(
+    { res },
+    {
+      status: 200,
+      // @ts-expect-error Array of cookies does work in runtime
+      headers: {
+        'Set-Cookie': [
+          `accessToken=${accessToken}; Path=/; ${process.env.NODE_ENV === 'production' ? 'Secure; ' : ''}Max-Age=31536000; HttpOnly; SameSite=Lax`,
+          `refreshToken=${refreshToken}; Path=/; ${process.env.NODE_ENV === 'production' ? 'Secure; ' : ''}Max-Age=31536000; HttpOnly; SameSite=Lax`,
+          `user=${userString}; Path=/; ${process.env.NODE_ENV === 'production' ? 'Secure; ' : ''}Max-Age=31536000; HttpOnly; SameSite=Lax`,
+        ],
+      },
+    },
+  );
 }

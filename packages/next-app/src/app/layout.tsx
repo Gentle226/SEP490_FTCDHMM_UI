@@ -5,6 +5,7 @@ import { getLocale } from 'next-intl/server';
 import { Toaster } from '@/base/components/ui/toaster';
 import { QueryProvider } from '@/base/providers';
 import '@/base/styles/globals.css';
+import { AuthProvider } from '@/modules/auth';
 
 export const metadata: Metadata = {
   title: {
@@ -25,8 +26,10 @@ export default async function RootLayout({
       <body className="antialiased">
         <NextIntlClientProvider>
           <QueryProvider>
-            {children}
-            <Toaster position="top-right" richColors />
+            <AuthProvider>
+              {children}
+              <Toaster position="top-right" richColors />
+            </AuthProvider>
           </QueryProvider>
         </NextIntlClientProvider>
       </body>
