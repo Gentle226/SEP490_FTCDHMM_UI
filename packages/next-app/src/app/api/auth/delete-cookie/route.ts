@@ -1,17 +1,24 @@
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
-
 export async function DELETE() {
   try {
-    const cookieStore = await cookies();
-
-    // Delete the access token and refresh token cookies
-    cookieStore.delete('accessToken');
-    cookieStore.delete('refreshToken');
-
-    return NextResponse.json({ message: 'Cookies cleared successfully' });
+    return Response.json(
+      { message: 'Cookies deleted successfully' },
+      {
+        status: 200,
+        // @ts-expect-error Array of cookies does work in runtime
+        headers: {
+          'Set-Cookie': [
+            `accessToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`,
+            `refreshToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`,
+            `user=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`,
+          ],
+        },
+      },
+    );
   } catch (error) {
-    console.error('Delete cookie error:', error);
-    return NextResponse.json({ message: 'Failed to clear cookies' }, { status: 500 });
+    console.error('Error deleting cookies:', error);
+    return Response.json(
+      { message: 'Error deleting cookies', error: error.message },
+      { status: 500 },
+    );
   }
 }

@@ -38,7 +38,7 @@ export class HttpClient {
       config.baseURL = '/api';
     } else {
       config.baseURL =
-        typeof window !== undefined
+        typeof window !== 'undefined'
           ? (await import('../config/env-client.config')).envClient.NEXT_PUBLIC_API_URL
           : (await import('../config/env-server.config')).envServer.API_URL;
     }

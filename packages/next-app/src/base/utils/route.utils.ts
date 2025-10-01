@@ -1,19 +1,22 @@
-import { pathToRegexp } from 'path-to-regexp';
-
 export class RouteUtils {
-  private static privateRoutes = ['/favourites', '/profile', '/book', '/book/*path'];
-  private static managerRoutes = ['/manager/*path'];
-  private static authRoutes = ['/auth/*path'];
+  private static privateRoutes = ['/profile', '/dashboard', '/settings'];
+  private static adminRoutes = ['/admin'];
+  private static moderatorRoutes = ['/moderator', '/management'];
+  private static authRoutes = ['/auth'];
 
   static isPrivateRoute(route: string) {
-    return this.privateRoutes.some((r) => pathToRegexp(r).test(route));
+    return this.privateRoutes.some((r) => route.startsWith(r));
   }
 
   static isAuthRoute(route: string) {
-    return this.authRoutes.some((r) => pathToRegexp(r).test(route));
+    return this.authRoutes.some((r) => route.startsWith(r));
   }
 
-  static isManagerRoute(route: string) {
-    return this.managerRoutes.some((r) => pathToRegexp(r).test(route));
+  static isAdminRoute(route: string) {
+    return this.adminRoutes.some((r) => route.startsWith(r));
+  }
+
+  static isModeratorRoute(route: string) {
+    return this.moderatorRoutes.some((r) => route.startsWith(r));
   }
 }

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { SuccessResponse } from '@/base/types';
+
 export const loginSchema = z.object({
   email: z.string().trim().nonempty('Email không được để trống').email('Email không hợp lệ'),
   password: z.string().trim().nonempty('Mật khẩu không được để trống'),
@@ -7,9 +9,11 @@ export const loginSchema = z.object({
 
 export type LoginSchema = z.infer<typeof loginSchema>;
 
-export type LoginSuccessResponse = {
-  token: string;
-};
+export type LoginSuccessResponse = SuccessResponse<{
+  accessToken: string;
+  refreshToken: string;
+  user: User;
+}>;
 
 export type RefreshTokenSuccessResponse = LoginSuccessResponse;
 
@@ -134,7 +138,34 @@ export const changePasswordSchema = z
 export type ChangePasswordSchema = z.infer<typeof changePasswordSchema>;
 
 export enum Role {
-  CUSTOMER = 'CUSTOMER',
-  MODERATOR = 'MODERATOR',
-  ADMIN = 'ADMIN',
+  CUSTOMER = 'Customer',
+  MODERATOR = 'Moderator',
+  ADMIN = 'Admin',
 }
+
+// User type based on API structure
+export interface User {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  phoneNumber?: string;
+  role: Role;
+  isActive: boolean;
+  isEmailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Permission policies matching API
+export const PermissionPolicies = {
+  MODERATOR_CREATE: 'ModeratorManagement:Create',
+  MODERATOR_UPDATE: 'ModeratorManagement:Update',
+  MODERATOR_DELETE: 'ModeratorManagement:Delete',
+  MODERATOR_VIEW: 'ModeratorManagement:View',
+  CUSTOMER_VIEW: 'CustomerManagement:View',
+  CUSTOMER_UPDATE: 'CustomerManagement:Update',
+  CUSTOMER_DELETE: 'CustomerManagement:Delete',
+  CUSTOMER_CREATE: 'CustomerManagement:Create',
+} as const;
