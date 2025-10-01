@@ -11,8 +11,8 @@ export default function AdminDashboard() {
         <Header />
         <div className="container mx-auto p-6">
           <div className="mb-8">
-            <h1 className="mb-2 text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-gray-600">Manage moderator accounts and system administration</p>
+            <h1 className="mb-2 text-3xl font-bold">Bảng Điều Khiển Admin</h1>
+            <p className="text-gray-600">Quản lý tài khoản moderator và quản trị hệ thống</p>
           </div>
 
           <div className="space-y-8">
@@ -20,7 +20,7 @@ export default function AdminDashboard() {
             <div className="rounded-lg bg-white p-6 shadow">
               <UserManagementTable
                 userType="moderators"
-                title="Moderator Management"
+                title="Quản Lý Moderator"
                 canCreate={true}
               />
             </div>
@@ -28,16 +28,16 @@ export default function AdminDashboard() {
             {/* System Overview Cards */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               <div className="rounded-lg bg-white p-6 shadow">
-                <h2 className="mb-4 text-xl font-semibold">System Settings</h2>
-                <p className="text-gray-600">Configure system-wide settings and preferences.</p>
+                <h2 className="mb-4 text-xl font-semibold">Cài Đặt Hệ Thống</h2>
+                <p className="text-gray-600">Cấu hình cài đặt và tùy chọn toàn hệ thống.</p>
               </div>
               <div className="rounded-lg bg-white p-6 shadow">
-                <h2 className="mb-4 text-xl font-semibold">Analytics</h2>
-                <p className="text-gray-600">View system analytics and reports.</p>
+                <h2 className="mb-4 text-xl font-semibold">Phân Tích</h2>
+                <p className="text-gray-600">Xem phân tích và báo cáo hệ thống.</p>
               </div>
               <div className="rounded-lg bg-white p-6 shadow">
-                <h2 className="mb-4 text-xl font-semibold">Audit Logs</h2>
-                <p className="text-gray-600">Review system activity and user actions.</p>
+                <h2 className="mb-4 text-xl font-semibold">Nhật Ký Kiểm Tra</h2>
+                <p className="text-gray-600">Xem xét hoạt động hệ thống và hành động người dùng.</p>
               </div>
             </div>
           </div>

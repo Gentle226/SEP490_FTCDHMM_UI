@@ -15,9 +15,9 @@ export default function HomePage() {
 
       <main className="container mx-auto p-6">
         <div className="mb-8 text-center">
-          <h1 className="mb-4 text-4xl font-bold text-gray-900">Welcome to Your App</h1>
+          <h1 className="mb-4 text-4xl font-bold text-gray-900">Chào Mừng Đến Với Ứng Dụng</h1>
           <p className="mb-8 text-xl text-gray-600">
-            A secure application with role-based access control
+            Một ứng dụng bảo mật với kiểm soát truy cập dựa trên vai trò
           </p>
         </div>
 
@@ -32,35 +32,35 @@ export default function HomePage() {
                 !
               </h2>
               <p className="mb-4 text-gray-600">
-                Your role: <span className="font-semibold text-blue-600">{user.role}</span>
+                Vai trò của bạn: <span className="font-semibold text-blue-600">{user.role}</span>
               </p>
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {/* Available to all authenticated users */}
               <div className="rounded-lg bg-white p-6 shadow">
-                <h3 className="mb-2 text-lg font-semibold">Profile</h3>
-                <p className="mb-4 text-gray-600">Manage your personal information</p>
+                <h3 className="mb-2 text-lg font-semibold">Hồ Sơ</h3>
+                <p className="mb-4 text-gray-600">Quản lý thông tin cá nhân của bạn</p>
                 <Link href="/profile">
-                  <Button>View Profile</Button>
+                  <Button>Xem Hồ Sơ</Button>
                 </Link>
               </div>
 
               <div className="rounded-lg bg-white p-6 shadow">
-                <h3 className="mb-2 text-lg font-semibold">Dashboard</h3>
-                <p className="mb-4 text-gray-600">Your personal dashboard</p>
+                <h3 className="mb-2 text-lg font-semibold">Bảng Điều Khiển</h3>
+                <p className="mb-4 text-gray-600">Bảng điều khiển cá nhân của bạn</p>
                 <Link href="/dashboard">
-                  <Button>Go to Dashboard</Button>
+                  <Button>Đi Đến Bảng Điều Khiển</Button>
                 </Link>
               </div>
 
               {/* Moderator and Admin only */}
               <ModeratorGuard user={user}>
                 <div className="rounded-lg bg-white p-6 shadow">
-                  <h3 className="mb-2 text-lg font-semibold">Moderator Panel</h3>
-                  <p className="mb-4 text-gray-600">Content moderation tools</p>
+                  <h3 className="mb-2 text-lg font-semibold">Bảng Moderator</h3>
+                  <p className="mb-4 text-gray-600">Công cụ kiểm duyệt nội dung</p>
                   <Link href="/moderator/dashboard">
-                    <Button variant="secondary">Moderator Dashboard</Button>
+                    <Button variant="secondary">Bảng Điều Khiển Moderator</Button>
                   </Link>
                 </div>
               </ModeratorGuard>
@@ -68,10 +68,10 @@ export default function HomePage() {
               {/* Admin only */}
               <AdminGuard user={user}>
                 <div className="rounded-lg bg-white p-6 shadow">
-                  <h3 className="mb-2 text-lg font-semibold">Admin Panel</h3>
-                  <p className="mb-4 text-gray-600">System administration</p>
+                  <h3 className="mb-2 text-lg font-semibold">Bảng Admin</h3>
+                  <p className="mb-4 text-gray-600">Quản trị hệ thống</p>
                   <Link href="/admin/dashboard">
-                    <Button variant="danger">Admin Dashboard</Button>
+                    <Button variant="danger">Bảng Điều Khiển Admin</Button>
                   </Link>
                 </div>
               </AdminGuard>
@@ -79,14 +79,14 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="text-center">
-            <p className="mb-6 text-gray-600">Please log in to access the application</p>
+            <p className="mb-6 text-gray-600">Vui lòng đăng nhập để truy cập ứng dụng</p>
             <div className="space-x-4">
               <Link href="/auth/login">
-                <Button size="lg">Login</Button>
+                <Button size="lg">Đăng Nhập</Button>
               </Link>
               <Link href="/auth/register">
                 <Button variant="outline" size="lg">
-                  Register
+                  Đăng Ký
                 </Button>
               </Link>
             </div>

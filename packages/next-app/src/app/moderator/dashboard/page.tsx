@@ -11,8 +11,8 @@ export default function ModeratorDashboard() {
         <Header />
         <div className="container mx-auto p-6">
           <div className="mb-8">
-            <h1 className="mb-2 text-3xl font-bold">Moderator Dashboard</h1>
-            <p className="text-gray-600">Manage customer accounts and moderate content</p>
+            <h1 className="mb-2 text-3xl font-bold">Bảng Điều Khiển Moderator</h1>
+            <p className="text-gray-600">Quản lý tài khoản khách hàng và kiểm duyệt nội dung</p>
           </div>
 
           <div className="space-y-8">
@@ -20,7 +20,7 @@ export default function ModeratorDashboard() {
             <div className="rounded-lg bg-white p-6 shadow">
               <UserManagementTable
                 userType="customers"
-                title="Customer Management"
+                title="Quản Lý Khách Hàng"
                 canCreate={false}
               />
             </div>
@@ -28,12 +28,12 @@ export default function ModeratorDashboard() {
             {/* Moderation Tools */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="rounded-lg bg-white p-6 shadow">
-                <h2 className="mb-4 text-xl font-semibold">Content Moderation</h2>
-                <p className="text-gray-600">Review and moderate user-generated content.</p>
+                <h2 className="mb-4 text-xl font-semibold">Kiểm Duyệt Nội Dung</h2>
+                <p className="text-gray-600">Xem xét và kiểm duyệt nội dung do người dùng tạo.</p>
               </div>
               <div className="rounded-lg bg-white p-6 shadow">
-                <h2 className="mb-4 text-xl font-semibold">User Reports</h2>
-                <p className="text-gray-600">Handle user reports and complaints.</p>
+                <h2 className="mb-4 text-xl font-semibold">Báo Cáo Người Dùng</h2>
+                <p className="text-gray-600">Xử lý báo cáo và khiếu nại của người dùng.</p>
               </div>
             </div>
           </div>

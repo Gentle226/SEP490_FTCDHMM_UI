@@ -82,11 +82,11 @@ export function UserManagementTable({
       setSelectedUser(null);
       setLockReason('');
       toast.success(
-        `${userType === 'customers' ? 'Customer' : 'Moderator'} has been locked successfully.`,
+        `${userType === 'customers' ? 'Khách hàng' : 'Moderator'} đã được khóa thành công.`,
       );
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to lock user.');
+      toast.error(error.message || 'Không thể khóa người dùng.');
     },
   });
 
@@ -102,11 +102,11 @@ export function UserManagementTable({
       setUnlockDialogOpen(false);
       setSelectedUser(null);
       toast.success(
-        `${userType === 'customers' ? 'Customer' : 'Moderator'} has been unlocked successfully.`,
+        `${userType === 'customers' ? 'Khách hàng' : 'Moderator'} đã được mở khóa thành công.`,
       );
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to unlock user.');
+      toast.error(error.message || 'Không thể mở khóa người dùng.');
     },
   });
 
@@ -117,10 +117,10 @@ export function UserManagementTable({
       queryClient.invalidateQueries({ queryKey: [userType] });
       setCreateDialogOpen(false);
       setNewModeratorEmail('');
-      toast.success('Moderator account has been created successfully.');
+      toast.success('Tài khoản Moderator đã được tạo thành công.');
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create moderator account.');
+      toast.error(error.message || 'Không thể tạo tài khoản moderator.');
     },
   });
 
@@ -162,18 +162,18 @@ export function UserManagementTable({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Verified':
-        return <Badge variant="default">Verified</Badge>;
+        return <Badge variant="default">Đã xác thực</Badge>;
       case 'Unverified':
-        return <Badge variant="secondary">Unverified</Badge>;
+        return <Badge variant="secondary">Chưa xác thực</Badge>;
       case 'Locked':
-        return <Badge variant="danger">Locked</Badge>;
+        return <Badge variant="danger">Đã khóa</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
 
   if (isLoading) {
-    return <div className="flex justify-center p-8">Loading...</div>;
+    return <div className="flex justify-center p-8">Đang tải...</div>;
   }
 
   return (
@@ -185,20 +185,20 @@ export function UserManagementTable({
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Moderator
+                Tạo Moderator
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create New Moderator Account</DialogTitle>
+                <DialogTitle>Tạo Tài Khoản Moderator Mới</DialogTitle>
                 <DialogDescription>
-                  Enter the email address for the new moderator account. A temporary password will
-                  be sent to this email.
+                  Nhập địa chỉ email cho tài khoản moderator mới. Mật khẩu tạm thời sẽ được gửi đến
+                  email này.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email">Địa Chỉ Email</Label>
                   <Input
                     id="email"
                     type="email"
@@ -210,13 +210,13 @@ export function UserManagementTable({
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                  Cancel
+                  Hủy
                 </Button>
                 <Button
                   onClick={handleCreateModerator}
                   disabled={!newModeratorEmail.trim() || createModeratorMutation.isPending}
                 >
-                  {createModeratorMutation.isPending ? 'Creating...' : 'Create Account'}
+                  {createModeratorMutation.isPending ? 'Đang tạo...' : 'Tạo Tài Khoản'}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -228,11 +228,11 @@ export function UserManagementTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
+              <TableHead>Tên</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created Date</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>Trạng Thái</TableHead>
+              <TableHead>Ngày Tạo</TableHead>
+              <TableHead>Hành Động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -252,7 +252,7 @@ export function UserManagementTable({
                         disabled={unlockMutation.isPending}
                       >
                         <Unlock className="mr-1 h-3 w-3" />
-                        Unlock
+                        Mở Khóa
                       </Button>
                     ) : (
                       <Button
@@ -262,7 +262,7 @@ export function UserManagementTable({
                         disabled={lockMutation.isPending}
                       >
                         <Lock className="mr-1 h-3 w-3" />
-                        Lock
+                        Khóa
                       </Button>
                     )}
                   </div>
@@ -277,17 +277,17 @@ export function UserManagementTable({
       {usersData && usersData.totalPages > 1 && (
         <div className="flex justify-center space-x-2">
           <Button variant="outline" onClick={() => setPage(page - 1)} disabled={page === 1}>
-            Previous
+            Trước
           </Button>
           <span className="flex items-center px-4">
-            Page {page} of {usersData.totalPages}
+            Trang {page} / {usersData.totalPages}
           </span>
           <Button
             variant="outline"
             onClick={() => setPage(page + 1)}
             disabled={page === usersData.totalPages}
           >
-            Next
+            Tiếp
           </Button>
         </div>
       )}
@@ -296,33 +296,33 @@ export function UserManagementTable({
       <Dialog open={lockDialogOpen} onOpenChange={setLockDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Lock User Account</DialogTitle>
+            <DialogTitle>Khóa Tài Khoản Người Dùng</DialogTitle>
             <DialogDescription>
-              Are you sure you want to lock {selectedUser?.firstName} {selectedUser?.lastName}
-              &apos;s account? Please provide a reason for locking this account.
+              Bạn có chắc chắn muốn khóa tài khoản của {selectedUser?.firstName}{' '}
+              {selectedUser?.lastName} không? Vui lòng cung cấp lý do khóa tài khoản này.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="reason">Reason for locking</Label>
+              <Label htmlFor="reason">Lý do khóa</Label>
               <Input
                 id="reason"
                 value={lockReason}
                 onChange={(e) => setLockReason(e.target.value)}
-                placeholder="Enter reason for locking this account"
+                placeholder="Nhập lý do khóa tài khoản này"
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setLockDialogOpen(false)}>
-              Cancel
+              Hủy
             </Button>
             <Button
               variant="danger"
               onClick={confirmLock}
               disabled={!lockReason.trim() || lockMutation.isPending}
             >
-              {lockMutation.isPending ? 'Locking...' : 'Lock Account'}
+              {lockMutation.isPending ? 'Đang khóa...' : 'Khóa Tài Khoản'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -332,18 +332,18 @@ export function UserManagementTable({
       <Dialog open={unlockDialogOpen} onOpenChange={setUnlockDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Unlock User Account</DialogTitle>
+            <DialogTitle>Mở Khóa Tài Khoản Người Dùng</DialogTitle>
             <DialogDescription>
-              Are you sure you want to unlock {selectedUser?.firstName} {selectedUser?.lastName}
-              &apos;s account?
+              Bạn có chắc chắn muốn mở khóa tài khoản của {selectedUser?.firstName}{' '}
+              {selectedUser?.lastName} không?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setUnlockDialogOpen(false)}>
-              Cancel
+              Hủy
             </Button>
             <Button onClick={confirmUnlock} disabled={unlockMutation.isPending}>
-              {unlockMutation.isPending ? 'Unlocking...' : 'Unlock Account'}
+              {unlockMutation.isPending ? 'Đang mở khóa...' : 'Mở Khóa Tài Khoản'}
             </Button>
           </DialogFooter>
         </DialogContent>
