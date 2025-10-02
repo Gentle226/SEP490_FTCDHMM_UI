@@ -52,7 +52,7 @@ export function UserManagementTable({
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [lockReason, setLockReason] = useState('');
+  const [lockDays, setLockDays] = useState(7);
   const [newModeratorEmail, setNewModeratorEmail] = useState('');
 
   const queryClient = useQueryClient();
@@ -62,7 +62,7 @@ export function UserManagementTable({
   const { data: usersData, isLoading } = useQuery({
     queryKey,
     queryFn: () => {
-      const params: PaginationParams = { pageNumber: page, pageSize: 10 };
+      const params: PaginationParams = { page: page, pageSize: 10 };
       return userType === 'customers'
         ? userManagementService.getCustomers(params)
         : userManagementService.getModerators(params);
@@ -80,7 +80,7 @@ export function UserManagementTable({
       queryClient.invalidateQueries({ queryKey: [userType] });
       setLockDialogOpen(false);
       setSelectedUser(null);
-      setLockReason('');
+      setLockDays(7);
       toast.success(
         `${userType === 'customers' ? 'Khách hàng' : 'Moderator'} đã được khóa thành công.`,
       );
@@ -135,10 +135,10 @@ export function UserManagementTable({
   };
 
   const confirmLock = () => {
-    if (selectedUser && lockReason.trim()) {
+    if (selectedUser && lockDays >= 2) {
       lockMutation.mutate({
-        userId: selectedUser.id,
-        reason: lockReason.trim(),
+        userId: selectedUser.Id,
+        day: lockDays,
       });
     }
   };
@@ -146,7 +146,7 @@ export function UserManagementTable({
   const confirmUnlock = () => {
     if (selectedUser) {
       unlockMutation.mutate({
-        userId: selectedUser.id,
+        userId: selectedUser.Id,
       });
     }
   };
@@ -236,15 +236,15 @@ export function UserManagementTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {usersData?.data?.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{`${user.firstName} ${user.lastName}`}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{getStatusBadge(user.status)}</TableCell>
-                <TableCell>{new Date(user.createdDateUTC).toLocaleDateString()}</TableCell>
+            {usersData?.Items?.map((user) => (
+              <TableRow key={user.Id}>
+                <TableCell>{`${user.FirstName} ${user.LastName}`}</TableCell>
+                <TableCell>{user.Email}</TableCell>
+                <TableCell>{getStatusBadge(user.Status)}</TableCell>
+                <TableCell>{new Date(user.CreatedDateUTC).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <div className="flex space-x-2">
-                    {user.status === 'Locked' ? (
+                    {user.Status === 'Locked' ? (
                       <Button
                         variant="outline"
                         size="sm"
@@ -274,18 +274,18 @@ export function UserManagementTable({
       </div>
 
       {/* Pagination */}
-      {usersData && usersData.totalPages > 1 && (
+      {usersData && usersData.TotalPages > 1 && (
         <div className="flex justify-center space-x-2">
           <Button variant="outline" onClick={() => setPage(page - 1)} disabled={page === 1}>
             Trước
           </Button>
           <span className="flex items-center px-4">
-            Trang {page} / {usersData.totalPages}
+            Trang {page} / {usersData.TotalPages}
           </span>
           <Button
             variant="outline"
             onClick={() => setPage(page + 1)}
-            disabled={page === usersData.totalPages}
+            disabled={page === usersData.TotalPages}
           >
             Tiếp
           </Button>
@@ -298,18 +298,20 @@ export function UserManagementTable({
           <DialogHeader>
             <DialogTitle>Khóa Tài Khoản Người Dùng</DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn khóa tài khoản của {selectedUser?.firstName}{' '}
-              {selectedUser?.lastName} không? Vui lòng cung cấp lý do khóa tài khoản này.
+              Bạn có chắc chắn muốn khóa tài khoản của {selectedUser?.FirstName}{' '}
+              {selectedUser?.LastName} không? Vui lòng chọn số ngày khóa tài khoản.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="reason">Lý do khóa</Label>
+              <Label htmlFor="days">Số ngày khóa (tối thiểu 2 ngày)</Label>
               <Input
-                id="reason"
-                value={lockReason}
-                onChange={(e) => setLockReason(e.target.value)}
-                placeholder="Nhập lý do khóa tài khoản này"
+                id="days"
+                type="number"
+                min="2"
+                value={lockDays}
+                onChange={(e) => setLockDays(parseInt(e.target.value) || 2)}
+                placeholder="Nhập số ngày khóa tài khoản"
               />
             </div>
           </div>
@@ -320,7 +322,7 @@ export function UserManagementTable({
             <Button
               variant="danger"
               onClick={confirmLock}
-              disabled={!lockReason.trim() || lockMutation.isPending}
+              disabled={lockDays < 2 || lockMutation.isPending}
             >
               {lockMutation.isPending ? 'Đang khóa...' : 'Khóa Tài Khoản'}
             </Button>
@@ -334,8 +336,8 @@ export function UserManagementTable({
           <DialogHeader>
             <DialogTitle>Mở Khóa Tài Khoản Người Dùng</DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn mở khóa tài khoản của {selectedUser?.firstName}{' '}
-              {selectedUser?.lastName} không?
+              Bạn có chắc chắn muốn mở khóa tài khoản của {selectedUser?.FirstName}{' '}
+              {selectedUser?.LastName} không?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

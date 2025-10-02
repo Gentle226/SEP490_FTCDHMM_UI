@@ -1,30 +1,30 @@
 import { HttpClient } from '@/base/lib';
 
 export interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  createdDateUTC: string;
-  status: 'Verified' | 'Unverified' | 'Locked';
+  Id: string;
+  FirstName: string;
+  LastName: string;
+  Email: string;
+  CreatedDateUTC: string;
+  Status: string;
 }
 
 export interface PaginationParams {
-  pageNumber?: number;
+  page?: number;
   pageSize?: number;
 }
 
 export interface PaginatedResponse<T> {
-  data: T[];
-  pageNumber: number;
-  pageSize: number;
-  totalPages: number;
-  totalRecords: number;
+  Items: T[];
+  Page: number;
+  PageSize: number;
+  TotalPages: number;
+  TotalCount: number;
 }
 
 export interface LockUserRequest {
   userId: string;
-  reason: string;
+  day: number;
 }
 
 export interface UnlockUserRequest {
@@ -43,22 +43,22 @@ class UserManagementService extends HttpClient {
   // Customer management (for Moderators)
   public async getCustomers(params: PaginationParams = {}) {
     const queryParams = new URLSearchParams();
-    if (params.pageNumber) queryParams.append('pageNumber', params.pageNumber.toString());
-    if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+    if (params.page) queryParams.append('Page', params.page.toString());
+    if (params.pageSize) queryParams.append('PageSize', params.pageSize.toString());
 
-    return this.get<PaginatedResponse<User>>(`api/User/getCustomers?${queryParams}`, {
+    return this.get<PaginatedResponse<User>>(`User/getCustomers?${queryParams}`, {
       isPrivateRoute: true,
     });
   }
 
   public async lockCustomer(request: LockUserRequest) {
-    return this.put<void>('api/User/lockCustomer', request, {
+    return this.put<void>('User/lockCustomer', request, {
       isPrivateRoute: true,
     });
   }
 
   public async unlockCustomer(request: UnlockUserRequest) {
-    return this.put<void>('api/User/unlockCustomer', request, {
+    return this.put<void>('User/unlockCustomer', request, {
       isPrivateRoute: true,
     });
   }
@@ -66,28 +66,28 @@ class UserManagementService extends HttpClient {
   // Moderator management (for Admins)
   public async getModerators(params: PaginationParams = {}) {
     const queryParams = new URLSearchParams();
-    if (params.pageNumber) queryParams.append('pageNumber', params.pageNumber.toString());
-    if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+    if (params.page) queryParams.append('Page', params.page.toString());
+    if (params.pageSize) queryParams.append('PageSize', params.pageSize.toString());
 
-    return this.get<PaginatedResponse<User>>(`api/User/getModerators?${queryParams}`, {
+    return this.get<PaginatedResponse<User>>(`User/getModerators?${queryParams}`, {
       isPrivateRoute: true,
     });
   }
 
   public async lockModerator(request: LockUserRequest) {
-    return this.put<void>('api/User/lockModerator', request, {
+    return this.put<void>('User/lockModerator', request, {
       isPrivateRoute: true,
     });
   }
 
   public async unlockModerator(request: UnlockUserRequest) {
-    return this.put<void>('api/User/unlockModerator', request, {
+    return this.put<void>('User/unlockModerator', request, {
       isPrivateRoute: true,
     });
   }
 
   public async createModerator(request: CreateModeratorRequest) {
-    return this.post<void>('api/User/createModerator', request, {
+    return this.post<void>('User/createModerator', request, {
       isPrivateRoute: true,
     });
   }

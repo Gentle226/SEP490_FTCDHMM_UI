@@ -18,7 +18,7 @@ export default function HomePage() {
           <div className="text-center">
             <h1 className="text-4xl font-bold">Chào Mừng Đến Với FitFood Tracker</h1>
             <p className="text-muted-foreground mt-2 text-xl">
-              Một ứng dụng bảo mật với kiểm soát truy cập dựa trên vai trò
+              Một ứng dụng quản lý chế độ ăn và chỉ số sức khỏe toàn diện
             </p>
           </div>
 
@@ -91,7 +91,7 @@ export default function HomePage() {
             Chào Mừng Đến Với FitFood Tracker
           </h1>
           <p className="mb-8 text-xl text-gray-600">
-            Một ứng dụng bảo mật với kiểm soát truy cập dựa trên vai trò
+            Một ứng dụng quản lý chế độ ăn và chỉ số sức khỏe toàn diện
           </p>
         </div>
 

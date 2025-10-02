@@ -31,7 +31,7 @@ export default function Dashboard() {
   return (
     <ProtectedRoute>
       <div className="flex h-screen items-center justify-center">
-        <div className="text-lg">Redirecting to your dashboard...</div>
+        <div className="text-lg">Đang chuyển hướng sang bảng điều khiển...</div>
       </div>
     </ProtectedRoute>
   );
