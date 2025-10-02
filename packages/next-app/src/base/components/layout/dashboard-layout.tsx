@@ -4,6 +4,7 @@ import {
   BarChart3,
   FileText,
   Home,
+  KeyRound,
   MessageSquare,
   Settings,
   Shield,
@@ -85,7 +86,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {
           title: 'Quản Lý Phân Quyền',
           url: '/admin/permissions',
-          icon: Users,
+          icon: KeyRound,
         },
         {
           title: 'Cài Đặt Hệ Thống',

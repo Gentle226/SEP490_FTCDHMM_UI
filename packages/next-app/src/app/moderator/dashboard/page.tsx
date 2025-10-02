@@ -24,20 +24,6 @@ export default function ModeratorDashboard() {
               canCreate={false}
             />
           </div>
-
-          {/* Moderation Tools */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="bg-card rounded-lg border p-6">
-              <h2 className="mb-4 text-xl font-semibold">Kiểm Duyệt Nội Dung</h2>
-              <p className="text-muted-foreground">
-                Xem xét và kiểm duyệt nội dung do người dùng tạo.
-              </p>
-            </div>
-            <div className="bg-card rounded-lg border p-6">
-              <h2 className="mb-4 text-xl font-semibold">Báo Cáo Người Dùng</h2>
-              <p className="text-muted-foreground">Xử lý báo cáo và khiếu nại của người dùng.</p>
-            </div>
-          </div>
         </div>
       </DashboardLayout>
     </ProtectedRoute>
