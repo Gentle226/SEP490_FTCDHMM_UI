@@ -137,7 +137,7 @@ export function UserManagementTable({
   const confirmLock = () => {
     if (selectedUser && lockDays >= 2) {
       lockMutation.mutate({
-        userId: selectedUser.Id,
+        userId: selectedUser.id,
         day: lockDays,
       });
     }
@@ -146,7 +146,7 @@ export function UserManagementTable({
   const confirmUnlock = () => {
     if (selectedUser) {
       unlockMutation.mutate({
-        userId: selectedUser.Id,
+        userId: selectedUser.id,
       });
     }
   };
@@ -236,15 +236,15 @@ export function UserManagementTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {usersData?.Items?.map((user) => (
-              <TableRow key={user.Id}>
-                <TableCell>{`${user.FirstName} ${user.LastName}`}</TableCell>
-                <TableCell>{user.Email}</TableCell>
-                <TableCell>{getStatusBadge(user.Status)}</TableCell>
-                <TableCell>{new Date(user.CreatedDateUTC).toLocaleDateString()}</TableCell>
+            {usersData?.items?.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>{`${user.firstName} ${user.lastName}`}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{getStatusBadge(user.status)}</TableCell>
+                <TableCell>{new Date(user.createdDateUTC).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <div className="flex space-x-2">
-                    {user.Status === 'Locked' ? (
+                    {user.status === 'Locked' ? (
                       <Button
                         variant="outline"
                         size="sm"
@@ -274,18 +274,18 @@ export function UserManagementTable({
       </div>
 
       {/* Pagination */}
-      {usersData && usersData.TotalPages > 1 && (
+      {usersData && usersData.totalPages > 1 && (
         <div className="flex justify-center space-x-2">
           <Button variant="outline" onClick={() => setPage(page - 1)} disabled={page === 1}>
             Trước
           </Button>
           <span className="flex items-center px-4">
-            Trang {page} / {usersData.TotalPages}
+            Trang {page} / {usersData.totalPages}
           </span>
           <Button
             variant="outline"
             onClick={() => setPage(page + 1)}
-            disabled={page === usersData.TotalPages}
+            disabled={page === usersData.totalPages}
           >
             Tiếp
           </Button>
@@ -298,8 +298,8 @@ export function UserManagementTable({
           <DialogHeader>
             <DialogTitle>Khóa Tài Khoản Người Dùng</DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn khóa tài khoản của {selectedUser?.FirstName}{' '}
-              {selectedUser?.LastName} không? Vui lòng chọn số ngày khóa tài khoản.
+              Bạn có chắc chắn muốn khóa tài khoản của {selectedUser?.firstName}{' '}
+              {selectedUser?.lastName} không? Vui lòng chọn số ngày khóa tài khoản.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -336,8 +336,8 @@ export function UserManagementTable({
           <DialogHeader>
             <DialogTitle>Mở Khóa Tài Khoản Người Dùng</DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn mở khóa tài khoản của {selectedUser?.FirstName}{' '}
-              {selectedUser?.LastName} không?
+              Bạn có chắc chắn muốn mở khóa tài khoản của {selectedUser?.firstName}{' '}
+              {selectedUser?.lastName} không?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

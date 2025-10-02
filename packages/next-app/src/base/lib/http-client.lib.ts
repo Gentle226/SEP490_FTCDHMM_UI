@@ -7,6 +7,8 @@ import axios, {
   InternalAxiosRequestConfig,
 } from 'axios';
 
+import { getToken } from './get-token.lib';
+
 interface CustomAxiosRequestConfig extends AxiosRequestConfig {
   isPrivateRoute?: boolean;
 }
@@ -21,7 +23,6 @@ export class HttpClient {
   constructor({ headers, ...otherAxiosConfig }: Omit<CreateAxiosDefaults, 'baseURL'> = {}) {
     this.axiosInstance = axios.create({
       headers: {
-        'Content-Type': 'application/json',
         ...headers,
       },
       timeout: 10000,
@@ -33,9 +34,16 @@ export class HttpClient {
   }
 
   protected async onSuccessRequest(config: CustomInternalAxiosRequestConfig) {
+    const token = getToken();
+
     if (config.isPrivateRoute) {
-      config.headers.set('Is-Private-Route', 'true');
-      config.baseURL = '/api';
+      if (token) {
+        config.headers.set('Authorization', `Bearer ${token}`);
+      }
+      config.baseURL =
+        typeof window !== 'undefined'
+          ? (await import('../config/env-client.config')).envClient.NEXT_PUBLIC_API_URL
+          : (await import('../config/env-server.config')).envServer.API_URL;
     } else {
       config.baseURL =
         typeof window !== 'undefined'

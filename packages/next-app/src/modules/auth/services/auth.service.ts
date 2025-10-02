@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { decodeJwt } from 'jose';
 
-import { HttpClient } from '@/base/lib';
+import { HttpClient } from '@/base/lib/http-client.lib';
 import {
   ChangePasswordSchema,
   ForgotPasswordSchema,
@@ -13,6 +13,8 @@ import {
   User,
   VerifyEmailOtpSchema,
 } from '@/modules/auth/types';
+
+import { ACCESS_TOKEN_KEY } from '../constants';
 
 class AuthService extends HttpClient {
   constructor() {

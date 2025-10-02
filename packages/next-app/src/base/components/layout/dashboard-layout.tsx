@@ -83,6 +83,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           icon: Shield,
         },
         {
+          title: 'Quản Lý Phân Quyền',
+          url: '/admin/permissions',
+          icon: Users,
+        },
+        {
           title: 'Cài Đặt Hệ Thống',
           url: '/admin/settings',
           icon: Settings,

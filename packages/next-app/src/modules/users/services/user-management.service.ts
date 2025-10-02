@@ -1,12 +1,12 @@
 import { HttpClient } from '@/base/lib';
 
 export interface User {
-  Id: string;
-  FirstName: string;
-  LastName: string;
-  Email: string;
-  CreatedDateUTC: string;
-  Status: string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  createdDateUTC: string;
+  status: string;
 }
 
 export interface PaginationParams {
@@ -15,11 +15,11 @@ export interface PaginationParams {
 }
 
 export interface PaginatedResponse<T> {
-  Items: T[];
-  Page: number;
-  PageSize: number;
-  TotalPages: number;
-  TotalCount: number;
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
 }
 
 export interface LockUserRequest {
@@ -46,19 +46,19 @@ class UserManagementService extends HttpClient {
     if (params.page) queryParams.append('Page', params.page.toString());
     if (params.pageSize) queryParams.append('PageSize', params.pageSize.toString());
 
-    return this.get<PaginatedResponse<User>>(`User/getCustomers?${queryParams}`, {
+    return this.get<PaginatedResponse<User>>(`api/User/getCustomers?${queryParams}`, {
       isPrivateRoute: true,
     });
   }
 
   public async lockCustomer(request: LockUserRequest) {
-    return this.put<void>('User/lockCustomer', request, {
+    return this.put<void>('api/User/lockCustomer', request, {
       isPrivateRoute: true,
     });
   }
 
   public async unlockCustomer(request: UnlockUserRequest) {
-    return this.put<void>('User/unlockCustomer', request, {
+    return this.put<void>('api/User/unlockCustomer', request, {
       isPrivateRoute: true,
     });
   }
@@ -69,25 +69,25 @@ class UserManagementService extends HttpClient {
     if (params.page) queryParams.append('Page', params.page.toString());
     if (params.pageSize) queryParams.append('PageSize', params.pageSize.toString());
 
-    return this.get<PaginatedResponse<User>>(`User/getModerators?${queryParams}`, {
+    return this.get<PaginatedResponse<User>>(`api/User/getModerators?${queryParams}`, {
       isPrivateRoute: true,
     });
   }
 
   public async lockModerator(request: LockUserRequest) {
-    return this.put<void>('User/lockModerator', request, {
+    return this.put<void>('api/User/lockModerator', request, {
       isPrivateRoute: true,
     });
   }
 
   public async unlockModerator(request: UnlockUserRequest) {
-    return this.put<void>('User/unlockModerator', request, {
+    return this.put<void>('api/User/unlockModerator', request, {
       isPrivateRoute: true,
     });
   }
 
   public async createModerator(request: CreateModeratorRequest) {
-    return this.post<void>('User/createModerator', request, {
+    return this.post<void>('api/User/createModerator', request, {
       isPrivateRoute: true,
     });
   }
