@@ -158,34 +158,40 @@ export function PermissionManagementTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Vai Trò</TableHead>
-              <TableHead>Trạng Thái</TableHead>
-              <TableHead>Hành Động</TableHead>
-              <TableHead>Quyền</TableHead>
+              <TableHead className="w-48">Vai Trò</TableHead>
+              <TableHead className="w-36">Trạng Thái</TableHead>
+              <TableHead className="w-24">Hành Động</TableHead>
+              <TableHead className="w-28">Quyền</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rolesData?.items?.map((role) => (
               <TableRow key={role.id}>
-                <TableCell className="font-medium">{role.name}</TableCell>
-                <TableCell>
+                <TableCell className="w-48 font-medium">{role.name}</TableCell>
+                <TableCell className="w-36">
                   {role.isActive ? (
-                    <Badge variant="default">Hoạt động</Badge>
+                    <Badge variant="default" className="w-32 justify-center">
+                      Hoạt động
+                    </Badge>
                   ) : (
-                    <Badge variant="secondary">Không hoạt động</Badge>
+                    <Badge variant="secondary" className="w-32 justify-center">
+                      Không hoạt động
+                    </Badge>
                   )}
                 </TableCell>
-                <TableCell>
+                <TableCell className="w-24">
                   <div className="flex items-center space-x-2">
                     <Switch
                       checked={role.isActive}
                       onCheckedChange={() => handleToggleActive(role)}
                       disabled={toggleRoleActiveMutation.isPending}
                     />
-                    <span className="text-sm text-gray-600">{role.isActive ? 'Bật' : 'Tắt'}</span>
+                    <span className="w-8 text-sm text-gray-600">
+                      {role.isActive ? 'Bật' : 'Tắt'}
+                    </span>
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="w-28">
                   <Button variant="outline" size="sm" onClick={() => handleEditPermissions(role)}>
                     <Edit className="mr-1 h-3 w-3" />
                     Chỉnh Sửa
