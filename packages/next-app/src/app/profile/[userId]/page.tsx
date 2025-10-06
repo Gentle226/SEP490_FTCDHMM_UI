@@ -1,8 +1,8 @@
 'use client';
 
-import { Ban, Edit, MapPin, MoreVertical, Share2, UserPlus, Users } from 'lucide-react';
+import { Ban, Camera, Edit, MapPin, MoreVertical, Share2, UserPlus, Users } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { Avatar, AvatarFallback, AvatarImage } from '@/base/components/ui/avatar';
@@ -16,7 +16,7 @@ import {
 import { Skeleton } from '@/base/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/base/components/ui/tabs';
 import { useAuth } from '@/modules/auth';
-import { useProfile, useUserProfile } from '@/modules/profile';
+import { useProfile, useUpdateProfile, useUserProfile } from '@/modules/profile';
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -25,12 +25,14 @@ export default function UserProfilePage() {
   const userId = params.userId as string;
   const isOwnProfile = currentUser?.id === userId;
   const [isFollowing, setIsFollowing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch profile data based on whether it's own profile or other's
   const { data: ownProfile, isLoading: isLoadingOwn } = useProfile();
   const { data: otherProfile, isLoading: isLoadingOther } = useUserProfile(
     isOwnProfile ? '' : userId,
   );
+  const updateProfile = useUpdateProfile();
 
   const isLoading = isOwnProfile ? isLoadingOwn : isLoadingOther;
   const profileData = isOwnProfile ? ownProfile : otherProfile;
@@ -39,7 +41,8 @@ export default function UserProfilePage() {
   const profileUser = profileData
     ? {
         id: userId,
-        username: `${profileData.firstName} ${profileData.lastName}`,
+        username: `${profileData.firstName} ${profileData.lastName}`.trim(),
+        fullName: `${profileData.firstName} ${profileData.lastName}`.trim(),
         handle: `@${profileData.email.split('@')[0]}`,
         location: 'Thanh Hóa', // TODO: Add location field to API
         bio: 'Được tự tay chế biến những món ăn ngon & cùng những người thân yêu trong gia đình thưởng thức chính tác phẩm ấy. Đó là niềm vui, là hạnh phúc của tôi', // TODO: Add bio field to API
@@ -58,8 +61,8 @@ export default function UserProfilePage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Hồ sơ của ${profileUser.username}`,
-          text: `Xem hồ sơ của ${profileUser.username} trên FitFood Tracker`,
+          title: `Hồ sơ của ${profileUser.fullName}`,
+          text: `Xem hồ sơ của ${profileUser.fullName} trên FitFood Tracker`,
           url: profileUrl,
         });
       } catch (error) {
@@ -86,6 +89,42 @@ export default function UserProfilePage() {
   const handleEditProfile = () => {
     // TODO: Navigate to edit profile page
     window.location.href = '/profile/edit';
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !profileData) return;
+
+    // Validate file size (2MB max)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Kích thước file không được vượt quá 2MB');
+      return;
+    }
+
+    // Validate file type - only JPG, PNG, and GIF are supported
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      alert('Chỉ chấp nhận file ảnh định dạng JPG, PNG hoặc GIF');
+      return;
+    }
+
+    try {
+      await updateProfile.mutateAsync({
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        phoneNumber: profileData.phoneNumber,
+        gender: profileData.gender,
+        avatar: file,
+      });
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+    }
+  };
+
+  const handleAvatarClick = () => {
+    if (isOwnProfile) {
+      fileInputRef.current?.click();
+    }
   };
 
   // Show loading state
@@ -143,21 +182,33 @@ export default function UserProfilePage() {
           <div className="flex items-start justify-between">
             <div className="flex gap-6">
               {/* Avatar */}
-              <Avatar className="border-primary/20 size-24 border-2">
-                <AvatarImage src={profileUser.avatar} alt={profileUser.username} />
-                <AvatarFallback className="text-2xl">
-                  {profileUser.username
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')
-                    .toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar
+                  className={`border-primary/20 size-24 border-2 ${isOwnProfile ? 'cursor-pointer transition-opacity hover:opacity-80' : ''}`}
+                  onClick={handleAvatarClick}
+                >
+                  <AvatarImage src={profileUser.avatar} alt={profileUser.fullName} />
+                  <AvatarFallback className="text-2xl">
+                    {profileUser.fullName
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
+              </div>
 
               {/* User Info */}
               <div className="flex-1 space-y-3">
                 <div>
-                  <h1 className="text-2xl font-bold">{profileUser.username}</h1>
+                  <h1 className="text-2xl font-bold">{profileUser.fullName}</h1>
                   <p className="text-muted-foreground text-sm">{profileUser.handle}</p>
                   {profileUser.location && (
                     <div className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">

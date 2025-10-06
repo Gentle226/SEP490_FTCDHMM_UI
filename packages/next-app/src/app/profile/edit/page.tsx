@@ -84,11 +84,12 @@ export default function EditProfilePage() {
         return;
       }
 
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
+      // Validate file type - only JPG, PNG, and GIF are supported
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type.toLowerCase())) {
         form.setError('avatar', {
           type: 'manual',
-          message: 'Chỉ chấp nhận file ảnh',
+          message: 'Chỉ chấp nhận file ảnh định dạng JPG, PNG hoặc GIF',
         });
         return;
       }
