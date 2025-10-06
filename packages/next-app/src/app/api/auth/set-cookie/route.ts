@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       // @ts-expect-error Array of cookies does work in runtime
       headers: {
         'Set-Cookie': [
-          `accessToken=${accessToken}; Path=/; ${process.env.NODE_ENV === 'production' ? 'Secure; ' : ''}Max-Age=31536000; HttpOnly; SameSite=Lax`,
+          `accessToken=${accessToken}; Path=/; ${process.env.NODE_ENV === 'production' ? 'Secure; ' : ''}Max-Age=31536000; SameSite=Lax`,
           `refreshToken=${refreshToken}; Path=/; ${process.env.NODE_ENV === 'production' ? 'Secure; ' : ''}Max-Age=31536000; HttpOnly; SameSite=Lax`,
           `user=${userString}; Path=/; ${process.env.NODE_ENV === 'production' ? 'Secure; ' : ''}Max-Age=31536000; HttpOnly; SameSite=Lax`,
         ],

@@ -17,13 +17,15 @@ import {
 } from '../ui/dropdown-menu';
 
 interface UserActionsProps {
-  user: Pick<User, 'id' | 'fullName' | 'role' | 'firstName' | 'lastName'> | undefined;
+  user: Pick<User, 'id' | 'fullName' | 'role' | 'firstName' | 'lastName' | 'email'> | undefined;
   onLogout?: () => void;
 }
 
 export function UserActions({ user, onLogout }: UserActionsProps) {
   const displayName =
-    user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.id;
+    user?.fullName ||
+    (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : null) ||
+    user?.email;
 
   if (user) {
     return (

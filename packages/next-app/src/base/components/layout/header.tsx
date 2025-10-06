@@ -28,7 +28,7 @@ export function Header() {
     <header className="border-b bg-white">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-bold">My App</h1>
+          <img src="/Fitfood Tracker Logo.png" alt="Logo" className="h-18 w-auto" />
         </div>
 
         <div className="flex items-center space-x-4">
