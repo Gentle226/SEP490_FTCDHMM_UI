@@ -15,8 +15,8 @@ let envServer: z.infer<typeof envServerSchema>;
 try {
   envServer = envServerSchema.parse(envServerData);
 } catch (error) {
-  console.error('❌ [ENV ERROR] Server environment validation failed:', error);
-  console.error('📋 [ENV DEBUG] Raw environment data:', envServerData);
+  console.error('[ENV ERROR] Server environment validation failed:', error);
+  console.error('[ENV DEBUG] Raw environment data:', envServerData);
   throw new Error('Server environment configuration is invalid');
 }
 

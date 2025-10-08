@@ -16,14 +16,14 @@ export function validateEnvVars(configs: EnvVarConfig[], context: 'client' | 'se
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  console.log(`🔍 [ENV VALIDATION] Checking ${context} environment variables...`);
+  console.log(`[ENV VALIDATION] Checking ${context} environment variables...`);
 
   configs.forEach((config) => {
     const value = process.env[config.name];
     const hasValue = value !== undefined && value !== '';
 
     console.log(
-      `  ${config.name}: ${hasValue ? '✅ SET' : '❌ NOT SET'}${hasValue ? ` (${value})` : ''}`,
+      `  ${config.name}: ${hasValue ? 'SET' : 'NOT SET'}${hasValue ? ` (${value})` : ''}`,
     );
 
     if (config.required && !hasValue) {
@@ -54,17 +54,17 @@ export function validateEnvVars(configs: EnvVarConfig[], context: 'client' | 'se
   });
 
   if (warnings.length > 0) {
-    console.warn('⚠️ [ENV WARNINGS]:');
+    console.warn('[ENV WARNINGS]:');
     warnings.forEach((warning) => console.warn(`  ${warning}`));
   }
 
   if (errors.length > 0) {
-    console.error('❌ [ENV ERRORS]:');
+    console.error('[ENV ERRORS]:');
     errors.forEach((error) => console.error(`  ${error}`));
     throw new Error(`Environment validation failed with ${errors.length} error(s)`);
   }
 
-  console.log(`✅ [ENV VALIDATION] All ${context} environment variables are valid`);
+  console.log(`[ENV VALIDATION] All ${context} environment variables are valid`);
 }
 
 /**
