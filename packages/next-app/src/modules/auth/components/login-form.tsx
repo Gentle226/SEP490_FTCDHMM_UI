@@ -16,6 +16,8 @@ import { cn } from '@/base/lib/cn.lib';
 import { LoginSchema, loginSchema } from '@/modules/auth/types';
 
 import { authService } from '../services/auth.service';
+import { GoogleLoginButton } from './google-login-button';
+import { GoogleSignInButton } from './google-signin-button';
 
 interface LoginFormProps extends React.ComponentProps<'div'> {
   onLoginSuccess?: () => void;
@@ -127,23 +129,30 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
                       </span>
                     </div>
 
-                    <Button
-                      variant="outline"
-                      type="button"
-                      className="w-full border-[#99b94a] text-[#99b94a] hover:bg-[#99b94a] hover:text-white"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        className="h-4 w-4"
-                      >
-                        <path
-                          d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
-                          fill="currentColor"
-                        />
-                      </svg>
-                      <span className="ml-2">Đăng nhập với Google</span>
-                    </Button>
+                    <GoogleSignInButton
+                      className="w-full"
+                      theme="outline"
+                      size="large"
+                      text="signin_with"
+                      disabled={isPending}
+                      onSuccess={() => {
+                        const redirect = searchParams.get('redirect');
+                        if (URL.canParse(redirect as string)) {
+                          const redirectUrl = new URL(redirect as string);
+
+                          if (redirectUrl.origin === window.location.origin) {
+                            window.location.replace(redirectUrl.href);
+                            return;
+                          }
+                        }
+
+                        window.location.replace('/');
+                        onLoginSuccess?.();
+                      }}
+                      onError={(error) => {
+                        console.error('Google login error:', error);
+                      }}
+                    />
 
                     <div className="text-center text-sm">
                       Chưa có tài khoản?{' '}
