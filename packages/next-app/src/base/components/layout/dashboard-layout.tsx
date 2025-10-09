@@ -137,15 +137,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar collapsible="icon">
         <SidebarHeader>
-          <div className="flex items-center gap-2 px-2 py-2">
-            <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded-lg">
-              <Home className="h-4 w-4" />
+          <div className="flex items-center gap-2 px-2 py-2 group-data-[collapsible=icon]:justify-center">
+            <div className="bg-primary text-primary-foreground flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg">
+              <img
+                src="/FitFood Tracker Square Logo.png"
+                alt="FitFood Tracker Logo"
+                className="h-6 w-6 object-contain"
+              />
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold">FitFood Tracker</span>
-              <span className="text-muted-foreground text-xs">
+            <div className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:opacity-0 transition-opacity duration-200">
+              <span className="truncate text-sm font-semibold">FitFood Tracker</span>
+              <span className="text-muted-foreground truncate text-xs">
                 {user?.role === Role.ADMIN && 'Quản Trị Viên'}
                 {user?.role === Role.MODERATOR && 'Người Kiểm Duyệt'}
                 {user?.role === Role.CUSTOMER && 'Khách Hàng'}
@@ -161,7 +165,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <SidebarMenu>
                 {navigationItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
+                    <SidebarMenuButton asChild tooltip={item.title}>
                       <Link href={item.url}>
                         <item.icon className="h-4 w-4" />
                         <span>{item.title}</span>
@@ -177,11 +181,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <SidebarFooter>
           <div className="p-2">
             {user && (
-              <div className="bg-muted flex items-center gap-2 rounded-lg p-2">
-                <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded-full text-sm">
+              <div className="bg-muted flex items-center gap-2 rounded-lg p-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2">
+                <div className="bg-primary text-primary-foreground flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm">
                   {user.email?.charAt(0).toUpperCase()}
                 </div>
-                <div className="flex min-w-0 flex-1 flex-col">
+                <div className="flex min-w-0 flex-1 flex-col group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:opacity-0 transition-opacity duration-200">
                   <span className="truncate text-sm font-medium">
                     {user.fullName ||
                       (user.firstName && user.lastName
