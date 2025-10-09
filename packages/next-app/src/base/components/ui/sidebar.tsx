@@ -53,6 +53,7 @@ function useSidebar() {
   return context;
 }
 
+/* eslint-disable react/forbid-dom-props */
 function SidebarProvider({
   defaultOpen = true,
   open: openProp,
@@ -123,18 +124,21 @@ function SidebarProvider({
     [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
   );
 
+  const sidebarStyles = React.useMemo(
+    () => ({
+      ['--sidebar-width' as keyof React.CSSProperties]: SIDEBAR_WIDTH,
+      ['--sidebar-width-icon' as keyof React.CSSProperties]: SIDEBAR_WIDTH_ICON,
+      ...style,
+    }),
+    [style],
+  );
+
   return (
     <SidebarContext.Provider value={contextValue}>
       <TooltipProvider delayDuration={0}>
         <div
           data-slot="sidebar-wrapper"
-          style={
-            {
-              '--sidebar-width': SIDEBAR_WIDTH,
-              '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
-              ...style,
-            } as React.CSSProperties
-          }
+          style={sidebarStyles}
           className={cn(
             'group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full',
             className,
@@ -147,6 +151,7 @@ function SidebarProvider({
     </SidebarContext.Provider>
   );
 }
+/* eslint-enable no-inline-styles */
 
 function Sidebar({
   side = 'left',
@@ -386,6 +391,7 @@ function SidebarGroupLabel({
   ...props
 }: React.ComponentProps<'div'> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : 'div';
+  const { popover, ...restProps } = props as any;
 
   return (
     <Comp
@@ -396,7 +402,7 @@ function SidebarGroupLabel({
         'group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0',
         className,
       )}
-      {...props}
+      {...(asChild ? restProps : props)}
     />
   );
 }
@@ -407,6 +413,7 @@ function SidebarGroupAction({
   ...props
 }: React.ComponentProps<'button'> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : 'button';
+  const { popover, ...restProps } = props as any;
 
   return (
     <Comp
@@ -419,7 +426,7 @@ function SidebarGroupAction({
         'group-data-[collapsible=icon]:hidden',
         className,
       )}
-      {...props}
+      {...(asChild ? restProps : props)}
     />
   );
 }
@@ -495,6 +502,8 @@ function SidebarMenuButton({
   const Comp = asChild ? Slot : 'button';
   const { isMobile, state } = useSidebar();
 
+  const { popover, ...restProps } = props as any;
+
   const button = (
     <Comp
       data-slot="sidebar-menu-button"
@@ -502,7 +511,7 @@ function SidebarMenuButton({
       data-size={size}
       data-active={isActive}
       className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-      {...props}
+      {...(asChild ? restProps : props)}
     />
   );
 
@@ -539,6 +548,7 @@ function SidebarMenuAction({
   showOnHover?: boolean;
 }) {
   const Comp = asChild ? Slot : 'button';
+  const { popover, ...restProps } = props as any;
 
   return (
     <Comp
@@ -556,7 +566,7 @@ function SidebarMenuAction({
           'peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 md:opacity-0',
         className,
       )}
-      {...props}
+      {...(asChild ? restProps : props)}
     />
   );
 }
@@ -651,6 +661,7 @@ function SidebarMenuSubButton({
   isActive?: boolean;
 }) {
   const Comp = asChild ? Slot : 'a';
+  const { popover, ...restProps } = props as any;
 
   return (
     <Comp
@@ -666,7 +677,7 @@ function SidebarMenuSubButton({
         'group-data-[collapsible=icon]:hidden',
         className,
       )}
-      {...props}
+      {...(asChild ? restProps : props)}
     />
   );
 }
