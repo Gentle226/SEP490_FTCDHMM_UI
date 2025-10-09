@@ -79,7 +79,13 @@ export default function HomePage() {
       <div className="container mx-auto px-4 py-8">
         {/* Categories Section */}
         <section className="mb-12">
-          <h2 className="mb-6 text-2xl font-bold">Từ Khóa Thịnh Hành</h2>
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-2xl font-bold">Từ Khóa Thịnh Hành</h2>
+            <Button variant="ghost" className="text-[#99b94a] hover:text-[#7a8f3a]">
+              <span>Cập nhật 4:36</span>
+              <ChevronRightIcon className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
             {categories.map((category, index) => (
               <div
@@ -99,13 +105,7 @@ export default function HomePage() {
         {/* Recent Recipes Section - Only show for logged in users */}
         {user && (
           <section className="mb-12">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Món bạn mới xem gần đây</h2>
-              <Button variant="ghost" className="text-[#99b94a] hover:text-[#7a8f3a]">
-                <span>Cập nhật 4:36</span>
-                <ChevronRightIcon className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
+            <h2 className="mb-6 text-2xl font-bold">Món bạn mới xem gần đây</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
               {recentRecipes.map((recipe) => (
                 <RecipeCard

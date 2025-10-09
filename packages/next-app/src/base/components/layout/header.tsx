@@ -46,7 +46,7 @@ export function Header() {
                 </Button>
               </Link>
               <Link href="/auth/register">
-                <Button size="sm" className="bg-orange-600 hover:bg-orange-700">
+                <Button size="sm" className="bg-[#99b94a] hover:bg-[#7a8f3a]">
                   Đăng Ký
                 </Button>
               </Link>
