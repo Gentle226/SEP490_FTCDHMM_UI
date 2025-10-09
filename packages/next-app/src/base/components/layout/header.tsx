@@ -1,7 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+import { Button } from '@/base/components/ui/button';
 import { useAuth } from '@/modules/auth';
 import { authService } from '@/modules/auth/services/auth.service';
 
@@ -28,11 +30,28 @@ export function Header() {
     <header className="border-b bg-white">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center space-x-4">
-          <img src="/Fitfood Tracker Logo.png" alt="Logo" className="h-18 w-auto" />
+          <Link href="/" className="flex items-center">
+            <img src="/Fitfood Tracker Logo.png" alt="FitFood Tracker" className="h-16 w-auto" />
+          </Link>
         </div>
 
         <div className="flex items-center space-x-4">
-          {user ? <UserActions user={user} onLogout={handleLogout} /> : null}
+          {user ? (
+            <UserActions user={user} onLogout={handleLogout} />
+          ) : (
+            <div className="flex items-center space-x-2">
+              <Link href="/auth/login">
+                <Button variant="ghost" size="sm">
+                  Đăng Nhập
+                </Button>
+              </Link>
+              <Link href="/auth/register">
+                <Button size="sm" className="bg-[#99b94a] hover:bg-[#7a8f3a]">
+                  Đăng Ký
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </header>

@@ -45,7 +45,7 @@ export default function UserProfilePage() {
         fullName: `${profileData.firstName} ${profileData.lastName}`.trim(),
         handle: `@${profileData.email.split('@')[0]}`,
         location: 'Thanh Hóa', // TODO: Add location field to API
-        bio: 'Được tự tay chế biến những món ăn ngon & cùng những người thân yêu trong gia đình thưởng thức chính tác phẩm ấy. Đó là niềm vui, là hạnh phúc của tôi', // TODO: Add bio field to API
+        bio: 'Bio sẽ hiện ở đây', // TODO: Add bio field to API
         avatar:
           profileData.avatar ||
           `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.firstName)}+${encodeURIComponent(profileData.lastName)}&background=random`,
@@ -202,6 +202,7 @@ export default function UserProfilePage() {
                   accept="image/*"
                   className="hidden"
                   onChange={handleAvatarChange}
+                  aria-label="Thay đổi ảnh đại diện"
                 />
               </div>
 
