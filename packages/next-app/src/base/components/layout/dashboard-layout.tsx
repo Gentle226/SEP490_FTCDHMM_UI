@@ -147,7 +147,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 className="h-6 w-6 object-contain"
               />
             </div>
-            <div className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:opacity-0 transition-opacity duration-200">
+            <div className="flex min-w-0 flex-col transition-opacity duration-200 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:opacity-0">
               <span className="truncate text-sm font-semibold">FitFood Tracker</span>
               <span className="text-muted-foreground truncate text-xs">
                 {user?.role === Role.ADMIN && 'Quản Trị Viên'}
@@ -185,7 +185,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <div className="bg-primary text-primary-foreground flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm">
                   {user.email?.charAt(0).toUpperCase()}
                 </div>
-                <div className="flex min-w-0 flex-1 flex-col group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:opacity-0 transition-opacity duration-200">
+                <div className="flex min-w-0 flex-1 flex-col transition-opacity duration-200 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:opacity-0">
                   <span className="truncate text-sm font-medium">
                     {user.fullName ||
                       (user.firstName && user.lastName
