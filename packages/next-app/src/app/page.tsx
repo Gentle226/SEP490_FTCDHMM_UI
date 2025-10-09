@@ -1,114 +1,161 @@
 'use client';
 
+import { ChevronRightIcon, SearchIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { Header } from '@/base/components/layout/header';
 import { Button } from '@/base/components/ui/button';
-import { AdminGuard, ModeratorGuard, useAuth } from '@/modules/auth';
+import { Input } from '@/base/components/ui/input';
+import { RecipeCard } from '@/base/components/ui/recipe-card';
+import { useAuth } from '@/modules/auth';
 
 export default function HomePage() {
   const { user } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // If user is logged in, show dashboard layout
+  // Mock data for categories (sẽ thay bằng API sau)
+  const categories = [
+    { name: 'thịt', image: '/placeholder-meat.jpg' },
+    { name: 'thực đơn món ngon mỗi ngày', image: '/placeholder-daily.jpg' },
+    { name: 'trứng', image: '/placeholder-egg.jpg' },
+    { name: 'cá', image: '/placeholder-fish.jpg' },
+    { name: 'bánh', image: '/placeholder-bread.jpg' },
+    { name: 'tàu hũ', image: '/placeholder-tofu.jpg' },
+    { name: 'gỏi gà', image: '/placeholder-salad.jpg' },
+    { name: 'gà', image: '/placeholder-chicken.jpg' },
+  ];
+
+  // Mock data for recent recipes (sẽ thay bằng API sau)
+  const recentRecipes = Array.from({ length: 6 }, (_, i) => ({
+    id: i + 1,
+    title: `Công thức món ăn ${i + 1}`,
+    author: `Tác giả ${i + 1}`,
+    image: undefined,
+  }));
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implement search functionality
+    console.log('Searching for:', searchQuery);
+  };
+
+  // Common search and recipes section
+  const mainContent = (
+    <main className="min-h-screen bg-gray-50">
+      {/* Search Section */}
+      <div className="bg-white py-8">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-2xl text-center">
+            <div className="mb-6">
+              <img
+                src="/Fitfood Tracker Logo.png"
+                alt="FitFood Tracker"
+                className="mx-auto mb-4 h-36 w-auto"
+              />
+            </div>
+
+            <form onSubmit={handleSearch} className="relative">
+              <Input
+                type="text"
+                placeholder="Tìm tên món hay nguyên liệu"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-12 border-2 border-gray-200 pr-12 text-lg focus:border-[#99b94a]"
+              />
+              <Button
+                type="submit"
+                size="icon"
+                className="absolute top-1 right-1 h-10 w-10 bg-[#99b94a] hover:bg-[#7a8f3a]"
+              >
+                <SearchIcon className="h-5 w-5" />
+              </Button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8">
+        {/* Categories Section */}
+        <section className="mb-12">
+          <h2 className="mb-6 text-2xl font-bold">Từ Khóa Thịnh Hành</h2>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
+            {categories.map((category, index) => (
+              <div
+                key={index}
+                className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-gray-200"
+              >
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                  <span className="px-2 text-center text-sm font-medium text-white">
+                    {category.name}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Recent Recipes Section - Only show for logged in users */}
+        {user && (
+          <section className="mb-12">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Món bạn mới xem gần đây</h2>
+              <Button variant="ghost" className="text-[#99b94a] hover:text-[#7a8f3a]">
+                <span>Cập nhật 4:36</span>
+                <ChevronRightIcon className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+              {recentRecipes.map((recipe) => (
+                <RecipeCard
+                  key={recipe.id}
+                  title={recipe.title}
+                  author={recipe.author}
+                  image={recipe.image}
+                  isLoading={true} // Set to true to show skeleton
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* All Recipes Section */}
+        <section>
+          <h2 className="mb-6 text-2xl font-bold">Tất Cả Công Thức</h2>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {Array.from({ length: 20 }, (_, i) => (
+              <RecipeCard
+                key={i}
+                title={`Món ăn ${i + 1}`}
+                author={`Tác giả ${i + 1}`}
+                isLoading={true} // Set to true to show skeleton
+              />
+            ))}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+
+  // If user is logged in, show with dashboard layout (sidebar)
   if (user) {
     return (
       <DashboardLayout>
-        <div className="space-y-6">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold">Chào Mừng Đến Với FitFood Tracker</h1>
-            <p className="text-muted-foreground mt-2 text-xl">
-              Một ứng dụng quản lý chế độ ăn và chỉ số sức khỏe toàn diện
-            </p>
-          </div>
-
-          <div className="bg-card rounded-lg border p-6">
-            <h2 className="mb-4 text-2xl font-semibold">
-              Xin chào,{' '}
-              {user.fullName ||
-                (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : null) ||
-                user.email}
-              !
-            </h2>
-            <p className="text-muted-foreground">
-              Vai trò của bạn: <span className="text-primary font-semibold">{user.role}</span>
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {/* Available to all authenticated users */}
-            <div className="bg-card rounded-lg border p-6">
-              <h3 className="mb-2 text-lg font-semibold">Hồ Sơ</h3>
-              <p className="text-muted-foreground mb-4">Quản lý thông tin cá nhân của bạn</p>
-              <Link href="/profile">
-                <Button>Xem Hồ Sơ</Button>
-              </Link>
-            </div>
-
-            <div className="bg-card rounded-lg border p-6">
-              <h3 className="mb-2 text-lg font-semibold">Bảng Điều Khiển</h3>
-              <p className="text-muted-foreground mb-4">Bảng điều khiển cá nhân của bạn</p>
-              <Link href="/dashboard">
-                <Button>Đi Đến Bảng Điều Khiển</Button>
-              </Link>
-            </div>
-
-            {/* Moderator and Admin only */}
-            <ModeratorGuard user={user}>
-              <div className="bg-card rounded-lg border p-6">
-                <h3 className="mb-2 text-lg font-semibold">Bảng Moderator</h3>
-                <p className="text-muted-foreground mb-4">Công cụ kiểm duyệt nội dung</p>
-                <Link href="/moderator/dashboard">
-                  <Button variant="secondary">Bảng Điều Khiển Moderator</Button>
-                </Link>
-              </div>
-            </ModeratorGuard>
-
-            {/* Admin only */}
-            <AdminGuard user={user}>
-              <div className="bg-card rounded-lg border p-6">
-                <h3 className="mb-2 text-lg font-semibold">Bảng Admin</h3>
-                <p className="text-muted-foreground mb-4">Quản trị hệ thống</p>
-                <Link href="/admin/dashboard">
-                  <Button variant="danger">Bảng Điều Khiển Admin</Button>
-                </Link>
-              </div>
-            </AdminGuard>
-          </div>
+        <div className="-m-4">
+          {' '}
+          {/* Remove default padding from DashboardLayout */}
+          {mainContent}
         </div>
       </DashboardLayout>
     );
   }
 
-  // If user is not logged in, show landing page
+  // If user is not logged in, show with regular header
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-
-      <main className="container mx-auto p-6">
-        <div className="mb-8 text-center">
-          <h1 className="mb-4 text-4xl font-bold text-gray-900">
-            Chào Mừng Đến Với FitFood Tracker
-          </h1>
-          <p className="mb-8 text-xl text-gray-600">
-            Một ứng dụng quản lý chế độ ăn và chỉ số sức khỏe toàn diện
-          </p>
-        </div>
-
-        <div className="text-center">
-          <p className="mb-6 text-gray-600">Vui lòng đăng nhập để truy cập ứng dụng</p>
-          <div className="space-x-4">
-            <Link href="/auth/login">
-              <Button size="lg">Đăng Nhập</Button>
-            </Link>
-            <Link href="/auth/register">
-              <Button variant="outline" size="lg">
-                Đăng Ký
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </main>
+      {mainContent}
     </div>
   );
 }
