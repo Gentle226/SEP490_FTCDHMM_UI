@@ -29,6 +29,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/base/components/ui/sidebar';
+import { useSidebarStateFromCookie } from '@/base/hooks/use-sidebar-cookie';
 import { Role, useAuth } from '@/modules/auth';
 import { authService } from '@/modules/auth/services/auth.service';
 
@@ -42,6 +43,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, setUser } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const sidebarDefaultOpen = useSidebarStateFromCookie();
 
   const handleLogout = async () => {
     try {
@@ -136,8 +138,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const navigationItems = getNavigationItems();
 
+  // Don't render until we have the sidebar state from cookie
+  if (sidebarDefaultOpen === null) {
+    return null; // or a loading spinner
+  }
+
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={sidebarDefaultOpen}>
       <Sidebar collapsible="icon">
         <SidebarHeader>
           <div className="flex items-center gap-2 px-2 py-2 group-data-[collapsible=icon]:justify-center">
