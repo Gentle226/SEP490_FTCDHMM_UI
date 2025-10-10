@@ -524,6 +524,17 @@ function SidebarMenuButton({
       children: tooltip,
     };
   }
+  // Merge tooltip className and override when the sidebar is collapsed (shows icon-only tooltips)
+  const tooltipProps = tooltip as React.ComponentProps<typeof TooltipContent> | undefined;
+  const tooltipClassFromProps = tooltipProps?.className;
+  const mergedTooltipClass = cn(
+    tooltipClassFromProps,
+    state === 'collapsed' && !isMobile ? 'bg-[#99b94a] text-white' : '',
+  );
+  const mergedTooltipStyle =
+    state === 'collapsed' && !isMobile
+      ? { backgroundColor: '#99b94a', color: '#ffffff', ['--tooltip-fill' as any]: '#99b94a' }
+      : undefined;
 
   return (
     <Tooltip>
@@ -533,6 +544,8 @@ function SidebarMenuButton({
         align="center"
         hidden={state !== 'collapsed' || isMobile}
         {...tooltip}
+        className={mergedTooltipClass}
+        style={mergedTooltipStyle}
       />
     </Tooltip>
   );
