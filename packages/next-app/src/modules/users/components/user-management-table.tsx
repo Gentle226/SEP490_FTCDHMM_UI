@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Lock, Plus, Unlock } from 'lucide-react';
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/base/components/ui/badge';
@@ -38,7 +38,7 @@ import {
 
 interface UserManagementTableProps {
   userType: 'customers' | 'moderators';
-  title: string;
+  title: ReactNode;
   canCreate?: boolean;
 }
 
@@ -135,7 +135,7 @@ export function UserManagementTable({
   };
 
   const confirmLock = () => {
-    if (selectedUser && lockDays >= 2) {
+    if (selectedUser && lockDays >= 1) {
       lockMutation.mutate({
         userId: selectedUser.id,
         day: lockDays,
@@ -162,7 +162,7 @@ export function UserManagementTable({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Verified':
-        return <Badge variant="default">Đã xác thực</Badge>;
+        return <Badge className="bg-[#99b94a] text-white">Đã xác thực</Badge>;
       case 'Unverified':
         return <Badge variant="secondary">Chưa xác thực</Badge>;
       case 'Locked':
@@ -183,14 +183,14 @@ export function UserManagementTable({
         {canCreate && (
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="bg-[#99b94a] hover:bg-[#7a8f3a]">
                 <Plus className="mr-2 h-4 w-4" />
                 Tạo Moderator
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Tạo Tài Khoản Moderator Mới</DialogTitle>
+                <DialogTitle className="text-[#99b94a]">Tạo Tài Khoản Moderator Mới</DialogTitle>
                 <DialogDescription>
                   Nhập địa chỉ email cho tài khoản moderator mới. Mật khẩu tạm thời sẽ được gửi đến
                   email này.
@@ -198,7 +198,9 @@ export function UserManagementTable({
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="email">Địa Chỉ Email</Label>
+                  <Label htmlFor="email" className="mb-3 text-[#99b94a]">
+                    Địa Chỉ Email
+                  </Label>
                   <Input
                     id="email"
                     type="email"
@@ -213,6 +215,7 @@ export function UserManagementTable({
                   Hủy
                 </Button>
                 <Button
+                  className="bg-[#99b94a] hover:bg-[#7a8f3a]"
                   onClick={handleCreateModerator}
                   disabled={!newModeratorEmail.trim() || createModeratorMutation.isPending}
                 >
@@ -304,13 +307,15 @@ export function UserManagementTable({
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="days">Số ngày khóa (tối thiểu 2 ngày)</Label>
+              <Label htmlFor="days" className="mb-3">
+                Số ngày khóa (tối thiểu 1 ngày)
+              </Label>
               <Input
                 id="days"
                 type="number"
-                min="2"
+                min="1"
                 value={lockDays}
-                onChange={(e) => setLockDays(parseInt(e.target.value) || 2)}
+                onChange={(e) => setLockDays(parseInt(e.target.value) || 1)}
                 placeholder="Nhập số ngày khóa tài khoản"
               />
             </div>
@@ -322,7 +327,7 @@ export function UserManagementTable({
             <Button
               variant="danger"
               onClick={confirmLock}
-              disabled={lockDays < 2 || lockMutation.isPending}
+              disabled={lockDays < 1 || lockMutation.isPending}
             >
               {lockMutation.isPending ? 'Đang khóa...' : 'Khóa Tài Khoản'}
             </Button>
