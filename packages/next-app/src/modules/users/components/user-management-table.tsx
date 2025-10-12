@@ -1,11 +1,12 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Lock, Plus, Unlock } from 'lucide-react';
-import { ReactNode, useState, useEffect } from 'react';
+import { Lock, Plus, Search, Unlock, X } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
+import { ReactNode, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { Pagination } from '@/base/components/layout/pagination';
 import { Badge } from '@/base/components/ui/badge';
 import { Button } from '@/base/components/ui/button';
 import {
@@ -27,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/base/components/ui/table';
-import { Pagination } from '@/base/components/layout/pagination';
+import { Pagination as PaginationType } from '@/base/types';
 
 import {
   CreateModeratorRequest,
@@ -37,7 +38,6 @@ import {
   User,
   userManagementService,
 } from '../services/user-management.service';
-import { Pagination as PaginationType } from '@/base/types';
 
 interface UserManagementTableProps {
   userType: 'customers' | 'moderators';
@@ -53,6 +53,7 @@ export function UserManagementTable({
   const searchParams = useSearchParams();
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
   const [page, setPage] = useState(currentPage);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Sync state with URL params
   useEffect(() => {
@@ -60,14 +61,28 @@ export function UserManagementTable({
   }, [currentPage]);
 
   // Helper function to convert API response to PaginationType
-  const convertToPaginationType = (data: any): PaginationType => ({
-    total: data.totalCount,
-    currentPage: data.page,
-    pageSize: data.pageSize,
-    totalPage: data.totalPages,
-    hasNextPage: data.page < data.totalPages,
-    hasPreviousPage: data.page > 1,
-  });
+  const convertToPaginationType = (data: any, filteredCount: number): PaginationType => {
+    // When searching, we show filtered results without pagination
+    if (searchTerm && filteredCount !== data.totalCount) {
+      return {
+        total: filteredCount,
+        currentPage: 1,
+        pageSize: filteredCount,
+        totalPage: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      };
+    }
+
+    return {
+      total: data.totalCount,
+      currentPage: data.page,
+      pageSize: data.pageSize,
+      totalPage: data.totalPages,
+      hasNextPage: data.page < data.totalPages,
+      hasPreviousPage: data.page > 1,
+    };
+  };
   const [lockDialogOpen, setLockDialogOpen] = useState(false);
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -88,6 +103,18 @@ export function UserManagementTable({
         : userManagementService.getModerators(params);
     },
   });
+
+  // Filter users based on search term (client-side filtering)
+  const filteredUsers =
+    usersData?.items?.filter((user) => {
+      if (!searchTerm) return true;
+
+      const searchLower = searchTerm.toLowerCase();
+      const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+      const email = user.email.toLowerCase();
+
+      return fullName.includes(searchLower) || email.includes(searchLower);
+    }) || [];
 
   // Lock user mutation
   const lockMutation = useMutation({
@@ -179,6 +206,14 @@ export function UserManagementTable({
     }
   };
 
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Verified':
@@ -247,6 +282,31 @@ export function UserManagementTable({
         )}
       </div>
 
+      {/* Search Bar */}
+      <div className="flex w-full justify-end">
+        <div className="flex w-1/4 items-center space-x-2">
+          <div className="relative flex-1">
+            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />
+            <Input
+              placeholder={`Tìm kiếm ${userType === 'customers' ? 'khách hàng' : 'moderator'}...`}
+              value={searchTerm}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="pr-10 pl-10"
+            />
+            {searchTerm && (
+              <button
+                onClick={handleClearSearch}
+                className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label="Xóa tìm kiếm"
+                title="Xóa tìm kiếm"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -259,47 +319,89 @@ export function UserManagementTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {usersData?.items?.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{`${user.firstName} ${user.lastName}`}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{getStatusBadge(user.status)}</TableCell>
-                <TableCell>{new Date(user.createdDateUTC).toLocaleDateString()}</TableCell>
-                <TableCell>
-                  <div className="flex space-x-2">
-                    {user.status === 'Locked' ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleUnlock(user)}
-                        disabled={unlockMutation.isPending}
-                      >
-                        <Unlock className="mr-1 h-3 w-3" />
-                        Mở Khóa
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleLock(user)}
-                        disabled={lockMutation.isPending}
-                      >
-                        <Lock className="mr-1 h-3 w-3" />
-                        Khóa
-                      </Button>
-                    )}
-                  </div>
+            {filteredUsers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center">
+                  {searchTerm ? (
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <Search className="size-8 text-gray-400" />
+                      <p className="text-gray-500">
+                        Không tìm thấy {userType === 'customers' ? 'khách hàng' : 'moderator'} nào
+                        với từ khóa "{searchTerm}"
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">
+                      {isLoading
+                        ? 'Đang tải...'
+                        : `Không có ${userType === 'customers' ? 'khách hàng' : 'moderator'} nào`}
+                    </p>
+                  )}
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filteredUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>{`${user.firstName} ${user.lastName}`}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{getStatusBadge(user.status)}</TableCell>
+                  <TableCell>{new Date(user.createdDateUTC).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      {user.status === 'Locked' ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUnlock(user)}
+                          disabled={unlockMutation.isPending}
+                        >
+                          <Unlock className="mr-1 h-3 w-3" />
+                          Mở Khóa
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleLock(user)}
+                          disabled={lockMutation.isPending}
+                        >
+                          <Lock className="mr-1 h-3 w-3" />
+                          Khóa
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
 
-      {/* Pagination */}
-      {usersData && usersData.totalPages > 1 && (
+      {/* Search Results Info */}
+      {usersData && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            {searchTerm ? (
+              <>
+                Tìm thấy <span className="font-medium">{filteredUsers.length}</span> kết quả cho "
+                {searchTerm}"
+              </>
+            ) : (
+              <>
+                Hiển thị <span className="font-medium">{usersData.items.length}</span> trên tổng số{' '}
+                <span className="font-medium">{usersData.totalCount}</span>{' '}
+                {userType === 'customers' ? 'khách hàng' : 'moderator'}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Pagination - Hide when searching */}
+      {usersData && usersData.totalPages > 1 && !searchTerm && (
         <div className="flex justify-center">
-          <Pagination pagination={convertToPaginationType(usersData)} />
+          <Pagination pagination={convertToPaginationType(usersData, filteredUsers.length)} />
         </div>
       )}
 
