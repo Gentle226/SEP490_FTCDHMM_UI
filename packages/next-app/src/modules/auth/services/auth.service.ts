@@ -173,7 +173,7 @@ class AuthService extends HttpClient {
   }
 
   public changePassword(payload: ChangePasswordSchema) {
-    return this.post<unknown>('/auth/change-password', payload, { isPrivateRoute: true });
+    return this.post<unknown>('api/Auth/change-password', payload, { isPrivateRoute: true });
   }
 
   public async loginWithGoogleIdToken(idToken: string) {

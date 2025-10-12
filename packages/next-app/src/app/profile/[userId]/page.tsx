@@ -242,11 +242,16 @@ export default function UserProfilePage() {
             <div className="flex items-center gap-2">
               {isOwnProfile ? (
                 <>
-                  <Button variant="outline" size="sm" onClick={handleEditProfile}>
+                  <Button
+                    className="text-[#99b94a]"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleEditProfile}
+                  >
                     <Edit className="size-4" />
                     Sửa hồ sơ
                   </Button>
-                  <Button variant="outline" size="sm" onClick={handleShare}>
+                  <Button className="text-[#99b94a]" variant="outline" size="sm" onClick={handleShare}>
                     <Share2 className="size-4" />
                   </Button>
                 </>
@@ -298,7 +303,7 @@ export default function UserProfilePage() {
               Công thức ({profileUser.recipesCount})
             </TabsTrigger>
             <TabsTrigger value="cooksnaps" className="flex-1">
-              Mục gì đó khác (36)
+              Mục gì đó khác
             </TabsTrigger>
           </TabsList>
 
