@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Lock, Plus, Search, Unlock, X } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ReactNode, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -39,6 +39,23 @@ import {
   userManagementService,
 } from '../services/user-management.service';
 
+// Custom debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 interface UserManagementTableProps {
   userType: 'customers' | 'moderators';
   title: ReactNode;
@@ -51,38 +68,49 @@ export function UserManagementTable({
   canCreate = false,
 }: UserManagementTableProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
+  const currentSearch = searchParams.get('search') || '';
+
   const [page, setPage] = useState(currentPage);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(currentSearch);
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // Sync state with URL params
   useEffect(() => {
     setPage(currentPage);
-  }, [currentPage]);
+    setSearchTerm(currentSearch);
+  }, [currentPage, currentSearch]);
 
-  // Helper function to convert API response to PaginationType
-  const convertToPaginationType = (data: any, filteredCount: number): PaginationType => {
-    // When searching, we show filtered results without pagination
-    if (searchTerm && filteredCount !== data.totalCount) {
-      return {
-        total: filteredCount,
-        currentPage: 1,
-        pageSize: filteredCount,
-        totalPage: 1,
-        hasNextPage: false,
-        hasPreviousPage: false,
-      };
+  // Update URL when search term changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+
+    if (debouncedSearchTerm) {
+      params.set('search', debouncedSearchTerm);
+    } else {
+      params.delete('search');
     }
 
-    return {
-      total: data.totalCount,
-      currentPage: data.page,
-      pageSize: data.pageSize,
-      totalPage: data.totalPages,
-      hasNextPage: data.page < data.totalPages,
-      hasPreviousPage: data.page > 1,
-    };
-  };
+    // Reset to page 1 when searching
+    if (debouncedSearchTerm !== currentSearch) {
+      params.set('page', '1');
+    }
+
+    router.push(`${pathname}?${params.toString()}`);
+  }, [debouncedSearchTerm, pathname, router, searchParams, currentSearch]);
+
+  // Helper function to convert API response to PaginationType
+  const convertToPaginationType = (data: any): PaginationType => ({
+    total: data.totalCount,
+    currentPage: data.page,
+    pageSize: data.pageSize,
+    totalPage: data.totalPages,
+    hasNextPage: data.page < data.totalPages,
+    hasPreviousPage: data.page > 1,
+  });
   const [lockDialogOpen, setLockDialogOpen] = useState(false);
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -91,30 +119,22 @@ export function UserManagementTable({
   const [newModeratorEmail, setNewModeratorEmail] = useState('');
 
   const queryClient = useQueryClient();
-  const queryKey = [userType, { page }];
+  const queryKey = [userType, { page, search: debouncedSearchTerm }];
 
   // Fetch users
   const { data: usersData, isLoading } = useQuery({
     queryKey,
     queryFn: () => {
-      const params: PaginationParams = { page: page, pageSize: 10 };
+      const params: PaginationParams = {
+        page: page,
+        pageSize: 10,
+        search: debouncedSearchTerm || undefined,
+      };
       return userType === 'customers'
         ? userManagementService.getCustomers(params)
         : userManagementService.getModerators(params);
     },
   });
-
-  // Filter users based on search term (client-side filtering)
-  const filteredUsers =
-    usersData?.items?.filter((user) => {
-      if (!searchTerm) return true;
-
-      const searchLower = searchTerm.toLowerCase();
-      const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-      const email = user.email.toLowerCase();
-
-      return fullName.includes(searchLower) || email.includes(searchLower);
-    }) || [];
 
   // Lock user mutation
   const lockMutation = useMutation({
@@ -319,15 +339,15 @@ export function UserManagementTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.length === 0 ? (
+            {usersData?.items?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center">
-                  {searchTerm ? (
+                  {debouncedSearchTerm ? (
                     <div className="flex flex-col items-center justify-center space-y-2">
                       <Search className="size-8 text-gray-400" />
                       <p className="text-gray-500">
                         Không tìm thấy {userType === 'customers' ? 'khách hàng' : 'moderator'} nào
-                        với từ khóa "{searchTerm}"
+                        với từ khóa "{debouncedSearchTerm}"
                       </p>
                     </div>
                   ) : (
@@ -340,7 +360,7 @@ export function UserManagementTable({
                 </TableCell>
               </TableRow>
             ) : (
-              filteredUsers.map((user) => (
+              usersData?.items?.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>{`${user.firstName} ${user.lastName}`}</TableCell>
                   <TableCell>{user.email}</TableCell>
@@ -382,10 +402,10 @@ export function UserManagementTable({
       {usersData && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            {searchTerm ? (
+            {debouncedSearchTerm ? (
               <>
-                Tìm thấy <span className="font-medium">{filteredUsers.length}</span> kết quả cho "
-                {searchTerm}"
+                Tìm thấy <span className="font-medium">{usersData?.totalCount || 0}</span> kết quả
+                cho "{debouncedSearchTerm}"
               </>
             ) : (
               <>
@@ -398,10 +418,10 @@ export function UserManagementTable({
         </div>
       )}
 
-      {/* Pagination - Hide when searching */}
-      {usersData && usersData.totalPages > 1 && !searchTerm && (
+      {/* Pagination */}
+      {usersData && usersData.totalPages > 1 && (
         <div className="flex justify-center">
-          <Pagination pagination={convertToPaginationType(usersData, filteredUsers.length)} />
+          <Pagination pagination={convertToPaginationType(usersData)} />
         </div>
       )}
 
