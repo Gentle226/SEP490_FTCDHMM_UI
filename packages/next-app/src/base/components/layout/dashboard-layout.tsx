@@ -148,15 +148,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <Sidebar collapsible="icon">
         <SidebarHeader>
           <div className="flex items-center gap-2 px-2 py-2 group-data-[collapsible=icon]:justify-center">
-            <div className="bg-primary text-primary-foreground flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg">
+            <div className="bg-[url('/FitFood Tracker Square Logo.png')] text-primary-foreground flex h-8 w-12 flex-shrink-0 items-center justify-center rounded-lg">
               <img
                 src="/FitFood Tracker Square Logo.png"
                 alt="FitFood Tracker Logo"
-                className="h-6 w-6 object-contain"
+                className="h-15 w-15 object-contain"
               />
             </div>
             <div className="flex min-w-0 flex-col transition-opacity duration-200 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:opacity-0">
-              <span className="truncate text-sm font-semibold">FitFood Tracker</span>
+              <span className="truncate text-sm font-semibold text-[#99b94a]">FitFood Tracker</span>
               <span className="text-muted-foreground truncate text-xs">
                 {user?.role === Role.ADMIN && 'Quản Trị Viên'}
                 {user?.role === Role.MODERATOR && 'Người Kiểm Duyệt'}
