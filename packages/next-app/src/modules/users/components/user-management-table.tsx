@@ -2,7 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Lock, Plus, Unlock } from 'lucide-react';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { Badge } from '@/base/components/ui/badge';
@@ -26,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/base/components/ui/table';
+import { Pagination } from '@/base/components/layout/pagination';
 
 import {
   CreateModeratorRequest,
@@ -35,6 +37,7 @@ import {
   User,
   userManagementService,
 } from '../services/user-management.service';
+import { Pagination as PaginationType } from '@/base/types';
 
 interface UserManagementTableProps {
   userType: 'customers' | 'moderators';
@@ -47,7 +50,24 @@ export function UserManagementTable({
   title,
   canCreate = false,
 }: UserManagementTableProps) {
-  const [page, setPage] = useState(1);
+  const searchParams = useSearchParams();
+  const currentPage = parseInt(searchParams.get('page') || '1', 10);
+  const [page, setPage] = useState(currentPage);
+
+  // Sync state with URL params
+  useEffect(() => {
+    setPage(currentPage);
+  }, [currentPage]);
+
+  // Helper function to convert API response to PaginationType
+  const convertToPaginationType = (data: any): PaginationType => ({
+    total: data.totalCount,
+    currentPage: data.page,
+    pageSize: data.pageSize,
+    totalPage: data.totalPages,
+    hasNextPage: data.page < data.totalPages,
+    hasPreviousPage: data.page > 1,
+  });
   const [lockDialogOpen, setLockDialogOpen] = useState(false);
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -278,20 +298,8 @@ export function UserManagementTable({
 
       {/* Pagination */}
       {usersData && usersData.totalPages > 1 && (
-        <div className="flex justify-center space-x-2">
-          <Button variant="outline" onClick={() => setPage(page - 1)} disabled={page === 1}>
-            Trước
-          </Button>
-          <span className="flex items-center px-4">
-            Trang {page} / {usersData.totalPages}
-          </span>
-          <Button
-            variant="outline"
-            onClick={() => setPage(page + 1)}
-            disabled={page === usersData.totalPages}
-          >
-            Tiếp
-          </Button>
+        <div className="flex justify-center">
+          <Pagination pagination={convertToPaginationType(usersData)} />
         </div>
       )}
 

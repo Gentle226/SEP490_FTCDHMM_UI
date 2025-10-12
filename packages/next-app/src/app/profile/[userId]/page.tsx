@@ -45,7 +45,7 @@ export default function UserProfilePage() {
         fullName: `${profileData.firstName} ${profileData.lastName}`.trim(),
         handle: `@${profileData.email.split('@')[0]}`,
         location: 'Thanh Hóa', // TODO: Add location field to API
-        bio: 'Bio sẽ hiện ở đây', // TODO: Add bio field to API
+        bio: 'Đam mê nấu ăn :)', // TODO: Add bio field to API
         avatar:
           profileData.avatar ||
           `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.firstName)}+${encodeURIComponent(profileData.lastName)}&background=random`,
@@ -160,11 +160,11 @@ export default function UserProfilePage() {
         <div className="mx-auto max-w-4xl space-y-6">
           <div className="bg-card rounded-lg border p-6">
             <div className="text-center">
-              <h2 className="text-xl font-semibold">Không tìm thấy hồ sơ</h2>
+              <h2 className="text-xl font-semibold text-[#99b94a]">Không tìm thấy hồ sơ</h2>
               <p className="text-muted-foreground mt-2">
                 Hồ sơ người dùng không tồn tại hoặc đã bị xóa.
               </p>
-              <Button className="mt-4" onClick={() => router.push('/')}>
+              <Button className="mt-4 bg-[#99b94a]" onClick={() => router.push('/')}>
                 Quay lại trang chủ
               </Button>
             </div>
@@ -298,7 +298,7 @@ export default function UserProfilePage() {
               Công thức ({profileUser.recipesCount})
             </TabsTrigger>
             <TabsTrigger value="cooksnaps" className="flex-1">
-              Anh em lên phím (36)
+              Mục gì đó khác (36)
             </TabsTrigger>
           </TabsList>
 
