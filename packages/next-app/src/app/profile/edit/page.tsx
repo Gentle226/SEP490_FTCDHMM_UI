@@ -12,7 +12,7 @@ import { Button } from '@/base/components/ui/button';
 import { Input } from '@/base/components/ui/input';
 import { Label } from '@/base/components/ui/label';
 import { Skeleton } from '@/base/components/ui/skeleton';
-import { useAuth } from '@/modules/auth';
+import { ChangePasswordDialog, useAuth } from '@/modules/auth';
 import { updateProfileSchema, useProfile, useUpdateProfile } from '@/modules/profile';
 import type { UpdateProfileSchema } from '@/modules/profile';
 
@@ -138,9 +138,12 @@ export default function EditProfilePage() {
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-2xl space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Chỉnh sửa hồ sơ</h1>
-          <p className="text-muted-foreground">Cập nhật thông tin cá nhân của bạn</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-[#99b94a]">Chỉnh sửa hồ sơ</h1>
+            <p className="text-muted-foreground">Cập nhật thông tin cá nhân của bạn</p>
+          </div>
+          <ChangePasswordDialog />
         </div>
 
         <div className="bg-card rounded-lg border p-6">
@@ -170,6 +173,7 @@ export default function EditProfilePage() {
               />
               <Button
                 variant="outline"
+                className="text-[#99b94a]"
                 size="sm"
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -190,7 +194,9 @@ export default function EditProfilePage() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="firstName">Tên *</Label>
+                <Label className="text-[#99b94a]" htmlFor="firstName">
+                  Tên *
+                </Label>
                 <Input
                   id="firstName"
                   placeholder="Nhập tên của bạn"
@@ -202,7 +208,9 @@ export default function EditProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lastName">Họ *</Label>
+                <Label className="text-[#99b94a]" htmlFor="lastName">
+                  Họ *
+                </Label>
                 <Input id="lastName" placeholder="Nhập họ của bạn" {...form.register('lastName')} />
                 {form.formState.errors.lastName && (
                   <p className="text-danger text-sm">{form.formState.errors.lastName.message}</p>
@@ -211,7 +219,9 @@ export default function EditProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phoneNumber">Số điện thoại *</Label>
+              <Label className="text-[#99b94a]" htmlFor="phoneNumber">
+                Số điện thoại *
+              </Label>
               <Input
                 id="phoneNumber"
                 placeholder="Nhập số điện thoại (VD: 0123456789)"
@@ -223,7 +233,9 @@ export default function EditProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="gender">Giới tính *</Label>
+              <Label htmlFor="gender" className="text-[#99b94a]">
+                Giới tính *
+              </Label>
               <select
                 id="gender"
                 className="border-input focus-visible:ring-ring flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
@@ -248,7 +260,7 @@ export default function EditProfilePage() {
               >
                 Hủy
               </Button>
-              <Button type="submit" loading={updateProfile.isPending}>
+              <Button className="bg-[#99b94a]" type="submit" loading={updateProfile.isPending}>
                 <Save className="size-4" />
                 Lưu thay đổi
               </Button>

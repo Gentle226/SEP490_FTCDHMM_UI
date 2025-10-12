@@ -1,10 +1,12 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Lock, Plus, Unlock } from 'lucide-react';
-import { ReactNode, useState } from 'react';
+import { Lock, Plus, Search, Unlock, X } from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { ReactNode, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { Pagination } from '@/base/components/layout/pagination';
 import { Badge } from '@/base/components/ui/badge';
 import { Button } from '@/base/components/ui/button';
 import {
@@ -26,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/base/components/ui/table';
+import { Pagination as PaginationType } from '@/base/types';
 
 import {
   CreateModeratorRequest,
@@ -35,6 +38,23 @@ import {
   User,
   userManagementService,
 } from '../services/user-management.service';
+
+// Custom debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 interface UserManagementTableProps {
   userType: 'customers' | 'moderators';
@@ -47,7 +67,50 @@ export function UserManagementTable({
   title,
   canCreate = false,
 }: UserManagementTableProps) {
-  const [page, setPage] = useState(1);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const currentPage = parseInt(searchParams.get('page') || '1', 10);
+  const currentSearch = searchParams.get('search') || '';
+
+  const [page, setPage] = useState(currentPage);
+  const [searchTerm, setSearchTerm] = useState(currentSearch);
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  // Sync state with URL params
+  useEffect(() => {
+    setPage(currentPage);
+    setSearchTerm(currentSearch);
+  }, [currentPage, currentSearch]);
+
+  // Update URL when search term changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+
+    if (debouncedSearchTerm) {
+      params.set('search', debouncedSearchTerm);
+    } else {
+      params.delete('search');
+    }
+
+    // Reset to page 1 when searching
+    if (debouncedSearchTerm !== currentSearch) {
+      params.set('page', '1');
+    }
+
+    router.push(`${pathname}?${params.toString()}`);
+  }, [debouncedSearchTerm, pathname, router, searchParams, currentSearch]);
+
+  // Helper function to convert API response to PaginationType
+  const convertToPaginationType = (data: any): PaginationType => ({
+    total: data.totalCount,
+    currentPage: data.page,
+    pageSize: data.pageSize,
+    totalPage: data.totalPages,
+    hasNextPage: data.page < data.totalPages,
+    hasPreviousPage: data.page > 1,
+  });
   const [lockDialogOpen, setLockDialogOpen] = useState(false);
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -56,13 +119,17 @@ export function UserManagementTable({
   const [newModeratorEmail, setNewModeratorEmail] = useState('');
 
   const queryClient = useQueryClient();
-  const queryKey = [userType, { page }];
+  const queryKey = [userType, { page, search: debouncedSearchTerm }];
 
   // Fetch users
   const { data: usersData, isLoading } = useQuery({
     queryKey,
     queryFn: () => {
-      const params: PaginationParams = { page: page, pageSize: 10 };
+      const params: PaginationParams = {
+        page: page,
+        pageSize: 10,
+        search: debouncedSearchTerm || undefined,
+      };
       return userType === 'customers'
         ? userManagementService.getCustomers(params)
         : userManagementService.getModerators(params);
@@ -159,6 +226,14 @@ export function UserManagementTable({
     }
   };
 
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Verified':
@@ -227,6 +302,31 @@ export function UserManagementTable({
         )}
       </div>
 
+      {/* Search Bar */}
+      <div className="flex w-full justify-end">
+        <div className="flex w-1/4 items-center space-x-2">
+          <div className="relative flex-1">
+            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />
+            <Input
+              placeholder={`Tìm kiếm ${userType === 'customers' ? 'khách hàng' : 'moderator'}...`}
+              value={searchTerm}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="pr-10 pl-10"
+            />
+            {searchTerm && (
+              <button
+                onClick={handleClearSearch}
+                className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label="Xóa tìm kiếm"
+                title="Xóa tìm kiếm"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -239,59 +339,89 @@ export function UserManagementTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {usersData?.items?.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{`${user.firstName} ${user.lastName}`}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{getStatusBadge(user.status)}</TableCell>
-                <TableCell>{new Date(user.createdDateUTC).toLocaleDateString()}</TableCell>
-                <TableCell>
-                  <div className="flex space-x-2">
-                    {user.status === 'Locked' ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleUnlock(user)}
-                        disabled={unlockMutation.isPending}
-                      >
-                        <Unlock className="mr-1 h-3 w-3" />
-                        Mở Khóa
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleLock(user)}
-                        disabled={lockMutation.isPending}
-                      >
-                        <Lock className="mr-1 h-3 w-3" />
-                        Khóa
-                      </Button>
-                    )}
-                  </div>
+            {usersData?.items?.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center">
+                  {debouncedSearchTerm ? (
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <Search className="size-8 text-gray-400" />
+                      <p className="text-gray-500">
+                        Không tìm thấy {userType === 'customers' ? 'khách hàng' : 'moderator'} nào
+                        với từ khóa "{debouncedSearchTerm}"
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">
+                      {isLoading
+                        ? 'Đang tải...'
+                        : `Không có ${userType === 'customers' ? 'khách hàng' : 'moderator'} nào`}
+                    </p>
+                  )}
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              usersData?.items?.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>{`${user.firstName} ${user.lastName}`}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{getStatusBadge(user.status)}</TableCell>
+                  <TableCell>{new Date(user.createdDateUTC).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      {user.status === 'Locked' ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUnlock(user)}
+                          disabled={unlockMutation.isPending}
+                        >
+                          <Unlock className="mr-1 h-3 w-3" />
+                          Mở Khóa
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleLock(user)}
+                          disabled={lockMutation.isPending}
+                        >
+                          <Lock className="mr-1 h-3 w-3" />
+                          Khóa
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
 
+      {/* Search Results Info */}
+      {usersData && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            {debouncedSearchTerm ? (
+              <>
+                Tìm thấy <span className="font-medium">{usersData?.totalCount || 0}</span> kết quả
+                cho "{debouncedSearchTerm}"
+              </>
+            ) : (
+              <>
+                Hiển thị <span className="font-medium">{usersData.items.length}</span> trên tổng số{' '}
+                <span className="font-medium">{usersData.totalCount}</span>{' '}
+                {userType === 'customers' ? 'khách hàng' : 'moderator'}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Pagination */}
       {usersData && usersData.totalPages > 1 && (
-        <div className="flex justify-center space-x-2">
-          <Button variant="outline" onClick={() => setPage(page - 1)} disabled={page === 1}>
-            Trước
-          </Button>
-          <span className="flex items-center px-4">
-            Trang {page} / {usersData.totalPages}
-          </span>
-          <Button
-            variant="outline"
-            onClick={() => setPage(page + 1)}
-            disabled={page === usersData.totalPages}
-          >
-            Tiếp
-          </Button>
+        <div className="flex justify-center">
+          <Pagination pagination={convertToPaginationType(usersData)} />
         </div>
       )}
 

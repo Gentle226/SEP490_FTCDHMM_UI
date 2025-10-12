@@ -1,3 +1,4 @@
+export * from './components/change-password-dialog';
 export * from './components/google-login-button';
 export * from './components/google-one-tap';
 export * from './components/google-signin-button';
@@ -5,6 +6,7 @@ export * from './components/login-form';
 export * from './components/protected-route';
 export * from './components/role-guard';
 export * from './contexts/auth.context';
+export * from './hooks/use-change-password';
 export * from './pages/login.page';
 export * from './pages/private.page';
 export * from './pages/register.page';

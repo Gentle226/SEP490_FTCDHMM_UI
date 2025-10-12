@@ -2,9 +2,11 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { Pagination } from '@/base/components/layout/pagination';
 import { Badge } from '@/base/components/ui/badge';
 import { Button } from '@/base/components/ui/button';
 import {
@@ -27,6 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/base/components/ui/table';
+import { Pagination as PaginationType } from '@/base/types';
 
 import {
   CreateRoleRequest,
@@ -37,7 +40,24 @@ import {
 import { EditPermissionsDialog } from './edit-permissions-dialog';
 
 export function PermissionManagementTable() {
-  const [page, setPage] = useState(1);
+  const searchParams = useSearchParams();
+  const currentPage = parseInt(searchParams.get('page') || '1', 10);
+  const [page, setPage] = useState(currentPage);
+
+  // Sync state with URL params
+  useEffect(() => {
+    setPage(currentPage);
+  }, [currentPage]);
+
+  // Helper function to convert API response to PaginationType
+  const convertToPaginationType = (data: any): PaginationType => ({
+    total: data.totalCount,
+    currentPage: data.page,
+    pageSize: data.pageSize,
+    totalPage: data.totalPages,
+    hasNextPage: data.page < data.totalPages,
+    hasPreviousPage: data.page > 1,
+  });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editPermissionsDialogOpen, setEditPermissionsDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
@@ -203,20 +223,8 @@ export function PermissionManagementTable() {
 
       {/* Pagination */}
       {rolesData && rolesData.totalPages > 1 && (
-        <div className="flex justify-center space-x-2">
-          <Button variant="outline" onClick={() => setPage(page - 1)} disabled={page === 1}>
-            Trước
-          </Button>
-          <span className="flex items-center px-4">
-            Trang {page} / {rolesData.totalPages}
-          </span>
-          <Button
-            variant="outline"
-            onClick={() => setPage(page + 1)}
-            disabled={page === rolesData.totalPages}
-          >
-            Tiếp
-          </Button>
+        <div className="flex justify-center">
+          <Pagination pagination={convertToPaginationType(rolesData)} />
         </div>
       )}
 

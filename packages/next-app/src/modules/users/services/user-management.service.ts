@@ -12,6 +12,7 @@ export interface User {
 export interface PaginationParams {
   page?: number;
   pageSize?: number;
+  search?: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -45,6 +46,7 @@ class UserManagementService extends HttpClient {
     const queryParams = new URLSearchParams();
     if (params.page) queryParams.append('Page', params.page.toString());
     if (params.pageSize) queryParams.append('PageSize', params.pageSize.toString());
+    if (params.search) queryParams.append('Search', params.search);
 
     return this.get<PaginatedResponse<User>>(`api/User/getCustomers?${queryParams}`, {
       isPrivateRoute: true,
@@ -68,6 +70,7 @@ class UserManagementService extends HttpClient {
     const queryParams = new URLSearchParams();
     if (params.page) queryParams.append('Page', params.page.toString());
     if (params.pageSize) queryParams.append('PageSize', params.pageSize.toString());
+    if (params.search) queryParams.append('Search', params.search);
 
     return this.get<PaginatedResponse<User>>(`api/User/getModerators?${queryParams}`, {
       isPrivateRoute: true,
