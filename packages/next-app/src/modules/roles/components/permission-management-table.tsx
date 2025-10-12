@@ -112,10 +112,10 @@ export function PermissionManagementTable() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Quản Lý Quyền</h2>
+        <h2 className="text-2xl font-bold text-[#99b94a]">Quản Lý Quyền</h2>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-[#99b94a] hover:bg-[#7a8f3a]">
               <Plus className="mr-2 h-4 w-4" />
               Tạo Vai Trò
             </Button>
@@ -170,11 +170,9 @@ export function PermissionManagementTable() {
                 <TableCell className="w-48 font-medium">{role.name}</TableCell>
                 <TableCell className="w-36">
                   {role.isActive ? (
-                    <Badge variant="default" className="w-32 justify-center">
-                      Hoạt động
-                    </Badge>
+                    <Badge className="w-32 justify-center bg-[#99b94a]">Hoạt động</Badge>
                   ) : (
-                    <Badge variant="secondary" className="w-32 justify-center">
+                    <Badge variant="danger" className="w-32 justify-center">
                       Không hoạt động
                     </Badge>
                   )}

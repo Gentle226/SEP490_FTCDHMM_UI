@@ -12,7 +12,7 @@ import {
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import {
   Sidebar,
@@ -29,6 +29,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/base/components/ui/sidebar';
+import { useSidebarStateFromCookie } from '@/base/hooks/use-sidebar-cookie';
 import { Role, useAuth } from '@/modules/auth';
 import { authService } from '@/modules/auth/services/auth.service';
 
@@ -41,6 +42,8 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, setUser } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const sidebarDefaultOpen = useSidebarStateFromCookie();
 
   const handleLogout = async () => {
     try {
@@ -135,20 +138,25 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const navigationItems = getNavigationItems();
 
+  // Don't render until we have the sidebar state from cookie
+  if (sidebarDefaultOpen === null) {
+    return null; // or a loading spinner
+  }
+
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={sidebarDefaultOpen}>
       <Sidebar collapsible="icon">
         <SidebarHeader>
           <div className="flex items-center gap-2 px-2 py-2 group-data-[collapsible=icon]:justify-center">
-            <div className="bg-primary text-primary-foreground flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg">
+            <div className="bg-[url('/FitFood Tracker Square Logo.png')] text-primary-foreground flex h-8 w-12 flex-shrink-0 items-center justify-center rounded-lg">
               <img
                 src="/FitFood Tracker Square Logo.png"
                 alt="FitFood Tracker Logo"
-                className="h-6 w-6 object-contain"
+                className="h-15 w-15 object-contain"
               />
             </div>
             <div className="flex min-w-0 flex-col transition-opacity duration-200 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:opacity-0">
-              <span className="truncate text-sm font-semibold">FitFood Tracker</span>
+              <span className="truncate text-sm font-semibold text-[#99b94a]">FitFood Tracker</span>
               <span className="text-muted-foreground truncate text-xs">
                 {user?.role === Role.ADMIN && 'Quản Trị Viên'}
                 {user?.role === Role.MODERATOR && 'Người Kiểm Duyệt'}
@@ -163,16 +171,25 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <SidebarGroupLabel>Điều Hướng</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {navigationItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild tooltip={item.title}>
-                      <Link href={item.url}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {navigationItems.map((item) => {
+                  const isActive =
+                    pathname === item.url || (item.url !== '/' && pathname.startsWith(item.url));
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        tooltip={item.title}
+                        isActive={isActive}
+                        className={isActive ? 'sidebar-item-active' : ''}
+                      >
+                        <Link href={item.url}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

@@ -9,12 +9,7 @@ export default function PermissionsPage() {
     <ProtectedRoute requiredRoles={[Role.ADMIN]}>
       <DashboardLayout>
         <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold">Quản Lý Phân Quyền</h1>
-            <p className="text-muted-foreground">
-              Quản lý vai trò và quyền truy cập trong hệ thống
-            </p>
-          </div>
+          <h1 className="text-3xl font-bold text-[#99b94a]">Quản Lý Phân Quyền</h1>
 
           <div className="bg-card rounded-lg border p-6">
             <PermissionManagementTable />

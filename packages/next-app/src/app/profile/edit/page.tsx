@@ -166,6 +166,7 @@ export default function EditProfilePage() {
                 accept="image/*"
                 className="hidden"
                 onChange={handleAvatarChange}
+                aria-label="Upload an avatar image"
               />
               <Button
                 variant="outline"
@@ -216,9 +217,6 @@ export default function EditProfilePage() {
                 placeholder="Nhập số điện thoại (VD: 0123456789)"
                 {...form.register('phoneNumber')}
               />
-              <p className="text-muted-foreground text-sm">
-                Số điện thoại phải bắt đầu bằng 0 và có 9-10 chữ số
-              </p>
               {form.formState.errors.phoneNumber && (
                 <p className="text-danger text-sm">{form.formState.errors.phoneNumber.message}</p>
               )}

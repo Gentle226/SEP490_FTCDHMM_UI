@@ -10,14 +10,17 @@ export default function ModeratorDashboard() {
       <DashboardLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-[#99b94a]">Bảng Điều Khiển Moderator</h1>
+            <h1 className="text-3xl font-bold">Quản lý nguyên liệu</h1>
+            <p className="text-muted-foreground">
+              Quản 
+            </p>
           </div>
 
           {/* Customer Management */}
           <div className="bg-card rounded-lg border p-6">
             <UserManagementTable
               userType="customers"
-              title={<span className="text-[#99b94a]">Quản lý Khách Hàng</span>}
+              title="Quản Lý Khách Hàng"
               canCreate={false}
             />
           </div>
