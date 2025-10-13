@@ -303,7 +303,7 @@ export function UserManagementTable({
       </div>
 
       {/* Search Bar */}
-      <div className="flex w-full justify-end">
+      <div className="flex w-full justify-end pb-3">
         <div className="flex w-1/4 items-center space-x-2">
           <div className="relative flex-1">
             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />
@@ -327,7 +327,7 @@ export function UserManagementTable({
         </div>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md pr-6 pl-6">
         <Table>
           <TableHeader>
             <TableRow>
@@ -400,7 +400,7 @@ export function UserManagementTable({
 
       {/* Search Results Info */}
       {usersData && (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pt-2">
           <div className="text-sm text-gray-500">
             {debouncedSearchTerm ? (
               <>

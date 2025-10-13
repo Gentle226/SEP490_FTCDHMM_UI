@@ -6,6 +6,7 @@ import {
   Home,
   KeyRound,
   MessageSquare,
+  Salad,
   Settings,
   Shield,
   User,
@@ -111,6 +112,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           title: 'Quản Lý Khách Hàng',
           url: '/moderator/dashboard',
           icon: Users,
+        },
+        {
+          title: 'Quản Lý Nguyên Liệu',
+          url: '/moderator/ingredient',
+          icon: Salad,
         },
         {
           title: 'Kiểm Duyệt Nội Dung',

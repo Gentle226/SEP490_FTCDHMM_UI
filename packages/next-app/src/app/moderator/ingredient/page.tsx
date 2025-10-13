@@ -2,20 +2,20 @@
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { ProtectedRoute, Role } from '@/modules/auth';
-import { UserManagementTable } from '@/modules/users/components/user-management-table';
+import { IngredientManagementTable } from '@/modules/ingredients';
 
-export default function ModeratorDashboard() {
+export default function IngredientManagementPage() {
   return (
     <ProtectedRoute requiredRoles={[Role.ADMIN, Role.MODERATOR]}>
       <DashboardLayout>
-        <div className="space-y-12 pt-8 pr-8 pl-8">
+        <div className="space-y-8 pt-8 pr-8 pl-8">
           <div>
-            <h1 className="text-4xl font-bold text-[#99b94a]">Quản lý Khách Hàng</h1>
+            <h1 className="text-4xl font-bold text-[#99b94a]">Quản lý Nguyên Liệu</h1>
           </div>
 
-          {/* Customer Management */}
+          {/* Ingredient Management */}
           <div className="bg-card rounded-lg border p-6">
-            <UserManagementTable userType="customers" title="" canCreate={false} />
+            <IngredientManagementTable />
           </div>
         </div>
       </DashboardLayout>
