@@ -14,6 +14,7 @@ import { cn } from '@/base/lib/cn.lib';
 import { LoginSchema, loginSchema } from '@/modules/auth/types';
 
 import { authService } from '../services/auth.service';
+import { GoogleSignInButton } from './google-signin-button';
 
 interface LoginFormProps extends React.ComponentProps<'div'> {
   onLoginSuccess?: () => void;
@@ -120,6 +121,34 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
                       <span className="bg-card text-muted-foreground relative z-10 px-2">
                         Hoặc tiếp tục với
                       </span>
+                    </div>
+
+                    <div className="flex w-full">
+                      <div className="flex w-full max-w-[400px] items-center justify-center">
+                        <GoogleSignInButton
+                          theme="outline"
+                          size="large"
+                          text="signin_with"
+                          disabled={isPending}
+                          onSuccess={() => {
+                            const redirect = searchParams.get('redirect');
+                            if (URL.canParse(redirect as string)) {
+                              const redirectUrl = new URL(redirect as string);
+
+                              if (redirectUrl.origin === window.location.origin) {
+                                window.location.replace(redirectUrl.href);
+                                return;
+                              }
+                            }
+
+                            window.location.replace('/');
+                            onLoginSuccess?.();
+                          }}
+                          onError={(error) => {
+                            console.error('Google login error:', error);
+                          }}
+                        />
+                      </div>
                     </div>
 
                     <div className="text-center text-sm">

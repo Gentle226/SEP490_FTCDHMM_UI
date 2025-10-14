@@ -48,29 +48,10 @@ export async function middleware(request: NextRequest) {
       const { exp } = decodeJwt(accessToken);
       const userCookie = request.cookies.get('user')?.value;
 
-      // Debug logging
-      console.warn('Middleware Debug:', {
-        pathname,
-        hasAccessToken: !!accessToken,
-        tokenExp: exp ? new Date(exp * 1000).toISOString() : 'no exp',
-        currentTime: new Date().toISOString(),
-        isTokenExpired: exp ? exp * 1000 < Date.now() : 'no exp',
-        hasUserCookie: !!userCookie,
-        isPrivateRoute,
-        isAdminRoute,
-        isModeratorRoute,
-      });
-
       let user: User | null = null;
       try {
         if (userCookie) {
           user = JSON.parse(userCookie) as User;
-          console.warn('Parsed user from cookie:', {
-            userId: user?.id,
-            userEmail: user?.email,
-            userRole: user?.role,
-            rawCookie: userCookie.substring(0, 100) + '...', // First 100 chars
-          });
         } else {
           console.warn('No user cookie found');
         }

@@ -152,6 +152,7 @@ class GoogleIdentityManager {
         theme: 'outline',
         size: 'large',
         text: 'signin_with',
+        width: 320,
         ...options,
       });
     } catch (error) {

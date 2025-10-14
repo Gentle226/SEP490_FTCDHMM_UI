@@ -54,7 +54,7 @@ export default function HomePage() {
                 alt="FitFood Tracker"
                 className="mx-auto mb-4 h-36 w-auto"
                 width={500}
-                height={36}
+                height={150}
               />
             </div>
 

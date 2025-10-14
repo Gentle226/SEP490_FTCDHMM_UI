@@ -30,14 +30,6 @@ class AuthService extends HttpClient {
     // Decode JWT to get user info
     const decodedToken = decodeJwt(res.token);
 
-    // Debug logging
-    console.warn('Login Debug:', {
-      tokenReceived: !!res.token,
-      decodedToken,
-      tokenExp: decodedToken.exp ? new Date(decodedToken.exp * 1000).toISOString() : 'no exp',
-      availableClaims: Object.keys(decodedToken),
-    });
-
     // Extract user data with flexible claim mapping
     const extractClaim = (
       token: Record<string, unknown>,

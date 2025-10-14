@@ -22,9 +22,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const response = await fetch('/api/auth/me');
         const data = await response.json();
-
-        console.error('AuthContext: User data from server:', data);
-
         if (data.user && data.user.id) {
           setUser(data.user);
         } else {

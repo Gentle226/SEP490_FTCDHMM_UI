@@ -23,34 +23,17 @@ export function ProtectedRoute({
 
   useEffect(() => {
     if (!isLoading) {
-      console.error('ProtectedRoute Debug:', {
-        hasUser: !!user,
-        userRole: user?.role,
-        requiredRoles,
-        roleMatch:
-          requiredRoles.length > 0
-            ? requiredRoles.includes(user?.role as Role)
-            : 'no roles required',
-      });
 
       if (!user) {
-        console.error('No user, redirecting to:', redirectTo);
         router.push(redirectTo);
         return;
       }
 
       if (requiredRoles.length > 0 && !requiredRoles.includes(user.role as Role)) {
-        console.error(
-          'Role mismatch, redirecting to home. User role:',
-          user.role,
-          'Required:',
-          requiredRoles,
-        );
         router.push('/');
         return;
       }
 
-      console.error('Access granted!');
     }
   }, [user, isLoading, requiredRoles, redirectTo, router]);
 

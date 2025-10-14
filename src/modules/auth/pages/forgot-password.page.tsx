@@ -25,13 +25,7 @@ export function ForgotPasswordPage() {
       <Card className="border-border/60 w-full max-w-md shadow-xl">
         <CardHeader className="space-y-3">
           <div className="flex justify-center">
-            <Image
-              src="/Fitfood Tracker Logo.png"
-              alt="Logo"
-              className="h-18 w-auto"
-              width={100}
-              height={100}
-            />
+            <Image src="/Fitfood Tracker Logo.png" alt="Logo" width={150} height={150} />
           </div>
           <CardTitle className="text-center text-3xl text-[#99b94a]">Đặt lại mật khẩu</CardTitle>
           <CardDescription className="text-muted-foreground text-center text-sm">

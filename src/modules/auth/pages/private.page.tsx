@@ -19,7 +19,7 @@ export function PrivatePage() {
   const handleLogout = async () => {
     await axios.delete('/api/auth/delete-cookie');
     queryClient.removeQueries({ queryKey: ['users', 'profile'] });
-    router.push('/auth/login');
+    router.push('/');
   };
 
   return (

@@ -18,12 +18,12 @@ export function Header() {
     try {
       await authService.logout();
       setUser(null);
-      router.push('/auth/login');
+      router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
       // Even if logout fails, clear user state and redirect
       setUser(null);
-      router.push('/auth/login');
+      router.push('/');
     }
   };
 
@@ -32,12 +32,7 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center space-x-4">
           <Link href="/" className="flex items-center">
-            <Image
-              src="/Fitfood Tracker Logo.png"
-              alt="FitFood Tracker"
-              width={128}
-              height={64}
-            />
+            <Image src="/Fitfood Tracker Logo.png" alt="FitFood Tracker" width={120} height={120} />
           </Link>
         </div>
 

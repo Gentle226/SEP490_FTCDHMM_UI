@@ -50,12 +50,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     try {
       await authService.logout();
       setUser(null);
-      router.push('/auth/login');
+      router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
       // Even if logout fails, clear user state and redirect
       setUser(null);
-      router.push('/auth/login');
+      router.push('/');
     }
   };
 
@@ -153,9 +153,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <Image
                 src="/FitFood Tracker Square Logo.png"
                 alt="FitFood Tracker Logo"
-                className="h-15 w-15 object-contain"
-                width={48}
-                height={48}
+                width={150}
+                height={150}
               />
             </div>
             <div className="flex min-w-0 flex-col transition-opacity duration-200 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:opacity-0">
