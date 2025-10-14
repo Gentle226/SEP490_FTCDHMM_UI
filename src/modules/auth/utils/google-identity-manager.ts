@@ -34,7 +34,7 @@ class GoogleIdentityManager {
       script.async = true;
       script.defer = true;
       script.onload = () => {
-        console.log('Google Identity Services script loaded successfully');
+        console.warn('Google Identity Services script loaded successfully');
         this.scriptLoaded = true;
         resolve();
       };
@@ -47,7 +47,10 @@ class GoogleIdentityManager {
     });
   }
 
-  async initialize(clientId: string, callback: (response: any) => void): Promise<void> {
+  async initialize(
+    clientId: string,
+    callback: (response: unknown) => Promise<void>,
+  ): Promise<void> {
     if (this.isInitialized) return;
 
     if (this.isInitializing) {
@@ -66,7 +69,10 @@ class GoogleIdentityManager {
     }
   }
 
-  private async _initialize(clientId: string, callback: (response: any) => void): Promise<void> {
+  private async _initialize(
+    clientId: string,
+    callback: (response: unknown) => Promise<void>,
+  ): Promise<void> {
     await this.loadScript();
 
     // Wait a bit for Google to be fully available
@@ -85,30 +91,48 @@ class GoogleIdentityManager {
       callback,
       cancel_on_tap_outside: true,
       auto_select: false, // Disable auto-select to prevent conflicts
-      use_fedcm_for_prompt: true, // Enable FedCM as it will become mandatory
+      use_fedcm_for_prompt: false, // Disable FedCM to avoid current issues
       itp_support: true, // Enable Intelligent Tracking Prevention support
+      context: 'signin', // Provide context for better UX
+      ux_mode: 'popup', // Use popup mode for better compatibility
     });
   }
 
   showPrompt(): void {
     if (!this.isInitialized || !window.google) {
-      console.error('Google Identity Services not initialized');
+      console.warn('Google Identity Services not initialized');
       return;
     }
 
     try {
-      window.google.accounts.id.prompt((notification: any) => {
-        console.log('Google prompt notification:', notification);
+      window.google.accounts.id.prompt((notification: unknown) => {
+        const notif = notification as {
+          isNotDisplayed?: () => boolean;
+          getNotDisplayedReason?: () => string;
+          isSkippedMoment?: () => boolean;
+          getSkippedReason?: () => string;
+          isDismissedMoment?: () => boolean;
+          getDismissedReason?: () => string;
+        };
 
-        if (notification.isNotDisplayed()) {
-          console.log(
-            'Google prompt was not displayed - Reason:',
-            notification.getNotDisplayedReason(),
-          );
-        } else if (notification.isSkippedMoment()) {
-          console.log('Google prompt was skipped - Reason:', notification.getSkippedReason());
-        } else if (notification.isDismissedMoment()) {
-          console.log('Google prompt was dismissed - Reason:', notification.getDismissedReason());
+        if (notif.isNotDisplayed?.()) {
+          const reason = notif.getNotDisplayedReason?.();
+          console.warn('Google prompt was not displayed - Reason:', reason);
+
+          // Handle specific cases where prompt is not displayed
+          if (reason === 'browser_not_supported') {
+            console.warn('Browser does not support Google One Tap');
+          } else if (reason === 'invalid_client') {
+            console.error('Invalid Google Client ID configuration');
+          } else if (reason === 'missing_client_id') {
+            console.error('Missing Google Client ID');
+          }
+        } else if (notif.isSkippedMoment?.()) {
+          const reason = notif.getSkippedReason?.();
+          console.warn('Google prompt was skipped - Reason:', reason);
+        } else if (notif.isDismissedMoment?.()) {
+          const reason = notif.getDismissedReason?.();
+          console.warn('Google prompt was dismissed - Reason:', reason);
         }
       });
     } catch (error) {
@@ -117,7 +141,7 @@ class GoogleIdentityManager {
   }
 
   // Alternative method to render the sign-in button directly
-  renderButton(element: HTMLElement, options?: any): void {
+  renderButton(element: HTMLElement, options?: Record<string, unknown>): void {
     if (!this.isInitialized || !window.google) {
       console.error('Google Identity Services not initialized');
       return;
@@ -145,6 +169,34 @@ class GoogleIdentityManager {
     this.isInitialized = false;
     this.isInitializing = false;
     this.initPromise = null;
+  }
+
+  // Check if One Tap is available for the current user/browser
+  isOneTapAvailable(): boolean {
+    if (!this.isInitialized || !window.google) {
+      return false;
+    }
+
+    // Check if One Tap was disabled by user action
+    try {
+      // This is a basic check - Google doesn't provide a direct API to check availability
+      return typeof window.google.accounts.id.prompt === 'function';
+    } catch (error) {
+      console.warn('Error checking One Tap availability:', error);
+      return false;
+    }
+  }
+
+  // Disable One Tap for the current user (useful for fallback scenarios)
+  disableOneTap(): void {
+    if (window.google?.accounts?.id) {
+      try {
+        window.google.accounts.id.disableAutoSelect();
+        console.warn('Google One Tap auto-select has been disabled');
+      } catch (error) {
+        console.error('Error disabling One Tap:', error);
+      }
+    }
   }
 }
 

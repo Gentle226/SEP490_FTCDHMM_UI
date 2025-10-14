@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { AxiosError, HttpStatusCode } from 'axios';
+import { AxiosError } from 'axios';
 import { AlertCircleIcon, ArrowLeft, CheckCircle, Lock, Mail } from 'lucide-react';
 import { useState } from 'react';
 import { z } from 'zod';
@@ -96,7 +96,8 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
     isPending: isVerifyingOtp,
     error: verifyOtpError,
   } = useMutation({
-    mutationFn: (payload: VerifyEmailOtpSchema) => authService.verifyEmailOtpForReset(payload, 'reset'),
+    mutationFn: (payload: VerifyEmailOtpSchema) =>
+      authService.verifyEmailOtpForReset(payload, 'reset'),
     onSuccess: (response: { token: string }) => {
       setResetToken(response.token);
       setCurrentStep('password');
@@ -123,7 +124,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
     },
   });
 
-  const renderError = (error: any) => {
+  const renderError = (error: unknown) => {
     if (!error) return null;
 
     let message = 'Đã xảy ra lỗi. Vui lòng thử lại sau.';

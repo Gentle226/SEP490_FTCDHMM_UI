@@ -8,32 +8,34 @@ import { googleIdentityManager } from '../utils/google-identity-manager';
 
 interface GoogleOneTapProps {
   onSuccess?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: unknown) => void;
   autoSelect?: boolean;
   cancelOnTapOutside?: boolean;
 }
 
-declare global {
-  interface Window {
-    google: any;
-  }
+interface GoogleCredentialResponse {
+  credential: string;
+  select_by: string;
+  [key: string]: unknown;
 }
+
+// Google types are already declared in google-login-button.tsx
 
 export function GoogleOneTap({
   onSuccess,
   onError,
-  autoSelect = false, // Set to false to prevent conflicts
-  cancelOnTapOutside = true,
+  autoSelect: _autoSelect = false, // Set to false to prevent conflicts
+  cancelOnTapOutside: _cancelOnTapOutside = true,
 }: GoogleOneTapProps) {
   const GOOGLE_CLIENT_ID =
     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
     '1013528724745-4gb7j1qedeo8n4qd07uj1grpla9ao7bf.apps.googleusercontent.com';
 
   const handleGoogleCallback = useCallback(
-    async (response: any) => {
+    async (response: unknown) => {
       try {
-        console.log('Google One Tap sign-in success:', response);
-        await authService.loginWithGoogleIdToken(response.credential);
+        const credentialResponse = response as GoogleCredentialResponse;
+        await authService.loginWithGoogleIdToken(credentialResponse.credential);
         onSuccess?.();
       } catch (error) {
         console.error('Google One Tap login error:', error);
@@ -48,12 +50,17 @@ export function GoogleOneTap({
       try {
         await googleIdentityManager.initialize(GOOGLE_CLIENT_ID, handleGoogleCallback);
 
-        // Show One Tap prompt automatically after initialization
-        setTimeout(() => {
-          googleIdentityManager.showPrompt();
-        }, 500); // Small delay to ensure everything is ready
+        // Check if One Tap is available before showing prompt
+        if (googleIdentityManager.isOneTapAvailable()) {
+          // Show One Tap prompt automatically after initialization
+          setTimeout(() => {
+            googleIdentityManager.showPrompt();
+          }, 500); // Small delay to ensure everything is ready
+        } else {
+          console.warn('Google One Tap is not available, skipping auto-prompt');
+        }
       } catch (error) {
-        console.error('Failed to initialize Google One Tap:', error);
+        console.warn('Failed to initialize Google One Tap:', error);
         onError?.(error);
       }
     };

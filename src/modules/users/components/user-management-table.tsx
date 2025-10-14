@@ -103,7 +103,12 @@ export function UserManagementTable({
   }, [debouncedSearchTerm, pathname, router, searchParams, currentSearch]);
 
   // Helper function to convert API response to PaginationType
-  const convertToPaginationType = (data: any): PaginationType => ({
+  const convertToPaginationType = (data: {
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }): PaginationType => ({
     total: data.totalCount,
     currentPage: data.page,
     pageSize: data.pageSize,
@@ -347,7 +352,7 @@ export function UserManagementTable({
                       <Search className="size-8 text-gray-400" />
                       <p className="text-gray-500">
                         Không tìm thấy {userType === 'customers' ? 'khách hàng' : 'moderator'} nào
-                        với từ khóa "{debouncedSearchTerm}"
+                        với từ khóa &ldquo;{debouncedSearchTerm}&rdquo;
                       </p>
                     </div>
                   ) : (
@@ -405,7 +410,7 @@ export function UserManagementTable({
             {debouncedSearchTerm ? (
               <>
                 Tìm thấy <span className="font-medium">{usersData?.totalCount || 0}</span> kết quả
-                cho "{debouncedSearchTerm}"
+                cho &ldquo;{debouncedSearchTerm}&rdquo;
               </>
             ) : (
               <>

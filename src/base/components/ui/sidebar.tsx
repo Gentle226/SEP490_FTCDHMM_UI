@@ -53,7 +53,6 @@ function useSidebar() {
   return context;
 }
 
-/* eslint-disable react/forbid-dom-props */
 function SidebarProvider({
   defaultOpen = true,
   open: openProp,
@@ -151,7 +150,6 @@ function SidebarProvider({
     </SidebarContext.Provider>
   );
 }
-/* eslint-enable no-inline-styles */
 
 function Sidebar({
   side = 'left',
@@ -391,7 +389,7 @@ function SidebarGroupLabel({
   ...props
 }: React.ComponentProps<'div'> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : 'div';
-  const { popover, ...restProps } = props as any;
+  const { popover, ...restProps } = props as Record<string, unknown>;
 
   return (
     <Comp
@@ -413,7 +411,7 @@ function SidebarGroupAction({
   ...props
 }: React.ComponentProps<'button'> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : 'button';
-  const { popover, ...restProps } = props as any;
+  const { popover, ...restProps } = props as Record<string, unknown>;
 
   return (
     <Comp
@@ -502,7 +500,7 @@ function SidebarMenuButton({
   const Comp = asChild ? Slot : 'button';
   const { isMobile, state } = useSidebar();
 
-  const { popover, ...restProps } = props as any;
+  const { popover, ...restProps } = props as Record<string, unknown>;
 
   const button = (
     <Comp
@@ -533,7 +531,11 @@ function SidebarMenuButton({
   );
   const mergedTooltipStyle =
     state === 'collapsed' && !isMobile
-      ? { backgroundColor: '#99b94a', color: '#ffffff', ['--tooltip-fill' as any]: '#99b94a' }
+      ? ({
+          backgroundColor: '#99b94a',
+          color: '#ffffff',
+          '--tooltip-fill': '#99b94a',
+        } as React.CSSProperties)
       : undefined;
 
   return (
@@ -561,7 +563,7 @@ function SidebarMenuAction({
   showOnHover?: boolean;
 }) {
   const Comp = asChild ? Slot : 'button';
-  const { popover, ...restProps } = props as any;
+  const { popover, ...restProps } = props as Record<string, unknown>;
 
   return (
     <Comp
@@ -674,7 +676,7 @@ function SidebarMenuSubButton({
   isActive?: boolean;
 }) {
   const Comp = asChild ? Slot : 'a';
-  const { popover, ...restProps } = props as any;
+  const { popover, ...restProps } = props as Record<string, unknown>;
 
   return (
     <Comp

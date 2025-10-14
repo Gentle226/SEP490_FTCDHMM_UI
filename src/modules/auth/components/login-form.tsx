@@ -1,23 +1,19 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { AxiosError, HttpStatusCode } from 'axios';
+import { AxiosError } from 'axios';
 import { AlertCircleIcon } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
 import { Alert, AlertDescription, AlertTitle } from '@/base/components/ui/alert';
-import { Button } from '@/base/components/ui/button';
 import { Card, CardContent } from '@/base/components/ui/card';
 import { Form } from '@/base/components/ui/form';
-import { Input } from '@/base/components/ui/input';
-import { Label } from '@/base/components/ui/label';
 import { cn } from '@/base/lib/cn.lib';
 import { LoginSchema, loginSchema } from '@/modules/auth/types';
 
 import { authService } from '../services/auth.service';
-import { GoogleLoginButton } from './google-login-button';
-import { GoogleSignInButton } from './google-signin-button';
 
 interface LoginFormProps extends React.ComponentProps<'div'> {
   onLoginSuccess?: () => void;
@@ -69,9 +65,6 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
                     {(() => {
                       if (error instanceof AxiosError) {
                         const status = error.status ?? error.response?.status;
-                        const message = (error.response?.data as { message: string })?.message as
-                          | string
-                          | undefined;
                         if (status === 404) {
                           return 'Email hoặc mật khẩu không đúng.';
                         } else if (status === 402) {
@@ -129,31 +122,6 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
                       </span>
                     </div>
 
-                    <GoogleSignInButton
-                      className="w-full"
-                      theme="outline"
-                      size="large"
-                      text="signin_with"
-                      disabled={isPending}
-                      onSuccess={() => {
-                        const redirect = searchParams.get('redirect');
-                        if (URL.canParse(redirect as string)) {
-                          const redirectUrl = new URL(redirect as string);
-
-                          if (redirectUrl.origin === window.location.origin) {
-                            window.location.replace(redirectUrl.href);
-                            return;
-                          }
-                        }
-
-                        window.location.replace('/');
-                        onLoginSuccess?.();
-                      }}
-                      onError={(error) => {
-                        console.error('Google login error:', error);
-                      }}
-                    />
-
                     <div className="text-center text-sm">
                       Chưa có tài khoản?{' '}
                       <Link
@@ -171,10 +139,14 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
           </div>
 
           <div className="relative hidden md:block">
-            <img
+            <Image
               src="/Web Background.png"
               alt="Login illustration"
               className="absolute inset-0 h-full w-full object-cover"
+              width={576}
+              height={512}
+              quality={100}
+              priority
             />
           </div>
         </CardContent>

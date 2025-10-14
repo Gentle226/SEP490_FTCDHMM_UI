@@ -23,24 +23,24 @@ export function ProtectedRoute({
 
   useEffect(() => {
     if (!isLoading) {
-      console.log('ProtectedRoute Debug:', {
+      console.error('ProtectedRoute Debug:', {
         hasUser: !!user,
         userRole: user?.role,
         requiredRoles,
         roleMatch:
           requiredRoles.length > 0
-            ? requiredRoles.includes(user?.role as any)
+            ? requiredRoles.includes(user?.role as Role)
             : 'no roles required',
       });
 
       if (!user) {
-        console.log('No user, redirecting to:', redirectTo);
+        console.error('No user, redirecting to:', redirectTo);
         router.push(redirectTo);
         return;
       }
 
-      if (requiredRoles.length > 0 && !requiredRoles.includes(user.role as any)) {
-        console.log(
+      if (requiredRoles.length > 0 && !requiredRoles.includes(user.role as Role)) {
+        console.error(
           'Role mismatch, redirecting to home. User role:',
           user.role,
           'Required:',
@@ -50,7 +50,7 @@ export function ProtectedRoute({
         return;
       }
 
-      console.log('Access granted!');
+      console.error('Access granted!');
     }
   }, [user, isLoading, requiredRoles, redirectTo, router]);
 

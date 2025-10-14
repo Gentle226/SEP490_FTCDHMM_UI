@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronRightIcon, SearchIcon } from 'lucide-react';
-import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
@@ -38,7 +38,7 @@ export default function HomePage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Implement search functionality
-    console.log('Searching for:', searchQuery);
+    console.warn('Searching for:', searchQuery);
   };
 
   // Common search and recipes section
@@ -49,10 +49,12 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-2xl text-center">
             <div className="mb-6">
-              <img
+              <Image
                 src="/Fitfood Tracker Logo.png"
                 alt="FitFood Tracker"
                 className="mx-auto mb-4 h-36 w-auto"
+                width={500}
+                height={36}
               />
             </div>
 

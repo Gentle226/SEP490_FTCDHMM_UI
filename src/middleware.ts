@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { Role, User } from '@/modules/auth/types';
 
-import { envServer } from './base/config/env-server.config';
 import { RouteUtils } from './base/utils';
 
 export const config = {
@@ -21,7 +20,7 @@ export const config = {
 
 export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get('accessToken')?.value;
-  const refreshToken = request.cookies.get('refreshToken')?.value;
+  const _refreshToken = request.cookies.get('refreshToken')?.value;
 
   const { pathname } = request.nextUrl;
   const redirectUrl = request.nextUrl.clone();
@@ -50,7 +49,7 @@ export async function middleware(request: NextRequest) {
       const userCookie = request.cookies.get('user')?.value;
 
       // Debug logging
-      console.log('Middleware Debug:', {
+      console.warn('Middleware Debug:', {
         pathname,
         hasAccessToken: !!accessToken,
         tokenExp: exp ? new Date(exp * 1000).toISOString() : 'no exp',
@@ -66,14 +65,14 @@ export async function middleware(request: NextRequest) {
       try {
         if (userCookie) {
           user = JSON.parse(userCookie) as User;
-          console.log('Parsed user from cookie:', {
+          console.warn('Parsed user from cookie:', {
             userId: user?.id,
             userEmail: user?.email,
             userRole: user?.role,
             rawCookie: userCookie.substring(0, 100) + '...', // First 100 chars
           });
         } else {
-          console.log('No user cookie found');
+          console.warn('No user cookie found');
         }
       } catch (userParseError) {
         console.error('User cookie parse error:', userParseError, 'Raw cookie:', userCookie);
@@ -83,25 +82,18 @@ export async function middleware(request: NextRequest) {
       const isTokenExpired = exp ? exp * 1000 < Date.now() : false;
       const hasValidUser = user?.id;
 
-      console.log('Validation results:', {
-        hasValidUser,
-        isTokenExpired,
-        userId: user?.id,
-        willRedirect: (isPrivateRoute || isAdminRoute || isModeratorRoute) && !hasValidUser,
-      });
-
       // For protected routes, enforce validation but be more lenient during debugging
       if (isPrivateRoute || isAdminRoute || isModeratorRoute) {
         if (!hasValidUser) {
-          console.log('❌ No valid user found, redirecting to login. User object:', user);
+          console.warn('No valid user found, redirecting to login. User object:', user);
           redirectUrl.pathname = '/auth/login';
           redirectUrl.search = '';
           redirectUrl.searchParams.set('redirect', request.nextUrl.href);
           return deleteCookieAndRedirect(redirectUrl);
         } else if (isTokenExpired) {
-          console.log('⚠️ Token expired but user valid - allowing access for debugging');
+          console.warn('Token expired but user valid - allowing access for debugging');
         } else {
-          console.log('✅ Valid user and token, allowing access');
+          console.warn('Valid user and token, allowing access');
         }
       }
 

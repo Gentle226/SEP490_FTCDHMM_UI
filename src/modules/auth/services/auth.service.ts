@@ -10,6 +10,7 @@ import {
   RegisterSchema,
   ResendOtpSchema,
   ResetPasswordWithOtpSchema,
+  Role,
   User,
   VerifyEmailOtpSchema,
 } from '@/modules/auth/types';
@@ -30,7 +31,7 @@ class AuthService extends HttpClient {
     const decodedToken = decodeJwt(res.token);
 
     // Debug logging
-    console.log('Login Debug:', {
+    console.warn('Login Debug:', {
       tokenReceived: !!res.token,
       decodedToken,
       tokenExp: decodedToken.exp ? new Date(decodedToken.exp * 1000).toISOString() : 'no exp',
@@ -38,10 +39,14 @@ class AuthService extends HttpClient {
     });
 
     // Extract user data with flexible claim mapping
-    const extractClaim = (token: any, ...possibleKeys: string[]) => {
+    const extractClaim = (
+      token: Record<string, unknown>,
+      ...possibleKeys: string[]
+    ): string | undefined => {
       for (const key of possibleKeys) {
-        if (token[key] !== undefined && token[key] !== null && token[key] !== '') {
-          return token[key];
+        const value = token[key];
+        if (value !== undefined && value !== null && value !== '') {
+          return String(value);
         }
       }
       return undefined;
@@ -77,8 +82,6 @@ class AuthService extends HttpClient {
           'authority',
         );
 
-        console.log('Raw role from JWT:', rawRole);
-
         // Map different role formats to our enum values
         const roleMapping: Record<string, string> = {
           ADMIN: 'Admin',
@@ -93,9 +96,8 @@ class AuthService extends HttpClient {
         };
 
         const mappedRole = rawRole ? roleMapping[rawRole] || rawRole : 'Customer';
-        console.log('Mapped role:', mappedRole);
 
-        return mappedRole;
+        return mappedRole as Role;
       })(),
       firstName: extractClaim(decodedToken, 'firstName', 'first_name', 'given_name', 'fname'),
       lastName: extractClaim(decodedToken, 'lastName', 'last_name', 'family_name', 'lname'),
@@ -103,18 +105,11 @@ class AuthService extends HttpClient {
       phoneNumber: extractClaim(decodedToken, 'phoneNumber', 'phone_number', 'phone', 'mobile'),
       isActive: true,
       isEmailVerified:
-        extractClaim(decodedToken, 'emailVerified', 'email_verified', 'verified') || false,
+        Boolean(extractClaim(decodedToken, 'emailVerified', 'email_verified', 'verified')) || false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    console.log('User created from token:', user);
-    console.log('Name extraction debug:', {
-      fullName: extractClaim(decodedToken, 'fullName', 'full_name', 'name', 'display_name'),
-      firstName: extractClaim(decodedToken, 'firstName', 'first_name', 'given_name', 'fname'),
-      lastName: extractClaim(decodedToken, 'lastName', 'last_name', 'family_name', 'lname'),
-      allTokenKeys: Object.keys(decodedToken),
-    });
 
     // Transform the response to match what the cookie API expects
     const loginResponse: LoginSuccessResponse = {
@@ -142,7 +137,7 @@ class AuthService extends HttpClient {
       });
     } catch (error) {
       // If API logout fails, just log it and continue with local logout
-      console.log('API logout failed, continuing with local logout:', error);
+      console.warn('API logout failed, continuing with local logout:', error);
     }
 
     // Always clear the cookies locally
@@ -184,19 +179,16 @@ class AuthService extends HttpClient {
     // Decode JWT to get user info
     const decodedToken = decodeJwt(res.token);
 
-    // Debug logging
-    console.log('Google Login Debug:', {
-      tokenReceived: !!res.token,
-      decodedToken,
-      tokenExp: decodedToken.exp ? new Date(decodedToken.exp * 1000).toISOString() : 'no exp',
-      availableClaims: Object.keys(decodedToken),
-    });
 
     // Extract user data with flexible claim mapping
-    const extractClaim = (token: any, ...possibleKeys: string[]) => {
+    const extractClaim = (
+      token: Record<string, unknown>,
+      ...possibleKeys: string[]
+    ): string | undefined => {
       for (const key of possibleKeys) {
-        if (token[key] !== undefined && token[key] !== null && token[key] !== '') {
-          return token[key];
+        const value = token[key];
+        if (value !== undefined && value !== null && value !== '') {
+          return String(value);
         }
       }
       return undefined;
@@ -246,7 +238,7 @@ class AuthService extends HttpClient {
         };
 
         const mappedRole = rawRole ? roleMapping[rawRole] || rawRole : 'Customer';
-        return mappedRole;
+        return mappedRole as Role;
       })(),
       firstName: extractClaim(decodedToken, 'firstName', 'first_name', 'given_name', 'fname'),
       lastName: extractClaim(decodedToken, 'lastName', 'last_name', 'family_name', 'lname'),
@@ -254,7 +246,7 @@ class AuthService extends HttpClient {
       phoneNumber: extractClaim(decodedToken, 'phoneNumber', 'phone_number', 'phone', 'mobile'),
       isActive: true,
       isEmailVerified:
-        extractClaim(decodedToken, 'emailVerified', 'email_verified', 'verified') || false,
+        Boolean(extractClaim(decodedToken, 'emailVerified', 'email_verified', 'verified')) || false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

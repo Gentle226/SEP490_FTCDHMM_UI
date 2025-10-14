@@ -8,12 +8,18 @@ import { googleIdentityManager } from '../utils/google-identity-manager';
 
 interface GoogleSignInButtonProps {
   onSuccess?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: unknown) => void;
   className?: string;
   disabled?: boolean;
   theme?: 'outline' | 'filled_blue' | 'filled_black';
   size?: 'large' | 'medium' | 'small';
   text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
+}
+
+interface GoogleCredentialResponse {
+  credential: string;
+  select_by: string;
+  [key: string]: unknown;
 }
 
 export function GoogleSignInButton({
@@ -32,10 +38,11 @@ export function GoogleSignInButton({
     '1013528724745-4gb7j1qedeo8n4qd07uj1grpla9ao7bf.apps.googleusercontent.com';
 
   const handleGoogleCallback = useCallback(
-    async (response: any) => {
+    async (response: unknown) => {
       try {
-        console.log('Google sign-in success:', response);
-        await authService.loginWithGoogleIdToken(response.credential);
+        const credentialResponse = response as GoogleCredentialResponse;
+        console.error('Google sign-in success:', credentialResponse);
+        await authService.loginWithGoogleIdToken(credentialResponse.credential);
         onSuccess?.();
       } catch (error) {
         console.error('Google login error:', error);

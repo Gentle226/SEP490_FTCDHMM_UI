@@ -50,7 +50,12 @@ export function PermissionManagementTable() {
   }, [currentPage]);
 
   // Helper function to convert API response to PaginationType
-  const convertToPaginationType = (data: any): PaginationType => ({
+  const convertToPaginationType = (data: {
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }): PaginationType => ({
     total: data.totalCount,
     currentPage: data.page,
     pageSize: data.pageSize,

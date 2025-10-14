@@ -45,7 +45,7 @@ export function ChangePasswordDialog({ trigger }: ChangePasswordDialogProps) {
       await changePasswordMutation.mutateAsync(data);
       form.reset();
       setOpen(false);
-    } catch (error) {
+    } catch (_error) {
       // Error is handled by the mutation
     }
   };

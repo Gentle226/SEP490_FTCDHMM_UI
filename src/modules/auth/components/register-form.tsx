@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import axios, { AxiosError, HttpStatusCode } from 'axios';
+import { AxiosError, HttpStatusCode } from 'axios';
 import { AlertCircleIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';

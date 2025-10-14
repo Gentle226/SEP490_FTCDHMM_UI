@@ -11,6 +11,7 @@ import {
   User,
   Users,
 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -149,10 +150,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <SidebarHeader>
           <div className="flex items-center gap-2 px-2 py-2 group-data-[collapsible=icon]:justify-center">
             <div className="bg-[url('/FitFood Tracker Square Logo.png')] text-primary-foreground flex h-8 w-12 flex-shrink-0 items-center justify-center rounded-lg">
-              <img
+              <Image
                 src="/FitFood Tracker Square Logo.png"
                 alt="FitFood Tracker Logo"
                 className="h-15 w-15 object-contain"
+                width={48}
+                height={48}
               />
             </div>
             <div className="flex min-w-0 flex-col transition-opacity duration-200 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:opacity-0">

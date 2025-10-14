@@ -17,11 +17,7 @@ import {
 import { Label } from '@/base/components/ui/label';
 import { ScrollArea } from '@/base/components/ui/scroll-area';
 
-import {
-  PermissionDomain,
-  PermissionToggle,
-  roleManagementService,
-} from '../services/role-management.service';
+import { PermissionToggle, roleManagementService } from '../services/role-management.service';
 
 interface EditPermissionsDialogProps {
   open: boolean;

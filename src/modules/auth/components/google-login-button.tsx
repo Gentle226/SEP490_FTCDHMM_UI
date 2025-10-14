@@ -7,9 +7,14 @@ import { authService } from '@/modules/auth/services/auth.service';
 
 import { googleIdentityManager } from '../utils/google-identity-manager';
 
+interface GoogleCredentialResponse {
+  credential: string;
+  select_by?: string;
+}
+
 interface GoogleLoginButtonProps {
   onSuccess?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: unknown) => void;
   className?: string;
   disabled?: boolean;
   text?: string;
@@ -17,7 +22,16 @@ interface GoogleLoginButtonProps {
 
 declare global {
   interface Window {
-    google: any;
+    google: {
+      accounts: {
+        id: {
+          initialize: (config: Record<string, unknown>) => void;
+          prompt: (callback?: (notification: unknown) => void) => void;
+          renderButton: (element: HTMLElement, options?: Record<string, unknown>) => void;
+          cancel: () => void;
+        };
+      };
+    };
   }
 }
 
@@ -34,10 +48,14 @@ export function GoogleLoginButton({
     '1013528724745-4gb7j1qedeo8n4qd07uj1grpla9ao7bf.apps.googleusercontent.com';
 
   const handleGoogleCallback = useCallback(
-    async (response: any) => {
+    async (response: unknown) => {
       try {
-        console.log('Google sign-in success:', response);
-        await authService.loginWithGoogleIdToken(response.credential);
+        const credentialResponse = response as GoogleCredentialResponse;
+        console.warn('Google sign-in attempt:', {
+          hasCredential: !!credentialResponse.credential,
+          selectBy: credentialResponse.select_by,
+        });
+        await authService.loginWithGoogleIdToken(credentialResponse.credential);
         onSuccess?.();
       } catch (error) {
         console.error('Google login error:', error);
@@ -46,14 +64,13 @@ export function GoogleLoginButton({
     },
     [onSuccess, onError],
   );
-
   useEffect(() => {
     const initializeGoogle = async () => {
       try {
         await googleIdentityManager.initialize(GOOGLE_CLIENT_ID, handleGoogleCallback);
         setIsInitialized(true);
       } catch (error) {
-        console.error('Failed to initialize Google Identity Services:', error);
+        console.warn('Failed to initialize Google Identity Services:', error);
         onError?.(error);
       }
     };
@@ -63,14 +80,14 @@ export function GoogleLoginButton({
 
   const handleGoogleLogin = useCallback(() => {
     if (!isInitialized) {
-      console.error('Google Identity Services not initialized');
+      console.warn('Google Identity Services not initialized');
       return;
     }
 
     try {
       googleIdentityManager.showPrompt();
     } catch (error) {
-      console.error('Error showing Google sign-in prompt:', error);
+      console.warn('Error showing Google sign-in prompt:', error);
       onError?.(error);
     }
   }, [isInitialized, onError]);

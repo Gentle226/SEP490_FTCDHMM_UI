@@ -9,16 +9,6 @@ export async function POST(request: Request) {
     ...(user.fullName && { fullName: encodeURIComponent(user.fullName) }),
   });
 
-  console.log('Setting cookies:', {
-    hasAccessToken: !!accessToken,
-    hasRefreshToken: !!refreshToken,
-    hasUser: !!user,
-    userId: user?.id,
-    userRole: user?.role,
-    userStringLength: userString.length,
-    userStringPreview: userString.substring(0, 200) + '...',
-  });
-
   if (!accessToken)
     return Response.json({ message: 'Access token not available.' }, { status: 400 });
 

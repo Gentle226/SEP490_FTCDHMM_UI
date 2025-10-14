@@ -1,6 +1,6 @@
 'use client';
 
-import { Ban, Camera, Edit, MapPin, MoreVertical, Share2, UserPlus, Users } from 'lucide-react';
+import { Ban, Edit, MapPin, MoreVertical, Share2, UserPlus, Users } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
@@ -251,7 +251,12 @@ export default function UserProfilePage() {
                     <Edit className="size-4" />
                     Sửa hồ sơ
                   </Button>
-                  <Button className="text-[#99b94a]" variant="outline" size="sm" onClick={handleShare}>
+                  <Button
+                    className="text-[#99b94a]"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleShare}
+                  >
                     <Share2 className="size-4" />
                   </Button>
                 </>

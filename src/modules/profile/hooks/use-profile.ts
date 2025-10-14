@@ -44,8 +44,10 @@ export function useUpdateProfile() {
 
       toast.success('Cập nhật hồ sơ thành công!');
     },
-    onError: (error: any) => {
-      const errorMessage = error?.response?.data?.message || 'Cập nhật hồ sơ thất bại';
+    onError: (error: unknown) => {
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        'Cập nhật hồ sơ thất bại';
       toast.error(errorMessage);
     },
   });

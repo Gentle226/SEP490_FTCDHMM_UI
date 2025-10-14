@@ -24,7 +24,7 @@ export function ConfirmLogoutDialog(props: ComponentProps<typeof AlertDialog>) {
   const { mutate: triggerLogout } = useMutation({
     mutationFn: () => authService.logout(),
     onSuccess: () => {
-      if (RouteUtils.isManagerRoute(pathname) || RouteUtils.isManagerRoute(pathname)) {
+      if (RouteUtils.isAdminRoute(pathname) || RouteUtils.isModeratorRoute(pathname)) {
         window.location.href = '/';
       } else {
         window.location.reload();

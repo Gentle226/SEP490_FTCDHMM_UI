@@ -17,7 +17,10 @@ export async function DELETE() {
   } catch (error) {
     console.error('Error deleting cookies:', error);
     return Response.json(
-      { message: 'Error deleting cookies', error: error.message },
+      {
+        message: 'Error deleting cookies',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 },
     );
   }

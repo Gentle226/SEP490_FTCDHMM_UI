@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -31,7 +32,12 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center space-x-4">
           <Link href="/" className="flex items-center">
-            <img src="/Fitfood Tracker Logo.png" alt="FitFood Tracker" className="h-16 w-auto" />
+            <Image
+              src="/Fitfood Tracker Logo.png"
+              alt="FitFood Tracker"
+              width={128}
+              height={64}
+            />
           </Link>
         </div>
 

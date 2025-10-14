@@ -1,5 +1,6 @@
 import { Skeleton } from '@/base/components/ui/skeleton';
 import { cn } from '@/base/lib';
+import Image from 'next/image';
 
 interface RecipeCardProps {
   title?: string;
@@ -28,9 +29,11 @@ export function RecipeCard({ title, author, image, className, isLoading = true }
     <div className={cn('group cursor-pointer', className)}>
       <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-gray-100">
         {image ? (
-          <img
+          <Image
             src={image}
-            alt={title}
+            alt={title || 'Recipe Image'}
+            width={400}
+            height={300}
             className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
           />
         ) : (

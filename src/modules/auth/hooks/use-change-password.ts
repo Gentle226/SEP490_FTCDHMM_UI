@@ -11,7 +11,7 @@ export function useChangePassword() {
     onSuccess: () => {
       toast.success('Đổi mật khẩu thành công!');
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       if (error instanceof AxiosError) {
         if (error.response?.status === 400) {
           toast.error('Mật khẩu hiện tại không đúng!');
