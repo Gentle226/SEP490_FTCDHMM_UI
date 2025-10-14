@@ -1,14 +1,13 @@
 'use client';
 
 import {
-  BarChart3,
   FileText,
   Home,
   KeyRound,
+  LayoutDashboard,
   MessageSquare,
   Settings,
   Shield,
-  User,
   Users,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -67,14 +66,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         icon: Home,
       },
       {
-        title: 'Bảng Điều Khiển',
+        title: 'Dữ Liệu Thống Kê',
         url: '/dashboard',
-        icon: BarChart3,
-      },
-      {
-        title: 'Hồ Sơ',
-        url: '/profile',
-        icon: User,
+        icon: LayoutDashboard,
       },
     ];
 

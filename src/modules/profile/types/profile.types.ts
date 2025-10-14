@@ -8,6 +8,9 @@ export interface ProfileDto {
   phoneNumber: string;
   gender: string;
   avatar?: string | null;
+  followersCount?: number;
+  followingCount?: number;
+  isFollowing?: boolean;
 }
 
 // Update Profile Schema for form validation
@@ -40,8 +43,15 @@ export interface UserProfile extends ProfileDto {
   bio?: string;
   location?: string;
   recipesCount?: number;
-  followersCount?: number;
-  followingCount?: number;
-  isFollowing?: boolean;
   createdAt?: string;
+}
+
+// User Follower DTO from API
+export interface UserFollower {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  avatar?: string | null;
+  fullName?: string;
 }

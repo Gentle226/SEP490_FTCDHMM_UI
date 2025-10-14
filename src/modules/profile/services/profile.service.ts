@@ -1,6 +1,6 @@
 import { HttpClient } from '@/base/lib/http-client.lib';
 
-import { ProfileDto, UpdateProfileDto } from '../types/profile.types';
+import { ProfileDto, UpdateProfileDto, UserFollower } from '../types/profile.types';
 
 class ProfileService extends HttpClient {
   constructor() {
@@ -43,13 +43,50 @@ class ProfileService extends HttpClient {
 
   /**
    * Get user profile by ID (for viewing other users' profiles)
-   * TODO: Add this endpoint to backend if needed
    * GET /api/User/profile/:userId
    */
   public async getUserProfile(userId: string): Promise<ProfileDto> {
-    // For now, if viewing own profile, use getProfile()
-    // This should be replaced when backend adds endpoint for viewing other users
     return this.get<ProfileDto>(`api/User/profile/${userId}`, {
+      isPrivateRoute: true,
+    });
+  }
+
+  /**
+   * Follow a user
+   * POST /api/User/follow/:followeeId
+   */
+  public async followUser(followeeId: string): Promise<void> {
+    return this.post<void>(`api/User/follow/${followeeId}`, null, {
+      isPrivateRoute: true,
+    });
+  }
+
+  /**
+   * Unfollow a user
+   * DELETE /api/User/unfollow/:followeeId
+   */
+  public async unfollowUser(followeeId: string): Promise<void> {
+    return this.delete<void>(`api/User/unfollow/${followeeId}`, {
+      isPrivateRoute: true,
+    });
+  }
+
+  /**
+   * Get list of followers
+   * GET /api/User/followers
+   */
+  public async getFollowers(): Promise<UserFollower[]> {
+    return this.get<UserFollower[]>('api/User/followers', {
+      isPrivateRoute: true,
+    });
+  }
+
+  /**
+   * Get list of following users
+   * GET /api/User/following
+   */
+  public async getFollowing(): Promise<UserFollower[]> {
+    return this.get<UserFollower[]>('api/User/following', {
       isPrivateRoute: true,
     });
   }

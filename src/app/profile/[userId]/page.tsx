@@ -1,6 +1,6 @@
 'use client';
 
-import { Ban, Edit, MapPin, MoreVertical, Share2, UserPlus, Users } from 'lucide-react';
+import { Ban, Edit, MapPin, MoreVertical, Share2, UserCheck, UserPlus } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
@@ -16,7 +16,15 @@ import {
 import { Skeleton } from '@/base/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/base/components/ui/tabs';
 import { useAuth } from '@/modules/auth';
-import { useProfile, useUpdateProfile, useUserProfile } from '@/modules/profile';
+import {
+  FollowersDialog,
+  FollowingDialog,
+  useFollowUser,
+  useProfile,
+  useUnfollowUser,
+  useUpdateProfile,
+  useUserProfile,
+} from '@/modules/profile';
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -24,7 +32,6 @@ export default function UserProfilePage() {
   const { user: currentUser } = useAuth();
   const userId = params.userId as string;
   const isOwnProfile = currentUser?.id === userId;
-  const [isFollowing, setIsFollowing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch profile data based on whether it's own profile or other's
@@ -33,9 +40,15 @@ export default function UserProfilePage() {
     isOwnProfile ? '' : userId,
   );
   const updateProfile = useUpdateProfile();
+  const followUser = useFollowUser();
+  const unfollowUser = useUnfollowUser();
 
   const isLoading = isOwnProfile ? isLoadingOwn : isLoadingOther;
   const profileData = isOwnProfile ? ownProfile : otherProfile;
+
+  // Track dialog visibility
+  const [showFollowersDialog, setShowFollowersDialog] = useState(false);
+  const [showFollowingDialog, setShowFollowingDialog] = useState(false);
 
   // Build profile user object from API data
   const profileUser = profileData
@@ -50,7 +63,9 @@ export default function UserProfilePage() {
           profileData.avatar ||
           `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.firstName)}+${encodeURIComponent(profileData.lastName)}&background=random`,
         recipesCount: 36, // TODO: Get from API
-        followersCount: 69, // TODO: Get from API
+        followersCount: profileData.followersCount ?? 0,
+        followingCount: profileData.followingCount ?? 0,
+        isFollowing: profileData.isFollowing ?? false,
       }
     : null;
 
@@ -77,13 +92,22 @@ export default function UserProfilePage() {
   };
 
   const handleFollow = () => {
-    setIsFollowing(!isFollowing);
-    // TODO: API call to follow/unfollow user
+    if (!userId || !profileUser || !currentUser) {
+      return;
+    }
+
+    if (profileUser.isFollowing) {
+      // Unfollow
+      unfollowUser.mutate(userId);
+    } else {
+      // Follow
+      followUser.mutate(userId);
+    }
   };
 
   const handleBlock = () => {
     // TODO: API call to block user
-    alert('Chức năng chặn người dùng');
+    alert('Chức năng chặn người dùng hiện tại chưa được hỗ trợ.');
   };
 
   const handleEditProfile = () => {
@@ -224,16 +248,44 @@ export default function UserProfilePage() {
                 </p>
 
                 <div className="flex gap-6">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold">{profileUser.recipesCount}</span>
-                    <span className="text-muted-foreground text-sm">Bạn Bếp</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold">
-                      {profileUser.followersCount.toLocaleString()}
-                    </span>
-                    <span className="text-muted-foreground text-sm">Người quan tâm</span>
-                  </div>
+                  {isOwnProfile && (
+                    <>
+                      <button
+                        onClick={() => setShowFollowersDialog(true)}
+                        className="flex items-center gap-2 transition-colors hover:text-[#99b94a]"
+                      >
+                        <span className="text-lg font-semibold">
+                          {profileUser.followersCount.toLocaleString()}
+                        </span>
+                        <span className="text-muted-foreground text-sm">Người quan tâm</span>
+                      </button>
+                      <button
+                        onClick={() => setShowFollowingDialog(true)}
+                        className="flex items-center gap-2 transition-colors hover:text-[#99b94a]"
+                      >
+                        <span className="text-lg font-semibold">
+                          {profileUser.followingCount.toLocaleString()}
+                        </span>
+                        <span className="text-muted-foreground text-sm">Đang theo dõi</span>
+                      </button>
+                    </>
+                  )}
+                  {!isOwnProfile && (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-semibold">
+                          {profileUser.followersCount.toLocaleString()}
+                        </span>
+                        <span className="text-muted-foreground text-sm">Người quan tâm</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-semibold">
+                          {profileUser.followingCount.toLocaleString()}
+                        </span>
+                        <span className="text-muted-foreground text-sm">Đang theo dõi</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -263,13 +315,19 @@ export default function UserProfilePage() {
               ) : (
                 <>
                   <Button
-                    variant={isFollowing ? 'secondary' : 'default'}
+                    variant={profileUser.isFollowing ? 'secondary' : 'default'}
                     size="sm"
+                    className={
+                      profileUser.isFollowing
+                        ? 'text-[#99b94a] hover:bg-gray-300'
+                        : 'bg-[#99b94a] text-white hover:bg-[#91af46]'
+                    }
                     onClick={handleFollow}
+                    disabled={followUser.isPending || unfollowUser.isPending}
                   >
-                    {isFollowing ? (
+                    {profileUser.isFollowing ? (
                       <>
-                        <Users className="size-4" />
+                        <UserCheck className="size-4" />
                         Đang theo dõi
                       </>
                     ) : (
@@ -279,12 +337,17 @@ export default function UserProfilePage() {
                       </>
                     )}
                   </Button>
-                  <Button variant="outline" size="sm" onClick={handleShare}>
+                  <Button
+                    variant="outline"
+                    className="text-[#99b94a]"
+                    size="sm"
+                    onClick={handleShare}
+                  >
                     <Share2 className="size-4" />
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" className="text-[#99b94a]" size="sm">
                         <MoreVertical className="size-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -331,6 +394,14 @@ export default function UserProfilePage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Followers/Following Dialogs */}
+      {isOwnProfile && (
+        <>
+          <FollowersDialog open={showFollowersDialog} onOpenChange={setShowFollowersDialog} />
+          <FollowingDialog open={showFollowingDialog} onOpenChange={setShowFollowingDialog} />
+        </>
+      )}
     </DashboardLayout>
   );
 }
