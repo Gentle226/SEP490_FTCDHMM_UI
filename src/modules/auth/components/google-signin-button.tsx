@@ -41,11 +41,9 @@ export function GoogleSignInButton({
     async (response: unknown) => {
       try {
         const credentialResponse = response as GoogleCredentialResponse;
-        console.error('Google sign-in success:', credentialResponse);
         await authService.loginWithGoogleIdToken(credentialResponse.credential);
         onSuccess?.();
       } catch (error) {
-        console.error('Google login error:', error);
         onError?.(error);
       }
     },

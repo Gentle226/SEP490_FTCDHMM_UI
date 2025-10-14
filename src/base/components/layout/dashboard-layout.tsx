@@ -18,7 +18,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -196,30 +195,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
-
-        <SidebarFooter>
-          <div className="p-2">
-            {user && (
-              <div className="bg-muted flex items-center gap-2 rounded-lg p-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2">
-                <div className="bg-primary text-primary-foreground flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm">
-                  {user.email?.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex min-w-0 flex-1 flex-col transition-opacity duration-200 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:opacity-0">
-                  <span className="truncate text-sm font-medium">
-                    {user.fullName ||
-                      (user.firstName && user.lastName
-                        ? `${user.firstName} ${user.lastName}`
-                        : null) ||
-                      user.email}
-                  </span>
-                  <span className="text-muted-foreground text-xs">{user.role}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </SidebarFooter>
       </Sidebar>
-
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
