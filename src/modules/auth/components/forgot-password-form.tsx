@@ -327,7 +327,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
             ) : (
               <Button
                 variant="ghost"
-                onClick={() => resendOtp({ email, purpose: 'reset' })}
+                onClick={() => resendOtp({ email, purpose: 'FORGOTPASSWORD' })}
                 disabled={isResendingOtp}
                 className="text-sm text-[#99b94a] underline-offset-2 hover:text-[#7a8f3a]"
               >

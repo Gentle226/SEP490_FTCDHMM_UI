@@ -289,7 +289,7 @@ function VerifyEmailStep({ email, onVerified }: VerifyEmailStepProps) {
 
   const { mutate: resendCode, isPending: isResending } = useMutation({
     mutationFn: async () => {
-      const payload: ResendOtpSchema = { email, purpose: 'ConfirmAccountEmail' };
+      const payload: ResendOtpSchema = { email, purpose: 'VERIFYACCOUNTEMAIL' };
       return authService.resendOtp(payload);
     },
     onSuccess: () => setCooldown(30),

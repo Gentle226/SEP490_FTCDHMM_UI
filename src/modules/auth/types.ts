@@ -70,8 +70,17 @@ export type VerifyEmailOtpSchema = z.infer<typeof verifyEmailOtpSchema>;
 export const resendOtpSchema = z.object({
   email: z.string().trim().email(),
   purpose: z
-    .enum(['confirm', 'confirmemail', 'ConfirmAccountEmail', 'forgot', 'forgotpassword', 'reset'])
-    .default('confirm'),
+    .enum([
+      'VERIFYACCOUNTEMAIL',
+      'FORGOTPASSWORD',
+      'confirm',
+      'confirmemail',
+      'ConfirmAccountEmail',
+      'forgot',
+      'forgotpassword',
+      'reset',
+    ])
+    .default('VERIFYACCOUNTEMAIL'),
 });
 export type ResendOtpSchema = z.infer<typeof resendOtpSchema>;
 

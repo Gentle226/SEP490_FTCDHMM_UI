@@ -195,11 +195,11 @@ export default function EditProfilePage() {
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label className="text-[#99b94a]" htmlFor="firstName">
-                  Tên *
+                  Họ *
                 </Label>
                 <Input
                   id="firstName"
-                  placeholder="Nhập tên của bạn"
+                  placeholder="Nhập họ của bạn"
                   {...form.register('firstName')}
                 />
                 {form.formState.errors.firstName && (
@@ -209,9 +209,9 @@ export default function EditProfilePage() {
 
               <div className="space-y-2">
                 <Label className="text-[#99b94a]" htmlFor="lastName">
-                  Họ *
+                  Tên *
                 </Label>
-                <Input id="lastName" placeholder="Nhập họ của bạn" {...form.register('lastName')} />
+                <Input id="lastName" placeholder="Nhập tên của bạn" {...form.register('lastName')} />
                 {form.formState.errors.lastName && (
                   <p className="text-danger text-sm">{form.formState.errors.lastName.message}</p>
                 )}
