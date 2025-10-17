@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 
@@ -9,9 +9,33 @@ import { AuthProvider } from '@/modules/auth';
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | Your App',
-    default: 'Your App',
+    template: '%s | FitFood Tracker',
+    default: 'FitFood Tracker',
   },
+  description: 'Quản lý chế độ ăn và chỉ số sức khỏe toàn diện',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'FitFood Tracker',
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: [
+      { url: '/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/web-app-manifest-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#ffffff',
 };
 
 export default async function RootLayout({

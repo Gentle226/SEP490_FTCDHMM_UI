@@ -1,6 +1,14 @@
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
+});
+
 const nextConfig: NextConfig = {
   transpilePackages: ['react-native'],
   webpack: (config, _options) => {
@@ -11,17 +19,6 @@ const nextConfig: NextConfig = {
     config.resolve.extensions = ['.web.js', '.web.ts', '.web.tsx', ...config.resolve.extensions];
     return config;
   },
-  /* config options here */
-  images: {
-    domains: ['example.com', 'shac.vn'], // Thêm domain này vào đây
-    remotePatterns: [
-      {
-        hostname: 'localhost',
-        port: '9000',
-        pathname: '/sep490-bucket/**', // Này set minIO, set sau
-      },
-    ],
-  },
 };
 
 const withNextIntl = createNextIntlPlugin({
@@ -30,4 +27,4 @@ const withNextIntl = createNextIntlPlugin({
     createMessagesDeclaration: ['./messages/en.json', './messages/vi.json'],
   },
 });
-export default withNextIntl(nextConfig);
+export default withPWA(withNextIntl(nextConfig));

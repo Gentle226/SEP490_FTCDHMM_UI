@@ -17,6 +17,10 @@
 /.next/
 /out/
 
+# pwa build
+/public/sw.js
+/public/workbox-*.js
+
 # storybook and build/cache
 storybook-static/
 dist/
