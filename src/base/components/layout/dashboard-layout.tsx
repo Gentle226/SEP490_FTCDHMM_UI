@@ -5,9 +5,9 @@ import {
   Home,
   KeyRound,
   LayoutDashboard,
-  MessageSquare,
-  Settings,
-  Shield,
+  Salad,
+  ScrollText,
+  Tags,
   Users,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -76,24 +76,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       return [
         ...commonItems,
         {
-          title: 'Quản Lý Moderator',
+          title: 'Quản Lý Kiểm Duyệt Viên',
           url: '/admin/dashboard',
-          icon: Shield,
+          icon: Users,
         },
         {
           title: 'Quản Lý Phân Quyền',
           url: '/admin/permissions',
           icon: KeyRound,
-        },
-        {
-          title: 'Cài Đặt Hệ Thống',
-          url: '/admin/settings',
-          icon: Settings,
-        },
-        {
-          title: 'Nhật Ký Kiểm Tra',
-          url: '/admin/audit-logs',
-          icon: FileText,
         },
       ];
     }
@@ -107,14 +97,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           icon: Users,
         },
         {
-          title: 'Kiểm Duyệt Nội Dung',
+          title: 'Quản Lý Nguyên Liệu',
           url: '/moderator/content',
-          icon: MessageSquare,
+          icon: Salad,
         },
         {
-          title: 'Báo Cáo Người Dùng',
-          url: '/moderator/reports',
-          icon: FileText,
+          title: 'Quản Lý Nhãn Thực Phẩm',
+          url: '/moderator/labels',
+          icon: Tags,
+        },
+        {
+          title: 'Nguyên Tắc Đăng Bài',
+          url: '/moderator/rules',
+          icon: ScrollText,
         },
       ];
     }

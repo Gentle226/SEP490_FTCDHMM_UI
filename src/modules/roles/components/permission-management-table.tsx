@@ -137,7 +137,7 @@ export function PermissionManagementTable() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-[#99b94a]">Quản Lý Quyền</h2>
+        <h2 className="text-3xl font-bold text-[#99b94a]">Quản Lý Phân Quyền</h2>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-[#99b94a] hover:bg-[#7a8f3a]">
@@ -154,7 +154,9 @@ export function PermissionManagementTable() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="roleName">Tên Vai Trò</Label>
+                <Label className="mb-2" htmlFor="roleName">
+                  Tên Vai Trò
+                </Label>
                 <Input
                   id="roleName"
                   type="text"
