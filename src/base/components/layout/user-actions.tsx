@@ -26,20 +26,22 @@ interface UserActionsProps {
 export function UserActions({ user, onLogout }: UserActionsProps) {
   const { data: profile } = useProfile();
 
+  // Prioritize profile data over user data for names
+  const firstName = profile?.firstName || user?.firstName;
+  const lastName = profile?.lastName || user?.lastName;
+
   const displayName =
-    user?.fullName ||
-    (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : null) ||
-    user?.email;
+    (firstName && lastName ? `${firstName} ${lastName}` : null) || user?.fullName || user?.email;
 
   const avatarUrl =
     profile?.avatar ||
-    (user?.firstName && user?.lastName
-      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName)}+${encodeURIComponent(user.lastName)}&background=random`
+    (firstName && lastName
+      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}+${encodeURIComponent(lastName)}&background=random`
       : undefined);
 
   const initials =
-    user?.firstName && user?.lastName
-      ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+    firstName && lastName
+      ? `${firstName[0]}${lastName[0]}`.toUpperCase()
       : (user?.email?.[0] || 'U').toUpperCase();
 
   if (user) {
