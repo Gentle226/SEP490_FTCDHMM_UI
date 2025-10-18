@@ -242,7 +242,7 @@ export function UserManagementTable({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Verified':
-        return <Badge className="bg-[#99b94a] text-white">Đã xác thực</Badge>;
+        return <Badge className="bg-[#99b94a] text-white flex content-center">Đã xác thực</Badge>;
       case 'Unverified':
         return <Badge variant="secondary">Chưa xác thực</Badge>;
       case 'Locked':
@@ -336,7 +336,7 @@ export function UserManagementTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Tên</TableHead>
+              <TableHead className="pl-6">Tên</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Trạng Thái</TableHead>
               <TableHead>Ngày Tạo</TableHead>
@@ -367,7 +367,7 @@ export function UserManagementTable({
             ) : (
               usersData?.items?.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell>{`${user.firstName} ${user.lastName}`}</TableCell>
+                  <TableCell className="pl-6">{`${user.firstName} ${user.lastName}`}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{getStatusBadge(user.status)}</TableCell>
                   <TableCell>{new Date(user.createdDateUTC).toLocaleDateString()}</TableCell>

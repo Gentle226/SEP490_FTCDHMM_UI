@@ -185,16 +185,16 @@ export function PermissionManagementTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-48">Vai Trò</TableHead>
+              <TableHead className="w-36 pl-6">Vai Trò</TableHead>
               <TableHead className="w-36">Trạng Thái</TableHead>
-              <TableHead className="w-24">Hành Động</TableHead>
-              <TableHead className="w-28">Quyền</TableHead>
+              <TableHead className="w-36">Hành Động</TableHead>
+              <TableHead className="w-36">Quyền</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rolesData?.items?.map((role) => (
               <TableRow key={role.id}>
-                <TableCell className="w-48 font-medium">{role.name}</TableCell>
+                <TableCell className="w-36 pl-6 font-medium">{role.name}</TableCell>
                 <TableCell className="w-36">
                   {role.isActive ? (
                     <Badge className="w-32 justify-center bg-[#99b94a]">Hoạt động</Badge>
@@ -204,7 +204,7 @@ export function PermissionManagementTable() {
                     </Badge>
                   )}
                 </TableCell>
-                <TableCell className="w-24">
+                <TableCell className="w-36">
                   <div className="flex items-center space-x-2">
                     <Switch
                       checked={role.isActive}
@@ -216,7 +216,7 @@ export function PermissionManagementTable() {
                     </span>
                   </div>
                 </TableCell>
-                <TableCell className="w-28">
+                <TableCell className="w-36">
                   <Button variant="outline" size="sm" onClick={() => handleEditPermissions(role)}>
                     <Edit className="mr-1 h-3 w-3" />
                     Chỉnh Sửa
