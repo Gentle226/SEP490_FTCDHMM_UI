@@ -39,6 +39,44 @@ export function Pagination({ pagination }: { pagination: PaginationType }) {
     router.push(`${pathname}?${params.toString()}`);
   };
 
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const { currentPage, totalPage } = pagination;
+    const pages: (number | 'ellipsis')[] = [];
+    const delta = 2; // Number of pages to show on each side of current page
+
+    // Always show first page
+    pages.push(1);
+
+    // Calculate range around current page
+    const rangeStart = Math.max(2, currentPage - delta);
+    const rangeEnd = Math.min(totalPage - 1, currentPage + delta);
+
+    // Add ellipsis after first page if needed
+    if (rangeStart > 2) {
+      pages.push('ellipsis');
+    }
+
+    // Add pages around current page
+    for (let i = rangeStart; i <= rangeEnd; i++) {
+      pages.push(i);
+    }
+
+    // Add ellipsis before last page if needed
+    if (rangeEnd < totalPage - 1) {
+      pages.push('ellipsis');
+    }
+
+    // Always show last page if it's different from first page
+    if (totalPage > 1) {
+      pages.push(totalPage);
+    }
+
+    return pages;
+  };
+
+  const pageNumbers = getPageNumbers();
+
   return (
     <PaginationComp>
       <PaginationContent>
@@ -50,50 +88,28 @@ export function Pagination({ pagination }: { pagination: PaginationType }) {
             onClick={() => navigateToPrevPage()}
           />
         </PaginationItem>
-        {/* Always show page 1 */}
-        <PaginationItem>
-          <PaginationLink
-            onClick={pagination.currentPage !== 1 ? () => navigateToPage(1) : undefined}
-            isActive={pagination.currentPage === 1}
-          >
-            1
-          </PaginationLink>
-        </PaginationItem>
 
-        {/* Show ellipsis if there's a gap between page 1 and current page */}
-        {pagination.currentPage - 1 > 1 && (
-          <PaginationItem>
-            <PaginationEllipsis />
-          </PaginationItem>
-        )}
-        {pagination.currentPage > 1 && pagination.currentPage < pagination.totalPage && (
-          <PaginationItem>
-            <PaginationLink isActive={true}>{pagination.currentPage}</PaginationLink>
-          </PaginationItem>
-        )}
+        {pageNumbers.map((page, index) => {
+          if (page === 'ellipsis') {
+            return (
+              <PaginationItem key={`ellipsis-${index}`}>
+                <PaginationEllipsis />
+              </PaginationItem>
+            );
+          }
 
-        {/* Show ellipsis if there's a gap between current page and last page */}
-        {pagination.totalPage - pagination.currentPage > 1 && (
-          <PaginationItem>
-            <PaginationEllipsis />
-          </PaginationItem>
-        )}
+          return (
+            <PaginationItem key={page}>
+              <PaginationLink
+                onClick={pagination.currentPage !== page ? () => navigateToPage(page) : undefined}
+                isActive={pagination.currentPage === page}
+              >
+                {page}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        })}
 
-        {/* Show last page if it's different from page 1 */}
-        {pagination.totalPage > 1 && (
-          <PaginationItem>
-            <PaginationLink
-              onClick={
-                pagination.currentPage !== pagination.totalPage
-                  ? () => navigateToPage(pagination.totalPage)
-                  : undefined
-              }
-              isActive={pagination.currentPage === pagination.totalPage}
-            >
-              {pagination.totalPage}
-            </PaginationLink>
-          </PaginationItem>
-        )}
         <PaginationItem>
           <PaginationNext
             className={cn({
