@@ -98,17 +98,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         },
         {
           title: 'Quản Lý Nguyên Liệu',
-          url: '/moderator/content',
+          url: '/moderator/ingredient',
           icon: Salad,
         },
         {
           title: 'Quản Lý Nhãn Thực Phẩm',
-          url: '/moderator/labels',
+          url: '/moderator/label',
           icon: Tags,
         },
         {
           title: 'Nguyên Tắc Đăng Bài',
-          url: '/moderator/rules',
+          url: '/moderator/rule',
           icon: ScrollText,
         },
       ];

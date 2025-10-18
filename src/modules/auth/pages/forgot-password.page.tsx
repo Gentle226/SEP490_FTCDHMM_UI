@@ -21,18 +21,26 @@ export function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex grow items-center justify-center p-24">
+    <div className="flex min-h-svh grow items-center justify-center p-4 sm:p-6 md:p-10 lg:p-24">
       <Card className="border-border/60 w-full max-w-md shadow-xl">
-        <CardHeader className="space-y-3">
+        <CardHeader className="space-y-2 sm:space-y-3">
           <div className="flex justify-center">
-            <Image src="/Fitfood Tracker Logo.png" alt="Logo" width={150} height={150} />
+            <Image
+              src="/Fitfood Tracker Logo.png"
+              alt="Logo"
+              width={150}
+              height={150}
+              className="h-24 w-auto sm:h-32"
+            />
           </div>
-          <CardTitle className="text-center text-3xl text-[#99b94a]">Đặt lại mật khẩu</CardTitle>
-          <CardDescription className="text-muted-foreground text-center text-sm">
+          <CardTitle className="text-center text-2xl text-[#99b94a] sm:text-3xl">
+            Đặt lại mật khẩu
+          </CardTitle>
+          <CardDescription className="text-muted-foreground text-center text-xs sm:text-sm">
             Khôi phục quyền truy cập vào tài khoản của bạn
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 pb-6 sm:px-6">
           <ForgotPasswordForm onBackToLogin={handleBackToLogin} />
         </CardContent>
       </Card>

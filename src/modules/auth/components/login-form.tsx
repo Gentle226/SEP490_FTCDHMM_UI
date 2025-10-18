@@ -51,6 +51,18 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
         <CardContent className="grid p-0 md:grid-cols-2">
           <div className="p-6 md:p-8">
             <div className="flex flex-col gap-6">
+              {/* Logo for mobile - hidden on desktop */}
+              <div className="flex justify-center md:hidden">
+                <Image
+                  src="/FitFood Tracker Logo.png"
+                  alt="FitFood Tracker Logo"
+                  width={120}
+                  height={120}
+                  className="h-24 w-auto"
+                  priority
+                />
+              </div>
+
               <div className="flex flex-col items-center text-center">
                 <h1 className="text-2xl font-bold text-[#99b94a]">Chào mừng trở lại</h1>
                 <p className="text-muted-foreground text-balance">

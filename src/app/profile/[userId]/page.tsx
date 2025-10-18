@@ -155,18 +155,18 @@ export default function UserProfilePage() {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="mx-auto max-w-4xl space-y-6">
-          <div className="bg-card rounded-lg border p-6">
-            <div className="flex items-start justify-between">
-              <div className="flex gap-6">
-                <Skeleton className="size-24 rounded-full" />
+        <div className="mx-auto max-w-4xl space-y-4 px-4 sm:space-y-6 sm:px-6">
+          <div className="bg-card rounded-lg border p-4 sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex gap-4 sm:gap-6">
+                <Skeleton className="size-20 shrink-0 rounded-full sm:size-24" />
                 <div className="space-y-3">
-                  <Skeleton className="h-8 w-48" />
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-16 w-96" />
-                  <div className="flex gap-6">
-                    <Skeleton className="h-6 w-24" />
-                    <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-6 w-32 sm:h-8 sm:w-48" />
+                  <Skeleton className="h-4 w-24 sm:w-32" />
+                  <Skeleton className="hidden h-16 w-64 sm:block sm:w-96" />
+                  <div className="flex gap-4 sm:gap-6">
+                    <Skeleton className="h-6 w-20 sm:w-24" />
+                    <Skeleton className="h-6 w-24 sm:w-32" />
                   </div>
                 </div>
               </div>
@@ -181,11 +181,13 @@ export default function UserProfilePage() {
   if (!profileUser) {
     return (
       <DashboardLayout>
-        <div className="mx-auto max-w-4xl space-y-6">
-          <div className="bg-card rounded-lg border p-6">
+        <div className="mx-auto max-w-4xl space-y-4 px-4 sm:space-y-6 sm:px-6">
+          <div className="bg-card rounded-lg border p-4 sm:p-6">
             <div className="text-center">
-              <h2 className="text-xl font-semibold text-[#99b94a]">Không tìm thấy hồ sơ</h2>
-              <p className="text-muted-foreground mt-2">
+              <h2 className="text-lg font-semibold text-[#99b94a] sm:text-xl">
+                Không tìm thấy hồ sơ
+              </h2>
+              <p className="text-muted-foreground mt-2 text-sm sm:text-base">
                 Hồ sơ người dùng không tồn tại hoặc đã bị xóa.
               </p>
               <Button className="mt-4 bg-[#99b94a]" onClick={() => router.push('/')}>
@@ -200,19 +202,20 @@ export default function UserProfilePage() {
 
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-4xl space-y-6">
+      <div className="mx-auto max-w-4xl space-y-4 px-4 sm:space-y-6 sm:px-6">
         {/* Profile Header */}
-        <div className="bg-card rounded-lg border p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex gap-6">
+        <div className="bg-card rounded-lg border p-4 sm:p-6">
+          {/* Mobile: Stack vertically, Desktop: Side by side */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex gap-4 sm:gap-6">
               {/* Avatar */}
-              <div className="relative">
+              <div className="relative shrink-0">
                 <Avatar
-                  className={`border-primary/20 size-24 border-2 ${isOwnProfile ? 'cursor-pointer transition-opacity hover:opacity-80' : ''}`}
+                  className={`border-primary/20 size-20 border-2 sm:size-24 ${isOwnProfile ? 'cursor-pointer transition-opacity hover:opacity-80' : ''}`}
                   onClick={handleAvatarClick}
                 >
                   <AvatarImage src={profileUser.avatar} alt={profileUser.fullName} />
-                  <AvatarFallback className="text-2xl">
+                  <AvatarFallback className="text-lg sm:text-2xl">
                     {profileUser.fullName
                       .split(' ')
                       .map((n) => n[0])
@@ -231,58 +234,62 @@ export default function UserProfilePage() {
               </div>
 
               {/* User Info */}
-              <div className="flex-1 space-y-3">
+              <div className="flex-1 space-y-2 sm:space-y-3">
                 <div>
-                  <h1 className="text-2xl font-bold">{profileUser.fullName}</h1>
-                  <p className="text-muted-foreground text-sm">{profileUser.handle}</p>
+                  <h1 className="text-xl font-bold sm:text-2xl">{profileUser.fullName}</h1>
+                  <p className="text-muted-foreground text-xs sm:text-sm">{profileUser.handle}</p>
                   {profileUser.location && (
-                    <div className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
-                      <MapPin className="size-4" />
+                    <div className="text-muted-foreground mt-1 flex items-center gap-1 text-xs sm:text-sm">
+                      <MapPin className="size-3 sm:size-4" />
                       <span>{profileUser.location}</span>
                     </div>
                   )}
                 </div>
 
-                <p className="text-foreground max-w-2xl text-sm leading-relaxed">
+                <p className="text-foreground hidden max-w-2xl text-sm leading-relaxed sm:block">
                   {profileUser.bio}
                 </p>
 
-                <div className="flex gap-6">
+                <div className="flex flex-wrap gap-4 sm:gap-6">
                   {isOwnProfile && (
                     <>
                       <button
-                        onClick={() => setShowFollowersDialog(true)}
-                        className="flex items-center gap-2 transition-colors hover:text-[#99b94a]"
-                      >
-                        <span className="text-lg font-semibold">
-                          {profileUser.followersCount.toLocaleString()}
-                        </span>
-                        <span className="text-muted-foreground text-sm">Người quan tâm</span>
-                      </button>
-                      <button
                         onClick={() => setShowFollowingDialog(true)}
-                        className="flex items-center gap-2 transition-colors hover:text-[#99b94a]"
+                        className="flex items-center gap-1.5 transition-colors hover:text-[#99b94a] sm:gap-2"
                       >
-                        <span className="text-lg font-semibold">
+                        <span className="text-base font-semibold sm:text-lg">
                           {profileUser.followingCount.toLocaleString()}
                         </span>
-                        <span className="text-muted-foreground text-sm">Đang theo dõi</span>
+                        <span className="text-muted-foreground text-xs sm:text-sm">Bạn Bếp</span>
+                      </button>
+                      <button
+                        onClick={() => setShowFollowersDialog(true)}
+                        className="flex items-center gap-1.5 transition-colors hover:text-[#99b94a] sm:gap-2"
+                      >
+                        <span className="text-base font-semibold sm:text-lg">
+                          {profileUser.followersCount.toLocaleString()}
+                        </span>
+                        <span className="text-muted-foreground text-xs sm:text-sm">
+                          Đang theo dõi
+                        </span>
                       </button>
                     </>
                   )}
                   {!isOwnProfile && (
                     <>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-semibold">
-                          {profileUser.followersCount.toLocaleString()}
-                        </span>
-                        <span className="text-muted-foreground text-sm">Người quan tâm</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-semibold">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <span className="text-base font-semibold sm:text-lg">
                           {profileUser.followingCount.toLocaleString()}
                         </span>
-                        <span className="text-muted-foreground text-sm">Đang theo dõi</span>
+                        <span className="text-muted-foreground text-xs sm:text-sm">Bạn Bếp</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <span className="text-base font-semibold sm:text-lg">
+                          {profileUser.followersCount.toLocaleString()}
+                        </span>
+                        <span className="text-muted-foreground text-xs sm:text-sm">
+                          Đang theo dõi
+                        </span>
                       </div>
                     </>
                   )}
@@ -290,18 +297,23 @@ export default function UserProfilePage() {
               </div>
             </div>
 
+            {/* Bio - Mobile only */}
+            <p className="text-foreground -mt-2 max-w-2xl text-sm leading-relaxed sm:hidden">
+              {profileUser.bio}
+            </p>
+
             {/* Action Buttons */}
-            <div className="flex items-center gap-2">
+            <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
               {isOwnProfile ? (
                 <>
                   <Button
-                    className="text-[#99b94a]"
+                    className="flex-1 text-[#99b94a] sm:flex-none"
                     variant="outline"
                     size="sm"
                     onClick={handleEditProfile}
                   >
                     <Edit className="size-4" />
-                    Sửa hồ sơ
+                    <span className="sm:inline">Sửa hồ sơ</span>
                   </Button>
                   <Button
                     className="text-[#99b94a]"
@@ -317,23 +329,23 @@ export default function UserProfilePage() {
                   <Button
                     variant={profileUser.isFollowing ? 'secondary' : 'default'}
                     size="sm"
-                    className={
+                    className={`flex-1 sm:flex-none ${
                       profileUser.isFollowing
                         ? 'text-[#99b94a] hover:bg-gray-300'
                         : 'bg-[#99b94a] text-white hover:bg-[#91af46]'
-                    }
+                    }`}
                     onClick={handleFollow}
                     disabled={followUser.isPending || unfollowUser.isPending}
                   >
                     {profileUser.isFollowing ? (
                       <>
                         <UserCheck className="size-4" />
-                        Đang theo dõi
+                        <span className="hidden sm:inline">Đang theo dõi</span>
                       </>
                     ) : (
                       <>
                         <UserPlus className="size-4" />
-                        Theo dõi
+                        <span className="hidden sm:inline">Theo dõi</span>
                       </>
                     )}
                   </Button>
@@ -367,16 +379,16 @@ export default function UserProfilePage() {
         {/* Tabs for Recipes and Cooksnaps */}
         <Tabs defaultValue="recipes" className="w-full">
           <TabsList className="w-full">
-            <TabsTrigger value="recipes" className="flex-1">
+            <TabsTrigger value="recipes" className="flex-1 text-xs sm:text-sm">
               Công thức ({profileUser.recipesCount})
             </TabsTrigger>
-            <TabsTrigger value="cooksnaps" className="flex-1">
+            <TabsTrigger value="cooksnaps" className="flex-1 text-xs sm:text-sm">
               Mục gì đó khác
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="recipes" className="mt-6">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <TabsContent value="recipes" className="mt-4 sm:mt-6">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
               {/* Recipe Cards - Using Skeleton as placeholder */}
               {Array.from({ length: 6 }).map((_, index) => (
                 <RecipeCardSkeleton key={index} />
@@ -384,8 +396,8 @@ export default function UserProfilePage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="cooksnaps" className="mt-6">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <TabsContent value="cooksnaps" className="mt-4 sm:mt-6">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
               {/* Cooksnap Cards - Using Skeleton as placeholder */}
               {Array.from({ length: 6 }).map((_, index) => (
                 <RecipeCardSkeleton key={index} />
@@ -413,20 +425,20 @@ function RecipeCardSkeleton() {
       <div className="aspect-video">
         <Skeleton className="size-full rounded-none" />
       </div>
-      <div className="space-y-3 p-4">
-        <div className="space-y-2">
-          <Skeleton className="h-5 w-3/4" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-2/3" />
+      <div className="space-y-2 p-3 sm:space-y-3 sm:p-4">
+        <div className="space-y-1.5 sm:space-y-2">
+          <Skeleton className="h-4 w-3/4 sm:h-5" />
+          <Skeleton className="h-3 w-full sm:h-4" />
+          <Skeleton className="h-3 w-2/3 sm:h-4" />
         </div>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Skeleton className="size-6 rounded-full" />
-            <Skeleton className="h-4 w-20" />
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Skeleton className="size-5 rounded-full sm:size-6" />
+            <Skeleton className="h-3 w-16 sm:h-4 sm:w-20" />
           </div>
-          <div className="flex gap-2">
-            <Skeleton className="h-4 w-12" />
-            <Skeleton className="h-4 w-12" />
+          <div className="flex gap-1.5 sm:gap-2">
+            <Skeleton className="h-3 w-10 sm:h-4 sm:w-12" />
+            <Skeleton className="h-3 w-10 sm:h-4 sm:w-12" />
           </div>
         </div>
       </div>

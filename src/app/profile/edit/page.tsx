@@ -258,7 +258,7 @@ export default function EditProfilePage() {
                 onClick={() => router.push(`/profile/${user.id}`)}
                 disabled={updateProfile.isPending}
               >
-                Hủy
+                Trở về
               </Button>
               <Button className="bg-[#99b94a]" type="submit" loading={updateProfile.isPending}>
                 <Save className="size-4" />
