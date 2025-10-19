@@ -75,6 +75,47 @@ class IngredientManagementService extends HttpClient {
       isPrivateRoute: true,
     });
   }
+
+  /**
+   * Update ingredient
+   */
+  public async updateIngredient(
+    id: string,
+    data: {
+      description?: string;
+      image?: File | string;
+      nutrients?: Nutrient[];
+    },
+  ) {
+    const formData = new FormData();
+
+    if (data.description !== undefined) {
+      formData.append('Description', data.description);
+    }
+
+    if (data.image instanceof File) {
+      formData.append('Image', data.image);
+    }
+
+    if (data.nutrients && data.nutrients.length > 0) {
+      data.nutrients.forEach((nutrient, index) => {
+        formData.append(`Nutrients[${index}].name`, nutrient.name);
+        if (nutrient.min !== undefined) {
+          formData.append(`Nutrients[${index}].min`, nutrient.min.toString());
+        }
+        if (nutrient.max !== undefined) {
+          formData.append(`Nutrients[${index}].max`, nutrient.max.toString());
+        }
+        if (nutrient.median !== undefined) {
+          formData.append(`Nutrients[${index}].median`, nutrient.median.toString());
+        }
+      });
+    }
+
+    return this.put<Ingredient>(`api/Ingredient/${id}`, formData, {
+      isPrivateRoute: true,
+    });
+  }
 }
 
 export const ingredientManagementService = new IngredientManagementService();

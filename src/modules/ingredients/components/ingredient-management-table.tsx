@@ -38,6 +38,7 @@ import {
   PaginationParams,
   ingredientManagementService,
 } from '../services/ingredient-management.service';
+import { EditIngredientDialog } from './edit-ingredient-dialog';
 
 // Custom debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -73,6 +74,7 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   // Sync state with URL params
   useEffect(() => {
@@ -168,9 +170,9 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
     setDetailDialogOpen(true);
   };
 
-  const handleEdit = (_ingredient: Ingredient) => {
-    // TODO: Navigate to edit page or open edit dialog
-    // router.push(`/moderator/ingredient/${ingredient.id}/edit`);
+  const handleEdit = (ingredient: Ingredient) => {
+    setSelectedIngredient(ingredient);
+    setEditDialogOpen(true);
   };
 
   const handleClearSearch = () => {
@@ -420,6 +422,13 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Edit Dialog */}
+      <EditIngredientDialog
+        ingredient={selectedIngredient}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+      />
     </div>
   );
 }
