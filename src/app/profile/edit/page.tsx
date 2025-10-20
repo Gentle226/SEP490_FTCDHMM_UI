@@ -32,7 +32,7 @@ export default function EditProfilePage() {
       lastName: '',
       phoneNumber: '',
       gender: '',
-      avatar: null,
+      avatarUrl: null,
     },
   });
 
@@ -44,12 +44,12 @@ export default function EditProfilePage() {
         lastName: profile.lastName,
         phoneNumber: profile.phoneNumber,
         gender: profile.gender,
-        avatar: null,
+        avatarUrl: null,
       });
 
       // Set avatar preview if exists
-      if (profile.avatar) {
-        setAvatarPreview(profile.avatar);
+      if (profile.avatarUrl) {
+        setAvatarPreview(profile.avatarUrl);
       }
     }
   }, [profile, form]);
@@ -61,7 +61,7 @@ export default function EditProfilePage() {
         lastName: data.lastName,
         phoneNumber: data.phoneNumber,
         gender: data.gender,
-        avatar: data.avatar || null,
+        avatarUrl: data.avatarUrl || null,
       });
 
       // After successful update, redirect to profile
@@ -77,7 +77,7 @@ export default function EditProfilePage() {
     if (file) {
       // Validate file size (2MB max)
       if (file.size > 2 * 1024 * 1024) {
-        form.setError('avatar', {
+        form.setError('avatarUrl', {
           type: 'manual',
           message: 'Kích thước file không được vượt quá 2MB',
         });
@@ -87,15 +87,15 @@ export default function EditProfilePage() {
       // Validate file type - only JPG, PNG, and GIF are supported
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(file.type.toLowerCase())) {
-        form.setError('avatar', {
+        form.setError('avatarUrl', {
           type: 'manual',
           message: 'Chỉ chấp nhận file ảnh định dạng JPG, PNG hoặc GIF',
         });
         return;
       }
 
-      form.setValue('avatar', file);
-      form.clearErrors('avatar');
+      form.setValue('avatarUrl', file);
+      form.clearErrors('avatarUrl');
 
       // Create preview URL
       const reader = new FileReader();
@@ -153,7 +153,7 @@ export default function EditProfilePage() {
               <AvatarImage
                 src={
                   avatarPreview ||
-                  profile?.avatar ||
+                  profile?.avatarUrl ||
                   `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=random`
                 }
                 alt={user.fullName || user.email}
@@ -184,8 +184,10 @@ export default function EditProfilePage() {
               <p className="text-muted-foreground mt-2 text-sm">
                 JPG, PNG hoặc GIF. Kích thước tối đa 2MB.
               </p>
-              {form.formState.errors.avatar && (
-                <p className="text-danger mt-1 text-sm">{form.formState.errors.avatar.message}</p>
+              {form.formState.errors.avatarUrl && (
+                <p className="text-danger mt-1 text-sm">
+                  {form.formState.errors.avatarUrl.message}
+                </p>
               )}
             </div>
           </div>
@@ -211,7 +213,11 @@ export default function EditProfilePage() {
                 <Label className="text-[#99b94a]" htmlFor="lastName">
                   Tên *
                 </Label>
-                <Input id="lastName" placeholder="Nhập tên của bạn" {...form.register('lastName')} />
+                <Input
+                  id="lastName"
+                  placeholder="Nhập tên của bạn"
+                  {...form.register('lastName')}
+                />
                 {form.formState.errors.lastName && (
                   <p className="text-danger text-sm">{form.formState.errors.lastName.message}</p>
                 )}

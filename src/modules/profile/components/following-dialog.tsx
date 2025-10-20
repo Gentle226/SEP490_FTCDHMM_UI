@@ -55,7 +55,7 @@ export function FollowingDialog({ open, onOpenChange }: FollowingDialogProps) {
                 onClick={() => onOpenChange(false)}
               >
                 <Avatar className="size-10">
-                  <AvatarImage src={user.avatar || undefined} />
+                  <AvatarImage src={user.avatarUrl || undefined} />
                   <AvatarFallback>
                     <User className="size-5" />
                   </AvatarFallback>

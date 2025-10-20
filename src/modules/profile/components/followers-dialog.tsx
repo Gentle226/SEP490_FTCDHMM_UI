@@ -55,7 +55,7 @@ export function FollowersDialog({ open, onOpenChange }: FollowersDialogProps) {
                 onClick={() => onOpenChange(false)}
               >
                 <Avatar className="size-10">
-                  <AvatarImage src={follower.avatar || undefined} />
+                  <AvatarImage src={follower.avatarUrl || undefined} />
                   <AvatarFallback>
                     <User className="size-5" />
                   </AvatarFallback>

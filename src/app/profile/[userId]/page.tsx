@@ -59,8 +59,8 @@ export default function UserProfilePage() {
         handle: `@${profileData.email.split('@')[0]}`,
         location: 'Thanh Hóa', // TODO: Add location field to API
         bio: 'Đam mê nấu ăn :)', // TODO: Add bio field to API
-        avatar:
-          profileData.avatar ||
+        avatarUrl:
+          profileData.avatarUrl ||
           `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.firstName)}+${encodeURIComponent(profileData.lastName)}&background=random`,
         recipesCount: 36, // TODO: Get from API
         followersCount: profileData.followersCount ?? 0,
@@ -138,7 +138,7 @@ export default function UserProfilePage() {
         lastName: profileData.lastName,
         phoneNumber: profileData.phoneNumber,
         gender: profileData.gender,
-        avatar: file,
+        avatarUrl: file,
       });
     } catch (error) {
       console.error('Error updating avatar:', error);
@@ -214,7 +214,7 @@ export default function UserProfilePage() {
                   className={`border-primary/20 size-20 border-2 sm:size-24 ${isOwnProfile ? 'cursor-pointer transition-opacity hover:opacity-80' : ''}`}
                   onClick={handleAvatarClick}
                 >
-                  <AvatarImage src={profileUser.avatar} alt={profileUser.fullName} />
+                  <AvatarImage src={profileUser.avatarUrl} alt={profileUser.fullName} />
                   <AvatarFallback className="text-lg sm:text-2xl">
                     {profileUser.fullName
                       .split(' ')

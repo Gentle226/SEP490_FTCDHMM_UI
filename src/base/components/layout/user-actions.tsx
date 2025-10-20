@@ -34,7 +34,7 @@ export function UserActions({ user, onLogout }: UserActionsProps) {
     (firstName && lastName ? `${firstName} ${lastName}` : null) || user?.fullName || user?.email;
 
   const avatarUrl =
-    profile?.avatar ||
+    profile?.avatarUrl ||
     (firstName && lastName
       ? `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}+${encodeURIComponent(lastName)}&background=random`
       : undefined);
