@@ -151,18 +151,22 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
   const formatDate = (dateString: string | undefined | null) => {
     if (!dateString) return 'N/A';
 
-    const date = new Date(dateString);
+    try {
+      // Parse ISO 8601 format: "2025-10-02T06:31:14.042026"
+      // Create date by parsing the string - date-fns will handle it
+      const date = new Date(dateString);
 
-    // Check if date is valid
-    if (isNaN(date.getTime())) return 'N/A';
+      // Check if date is valid
+      if (isNaN(date.getTime())) return 'N/A';
 
-    return new Intl.DateTimeFormat('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
+      return new Intl.DateTimeFormat('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(date);
+    } catch {
+      return 'N/A';
+    }
   };
 
   const handleViewDetails = (ingredient: Ingredient) => {

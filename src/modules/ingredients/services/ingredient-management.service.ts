@@ -18,7 +18,7 @@ export interface Ingredient {
   description?: string;
   image?: string;
   ingredientCategoryIds: string[];
-  categoryNames?: string[]; // Populated from categories
+  categoryNames?: string[];
   nutrients: Nutrient[];
   lastUpdatedUtc: string;
   createdAtUtc: string;
@@ -47,11 +47,11 @@ class IngredientManagementService extends HttpClient {
    * Get paginated ingredients
    */
   public async getIngredients(params: PaginationParams = {}) {
-    const queryParams = new URLSearchParams({
-      page: (params.page || 1).toString(),
-      pageSize: (params.pageSize || 10).toString(),
-      ...(params.search && { search: params.search }),
-    });
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('PaginationParams.PageNumber', params.page.toString());
+    if (params.pageSize)
+      queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
+    if (params.search) queryParams.append('Keyword', params.search);
 
     return this.get<IngredientsResponse>(`api/Ingredient?${queryParams.toString()}`, {
       isPrivateRoute: true,

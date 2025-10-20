@@ -50,8 +50,9 @@ class RoleManagementService extends HttpClient {
 
   public async getRoles(params: PaginationParams = {}) {
     const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append('Page', params.page.toString());
-    if (params.pageSize) queryParams.append('PageSize', params.pageSize.toString());
+    if (params.page) queryParams.append('PaginationParams.PageNumber', params.page.toString());
+    if (params.pageSize)
+      queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
 
     return this.get<PaginatedResponse<Role>>(`api/Role?${queryParams}`, {
       isPrivateRoute: true,

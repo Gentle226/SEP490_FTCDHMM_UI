@@ -5,7 +5,7 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  createdDateUTC: string;
+  createdAtUTC: string;
   status: string;
 }
 
@@ -44,9 +44,10 @@ class UserManagementService extends HttpClient {
   // Customer management (for Moderators)
   public async getCustomers(params: PaginationParams = {}) {
     const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append('Page', params.page.toString());
-    if (params.pageSize) queryParams.append('PageSize', params.pageSize.toString());
-    if (params.search) queryParams.append('Search', params.search);
+    if (params.page) queryParams.append('PaginationParams.PageNumber', params.page.toString());
+    if (params.pageSize)
+      queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
+    if (params.search) queryParams.append('Keyword', params.search);
 
     return this.get<PaginatedResponse<User>>(`api/User/getCustomers?${queryParams}`, {
       isPrivateRoute: true,
@@ -68,9 +69,11 @@ class UserManagementService extends HttpClient {
   // Moderator management (for Admins)
   public async getModerators(params: PaginationParams = {}) {
     const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append('Page', params.page.toString());
-    if (params.pageSize) queryParams.append('PageSize', params.pageSize.toString());
-    if (params.search) queryParams.append('Search', params.search);
+    // Backend expects nested PaginationParams and Keyword
+    if (params.page) queryParams.append('PaginationParams.PageNumber', params.page.toString());
+    if (params.pageSize)
+      queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
+    if (params.search) queryParams.append('Keyword', params.search);
 
     return this.get<PaginatedResponse<User>>(`api/User/getModerators?${queryParams}`, {
       isPrivateRoute: true,

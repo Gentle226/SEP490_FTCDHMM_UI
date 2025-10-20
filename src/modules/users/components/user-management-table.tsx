@@ -242,13 +242,33 @@ export function UserManagementTable({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Verified':
-        return <Badge className="bg-[#99b94a] text-white flex content-center">Đã xác thực</Badge>;
+        return <Badge className="flex content-center bg-[#99b94a] text-white">Đã xác thực</Badge>;
       case 'Unverified':
         return <Badge variant="secondary">Chưa xác thực</Badge>;
       case 'Locked':
         return <Badge variant="danger">Đã khóa</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  // Format date helper
+  const formatDate = (dateString: string | undefined | null) => {
+    if (!dateString) return 'N/A';
+
+    try {
+      const date = new Date(dateString);
+
+      // Check if date is valid
+      if (isNaN(date.getTime())) return 'N/A';
+
+      return new Intl.DateTimeFormat('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(date);
+    } catch {
+      return 'N/A';
     }
   };
 
@@ -370,7 +390,7 @@ export function UserManagementTable({
                   <TableCell className="pl-6">{`${user.firstName} ${user.lastName}`}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{getStatusBadge(user.status)}</TableCell>
-                  <TableCell>{new Date(user.createdDateUTC).toLocaleDateString()}</TableCell>
+                  <TableCell>{formatDate(user.createdAtUTC)}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       {user.status === 'Locked' ? (
