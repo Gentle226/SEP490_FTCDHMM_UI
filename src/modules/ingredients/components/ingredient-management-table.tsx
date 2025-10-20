@@ -270,11 +270,6 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                       )}
                       <div>
                         <div>{ingredient.name}</div>
-                        {ingredient.description && (
-                          <div className="text-muted-foreground line-clamp-1 text-xs">
-                            {ingredient.description}
-                          </div>
-                        )}
                       </div>
                     </div>
                   </TableCell>

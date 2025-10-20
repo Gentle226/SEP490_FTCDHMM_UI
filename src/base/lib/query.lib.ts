@@ -20,7 +20,7 @@ function makeQueryClient() {
           if (failureCount > 2) {
             if (typeof window !== 'undefined') {
               import('sonner').then(({ toast }) => {
-                toast.error('Something went wrong. Please try again later.');
+                toast.error('Đã có lỗi xảy ra. Vui lòng thử lại sau.');
               });
             }
             return false;
