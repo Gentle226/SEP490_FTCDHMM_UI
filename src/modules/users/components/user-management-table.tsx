@@ -105,16 +105,16 @@ export function UserManagementTable({
   // Helper function to convert API response to PaginationType
   const convertToPaginationType = (data: {
     totalCount: number;
-    page: number;
+    pageNumber: number;
     pageSize: number;
     totalPages: number;
   }): PaginationType => ({
     total: data.totalCount,
-    currentPage: data.page,
+    currentPage: data.pageNumber,
     pageSize: data.pageSize,
     totalPage: data.totalPages,
-    hasNextPage: data.page < data.totalPages,
-    hasPreviousPage: data.page > 1,
+    hasNextPage: data.pageNumber < data.totalPages,
+    hasPreviousPage: data.pageNumber > 1,
   });
   const [lockDialogOpen, setLockDialogOpen] = useState(false);
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
@@ -131,7 +131,7 @@ export function UserManagementTable({
     queryKey,
     queryFn: () => {
       const params: PaginationParams = {
-        page: page,
+        pageNumber: page,
         pageSize: 10,
         search: debouncedSearchTerm || undefined,
       };

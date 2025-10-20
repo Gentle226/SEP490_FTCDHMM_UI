@@ -25,7 +25,7 @@ export interface Ingredient {
 }
 
 export interface PaginationParams {
-  page?: number;
+  pageNumber?: number;
   pageSize?: number;
   search?: string;
 }
@@ -33,7 +33,7 @@ export interface PaginationParams {
 export interface IngredientsResponse {
   items: Ingredient[];
   totalCount: number;
-  page: number;
+  pageNumber: number;
   pageSize: number;
   totalPages: number;
 }
@@ -48,7 +48,7 @@ class IngredientManagementService extends HttpClient {
    */
   public async getIngredients(params: PaginationParams = {}) {
     const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append('PaginationParams.PageNumber', params.page.toString());
+    if (params.pageNumber) queryParams.append('PaginationParams.PageNumber', params.pageNumber.toString());
     if (params.pageSize)
       queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
     if (params.search) queryParams.append('Keyword', params.search);

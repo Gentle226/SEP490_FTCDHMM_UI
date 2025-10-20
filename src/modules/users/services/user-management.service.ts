@@ -10,14 +10,14 @@ export interface User {
 }
 
 export interface PaginationParams {
-  page?: number;
+  pageNumber?: number;
   pageSize?: number;
   search?: string;
 }
 
 export interface PaginatedResponse<T> {
   items: T[];
-  page: number;
+  pageNumber: number;
   pageSize: number;
   totalPages: number;
   totalCount: number;
@@ -44,7 +44,8 @@ class UserManagementService extends HttpClient {
   // Customer management (for Moderators)
   public async getCustomers(params: PaginationParams = {}) {
     const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append('PaginationParams.PageNumber', params.page.toString());
+    if (params.pageNumber)
+      queryParams.append('PaginationParams.PageNumber', params.pageNumber.toString());
     if (params.pageSize)
       queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
     if (params.search) queryParams.append('Keyword', params.search);
@@ -70,7 +71,8 @@ class UserManagementService extends HttpClient {
   public async getModerators(params: PaginationParams = {}) {
     const queryParams = new URLSearchParams();
     // Backend expects nested PaginationParams and Keyword
-    if (params.page) queryParams.append('PaginationParams.PageNumber', params.page.toString());
+    if (params.pageNumber)
+      queryParams.append('PaginationParams.PageNumber', params.pageNumber.toString());
     if (params.pageSize)
       queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
     if (params.search) queryParams.append('Keyword', params.search);

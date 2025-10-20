@@ -52,16 +52,16 @@ export function PermissionManagementTable() {
   // Helper function to convert API response to PaginationType
   const convertToPaginationType = (data: {
     totalCount: number;
-    page: number;
+    pageNumber: number;
     pageSize: number;
     totalPages: number;
   }): PaginationType => ({
     total: data.totalCount,
-    currentPage: data.page,
+    currentPage: data.pageNumber,
     pageSize: data.pageSize,
     totalPage: data.totalPages,
-    hasNextPage: data.page < data.totalPages,
-    hasPreviousPage: data.page > 1,
+    hasNextPage: data.pageNumber < data.totalPages,
+    hasPreviousPage: data.pageNumber > 1,
   });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editPermissionsDialogOpen, setEditPermissionsDialogOpen] = useState(false);
@@ -75,7 +75,7 @@ export function PermissionManagementTable() {
   const { data: rolesData, isLoading } = useQuery({
     queryKey,
     queryFn: () => {
-      const params: PaginationParams = { page: page, pageSize: 10 };
+      const params: PaginationParams = { pageNumber: page, pageSize: 10 };
       return roleManagementService.getRoles(params);
     },
   });

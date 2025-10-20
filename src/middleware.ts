@@ -66,7 +66,6 @@ export async function middleware(request: NextRequest) {
       // For protected routes, enforce validation but be more lenient during debugging
       if (isPrivateRoute || isAdminRoute || isModeratorRoute) {
         if (!hasValidUser) {
-          console.warn('No valid user found, redirecting to login. User object:', user);
           redirectUrl.pathname = '/auth/login';
           redirectUrl.search = '';
           redirectUrl.searchParams.set('redirect', request.nextUrl.href);
