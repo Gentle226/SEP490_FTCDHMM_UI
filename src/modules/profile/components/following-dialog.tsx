@@ -38,6 +38,7 @@ export function FollowingDialog({ open, onOpenChange }: FollowingDialogProps) {
   const followUser = useFollowUser();
   const unfollowUser = useUnfollowUser();
 
+  const [displayUsers, setDisplayUsers] = useState<UserFollower[]>([]);
   // Track unfollow state locally - keeps users visible until dialog closes
   const [unfollowedUsers, setUnfollowedUsers] = useState<Set<string>>(new Set());
   // Track mutual follow status (if they follow us back)
@@ -57,10 +58,14 @@ export function FollowingDialog({ open, onOpenChange }: FollowingDialogProps) {
 
   // Reset unfollowed users when dialog closes
   useEffect(() => {
+    if (open && following && displayUsers.length === 0) {
+      setDisplayUsers(following);
+    }
     if (!open) {
       setUnfollowedUsers(new Set());
+      setDisplayUsers([]);
     }
-  }, [open]);
+  }, [open, following, displayUsers.length]);
 
   const handleFollowToggle = (userId: string) => {
     const isUnfollowed = unfollowedUsers.has(userId);
@@ -99,9 +104,9 @@ export function FollowingDialog({ open, onOpenChange }: FollowingDialogProps) {
                 </div>
               </div>
             ))
-          ) : following && following.length > 0 ? (
+          ) : displayUsers && displayUsers.length > 0 ? (
             // Display following
-            following.map((followingUser: UserFollower) => (
+            displayUsers.map((followingUser: UserFollower) => (
               <div
                 key={followingUser.id}
                 className="hover:bg-accent flex items-center gap-3 rounded-lg p-2 transition-colors"
