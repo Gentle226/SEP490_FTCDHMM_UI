@@ -3,7 +3,7 @@
 import { LogOut } from 'lucide-react';
 import Link from 'next/link';
 
-import { Role, User } from '@/modules/auth/types';
+import { User } from '@/modules/auth/types';
 import { useProfile } from '@/modules/profile';
 
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -69,13 +69,13 @@ export function UserActions({ user, onLogout }: UserActionsProps) {
               <DropdownMenuItem asChild>
                 <Link href="/profile">Bếp cá nhân</Link>
               </DropdownMenuItem>
-              {(user?.role === Role.ADMIN || user?.role === Role.MODERATOR) && (
+              {/* {(user?.role === Role.ADMIN || user?.role === Role.MODERATOR) && (
                 <DropdownMenuItem asChild>
                   <Link href="/admin/dashboard">Bảng điều khiển</Link>
                 </DropdownMenuItem>
-              )}
+              )} */}
               <DropdownMenuItem asChild>
-                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/setting">Cài đặt</Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

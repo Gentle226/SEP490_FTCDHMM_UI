@@ -5,7 +5,6 @@ import {
   FileText,
   Home,
   KeyRound,
-  LayoutDashboard,
   Salad,
   ScrollText,
   Tags,
@@ -66,11 +65,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         url: '/',
         icon: Home,
       },
-      {
-        title: 'Dữ Liệu Thống Kê',
-        url: '/dashboard',
-        icon: LayoutDashboard,
-      },
+      // {
+      //   title: 'Dữ Liệu Thống Kê',
+      //   url: '/dashboard',
+      //   icon: LayoutDashboard,
+      // },
     ];
 
     if (user?.role === Role.ADMIN) {
