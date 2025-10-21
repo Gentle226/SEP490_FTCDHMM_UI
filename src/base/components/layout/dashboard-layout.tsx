@@ -1,8 +1,11 @@
 'use client';
 
 import {
+  BookHeart,
+  BookMarked,
   ClipboardList,
-  FileText,
+  CookingPot,
+  History,
   Home,
   KeyRound,
   Salad,
@@ -123,9 +126,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     return [
       ...commonItems,
       {
-        title: 'Công Thức Nấu Ăn',
-        url: '/customer/recipes',
-        icon: FileText,
+        title: 'Công Thức Của Tôi',
+        url: '/customer/recipe',
+        icon: CookingPot,
+      },
+      {
+        title: 'Công Thức Đã Lưu',
+        url: '/customer/save',
+        icon: BookMarked,
+      },
+      {
+        title: 'Công Thức Ưa Thích',
+        url: '/customer/favorite',
+        icon: BookHeart,
+      },
+      {
+        title: 'Công Thức Đã Xem',
+        url: '/customer/history',
+        icon: History,
       },
     ];
   };
