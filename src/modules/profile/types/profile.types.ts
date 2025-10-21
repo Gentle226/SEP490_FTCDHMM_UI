@@ -7,7 +7,7 @@ export interface ProfileDto {
   email: string;
   phoneNumber: string;
   gender: string;
-  avatar?: string | null;
+  avatarUrl?: string | null;
   followersCount?: number;
   followingCount?: number;
   isFollowing?: boolean;
@@ -21,7 +21,7 @@ export const updateProfileSchema = z.object({
     .string()
     .regex(/^0\d{8,9}$/, 'Số điện thoại phải bắt đầu bằng 0 và có 9-10 chữ số'),
   gender: z.string().min(1, 'Giới tính là bắt buộc'),
-  avatar: z.instanceof(File).optional().nullable(),
+  avatarUrl: z.instanceof(File).optional().nullable(),
 });
 
 export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;
@@ -32,7 +32,7 @@ export interface UpdateProfileDto {
   lastName: string;
   phoneNumber: string;
   gender: string;
-  avatar?: File | null;
+  avatarUrl?: File | null;
 }
 
 // Extended Profile for UI with additional fields
@@ -52,6 +52,6 @@ export interface UserFollower {
   firstName: string;
   lastName: string;
   email: string;
-  avatar?: string | null;
+  avatarUrl?: string | null;
   fullName?: string;
 }

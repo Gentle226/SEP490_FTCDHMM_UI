@@ -1,10 +1,12 @@
 'use client';
 
-import { LogOut, UserIcon } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import Link from 'next/link';
 
-import { Role, User } from '@/modules/auth/types';
+import { User } from '@/modules/auth/types';
+import { useProfile } from '@/modules/profile';
 
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button } from '../ui/button';
 import {
   DropdownMenu,
@@ -22,35 +24,58 @@ interface UserActionsProps {
 }
 
 export function UserActions({ user, onLogout }: UserActionsProps) {
+  const { data: profile } = useProfile();
+
+  // Prioritize profile data over user data for names
+  const firstName = profile?.firstName || user?.firstName;
+  const lastName = profile?.lastName || user?.lastName;
+
   const displayName =
-    user?.fullName ||
-    (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : null) ||
-    user?.email;
+    (firstName && lastName ? `${firstName} ${lastName}` : null) || user?.fullName || user?.email;
+
+  const avatarUrl =
+    profile?.avatarUrl ||
+    (firstName && lastName
+      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}+${encodeURIComponent(lastName)}&background=random`
+      : undefined);
+
+  const initials =
+    firstName && lastName
+      ? `${firstName[0]}${lastName[0]}`.toUpperCase()
+      : (user?.email?.[0] || 'U').toUpperCase();
 
   if (user) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="text-gray-500">
-            {displayName}
-            <UserIcon />
+          <Button variant="ghost">
+            <Avatar className="size-10">
+              <AvatarImage src={avatarUrl} alt={displayName || 'User avatar'} />
+              <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
+            {/* <span className="hidden sm:inline">{displayName}</span> */}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end">
           <>
-            <DropdownMenuLabel>Tài khoản của tôi</DropdownMenuLabel>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm leading-none font-medium">{displayName}</p>
+                <p className="text-muted-foreground text-xs leading-none">{user.email}</p>
+              </div>
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link href="/profile">Thông tin cá nhân</Link>
+                <Link href="/profile">Bếp cá nhân</Link>
               </DropdownMenuItem>
-              {(user?.role === Role.ADMIN || user?.role === Role.MODERATOR) && (
+              {/* {(user?.role === Role.ADMIN || user?.role === Role.MODERATOR) && (
                 <DropdownMenuItem asChild>
                   <Link href="/admin/dashboard">Bảng điều khiển</Link>
                 </DropdownMenuItem>
-              )}
+              )} */}
               <DropdownMenuItem asChild>
-                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/setting">Cài đặt</Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

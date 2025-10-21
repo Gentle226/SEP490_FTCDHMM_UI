@@ -153,10 +153,10 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
   };
 
   const renderStepIndicator = () => (
-    <div className="mb-6 flex items-center justify-center">
-      <div className="flex items-center space-x-4">
+    <div className="mb-4 flex items-center justify-center sm:mb-6">
+      <div className="flex items-center space-x-2 sm:space-x-4">
         <div
-          className={`flex h-8 w-8 items-center justify-center rounded-full ${
+          className={`flex h-7 w-7 items-center justify-center rounded-full sm:h-8 sm:w-8 ${
             currentStep === 'email'
               ? 'bg-green-500 text-white'
               : ['otp', 'password', 'success'].includes(currentStep)
@@ -165,16 +165,16 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
           }`}
         >
           {['otp', 'password', 'success'].includes(currentStep) ? (
-            <CheckCircle className="h-5 w-5" />
+            <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
           ) : (
-            <Mail className="h-5 w-5" />
+            <Mail className="h-4 w-4 sm:h-5 sm:w-5" />
           )}
         </div>
         <div
-          className={`h-0.5 w-16 ${['otp', 'password', 'success'].includes(currentStep) ? 'bg-lime-500' : 'bg-gray-200'}`}
+          className={`h-0.5 w-10 sm:w-16 ${['otp', 'password', 'success'].includes(currentStep) ? 'bg-lime-500' : 'bg-gray-200'}`}
         />
         <div
-          className={`flex h-8 w-8 items-center justify-center rounded-full ${
+          className={`flex h-7 w-7 items-center justify-center rounded-full sm:h-8 sm:w-8 ${
             currentStep === 'otp'
               ? 'bg-green-500 text-white'
               : ['password', 'success'].includes(currentStep)
@@ -183,16 +183,16 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
           }`}
         >
           {['password', 'success'].includes(currentStep) ? (
-            <CheckCircle className="h-5 w-5" />
+            <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
           ) : (
-            <span className="text-sm">2</span>
+            <span className="text-xs sm:text-sm">2</span>
           )}
         </div>
         <div
-          className={`h-0.5 w-16 ${['password', 'success'].includes(currentStep) ? 'bg-lime-500' : 'bg-gray-200'}`}
+          className={`h-0.5 w-10 sm:w-16 ${['password', 'success'].includes(currentStep) ? 'bg-lime-500' : 'bg-gray-200'}`}
         />
         <div
-          className={`flex h-8 w-8 items-center justify-center rounded-full ${
+          className={`flex h-7 w-7 items-center justify-center rounded-full sm:h-8 sm:w-8 ${
             currentStep === 'password'
               ? 'bg-green-500 text-white'
               : currentStep === 'success'
@@ -201,9 +201,9 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
           }`}
         >
           {currentStep === 'success' ? (
-            <CheckCircle className="h-5 w-5" />
+            <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
           ) : (
-            <Lock className="h-5 w-5" />
+            <Lock className="h-4 w-4 sm:h-5 sm:w-5" />
           )}
         </div>
       </div>
@@ -212,16 +212,16 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
 
   if (currentStep === 'success') {
     return (
-      <div className="space-y-6 text-center">
+      <div className="space-y-4 text-center sm:space-y-6">
         {renderStepIndicator()}
-        <div className="space-y-4">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle className="h-8 w-8 text-[#99b94a]" />
+        <div className="space-y-3 sm:space-y-4">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100 sm:h-16 sm:w-16">
+            <CheckCircle className="h-7 w-7 text-[#99b94a] sm:h-8 sm:w-8" />
           </div>
-          <h3 className="text-2xl font-semibold text-[#99b94a]">
+          <h3 className="text-xl font-semibold text-[#99b94a] sm:text-2xl">
             Mật khẩu đã được đặt lại thành công!
           </h3>
-          <p className="text-gray-600">
+          <p className="text-sm text-gray-600 sm:text-base">
             Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập bằng mật khẩu mới của
             mình.
           </p>
@@ -234,15 +234,15 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {renderStepIndicator()}
 
       {/* Step 1: Email Input */}
       {currentStep === 'email' && (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="text-center">
-            <h3 className="text-xl font-semibold text-[#99b94a]">Quên mật khẩu?</h3>
-            <p className="mt-2 text-sm text-gray-600">
+            <h3 className="text-lg font-semibold text-[#99b94a] sm:text-xl">Quên mật khẩu?</h3>
+            <p className="mt-2 text-xs text-gray-600 sm:text-sm">
               Nhập email của bạn và chúng tôi sẽ
               <br /> gửi mã xác nhận để đặt lại mật khẩu.
             </p>
@@ -251,7 +251,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
           {renderError(sendCodeError)}
 
           <Form
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-3 sm:gap-4"
             loading={isSendingCode}
             schema={forgotPasswordSchema}
             fields={[
@@ -275,10 +275,10 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
           <Button
             variant="ghost"
             onClick={onBackToLogin}
-            className="w-full text-sm text-[#99b94a] underline-offset-2 hover:text-[#7a8f3a]"
+            className="w-full text-xs text-[#99b94a] underline-offset-2 hover:text-[#7a8f3a] sm:text-sm"
             disabled={isSendingCode}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
             Về trang đăng nhập
           </Button>
         </div>
@@ -286,10 +286,12 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
 
       {/* Step 2: OTP Verification */}
       {currentStep === 'otp' && (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="text-center">
-            <h3 className="text-xl font-semibold text-[#99b94a]">Xác minh email của bạn</h3>
-            <p className="mt-2 text-sm text-gray-600">
+            <h3 className="text-lg font-semibold text-[#99b94a] sm:text-xl">
+              Xác minh email của bạn
+            </h3>
+            <p className="mt-2 text-xs text-gray-600 sm:text-sm">
               Chúng tôi đã gửi mã xác minh 6 chữ số đến{' '}
               <strong className="text-[#99b94a]">{email}</strong>
             </p>
@@ -298,7 +300,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
           {renderError(verifyOtpError)}
 
           <Form
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-3 sm:gap-4"
             loading={isVerifyingOtp}
             schema={otpOnlySchema}
             defaultValues={{ code }}
@@ -323,13 +325,13 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
 
           <div className="text-center">
             {countdown > 0 ? (
-              <p className="text-sm text-gray-600">Gửi lại mã trong {countdown} giây</p>
+              <p className="text-xs text-gray-600 sm:text-sm">Gửi lại mã trong {countdown} giây</p>
             ) : (
               <Button
                 variant="ghost"
                 onClick={() => resendOtp({ email, purpose: 'FORGOTPASSWORD' })}
                 disabled={isResendingOtp}
-                className="text-sm text-[#99b94a] underline-offset-2 hover:text-[#7a8f3a]"
+                className="text-xs text-[#99b94a] underline-offset-2 hover:text-[#7a8f3a] sm:text-sm"
               >
                 {isResendingOtp ? 'Đang gửi...' : 'Gửi lại mã'}
               </Button>
@@ -339,10 +341,10 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
           <Button
             variant="ghost"
             onClick={() => setCurrentStep('email')}
-            className="w-full text-sm text-[#99b94a] underline-offset-2 hover:text-[#7a8f3a]"
+            className="w-full text-xs text-[#99b94a] underline-offset-2 hover:text-[#7a8f3a] sm:text-sm"
             disabled={isVerifyingOtp}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
             Đổi email
           </Button>
         </div>
@@ -350,10 +352,10 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
 
       {/* Step 3: Reset Password */}
       {currentStep === 'password' && (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="text-center">
-            <h3 className="text-xl font-semibold text-[#99b94a]">Tạo mật khẩu mới</h3>
-            <p className="mt-2 text-sm text-gray-600">
+            <h3 className="text-lg font-semibold text-[#99b94a] sm:text-xl">Tạo mật khẩu mới</h3>
+            <p className="mt-2 text-xs text-gray-600 sm:text-sm">
               Vui lòng nhập mật khẩu mới của bạn bên dưới.
             </p>
           </div>
@@ -361,7 +363,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
           {renderError(resetPasswordError)}
 
           <Form
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-3 sm:gap-4"
             loading={isResettingPassword}
             schema={passwordOnlySchema}
             defaultValues={{ newPassword: '', rePassword: '' }}
@@ -393,10 +395,10 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
           <Button
             variant="ghost"
             onClick={() => setCurrentStep('otp')}
-            className="w-full text-sm text-[#99b94a] underline-offset-2"
+            className="w-full text-xs text-[#99b94a] underline-offset-2 sm:text-sm"
             disabled={isResettingPassword}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
             Quay lại bước xác minh mã
           </Button>
         </div>

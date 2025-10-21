@@ -1,7 +1,8 @@
 'use client';
 
-import { User } from 'lucide-react';
+import { UserCheck, UserPlus } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/base/components/ui/avatar';
 import { Button } from '@/base/components/ui/button';
@@ -13,8 +14,15 @@ import {
   DialogTitle,
 } from '@/base/components/ui/dialog';
 import { Skeleton } from '@/base/components/ui/skeleton';
+import { useAuth } from '@/modules/auth';
 
-import { useFollowing } from '../hooks/use-profile';
+import {
+  useFollowUser,
+  useFollowers,
+  useFollowing,
+  useProfile,
+  useUnfollowUser,
+} from '../hooks/use-profile';
 import { UserFollower } from '../types/profile.types';
 
 interface FollowingDialogProps {
@@ -24,6 +32,57 @@ interface FollowingDialogProps {
 
 export function FollowingDialog({ open, onOpenChange }: FollowingDialogProps) {
   const { data: following, isLoading } = useFollowing();
+  const { data: followers } = useFollowers(); // Get list of our followers
+  const { data: profile } = useProfile(); // Get current user profile for avatar
+  const { user } = useAuth();
+  const followUser = useFollowUser();
+  const unfollowUser = useUnfollowUser();
+
+  const [displayUsers, setDisplayUsers] = useState<UserFollower[]>([]);
+  // Track unfollow state locally - keeps users visible until dialog closes
+  const [unfollowedUsers, setUnfollowedUsers] = useState<Set<string>>(new Set());
+  // Track mutual follow status (if they follow us back)
+  const [mutualFollowState, setMutualFollowState] = useState<Record<string, boolean>>({});
+
+  // Initialize mutual follow state based on followers list
+  useEffect(() => {
+    if (followers && following) {
+      const followerIds = new Set(followers.map((f) => f.id));
+      const initialState: Record<string, boolean> = {};
+      following.forEach((user) => {
+        initialState[user.id] = followerIds.has(user.id);
+      });
+      setMutualFollowState(initialState);
+    }
+  }, [followers, following]);
+
+  // Reset unfollowed users when dialog closes
+  useEffect(() => {
+    if (open && following && displayUsers.length === 0) {
+      setDisplayUsers(following);
+    }
+    if (!open) {
+      setUnfollowedUsers(new Set());
+      setDisplayUsers([]);
+    }
+  }, [open, following, displayUsers.length]);
+
+  const handleFollowToggle = (userId: string) => {
+    const isUnfollowed = unfollowedUsers.has(userId);
+    if (isUnfollowed) {
+      // Re-follow
+      followUser.mutate(userId);
+      setUnfollowedUsers((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(userId);
+        return newSet;
+      });
+    } else {
+      // Unfollow
+      unfollowUser.mutate(userId);
+      setUnfollowedUsers((prev) => new Set(prev).add(userId));
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -45,40 +104,82 @@ export function FollowingDialog({ open, onOpenChange }: FollowingDialogProps) {
                 </div>
               </div>
             ))
-          ) : following && following.length > 0 ? (
+          ) : displayUsers && displayUsers.length > 0 ? (
             // Display following
-            following.map((user: UserFollower) => (
-              <Link
-                key={user.id}
-                href={`/profile/${user.id}`}
+            displayUsers.map((followingUser: UserFollower) => (
+              <div
+                key={followingUser.id}
                 className="hover:bg-accent flex items-center gap-3 rounded-lg p-2 transition-colors"
-                onClick={() => onOpenChange(false)}
               >
-                <Avatar className="size-10">
-                  <AvatarImage src={user.avatar || undefined} />
-                  <AvatarFallback>
-                    <User className="size-5" />
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <p className="font-medium">
-                    {user.fullName || `${user.firstName} ${user.lastName}`.trim() || 'Người dùng'}
-                  </p>
-                  <p className="text-muted-foreground text-sm">{user.email}</p>
-                </div>
-              </Link>
+                <Link
+                  href={`/profile/${followingUser.id}`}
+                  className="flex flex-1 items-center gap-3"
+                  onClick={() => onOpenChange(false)}
+                >
+                  <Avatar className="size-10">
+                    <AvatarImage
+                      src={
+                        followingUser.id === user?.id && profile?.avatarUrl
+                          ? profile.avatarUrl
+                          : followingUser.avatarUrl ||
+                            `https://ui-avatars.com/api/?name=${encodeURIComponent(followingUser.firstName)}+${encodeURIComponent(followingUser.lastName)}&background=random`
+                      }
+                      alt={followingUser.fullName}
+                    />
+                    <AvatarFallback>
+                      {(followingUser.firstName?.[0] || '') + (followingUser.lastName?.[0] || '')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-medium">
+                      {followingUser.fullName ||
+                        `${followingUser.firstName} ${followingUser.lastName}`.trim() ||
+                        'Người dùng'}
+                    </p>
+                    <p className="text-muted-foreground text-sm">{followingUser.email}</p>
+                  </div>
+                </Link>
+                <Button
+                  size="sm"
+                  variant={unfollowedUsers.has(followingUser.id) ? 'outline' : 'default'}
+                  className={
+                    unfollowedUsers.has(followingUser.id)
+                      ? 'text-[#99b94a]'
+                      : 'bg-[#99b94a] hover:bg-[#8aa83f]'
+                  }
+                  onClick={() => handleFollowToggle(followingUser.id)}
+                  disabled={followUser.isPending || unfollowUser.isPending}
+                >
+                  {unfollowedUsers.has(followingUser.id) ? (
+                    <>
+                      <UserPlus className="size-4" />
+                      Theo dõi
+                    </>
+                  ) : mutualFollowState[followingUser.id] ? (
+                    <>
+                      <UserCheck className="size-4" />
+                      Đang theo dõi
+                    </>
+                  ) : (
+                    <>
+                      <UserCheck className="size-4" />
+                      Đang theo dõi
+                    </>
+                  )}
+                </Button>
+              </div>
             ))
           ) : (
             // Empty state
             <div className="py-8 text-center">
-              <User className="text-muted-foreground mx-auto size-12" />
+              <UserPlus className="text-muted-foreground mx-auto size-12" />
               <p className="text-muted-foreground mt-4">Chưa theo dõi ai</p>
             </div>
           )}
         </div>
 
         <div className="flex justify-end">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" className="text-[#99b94a]" onClick={() => onOpenChange(false)}>
             Đóng
           </Button>
         </div>

@@ -29,8 +29,8 @@ class ProfileService extends HttpClient {
     formData.append('phoneNumber', data.phoneNumber);
     formData.append('gender', data.gender);
 
-    if (data.avatar) {
-      formData.append('avatar', data.avatar);
+    if (data.avatarUrl) {
+      formData.append('Avatar', data.avatarUrl);
     }
 
     return this.put<void>('api/User/profile', formData, {

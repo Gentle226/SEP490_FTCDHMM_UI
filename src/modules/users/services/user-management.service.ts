@@ -5,19 +5,19 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  createdDateUTC: string;
+  createdAtUTC: string;
   status: string;
 }
 
 export interface PaginationParams {
-  page?: number;
+  pageNumber?: number;
   pageSize?: number;
   search?: string;
 }
 
 export interface PaginatedResponse<T> {
   items: T[];
-  page: number;
+  pageNumber: number;
   pageSize: number;
   totalPages: number;
   totalCount: number;
@@ -44,9 +44,11 @@ class UserManagementService extends HttpClient {
   // Customer management (for Moderators)
   public async getCustomers(params: PaginationParams = {}) {
     const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append('Page', params.page.toString());
-    if (params.pageSize) queryParams.append('PageSize', params.pageSize.toString());
-    if (params.search) queryParams.append('Search', params.search);
+    if (params.pageNumber)
+      queryParams.append('PaginationParams.PageNumber', params.pageNumber.toString());
+    if (params.pageSize)
+      queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
+    if (params.search) queryParams.append('Keyword', params.search);
 
     return this.get<PaginatedResponse<User>>(`api/User/getCustomers?${queryParams}`, {
       isPrivateRoute: true,
@@ -54,23 +56,30 @@ class UserManagementService extends HttpClient {
   }
 
   public async lockCustomer(request: LockUserRequest) {
-    return this.put<void>('api/User/lockCustomer', request, {
+    return this.put<void>(`api/User/lockCustomer/${request.userId}`, request, {
       isPrivateRoute: true,
     });
   }
 
   public async unlockCustomer(request: UnlockUserRequest) {
-    return this.put<void>('api/User/unlockCustomer', request, {
-      isPrivateRoute: true,
-    });
+    return this.put<void>(
+      `api/User/unlockCustomer/${request.userId}`,
+      {},
+      {
+        isPrivateRoute: true,
+      },
+    );
   }
 
   // Moderator management (for Admins)
   public async getModerators(params: PaginationParams = {}) {
     const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append('Page', params.page.toString());
-    if (params.pageSize) queryParams.append('PageSize', params.pageSize.toString());
-    if (params.search) queryParams.append('Search', params.search);
+    // Backend expects nested PaginationParams and Keyword
+    if (params.pageNumber)
+      queryParams.append('PaginationParams.PageNumber', params.pageNumber.toString());
+    if (params.pageSize)
+      queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
+    if (params.search) queryParams.append('Keyword', params.search);
 
     return this.get<PaginatedResponse<User>>(`api/User/getModerators?${queryParams}`, {
       isPrivateRoute: true,
@@ -78,15 +87,19 @@ class UserManagementService extends HttpClient {
   }
 
   public async lockModerator(request: LockUserRequest) {
-    return this.put<void>('api/User/lockModerator', request, {
+    return this.put<void>(`api/User/lockModerator/${request.userId}`, request, {
       isPrivateRoute: true,
     });
   }
 
   public async unlockModerator(request: UnlockUserRequest) {
-    return this.put<void>('api/User/unlockModerator', request, {
-      isPrivateRoute: true,
-    });
+    return this.put<void>(
+      `api/User/unlockModerator/${request.userId}`,
+      {},
+      {
+        isPrivateRoute: true,
+      },
+    );
   }
 
   public async createModerator(request: CreateModeratorRequest) {

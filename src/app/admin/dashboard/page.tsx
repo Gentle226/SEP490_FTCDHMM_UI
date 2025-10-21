@@ -9,16 +9,14 @@ export default function AdminDashboard() {
     <ProtectedRoute requiredRoles={[Role.ADMIN]}>
       <DashboardLayout>
         <div className="space-y-6">
-          <h1 className="text-3xl font-bold text-[#99b94a]">Bảng Điều Khiển Admin</h1>
-
           {/* Moderator Management */}
-            <div className="bg-card rounded-lg border p-6">
+          <div className="bg-card rounded-lg border p-6">
             <UserManagementTable
               userType="moderators"
-              title={<span className="text-[#99b94a]">Quản Lý Moderator</span>}
+              title={<span className="text-3xl text-[#99b94a]">Quản Lý Kiểm Duyệt Viên</span>}
               canCreate={true}
             />
-            </div>
+          </div>
         </div>
       </DashboardLayout>
     </ProtectedRoute>

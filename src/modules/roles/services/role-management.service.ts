@@ -7,13 +7,13 @@ export interface Role {
 }
 
 export interface PaginationParams {
-  page?: number;
+  pageNumber?: number;
   pageSize?: number;
 }
 
 export interface PaginatedResponse<T> {
   items: T[];
-  page: number;
+  pageNumber: number;
   pageSize: number;
   totalPages: number;
   totalCount: number;
@@ -50,8 +50,9 @@ class RoleManagementService extends HttpClient {
 
   public async getRoles(params: PaginationParams = {}) {
     const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append('Page', params.page.toString());
-    if (params.pageSize) queryParams.append('PageSize', params.pageSize.toString());
+    if (params.pageNumber) queryParams.append('PaginationParams.PageNumber', params.pageNumber.toString());
+    if (params.pageSize)
+      queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
 
     return this.get<PaginatedResponse<Role>>(`api/Role?${queryParams}`, {
       isPrivateRoute: true,

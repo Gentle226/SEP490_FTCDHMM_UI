@@ -52,16 +52,16 @@ export function PermissionManagementTable() {
   // Helper function to convert API response to PaginationType
   const convertToPaginationType = (data: {
     totalCount: number;
-    page: number;
+    pageNumber: number;
     pageSize: number;
     totalPages: number;
   }): PaginationType => ({
     total: data.totalCount,
-    currentPage: data.page,
+    currentPage: data.pageNumber,
     pageSize: data.pageSize,
     totalPage: data.totalPages,
-    hasNextPage: data.page < data.totalPages,
-    hasPreviousPage: data.page > 1,
+    hasNextPage: data.pageNumber < data.totalPages,
+    hasPreviousPage: data.pageNumber > 1,
   });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editPermissionsDialogOpen, setEditPermissionsDialogOpen] = useState(false);
@@ -75,7 +75,7 @@ export function PermissionManagementTable() {
   const { data: rolesData, isLoading } = useQuery({
     queryKey,
     queryFn: () => {
-      const params: PaginationParams = { page: page, pageSize: 10 };
+      const params: PaginationParams = { pageNumber: page, pageSize: 10 };
       return roleManagementService.getRoles(params);
     },
   });
@@ -137,7 +137,7 @@ export function PermissionManagementTable() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-[#99b94a]">Quản Lý Quyền</h2>
+        <h2 className="text-3xl font-bold text-[#99b94a]">Quản Lý Phân Quyền</h2>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-[#99b94a] hover:bg-[#7a8f3a]">
@@ -154,7 +154,9 @@ export function PermissionManagementTable() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="roleName">Tên Vai Trò</Label>
+                <Label className="mb-2" htmlFor="roleName">
+                  Tên Vai Trò
+                </Label>
                 <Input
                   id="roleName"
                   type="text"
@@ -183,16 +185,16 @@ export function PermissionManagementTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-48">Vai Trò</TableHead>
+              <TableHead className="w-36 pl-6">Vai Trò</TableHead>
               <TableHead className="w-36">Trạng Thái</TableHead>
-              <TableHead className="w-24">Hành Động</TableHead>
-              <TableHead className="w-28">Quyền</TableHead>
+              <TableHead className="w-36">Hành Động</TableHead>
+              <TableHead className="w-36">Quyền</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rolesData?.items?.map((role) => (
               <TableRow key={role.id}>
-                <TableCell className="w-48 font-medium">{role.name}</TableCell>
+                <TableCell className="w-36 pl-6 font-medium">{role.name}</TableCell>
                 <TableCell className="w-36">
                   {role.isActive ? (
                     <Badge className="w-32 justify-center bg-[#99b94a]">Hoạt động</Badge>
@@ -202,7 +204,7 @@ export function PermissionManagementTable() {
                     </Badge>
                   )}
                 </TableCell>
-                <TableCell className="w-24">
+                <TableCell className="w-36">
                   <div className="flex items-center space-x-2">
                     <Switch
                       checked={role.isActive}
@@ -214,7 +216,7 @@ export function PermissionManagementTable() {
                     </span>
                   </div>
                 </TableCell>
-                <TableCell className="w-28">
+                <TableCell className="w-36">
                   <Button variant="outline" size="sm" onClick={() => handleEditPermissions(role)}>
                     <Edit className="mr-1 h-3 w-3" />
                     Chỉnh Sửa
