@@ -56,15 +56,19 @@ class UserManagementService extends HttpClient {
   }
 
   public async lockCustomer(request: LockUserRequest) {
-    return this.put<void>('api/User/lockCustomer', request, {
+    return this.put<void>(`api/User/lockCustomer/${request.userId}`, request, {
       isPrivateRoute: true,
     });
   }
 
   public async unlockCustomer(request: UnlockUserRequest) {
-    return this.put<void>('api/User/unlockCustomer', request, {
-      isPrivateRoute: true,
-    });
+    return this.put<void>(
+      `api/User/unlockCustomer/${request.userId}`,
+      {},
+      {
+        isPrivateRoute: true,
+      },
+    );
   }
 
   // Moderator management (for Admins)
@@ -83,15 +87,19 @@ class UserManagementService extends HttpClient {
   }
 
   public async lockModerator(request: LockUserRequest) {
-    return this.put<void>('api/User/lockModerator', request, {
+    return this.put<void>(`api/User/lockModerator/${request.userId}`, request, {
       isPrivateRoute: true,
     });
   }
 
   public async unlockModerator(request: UnlockUserRequest) {
-    return this.put<void>('api/User/unlockModerator', request, {
-      isPrivateRoute: true,
-    });
+    return this.put<void>(
+      `api/User/unlockModerator/${request.userId}`,
+      {},
+      {
+        isPrivateRoute: true,
+      },
+    );
   }
 
   public async createModerator(request: CreateModeratorRequest) {

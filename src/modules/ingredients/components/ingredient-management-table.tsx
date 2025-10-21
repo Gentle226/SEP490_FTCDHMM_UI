@@ -230,10 +230,10 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[30%] pl-6">Tên nguyên liệu</TableHead>
+              <TableHead className="w-[30%] pl-12">Tên nguyên liệu</TableHead>
               <TableHead className="w-[30%]">Phân loại</TableHead>
               <TableHead className="w-[25%]">Cập nhật</TableHead>
-              <TableHead className="w-[15%] pr-6 text-right">Hành động</TableHead>
+              <TableHead className="w-[15%] pr-12 text-right">Hành động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -261,7 +261,7 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
             ) : (
               ingredientsData.items.map((ingredient) => (
                 <TableRow key={ingredient.id}>
-                  <TableCell className="pl-6 font-medium">
+                  <TableCell className="pl-12 font-medium">
                     <div className="flex items-center gap-2">
                       {ingredient.image && (
                         <Image
@@ -292,7 +292,7 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                     </div>
                   </TableCell>
                   <TableCell className="text-sm">{formatDate(ingredient.lastUpdatedUtc)}</TableCell>
-                  <TableCell className="pr-6 text-right">
+                  <TableCell className="pr-24 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm">

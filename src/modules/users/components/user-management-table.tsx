@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Lock, Plus, Search, Unlock, X } from 'lucide-react';
+import { Lock, MoreHorizontal, Plus, Search, SquareUserRound, Unlock, X } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ReactNode, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -18,6 +18,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/base/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/base/components/ui/dropdown-menu';
 import { Input } from '@/base/components/ui/input';
 import { Label } from '@/base/components/ui/label';
 import {
@@ -154,11 +160,11 @@ export function UserManagementTable({
       setSelectedUser(null);
       setLockDays(7);
       toast.success(
-        `${userType === 'customers' ? 'Khách hàng' : 'Moderator'} đã được khóa thành công.`,
+        `Tài khoản ${userType === 'customers' ? 'Khách hàng' : 'Moderator'} đã được khóa thành công.`,
       );
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Không thể khóa người dùng.');
+      toast.error(error.message || 'Không thể khóa tài khoản.');
     },
   });
 
@@ -174,11 +180,11 @@ export function UserManagementTable({
       setUnlockDialogOpen(false);
       setSelectedUser(null);
       toast.success(
-        `${userType === 'customers' ? 'Khách hàng' : 'Moderator'} đã được mở khóa thành công.`,
+        `Tài khoản ${userType === 'customers' ? 'Khách hàng' : 'Moderator'} đã được mở khóa thành công.`,
       );
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Không thể mở khóa người dùng.');
+      toast.error(error.message || 'Không thể mở khóa tài khoản.');
     },
   });
 
@@ -221,6 +227,11 @@ export function UserManagementTable({
         userId: selectedUser.id,
       });
     }
+  };
+
+  const handleUserDetail = (user: User) => {
+    setSelectedUser(user);
+    router.push(`/profile/${user.id}`);
   };
 
   const handleCreateModerator = () => {
@@ -392,29 +403,30 @@ export function UserManagementTable({
                   <TableCell>{getStatusBadge(user.status)}</TableCell>
                   <TableCell>{formatDate(user.createdAtUTC)}</TableCell>
                   <TableCell>
-                    <div className="flex space-x-2">
-                      {user.status === 'Locked' ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleUnlock(user)}
-                          disabled={unlockMutation.isPending}
-                        >
-                          <Unlock className="mr-1 h-3 w-3" />
-                          Mở Khóa
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="size-4" />
                         </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleLock(user)}
-                          disabled={lockMutation.isPending}
-                        >
-                          <Lock className="mr-1 h-3 w-3" />
-                          Khóa
-                        </Button>
-                      )}
-                    </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleUserDetail(user)}>
+                          <SquareUserRound className="mr-2 h-4 w-4 text-[#99b94a]" />
+                          Xem Hồ Sơ
+                        </DropdownMenuItem>
+                        {user.status === 'Locked' ? (
+                          <DropdownMenuItem onClick={() => handleUnlock(user)}>
+                            <Unlock className="mr-2 h-4 w-4 text-[#99b94a]" />
+                            Mở Khóa
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem onClick={() => handleLock(user)}>
+                            <Lock className="mr-2 h-4 w-4 text-[#99b94a]" />
+                            Khóa Tài Khoản
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))
