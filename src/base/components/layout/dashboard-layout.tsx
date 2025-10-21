@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  ClipboardList,
   FileText,
   Home,
   KeyRound,
@@ -105,6 +106,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           title: 'Quản Lý Nhãn Thực Phẩm',
           url: '/moderator/label',
           icon: Tags,
+        },
+        {
+          title: 'Quản Lý Nhóm Thực Phẩm',
+          url: '/moderator/category',
+          icon: ClipboardList,
         },
         {
           title: 'Nguyên Tắc Đăng Bài',
