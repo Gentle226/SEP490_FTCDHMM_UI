@@ -245,6 +245,60 @@ class IngredientManagementService extends HttpClient {
       isPrivateRoute: true,
     });
   }
+
+  /**
+   * Create new ingredient
+   */
+  public async createIngredient(data: {
+    name: string;
+    description?: string;
+    image: File;
+    nutrients: Nutrient[];
+    ingredientCategoryIds: string[];
+  }) {
+    const formData = new FormData();
+
+    formData.append('Name', data.name);
+
+    if (data.description) {
+      formData.append('Description', data.description);
+    }
+
+    if (data.image) {
+      formData.append('Image', data.image);
+    }
+
+    if (data.nutrients && data.nutrients.length > 0) {
+      data.nutrients.forEach((nutrient, index) => {
+        formData.append(`Nutrients[${index}].NutrientId`, nutrient.id);
+        if (nutrient.min !== undefined && nutrient.min !== null) {
+          formData.append(`Nutrients[${index}].Min`, nutrient.min.toString());
+        }
+        if (nutrient.max !== undefined && nutrient.max !== null) {
+          formData.append(`Nutrients[${index}].Max`, nutrient.max.toString());
+        }
+        if (nutrient.median !== undefined && nutrient.median !== null) {
+          formData.append(`Nutrients[${index}].Median`, nutrient.median.toString());
+        }
+      });
+    }
+
+    if (data.ingredientCategoryIds && data.ingredientCategoryIds.length > 0) {
+      data.ingredientCategoryIds.forEach((categoryId) => {
+        formData.append('IngredientCategoryIds', categoryId);
+      });
+    }
+
+    return this.post<Ingredient>(`api/Ingredient`, formData, {
+      isPrivateRoute: true,
+    });
+  }
+
+  async deleteIngredient(id: string): Promise<void> {
+    return this.delete<void>(`api/Ingredient/${id}`, {
+      isPrivateRoute: true,
+    });
+  }
 }
 
 export const ingredientManagementService = new IngredientManagementService();

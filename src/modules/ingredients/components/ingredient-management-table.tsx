@@ -1,10 +1,11 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MoreVertical, Search, X } from 'lucide-react';
 import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ReactNode, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Pagination } from '@/base/components/layout/pagination';
 import { Badge } from '@/base/components/ui/badge';
@@ -38,6 +39,7 @@ import {
   PaginationParams,
   ingredientManagementService,
 } from '../services/ingredient-management.service';
+import { CreateIngredientDialog } from './create-ingredient-dialog';
 import { EditIngredientDialog } from './edit-ingredient-dialog';
 
 // Custom debounce hook
@@ -75,6 +77,7 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   // Sync state with URL params
   useEffect(() => {
@@ -115,6 +118,23 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
       return ingredientManagementService.getIngredientById(selectedIngredient.id);
     },
     enabled: detailDialogOpen && !!selectedIngredient?.id,
+  });
+
+  const queryClient = useQueryClient();
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (ingredientId: string) => {
+      return ingredientManagementService.deleteIngredient(ingredientId);
+    },
+    onSuccess: () => {
+      toast.success('Xóa nguyên liệu thành công');
+      queryClient.invalidateQueries({ queryKey: ['ingredients'] });
+    },
+    onError: (error: Error) => {
+      console.warn('Delete error:', error);
+      toast.error(error.message || 'Không thể xóa nguyên liệu');
+    },
   });
 
   // Helper function to convert API response to PaginationType
@@ -189,6 +209,12 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
     setEditDialogOpen(true);
   };
 
+  const handleDelete = (ingredientId: string) => {
+    if (confirm('Bạn có chắc muốn xóa nguyên liệu này?')) {
+      deleteMutation.mutate(ingredientId);
+    }
+  };
+
   const handleClearSearch = () => {
     setSearchTerm('');
     const params = new URLSearchParams(searchParams);
@@ -213,25 +239,36 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>{title}</div>
 
-        {/* Search */}
-        <div className="relative w-full sm:w-64">
-          <Search className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
-          <Input
-            placeholder="Tìm kiếm nguyên liệu..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pr-8 pl-8"
-          />
-          {searchTerm && (
-            <button
-              onClick={handleClearSearch}
-              className="text-muted-foreground hover:text-foreground absolute top-2.5 right-2.5"
-              aria-label="Clear search"
-              title="Clear search"
-            >
-              <X className="size-4" />
-            </button>
-          )}
+        {/* Actions */}
+        <div className="flex w-full gap-2 sm:w-auto sm:flex-row-reverse">
+          {/* Create button */}
+          <Button
+            onClick={() => setCreateDialogOpen(true)}
+            className="flex bg-[#99b94a] hover:bg-[#88a839] sm:flex-initial"
+          >
+            + Thêm nguyên liệu mới
+          </Button>
+
+          {/* Search */}
+          <div className="relative flex-1 sm:w-64">
+            <Search className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
+            <Input
+              placeholder="Tìm kiếm nguyên liệu..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pr-8 pl-8"
+            />
+            {searchTerm && (
+              <button
+                onClick={handleClearSearch}
+                className="text-muted-foreground hover:text-foreground absolute top-2.5 right-2.5"
+                aria-label="Clear search"
+                title="Clear search"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -315,6 +352,13 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleEdit(ingredient)}>
                           Chỉnh sửa
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDelete(ingredient.id)}
+                          disabled={deleteMutation.isPending}
+                          className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                        >
+                          {deleteMutation.isPending ? 'Đang xóa...' : 'Xóa'}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -453,6 +497,9 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
       />
+
+      {/* Create Dialog */}
+      <CreateIngredientDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
     </div>
   );
 }
