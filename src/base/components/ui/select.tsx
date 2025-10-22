@@ -198,8 +198,8 @@ export function Select({
             if (selectedOptions.length > 2)
               return (
                 <span>
-                  {getDisplayValue(selectedOptions[0])}, {getDisplayValue(selectedOptions[1])}, and{' '}
-                  {selectedOptions.length - 2} more...
+                  {getDisplayValue(selectedOptions[0])}, {getDisplayValue(selectedOptions[1])}, và{' '}
+                  {selectedOptions.length - 2} cái nữa...
                 </span>
               );
           })()}

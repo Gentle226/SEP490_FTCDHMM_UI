@@ -11,6 +11,15 @@ const withPWA = require('next-pwa')({
 
 const nextConfig: NextConfig = {
   transpilePackages: ['react-native'],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'sep490-images.s3.amazonaws.com',
+        pathname: '/**',
+      },
+    ],
+  },
   webpack: (config, _options) => {
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
