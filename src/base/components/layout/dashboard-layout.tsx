@@ -17,6 +17,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
+import { Button } from '@/base/components/ui/button';
 import {
   Sidebar,
   SidebarContent,
@@ -211,7 +212,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
-          <div className="flex flex-1 items-center justify-end">
+          <div className="flex flex-1 items-center justify-end gap-4">
+            <Link href="/recipe/new">
+              <Button size="sm" className="bg-[#99b94a] whitespace-nowrap hover:bg-[#7a8f3a]">
+                + Viết món mới
+              </Button>
+            </Link>
             {user && <UserActions user={user} onLogout={handleLogout} />}
           </div>
         </header>

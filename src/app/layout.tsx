@@ -4,6 +4,7 @@ import { getLocale } from 'next-intl/server';
 
 import { Toaster } from '@/base/components/ui/toaster';
 import { QueryProvider } from '@/base/providers';
+import { LayoutClient } from '@/base/providers/layout-client';
 import '@/base/styles/globals.css';
 import { AuthProvider } from '@/modules/auth';
 
@@ -51,7 +52,7 @@ export default async function RootLayout({
         <NextIntlClientProvider>
           <QueryProvider>
             <AuthProvider>
-              {children}
+              <LayoutClient>{children}</LayoutClient>
               <Toaster position="top-right" richColors />
             </AuthProvider>
           </QueryProvider>
