@@ -2,6 +2,7 @@ import { HttpClient } from '@/base/lib';
 
 export interface Nutrient {
   id: string; // Nutrient ID from the API
+  vietnameseName?: string; // Nutrient name in Vietnamese (from detail API)
   min?: number;
   max?: number;
   median?: number;
@@ -49,6 +50,14 @@ export interface IngredientApiResponse {
   nutrients: NutrientResponse[];
 }
 
+export interface IngredientListItemResponse {
+  id: string;
+  name: string;
+  description?: string;
+  lastUpdatedUtc: string;
+  categoryNames: IngredientCategory[];
+}
+
 export interface PaginationParams {
   pageNumber?: number;
   pageSize?: number;
@@ -56,7 +65,7 @@ export interface PaginationParams {
 }
 
 export interface IngredientsResponse {
-  items: Ingredient[];
+  items: IngredientListItemResponse[];
   totalCount: number;
   pageNumber: number;
   pageSize: number;
@@ -98,6 +107,7 @@ class IngredientManagementService extends HttpClient {
 
         return {
           id: nutrientId,
+          vietnameseName: vietnameseName,
           min: n.min,
           max: n.max,
           median: n.median,
@@ -118,9 +128,27 @@ class IngredientManagementService extends HttpClient {
       queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
     if (params.search) queryParams.append('Keyword', params.search);
 
-    return this.get<IngredientsResponse>(`api/Ingredient?${queryParams.toString()}`, {
-      isPrivateRoute: true,
-    });
+    const apiResponse = await this.get<IngredientsResponse>(
+      `api/Ingredient?${queryParams.toString()}`,
+      {
+        isPrivateRoute: true,
+      },
+    );
+
+    // Map API response to frontend interface
+    return {
+      ...apiResponse,
+      items: apiResponse.items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        image: undefined, // List response doesn't include images
+        ingredientCategoryIds: item.categoryNames?.map((cat) => cat.id) || [],
+        categoryNames: item.categoryNames?.map((cat) => cat.name) || [],
+        nutrients: [],
+        lastUpdatedUtc: item.lastUpdatedUtc,
+      })),
+    };
   }
 
   /**
