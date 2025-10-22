@@ -25,7 +25,7 @@ export class HttpClient {
       headers: {
         ...headers,
       },
-      timeout: 10000,
+      timeout: 120000, // Increased to 120 seconds for long-running requests like image detection
       ...otherAxiosConfig,
     });
 

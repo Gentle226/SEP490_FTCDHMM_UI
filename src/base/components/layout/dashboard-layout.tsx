@@ -16,6 +16,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 import { Button } from '@/base/components/ui/button';
 import {
@@ -35,6 +36,7 @@ import {
 import { useSidebarStateFromCookie } from '@/base/hooks/use-sidebar-cookie';
 import { Role, useAuth } from '@/modules/auth';
 import { authService } from '@/modules/auth/services/auth.service';
+import { IngredientDetectionDialog } from '@/modules/ingredients/components/ingredient-detection-dialog';
 
 import { UserActions } from './user-actions';
 
@@ -47,6 +49,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const sidebarDefaultOpen = useSidebarStateFromCookie();
+  const [detectionDialogOpen, setDetectionDialogOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -213,6 +216,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
           <div className="flex flex-1 items-center justify-end gap-4">
+            {/* Ingredient Detection Button */}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setDetectionDialogOpen(true)}
+              className="border-[#99b94a] whitespace-nowrap text-[#99b94a] hover:bg-[#99b94a]/10"
+              title="Quét nguyên liệu từ ảnh"
+            >
+              Quét Nguyên Liệu
+            </Button>
+
             <Link href="/recipe/new">
               <Button size="sm" className="bg-[#99b94a] whitespace-nowrap hover:bg-[#7a8f3a]">
                 + Viết món mới
@@ -222,6 +236,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
+
+        {/* Ingredient Detection Dialog */}
+        <IngredientDetectionDialog
+          open={detectionDialogOpen}
+          onOpenChange={setDetectionDialogOpen}
+          onSelect={(ingredients) => {
+            // TODO: Implement search by selected ingredients
+            console.warn('Selected ingredients:', ingredients);
+          }}
+        />
       </SidebarInset>
     </SidebarProvider>
   );

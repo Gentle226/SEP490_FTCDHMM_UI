@@ -50,6 +50,11 @@ export interface IngredientApiResponse {
   nutrients: NutrientResponse[];
 }
 
+export interface IngredientDetectionResult {
+  ingredient: string;
+  confidence: number;
+}
+
 export interface IngredientListItemResponse {
   id: string;
   name: string;
@@ -296,6 +301,15 @@ class IngredientManagementService extends HttpClient {
 
   async deleteIngredient(id: string): Promise<void> {
     return this.delete<void>(`api/Ingredient/${id}`, {
+      isPrivateRoute: true,
+    });
+  }
+
+  async detectIngredientsFromImage(imageFile: File): Promise<IngredientDetectionResult[]> {
+    const formData = new FormData();
+    formData.append('Image', imageFile);
+
+    return this.post<IngredientDetectionResult[]>(`api/Ingredient/detect-gemini`, formData, {
       isPrivateRoute: true,
     });
   }
