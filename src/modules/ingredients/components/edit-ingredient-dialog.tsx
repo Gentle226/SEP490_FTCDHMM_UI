@@ -79,6 +79,10 @@ export function EditIngredientDialog({
       return ingredientManagementService.getIngredientById(ingredient.id);
     },
     enabled: open && !!ingredient?.id,
+    staleTime: Infinity, // Data never becomes stale while dialog is open
+    gcTime: 0, // Don't garbage collect while dialog is open
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnReconnect: false, // Don't refetch on reconnect
   });
 
   // Reset form when dialog opens or detailed ingredient loads
@@ -103,8 +107,12 @@ export function EditIngredientDialog({
 
       console.warn('Loaded nutrients:', existingNutrientRows);
       setNutrientRows(existingNutrientRows);
-    } else if (!open) {
-      // Reset form when dialog closes
+    }
+  }, [open, ingredient?.id, detailedIngredient]);
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
       setName('');
       setSelectedCategoryIds([]);
       setDescription('');
@@ -112,7 +120,7 @@ export function EditIngredientDialog({
       setImageFile(null);
       setNutrientRows([]);
     }
-  }, [open, detailedIngredient]);
+  }, [open]);
 
   const updateMutation = useMutation({
     mutationFn: async (data: {
