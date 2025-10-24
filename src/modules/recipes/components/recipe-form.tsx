@@ -33,6 +33,7 @@ import {
 
 import { recipeService } from '../services/recipe.service';
 import { CookingStep } from '../types';
+import { ImageCropDialog } from './image-crop-dialog';
 
 interface SelectedIngredient {
   id: string;
@@ -61,6 +62,8 @@ export function RecipeForm({}: RecipeFormProps) {
 
   const [mainImage, setMainImage] = useState<File | null>(null);
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
+  const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [cookingSteps, setCookingSteps] = useState<CookingStep[]>([
     { stepOrder: 1, instruction: '', image: undefined },
   ]);
@@ -129,13 +132,24 @@ export function RecipeForm({}: RecipeFormProps) {
   const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setMainImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setMainImagePreview(reader.result as string);
+        setImageToCrop(reader.result as string);
+        setIsCropDialogOpen(true);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleCropComplete = (croppedFile: File) => {
+    setMainImage(croppedFile);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setMainImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(croppedFile);
+    setIsCropDialogOpen(false);
+    setImageToCrop(null);
   };
 
   const handleStepImageChange = (index: number, file: File) => {
@@ -203,6 +217,16 @@ export function RecipeForm({}: RecipeFormProps) {
       return;
     }
 
+    if (name.length > 100) {
+      toast.error('Tên món không được vượt quá 100 ký tự');
+      return;
+    }
+
+    if (description.length > 1500) {
+      toast.error('Mô tả không được vượt quá 1500 ký tự');
+      return;
+    }
+
     if (!mainImage) {
       toast.error('Vui lòng tải lên hình ảnh món ăn');
       return;
@@ -260,38 +284,13 @@ export function RecipeForm({}: RecipeFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Recipe Name */}
-      <div className="space-y-2">
-        <Label htmlFor="name">
-          Tên món <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id="name"
-          placeholder="Nhập tên món ăn"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-      </div>
-
-      {/* Description */}
-      <div className="space-y-2">
-        <Label htmlFor="description">Mô tả</Label>
-        <Textarea
-          id="description"
-          placeholder="Hãy chia sẻ với mọi người về món này của bạn nhé - ai đã truyền cảm hứng cho bạn, tại sao nó đặc biệt, bạn thích thưởng thức nó như thế nào để đề cập đến đó."
-          rows={4}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </div>
-
-      {/* Main Image */}
-      <div className="space-y-2">
-        <Label>Hình ảnh món ăn</Label>
-        <div className="flex items-center gap-4">
+      {/* Main Image and Basic Info */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-[300px_1fr]">
+        {/* Image Section - Left */}
+        <div className="space-y-2">
+          <Label>Hình ảnh món ăn</Label>
           {mainImagePreview ? (
-            <div className="relative h-32 w-32 overflow-hidden rounded-lg border">
+            <div className="relative h-64 w-full overflow-hidden rounded-lg border">
               <Image src={mainImagePreview} alt="Recipe preview" fill className="object-cover" />
               <button
                 type="button"
@@ -299,16 +298,16 @@ export function RecipeForm({}: RecipeFormProps) {
                   setMainImage(null);
                   setMainImagePreview(null);
                 }}
-                className="absolute top-1 right-1 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                className="absolute top-2 right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
                 aria-label="Remove image"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
           ) : (
-            <label className="flex h-32 w-32 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400">
+            <label className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400">
               <Upload className="h-8 w-8 text-gray-400" />
-              <span className="mt-2 text-xs text-gray-500">Tải ảnh lên</span>
+              <span className="mt-2 px-2 text-center text-xs text-gray-500">Tải ảnh lên</span>
               <input
                 type="file"
                 accept="image/*"
@@ -318,53 +317,87 @@ export function RecipeForm({}: RecipeFormProps) {
             </label>
           )}
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {/* Difficulty */}
-        <div className="space-y-2">
-          <Label htmlFor="difficulty">
-            Độ khó <span className="text-red-500">*</span>
-          </Label>
-          <Select
-            options={[
-              { value: 'Easy', label: 'Dễ' },
-              { value: 'Medium', label: 'Trung bình' },
-              { value: 'Hard', label: 'Khó' },
-            ]}
-            value={difficulty}
-            onChange={(value) => setDifficulty(value as 'Easy' | 'Medium' | 'Hard')}
-            placeholder="Chọn độ khó"
-          />
-        </div>
+        {/* Right Section - Title, Description, Difficulty, Cook Time, Ration */}
+        <div className="space-y-4">
+          {/* Recipe Name */}
+          <div className="space-y-2">
+            <Label htmlFor="name">
+              Tên món <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="name"
+              placeholder="Tên món ăn của bạn"
+              value={name}
+              onChange={(e) => setName(e.target.value.slice(0, 100))}
+              maxLength={100}
+              required
+            />
+            <p className="text-xs text-gray-500">{name.length}/100 ký tự</p>
+          </div>
 
-        {/* Cook Time */}
-        <div className="space-y-2">
-          <Label htmlFor="cookTime">Thời gian nấu (phút)</Label>
-          <Input
-            id="cookTime"
-            type="number"
-            placeholder="30"
-            value={cookTime}
-            onChange={(e) => setCookTime(parseFloat(e.target.value) || 0)}
-            min="0"
-          />
-        </div>
+          {/* Description */}
+          <div className="space-y-2">
+            <Label htmlFor="description">Mô tả</Label>
+            <Textarea
+              id="description"
+              placeholder="Hãy chia sẻ với mọi người về món này của bạn nhé - ai đã truyền cảm hứng cho bạn, tại sao nó đặc biệt, bạn thích thưởng thức nó như thế nào..."
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value.slice(0, 1500))}
+              maxLength={1500}
+            />
+            <p className="text-xs text-gray-500">{description.length}/1500 ký tự</p>
+          </div>
 
-        {/* Ration */}
-        <div className="space-y-2">
-          <Label htmlFor="ration">
-            Khẩu phần (người) <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="ration"
-            type="number"
-            placeholder="2"
-            value={ration}
-            onChange={(e) => setRation(parseInt(e.target.value) || 1)}
-            min="1"
-            required
-          />
+          {/* Difficulty, Cook Time, Ration - Grid */}
+          <div className="grid grid-cols-3 gap-3">
+            {/* Difficulty */}
+            <div className="space-y-2">
+              <Label htmlFor="difficulty">
+                Độ khó <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                options={[
+                  { value: 'Easy', label: 'Dễ' },
+                  { value: 'Medium', label: 'Trung bình' },
+                  { value: 'Hard', label: 'Khó' },
+                ]}
+                value={difficulty}
+                onChange={(value) => setDifficulty(value as 'Easy' | 'Medium' | 'Hard')}
+                placeholder="Chọn độ khó"
+              />
+            </div>
+
+            {/* Cook Time */}
+            <div className="space-y-2">
+              <Label htmlFor="cookTime">Thời gian (phút)</Label>
+              <Input
+                id="cookTime"
+                type="number"
+                placeholder="30"
+                value={cookTime}
+                onChange={(e) => setCookTime(parseFloat(e.target.value) || 0)}
+                min="0"
+              />
+            </div>
+
+            {/* Ration */}
+            <div className="space-y-2">
+              <Label htmlFor="ration">
+                Khẩu phần (người) <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="ration"
+                type="number"
+                placeholder="2"
+                value={ration}
+                onChange={(e) => setRation(parseInt(e.target.value) || 1)}
+                min="1"
+                required
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -379,23 +412,26 @@ export function RecipeForm({}: RecipeFormProps) {
           {selectedLabels.length === 0 ? (
             <span className="text-sm text-gray-400">Chưa có nhãn nào được chọn</span>
           ) : (
-            selectedLabels.map((label) => (
-              <div
-                key={label.id}
-                className="flex items-center gap-1 rounded-full px-3 py-1 text-sm text-white"
-                style={{ backgroundColor: label.colorCode }}
-              >
-                <span>{label.name}</span>
-                <button
-                  type="button"
-                  onClick={() => removeLabel(label.id)}
-                  className="ml-1 rounded-full hover:bg-white/20"
-                  aria-label={`Remove ${label.name}`}
+            selectedLabels.map((label) => {
+              const labelStyle = { backgroundColor: label.colorCode } as React.CSSProperties;
+              return (
+                <div
+                  key={label.id}
+                  className="flex items-center gap-1 rounded-full px-3 py-1 text-sm text-white"
+                  style={labelStyle}
                 >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))
+                  <span>{label.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeLabel(label.id)}
+                    className="ml-1 rounded-full hover:bg-white/20"
+                    aria-label={`Remove ${label.name}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              );
+            })
           )}
         </div>
 
@@ -423,6 +459,9 @@ export function RecipeForm({}: RecipeFormProps) {
                   <CommandGroup>
                     {labelSearchResults.map((label) => {
                       const isSelected = selectedLabels.some((l) => l.id === label.id);
+                      const colorStyle = {
+                        backgroundColor: label.colorCode,
+                      } as React.CSSProperties;
                       return (
                         <CommandItem
                           key={label.id}
@@ -433,7 +472,7 @@ export function RecipeForm({}: RecipeFormProps) {
                           <div className="flex w-full items-center gap-2">
                             <div
                               className="h-4 w-4 flex-shrink-0 rounded-full"
-                              style={{ backgroundColor: label.colorCode }}
+                              style={colorStyle}
                             />
                             <span className="flex-1">{label.name}</span>
                             {isSelected && <span className="text-xs text-gray-500">Đã chọn</span>}
@@ -630,6 +669,19 @@ export function RecipeForm({}: RecipeFormProps) {
           {isSubmitting ? 'Đang lưu...' : 'Lên bài'}
         </Button>
       </div>
+
+      {/* Image Crop Dialog */}
+      {imageToCrop && (
+        <ImageCropDialog
+          open={isCropDialogOpen}
+          imageSrc={imageToCrop}
+          onCropComplete={handleCropComplete}
+          onCancel={() => {
+            setIsCropDialogOpen(false);
+            setImageToCrop(null);
+          }}
+        />
+      )}
     </form>
   );
 }
