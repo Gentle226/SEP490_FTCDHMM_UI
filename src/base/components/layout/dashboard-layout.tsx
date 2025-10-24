@@ -131,22 +131,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       ...commonItems,
       {
         title: 'Công Thức Của Tôi',
-        url: '/customer/recipe',
+        url: '/myrecipe',
         icon: CookingPot,
       },
       {
         title: 'Công Thức Đã Lưu',
-        url: '/customer/save',
+        url: '/saved',
         icon: BookMarked,
       },
       {
         title: 'Công Thức Ưa Thích',
-        url: '/customer/favorite',
+        url: '/favorite',
         icon: BookHeart,
       },
       {
         title: 'Công Thức Đã Xem',
-        url: '/customer/history',
+        url: '/history',
         icon: History,
       },
     ];

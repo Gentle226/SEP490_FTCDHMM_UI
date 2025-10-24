@@ -23,3 +23,5 @@ export interface Recipe extends Omit<CreateRecipeRequest, 'image' | 'cookingStep
   createdAt: string;
   updatedAt: string;
 }
+
+export * from './my-recipe.types';
