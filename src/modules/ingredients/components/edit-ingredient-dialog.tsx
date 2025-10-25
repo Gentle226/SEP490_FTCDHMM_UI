@@ -421,7 +421,7 @@ export function EditIngredientDialog({
           {/* Nutrients */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-base font-semibold">Thành phần dinh dưỡng</Label>
+              <Label className="text-base font-semibold">Thành phần dinh dưỡng (Trên 100g)</Label>
               <span className="text-muted-foreground text-xs">
                 <Badge variant="warning" className="mr-1 text-xs">
                   *
@@ -524,7 +524,7 @@ export function EditIngredientDialog({
                         }
                         title={isRequired ? 'Không thể xóa thành phần bắt buộc' : 'Xóa'}
                       >
-                        Hủy
+                        Xóa
                       </Button>
                     </div>
                   );
@@ -548,7 +548,7 @@ export function EditIngredientDialog({
           {/* Actions */}
           <div className="flex justify-end gap-3 border-t pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Hủy
+              Xóa
             </Button>
             <Button
               type="submit"

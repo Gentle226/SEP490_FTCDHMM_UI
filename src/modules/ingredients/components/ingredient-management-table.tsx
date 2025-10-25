@@ -217,10 +217,7 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
 
   const handleClearSearch = () => {
     setSearchTerm('');
-    const params = new URLSearchParams(searchParams);
-    params.delete('search');
-    params.set('page', '1');
-    router.push(`${pathname}?${params.toString()}`);
+    setPage(1);
   };
 
   if (error) {
@@ -297,11 +294,6 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                 <TableCell colSpan={4} className="h-32 text-center">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <p className="text-muted-foreground">Không tìm thấy nguyên liệu nào.</p>
-                    {searchTerm && (
-                      <Button variant="link" onClick={handleClearSearch} className="text-[#99b94a]">
-                        Xóa bộ lọc
-                      </Button>
-                    )}
                   </div>
                 </TableCell>
               </TableRow>

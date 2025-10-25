@@ -95,6 +95,22 @@ class IngredientManagementService extends HttpClient {
       Calories: 'Năng lượng',
       Fat: 'Tổng chất béo',
       Carbohydrate: 'Tinh bột',
+      Phosphorus: 'Phốt pho',
+      Zinc: 'Kẽm',
+      Sugars: 'Đường',
+      Copper: 'Đồng',
+      Iron: 'Sắt',
+      Calcium: 'Canxi',
+      Selenium: 'Selen',
+      Manganese: 'Mangan',
+      Magnesium: 'Magie',
+      Potassium: 'Kali',
+      Sodium: 'Natri',
+      'Dietary Fiber': 'Chất xơ',
+      'Folate (Folic Acid)': 'Axit folic',
+      'Vitamin B1 (Thiamin)': 'Vitamin B1',
+      'Vitamin B2 (Riboflavin)': 'Vitamin B2',
+      'Vitamin B3 (Niacin)': 'Vitamin B3',
     };
 
     return {
@@ -105,14 +121,20 @@ class IngredientManagementService extends HttpClient {
       ingredientCategoryIds: apiResponse.categories.map((c) => c.id),
       categoryNames: apiResponse.categories.map((c) => c.name),
       nutrients: apiResponse.nutrients.map((n) => {
-        // Try to find nutrient by Vietnamese name
+        // Try to find nutrient by Vietnamese name first
         const vietnameseName = englishToVietnameseName[n.name] || n.name;
-        const nutrientInfo = allNutrients.find((nut) => nut.vietnameseName === vietnameseName);
+        let nutrientInfo = allNutrients.find((nut) => nut.vietnameseName === vietnameseName);
+
+        // If not found by Vietnamese name, try by English name
+        if (!nutrientInfo) {
+          nutrientInfo = allNutrients.find((nut) => nut.name === n.name);
+        }
+
         const nutrientId = nutrientInfo?.id || n.name;
 
         return {
           id: nutrientId,
-          vietnameseName: vietnameseName,
+          vietnameseName: nutrientInfo?.vietnameseName || vietnameseName,
           min: n.min,
           max: n.max,
           median: n.median,
