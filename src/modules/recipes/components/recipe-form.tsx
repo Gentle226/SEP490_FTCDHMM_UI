@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, Trash2, Upload, X } from 'lucide-react';
+import { GripVertical, Plus, Trash2, Upload, X } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
@@ -59,14 +59,20 @@ export function RecipeForm({}: RecipeFormProps) {
   const [difficulty, setDifficulty] = useState<'Easy' | 'Medium' | 'Hard'>('Easy');
   const [cookTime, setCookTime] = useState(0);
   const [ration, setRation] = useState(1);
+  const [isNameFocused, setIsNameFocused] = useState(false);
+  const [isDescriptionFocused, setIsDescriptionFocused] = useState(false);
 
   const [mainImage, setMainImage] = useState<File | null>(null);
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
   const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [cookingSteps, setCookingSteps] = useState<CookingStep[]>([
     { stepOrder: 1, instruction: '', image: undefined },
   ]);
+  const [draggedStepIndex, setDraggedStepIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [focusedStepIndex, setFocusedStepIndex] = useState<number | null>(null);
 
   // Labels state
   const [selectedLabels, setSelectedLabels] = useState<SelectedLabel[]>([]);
@@ -132,12 +138,40 @@ export function RecipeForm({}: RecipeFormProps) {
   const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageToCrop(reader.result as string);
-        setIsCropDialogOpen(true);
-      };
-      reader.readAsDataURL(file);
+      processImageFile(file);
+    }
+  };
+
+  const processImageFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageToCrop(reader.result as string);
+      setIsCropDialogOpen(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      processImageFile(file);
+    } else if (file) {
+      toast.error('Vui lòng chỉ tải lên tệp ảnh');
     }
   };
 
@@ -182,6 +216,43 @@ export function RecipeForm({}: RecipeFormProps) {
     const newSteps = [...cookingSteps];
     newSteps[index].instruction = instruction;
     setCookingSteps(newSteps);
+  };
+
+  const reorderCookingSteps = (fromIndex: number, toIndex: number) => {
+    const newSteps = [...cookingSteps];
+    const [removed] = newSteps.splice(fromIndex, 1);
+    newSteps.splice(toIndex, 0, removed);
+
+    // Renumber steps
+    const renumberedSteps = newSteps.map((step, i) => ({
+      ...step,
+      stepOrder: i + 1,
+    }));
+    setCookingSteps(renumberedSteps);
+  };
+
+  const handleCookStepDragStart = (index: number) => {
+    setDraggedStepIndex(index);
+  };
+
+  const handleCookStepDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverIndex(index);
+  };
+
+  const handleCookStepDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleCookStepDrop = (e: React.DragEvent<HTMLDivElement>, toIndex: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (draggedStepIndex !== null && draggedStepIndex !== toIndex) {
+      reorderCookingSteps(draggedStepIndex, toIndex);
+    }
+    setDraggedStepIndex(null);
+    setDragOverIndex(null);
   };
 
   const addLabel = (label: LabelType) => {
@@ -305,9 +376,28 @@ export function RecipeForm({}: RecipeFormProps) {
               </button>
             </div>
           ) : (
-            <label className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400">
-              <Upload className="h-8 w-8 text-gray-400" />
-              <span className="mt-2 px-2 text-center text-xs text-gray-500">Tải ảnh lên</span>
+            <label
+              className={`flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-all ${
+                isDragOver
+                  ? 'border-[#99b94a] bg-green-50 ring-2 ring-[#b2df3f]'
+                  : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <Upload
+                className={`h-8 w-8 transition-colors ${
+                  isDragOver ? 'text-[#99b94a]' : 'text-gray-400'
+                }`}
+              />
+              <span
+                className={`mt-2 px-2 text-center text-xs transition-colors ${
+                  isDragOver ? 'text-[#99b94a]' : 'text-gray-500'
+                }`}
+              >
+                {isDragOver ? 'Thả ảnh vào đây' : 'Tải ảnh lên hoặc kéo thả'}
+              </span>
               <input
                 type="file"
                 accept="image/*"
@@ -322,18 +412,22 @@ export function RecipeForm({}: RecipeFormProps) {
         <div className="space-y-4">
           {/* Recipe Name */}
           <div className="space-y-2">
-            <Label htmlFor="name">
-              Tên món <span className="text-red-500">*</span>
-            </Label>
+            <Label htmlFor="name">Tên món</Label>
             <Input
               id="name"
               placeholder="Tên món ăn của bạn"
               value={name}
               onChange={(e) => setName(e.target.value.slice(0, 100))}
+              onFocus={() => setIsNameFocused(true)}
+              onBlur={() => setIsNameFocused(false)}
               maxLength={100}
               required
             />
-            <p className="text-xs text-gray-500">{name.length}/100 ký tự</p>
+            <p
+              className={`text-right text-xs transition-opacity ${isNameFocused ? 'text-gray-500 opacity-100' : 'text-gray-300 opacity-0'}`}
+            >
+              {name.length}/100
+            </p>
           </div>
 
           {/* Description */}
@@ -342,21 +436,26 @@ export function RecipeForm({}: RecipeFormProps) {
             <Textarea
               id="description"
               placeholder="Hãy chia sẻ với mọi người về món này của bạn nhé - ai đã truyền cảm hứng cho bạn, tại sao nó đặc biệt, bạn thích thưởng thức nó như thế nào..."
-              rows={3}
+              rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value.slice(0, 1500))}
+              onFocus={() => setIsDescriptionFocused(true)}
+              onBlur={() => setIsDescriptionFocused(false)}
               maxLength={1500}
+              className="break-words sm:min-h-24 md:min-h-28"
             />
-            <p className="text-xs text-gray-500">{description.length}/1500 ký tự</p>
+            <p
+              className={`text-right text-xs transition-opacity ${isDescriptionFocused ? 'text-gray-500 opacity-100' : 'text-gray-300 opacity-0'}`}
+            >
+              {description.length}/1500
+            </p>
           </div>
 
           {/* Difficulty, Cook Time, Ration - Grid */}
           <div className="grid grid-cols-3 gap-3">
             {/* Difficulty */}
             <div className="space-y-2">
-              <Label htmlFor="difficulty">
-                Độ khó <span className="text-red-500">*</span>
-              </Label>
+              <Label htmlFor="difficulty">Độ khó</Label>
               <Select
                 options={[
                   { value: 'Easy', label: 'Dễ' },
@@ -366,36 +465,48 @@ export function RecipeForm({}: RecipeFormProps) {
                 value={difficulty}
                 onChange={(value) => setDifficulty(value as 'Easy' | 'Medium' | 'Hard')}
                 placeholder="Chọn độ khó"
+                searchable={false}
               />
             </div>
 
             {/* Cook Time */}
             <div className="space-y-2">
-              <Label htmlFor="cookTime">Thời gian (phút)</Label>
-              <Input
-                id="cookTime"
-                type="number"
-                placeholder="30"
-                value={cookTime}
-                onChange={(e) => setCookTime(parseFloat(e.target.value) || 0)}
-                min="0"
-              />
+              <Label htmlFor="cookTime">Thời gian nấu</Label>
+              <div className="relative">
+                <Input
+                  id="cookTime"
+                  type="number"
+                  placeholder="30"
+                  value={cookTime}
+                  onChange={(e) => setCookTime(parseFloat(e.target.value) || 0)}
+                  min="0"
+                  step="0.1"
+                  className="pr-12 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                />
+                <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm font-medium text-gray-500">
+                  phút
+                </span>
+              </div>
             </div>
 
             {/* Ration */}
             <div className="space-y-2">
-              <Label htmlFor="ration">
-                Khẩu phần (người) <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="ration"
-                type="number"
-                placeholder="2"
-                value={ration}
-                onChange={(e) => setRation(parseInt(e.target.value) || 1)}
-                min="1"
-                required
-              />
+              <Label htmlFor="ration">Khẩu phần</Label>
+              <div className="relative">
+                <Input
+                  id="ration"
+                  type="number"
+                  placeholder="2"
+                  value={ration}
+                  onChange={(e) => setRation(parseInt(e.target.value) || 1)}
+                  min="1"
+                  className="pr-12 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  required
+                />
+                <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm font-medium text-gray-500">
+                  người
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -403,9 +514,7 @@ export function RecipeForm({}: RecipeFormProps) {
 
       {/* Labels */}
       <div className="space-y-2">
-        <Label>
-          Nhãn <span className="text-red-500">*</span>
-        </Label>
+        <Label>Nhãn</Label>
 
         {/* Selected Labels */}
         <div className="flex min-h-[40px] flex-wrap gap-2 rounded-lg border p-3">
@@ -490,9 +599,7 @@ export function RecipeForm({}: RecipeFormProps) {
 
       {/* Ingredients */}
       <div className="space-y-2">
-        <Label>
-          Nguyên liệu <span className="text-red-500">*</span>
-        </Label>
+        <Label>Nguyên liệu</Label>
 
         {/* Selected Ingredients */}
         <div className="min-h-[100px] rounded-lg border p-3">
@@ -570,29 +677,55 @@ export function RecipeForm({}: RecipeFormProps) {
 
       {/* Cooking Steps */}
       <div className="space-y-4">
-        <Label>
-          Các bước nấu <span className="text-red-500">*</span>
-        </Label>
+        <Label>Các bước nấu</Label>
 
         {cookingSteps.map((step, index) => (
-          <Card key={index} className="relative">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-4">
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#99b94a] font-semibold text-white">
-                  {step.stepOrder}
+          <Card
+            key={index}
+            className={`relative cursor-move transition-all ${
+              dragOverIndex === index ? 'border-green-500 bg-green-50' : ''
+            }`}
+            draggable
+            onDragStart={() => handleCookStepDragStart(index)}
+            onDragOver={(e) => handleCookStepDragOver(e, index)}
+            onDragLeave={handleCookStepDragLeave}
+            onDrop={(e) => handleCookStepDrop(e, index)}
+          >
+            <CardContent className="pt-4 pb-4">
+              <div className="flex gap-3">
+                {/* Left Column: Step Number and Drag Handle */}
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#99b94a] text-2xl font-semibold text-white">
+                    {step.stepOrder}
+                  </div>
+                  <div className="cursor-grab text-gray-400 active:cursor-grabbing">
+                    <GripVertical className="h-5 w-5" />
+                  </div>
                 </div>
 
-                <div className="flex-1 space-y-3">
-                  <Textarea
-                    placeholder="Trộn bột và nước đến khi đặc lại và để ở nhiệt độ phòng trong vòng 24-36 tiếng"
-                    value={step.instruction}
-                    onChange={(e) => updateStepDescription(index, e.target.value)}
-                    rows={3}
-                  />
+                {/* Main Content */}
+                <div className="flex-1">
+                  <div className="space-y-1">
+                    <Textarea
+                      placeholder="Ướp cá hồi với mật ong, dầu oliu và tiêu 15 phút."
+                      value={step.instruction}
+                      onChange={(e) => updateStepDescription(index, e.target.value.slice(0, 500))}
+                      onFocus={() => setFocusedStepIndex(index)}
+                      onBlur={() => setFocusedStepIndex(null)}
+                      maxLength={500}
+                      rows={3}
+                      className="break-words"
+                    />
+                    <p
+                      className={`text-right text-xs transition-opacity ${focusedStepIndex === index ? 'text-gray-500 opacity-100' : 'text-gray-300 opacity-0'}`}
+                    >
+                      {step.instruction.length}/500
+                    </p>
+                  </div>
 
                   <div className="flex items-center gap-4">
                     {step.image ? (
-                      <div className="relative h-24 w-24 overflow-hidden rounded-lg border">
+                      <div className="relative h-32 w-48 overflow-hidden rounded-lg border">
                         <Image
                           src={
                             step.image instanceof File
@@ -617,7 +750,7 @@ export function RecipeForm({}: RecipeFormProps) {
                         </button>
                       </div>
                     ) : (
-                      <label className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400">
+                      <label className="flex h-32 w-48 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400">
                         <Upload className="h-6 w-6 text-gray-400" />
                         <input
                           type="file"
@@ -633,18 +766,20 @@ export function RecipeForm({}: RecipeFormProps) {
                     )}
                   </div>
                 </div>
+              </div>
 
-                {cookingSteps.length > 1 && (
+              {cookingSteps.length > 1 && (
+                <div className="absolute right-3 bottom-3">
                   <button
                     type="button"
                     onClick={() => removeCookingStep(index)}
-                    className="flex-shrink-0 rounded-lg p-2 text-red-500 hover:bg-red-50"
+                    className="rounded-lg p-1.5 text-red-500 transition-colors hover:bg-red-100"
                     aria-label={`Remove step ${step.stepOrder}`}
                   >
                     <Trash2 className="h-5 w-5" />
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}

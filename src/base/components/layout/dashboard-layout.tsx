@@ -42,9 +42,10 @@ import { UserActions } from './user-actions';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
+  showHeader?: boolean;
 }
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+export function DashboardLayout({ children, showHeader = true }: DashboardLayoutProps) {
   const { user, setUser } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -213,28 +214,30 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <div className="flex flex-1 items-center justify-end gap-4">
-            {/* Ingredient Detection Button */}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setDetectionDialogOpen(true)}
-              className="border-[#99b94a] whitespace-nowrap text-[#99b94a] hover:bg-[#99b94a]/10"
-              title="Quét nguyên liệu từ ảnh"
-            >
-              Quét Nguyên Liệu
-            </Button>
-
-            <Link href="/recipe/new">
-              <Button size="sm" className="bg-[#99b94a] whitespace-nowrap hover:bg-[#7a8f3a]">
-                + Viết món mới
+        {showHeader && (
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+            <SidebarTrigger className="-ml-1" />
+            <div className="flex flex-1 items-center justify-end gap-4">
+              {/* Ingredient Detection Button */}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setDetectionDialogOpen(true)}
+                className="border-[#99b94a] whitespace-nowrap text-[#99b94a] hover:bg-[#99b94a]/10"
+                title="Quét nguyên liệu từ ảnh"
+              >
+                Quét Nguyên Liệu
               </Button>
-            </Link>
-            {user && <UserActions user={user} onLogout={handleLogout} />}
-          </div>
-        </header>
+
+              <Link href="/recipe/new">
+                <Button size="sm" className="bg-[#99b94a] whitespace-nowrap hover:bg-[#7a8f3a]">
+                  + Viết món mới
+                </Button>
+              </Link>
+              {user && <UserActions user={user} onLogout={handleLogout} />}
+            </div>
+          </header>
+        )}
         <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
 
         {/* Ingredient Detection Dialog */}

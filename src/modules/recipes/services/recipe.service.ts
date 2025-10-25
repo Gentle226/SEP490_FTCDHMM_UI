@@ -46,9 +46,9 @@ class RecipeService extends HttpClient {
     // CookTime - send as number string (API expects number type)
     formData.append('CookTime', String(data.cookTime));
 
-    // ImageUrl is required based on your API spec
+    // Image - send as IFormFile
     if (data.image) {
-      formData.append('ImageUrl', data.image);
+      formData.append('Image', data.image);
     }
 
     // Append array fields (LabelIds and IngredientIds)

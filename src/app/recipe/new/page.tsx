@@ -1,8 +1,9 @@
 'use client';
 
+import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { RecipeForm } from '@/modules/recipes/components';
 
-export default function NewRecipePage() {
+function NewRecipePageContent() {
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
       <div className="mb-8">
@@ -12,5 +13,13 @@ export default function NewRecipePage() {
 
       <RecipeForm />
     </div>
+  );
+}
+
+export default function NewRecipePage() {
+  return (
+    <DashboardLayout showHeader={false}>
+      <NewRecipePageContent />
+    </DashboardLayout>
   );
 }
