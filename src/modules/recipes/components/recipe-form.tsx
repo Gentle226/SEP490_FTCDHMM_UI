@@ -427,7 +427,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         <div className="space-y-2">
           <Label>Hình ảnh món ăn</Label>
           {mainImagePreview ? (
-            <div className="relative h-64 w-full overflow-hidden rounded-lg border">
+            <div className="relative h-75 w-full overflow-hidden rounded-lg border">
               <Image src={mainImagePreview} alt="Recipe preview" fill className="object-cover" />
               <button
                 type="button"
@@ -443,7 +443,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
             </div>
           ) : (
             <label
-              className={`flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-all ${
+              className={`flex h-75 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-all ${
                 isDragOver
                   ? 'border-[#99b94a] bg-green-50 ring-2 ring-[#b2df3f]'
                   : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
@@ -544,9 +544,9 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
                   type="number"
                   placeholder="30"
                   value={cookTime}
-                  onChange={(e) => setCookTime(parseFloat(e.target.value) || 0)}
+                  onChange={(e) => setCookTime(parseInt(e.target.value) || 0)}
                   min="0"
-                  step="0.1"
+                  step="1"
                   className="pr-12 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
                 <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm font-medium text-gray-500">

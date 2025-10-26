@@ -208,7 +208,15 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
 
           {/* Author Info */}
           {(recipe.createdBy || recipe.author) && (
-            <div className="flex items-center gap-3 border-t pt-4">
+            <button
+              onClick={() => {
+                const authorId = recipe.author?.id || recipe.createdBy?.id;
+                if (authorId) {
+                  router.push(`/profile/${authorId}`);
+                }
+              }}
+              className="-mx-3 flex w-full cursor-pointer items-center gap-3 rounded-lg border-t px-3 py-2 pt-4 text-left transition-all hover:bg-gray-50"
+            >
               {recipe.createdBy?.avatarUrl || recipe.author?.avatarUrl ? (
                 <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border">
                   <Image
@@ -233,12 +241,12 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
               )}
               <div className="min-w-0">
                 <p className="text-xs text-gray-500">Tác Giả</p>
-                <p className="font-semibold text-gray-800">
+                <p className="font-semibold text-gray-800 transition-colors hover:text-[#99b94a]">
                   {recipe.createdBy?.userName ||
                     `${recipe.author?.firstName} ${recipe.author?.lastName}`}
                 </p>
               </div>
-            </div>
+            </button>
           )}
 
           {/* Description */}
