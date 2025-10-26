@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { Pagination } from '@/base/components/layout/pagination';
@@ -12,7 +13,7 @@ import { Skeleton } from '@/base/components/ui/skeleton';
 import { MyRecipeCard } from '@/modules/recipes/components/my-recipe-card';
 import { recipeService } from '@/modules/recipes/services/recipe.service';
 
-export default function MyRecipePage() {
+function MyRecipeContent() {
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get('page')) || 1;
   const pageSize = 10;
@@ -118,5 +119,31 @@ export default function MyRecipePage() {
         )}
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function MyRecipePage() {
+  return (
+    <Suspense
+      fallback={
+        <DashboardLayout>
+          <div className="space-y-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="mt-2 h-4 w-64" />
+              </div>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} className="h-64 w-full" />
+              ))}
+            </div>
+          </div>
+        </DashboardLayout>
+      }
+    >
+      <MyRecipeContent />
+    </Suspense>
   );
 }
