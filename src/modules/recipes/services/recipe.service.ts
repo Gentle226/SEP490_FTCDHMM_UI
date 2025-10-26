@@ -150,6 +150,74 @@ class RecipeService extends HttpClient {
       isPrivateRoute: true,
     });
   }
+
+  /**
+   * Get favorite recipes
+   */
+  public async getFavoriteRecipes(params: PaginationParams & { keyword?: string } = {}) {
+    const { pageNumber = 1, pageSize = 10, keyword } = params;
+
+    return this.get<MyRecipeResponse>('api/Recipe/favoriteList', {
+      isPrivateRoute: true,
+      params: {
+        'PaginationParams.PageNumber': pageNumber,
+        'PaginationParams.PageSize': pageSize,
+        ...(keyword && { Keyword: keyword }),
+      },
+    });
+  }
+
+  /**
+   * Get saved recipes
+   */
+  public async getSavedRecipes(params: PaginationParams & { keyword?: string } = {}) {
+    const { pageNumber = 1, pageSize = 10, keyword } = params;
+
+    return this.get<MyRecipeResponse>('api/Recipe/saveList', {
+      isPrivateRoute: true,
+      params: {
+        'PaginationParams.PageNumber': pageNumber,
+        'PaginationParams.PageSize': pageSize,
+        ...(keyword && { Keyword: keyword }),
+      },
+    });
+  }
+
+  /**
+   * Add recipe to favorites
+   */
+  public async addToFavorite(recipeId: string) {
+    return this.post<void>(`api/Recipe/${recipeId}/favorite`, null, {
+      isPrivateRoute: true,
+    });
+  }
+
+  /**
+   * Remove recipe from favorites
+   */
+  public async removeFromFavorite(recipeId: string) {
+    return this.delete<void>(`api/Recipe/${recipeId}/favorite`, {
+      isPrivateRoute: true,
+    });
+  }
+
+  /**
+   * Save recipe
+   */
+  public async saveRecipe(recipeId: string) {
+    return this.post<void>(`api/Recipe/${recipeId}/save`, null, {
+      isPrivateRoute: true,
+    });
+  }
+
+  /**
+   * Unsave recipe
+   */
+  public async unsaveRecipe(recipeId: string) {
+    return this.delete<void>(`api/Recipe/${recipeId}/save`, {
+      isPrivateRoute: true,
+    });
+  }
 }
 
 export const recipeService = new RecipeService();

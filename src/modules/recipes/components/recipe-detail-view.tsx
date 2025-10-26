@@ -1,17 +1,34 @@
 'use client';
 
-import { ChefHat, Clock, Edit, Share2, Trash2, Users } from 'lucide-react';
+import {
+  Bookmark,
+  BookmarkCheck,
+  ChefHat,
+  Clock,
+  Edit,
+  Heart,
+  Share2,
+  Trash2,
+  Users,
+} from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/base/components/ui/button';
 import { Card, CardContent } from '@/base/components/ui/card';
 import { Skeleton } from '@/base/components/ui/skeleton';
+import { useAuth } from '@/modules/auth/contexts/auth.context';
 import { recipeService } from '@/modules/recipes/services/recipe.service';
-import { RecipeDetail } from '@/modules/recipes/types';
 
+import {
+  useAddToFavorite,
+  useRecipeDetail,
+  useRemoveFromFavorite,
+  useSaveRecipe,
+  useUnsaveRecipe,
+} from '../hooks/use-recipe-actions';
 import styles from './recipe-detail-view.module.css';
 
 interface RecipeDetailViewProps {
@@ -20,30 +37,25 @@ interface RecipeDetailViewProps {
 
 export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   const router = useRouter();
-  const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    async function fetchRecipe() {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await recipeService.getRecipeById(recipeId);
-        setRecipe(data);
-      } catch (err) {
-        console.error('Failed to fetch recipe:', err);
-        setError('Không thể tải thông tin công thức. Vui lòng thử lại sau.');
-      } finally {
-        setIsLoading(false);
-      }
-    }
+  // Fetch recipe using React Query
+  const { data: recipe, isLoading, error } = useRecipeDetail(recipeId);
 
-    if (recipeId) {
-      fetchRecipe();
-    }
-  }, [recipeId]);
+  // React Query mutations
+  const addToFavorite = useAddToFavorite();
+  const removeFromFavorite = useRemoveFromFavorite();
+  const saveRecipe = useSaveRecipe();
+  const unsaveRecipe = useUnsaveRecipe();
+
+  // Check if current user is the author
+  const isAuthor =
+    user && recipe && (recipe.author?.id === user.id || recipe.createdBy?.id === user.id);
+
+  // Get favorite and saved state from recipe data
+  const isFavorited = recipe?.isFavorited ?? false;
+  const isSaved = recipe?.isSaved ?? false;
 
   const handleDelete = async () => {
     if (!confirm('Bạn chắc chắn muốn xóa công thức này? Hành động này không thể hoàn tác.')) {
@@ -88,15 +100,44 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
     }
   };
 
+  const handleToggleFavorite = () => {
+    if (isFavorited) {
+      removeFromFavorite.mutate(recipeId);
+    } else {
+      addToFavorite.mutate(recipeId);
+    }
+  };
+
+  const handleToggleSave = () => {
+    if (isSaved) {
+      unsaveRecipe.mutate(recipeId);
+    } else {
+      saveRecipe.mutate(recipeId);
+    }
+  };
+
   if (isLoading) {
     return <RecipeDetailSkeleton />;
   }
 
-  if (error || !recipe) {
+  if (error) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
-          <p className="text-lg text-red-500">{error || 'Không tìm thấy công thức'}</p>
+          <p className="text-lg text-red-500">
+            {(error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+              'Không thể tải thông tin công thức. Vui lòng thử lại sau.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!recipe) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground text-lg">Không tìm thấy công thức</p>
         </div>
       </div>
     );
@@ -211,25 +252,58 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2 pt-4">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => router.push(`/recipe/${recipeId}/edit`)}
-            >
-              <Edit className="h-4 w-4" />
-              Chỉnh sửa
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 text-red-500 hover:text-red-600"
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
-              <Trash2 className="h-4 w-4" />
-              {isDeleting ? 'Đang xóa...' : 'Xóa'}
-            </Button>
+            {isAuthor ? (
+              <>
+                {/* Author buttons: Edit and Delete */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => router.push(`/recipe/${recipeId}/edit`)}
+                >
+                  <Edit className="h-4 w-4" />
+                  Chỉnh sửa
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 text-red-500 hover:text-red-600"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {isDeleting ? 'Đang xóa...' : 'Xóa'}
+                </Button>
+              </>
+            ) : (
+              <>
+                {/* Non-author buttons: Favorite and Save */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={handleToggleFavorite}
+                  disabled={addToFavorite.isPending || removeFromFavorite.isPending}
+                >
+                  <Heart className={`h-4 w-4 ${isFavorited ? 'fill-red-500 text-red-500' : ''}`} />
+                  {isFavorited ? 'Đã yêu thích' : 'Yêu thích'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={handleToggleSave}
+                  disabled={saveRecipe.isPending || unsaveRecipe.isPending}
+                >
+                  {isSaved ? (
+                    <BookmarkCheck className="h-4 w-4 fill-[#99b94a] text-[#99b94a]" />
+                  ) : (
+                    <Bookmark className="h-4 w-4" />
+                  )}
+                  {isSaved ? 'Đã lưu' : 'Lưu'}
+                </Button>
+              </>
+            )}
             <Button variant="outline" size="sm" className="gap-2" onClick={handleShare}>
               <Share2 className="h-4 w-4" />
               Chia sẻ

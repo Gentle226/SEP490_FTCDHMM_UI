@@ -137,12 +137,12 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
       },
       {
         title: 'Công Thức Đã Lưu',
-        url: '/saved',
+        url: '/saved-recipes',
         icon: BookMarked,
       },
       {
         title: 'Công Thức Ưa Thích',
-        url: '/favorite',
+        url: '/favorite-recipes',
         icon: BookHeart,
       },
       {

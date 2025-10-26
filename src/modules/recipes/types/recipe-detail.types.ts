@@ -42,6 +42,8 @@ export interface RecipeDetail {
     email: string;
     avatarUrl?: string;
   };
+  isFavorited?: boolean;
+  isSaved?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
