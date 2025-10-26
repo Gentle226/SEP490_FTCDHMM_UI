@@ -1,13 +1,16 @@
 'use client';
 
-import { ChefHat, Clock, Users } from 'lucide-react';
+import { ChefHat, Clock, Edit, Share2, Trash2, Users } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
+import { Button } from '@/base/components/ui/button';
 import { Card, CardContent } from '@/base/components/ui/card';
 import { Skeleton } from '@/base/components/ui/skeleton';
 import { recipeService } from '@/modules/recipes/services/recipe.service';
 import { RecipeDetail } from '@/modules/recipes/types';
+
+import styles from './recipe-detail-view.module.css';
 
 interface RecipeDetailViewProps {
   recipeId: string;
@@ -59,59 +62,135 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
-      {/* Header Section */}
-      <div className="space-y-4">
-        <h1 className="text-4xl font-bold text-[#99b94a]">{recipe.name}</h1>
-
-        {/* Labels */}
-        {recipe.labels && recipe.labels.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {recipe.labels.map((label) => (
-              <span
-                key={label.id}
-                className="rounded-full px-3 py-1 text-sm text-white"
-                style={{ backgroundColor: label.colorCode }}
-              >
-                {label.name}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Meta Info */}
-        <div className="flex flex-wrap gap-4 text-gray-600">
-          <div className="flex items-center gap-2">
-            <ChefHat className="h-5 w-5" />
-            <span>{difficultyMap[recipe.difficulty.name] || recipe.difficulty.name}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            <span>{recipe.cookTime} phút</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            <span>{recipe.ration} người</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Image and Description */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-[400px_1fr]">
-        {/* Image */}
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+      {/* Header: Image + Title, Labels, Author, Description, Buttons */}
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-[350px_1fr]">
+        {/* Left: Main Image */}
         {recipe.imageUrl && (
           <div className="relative h-80 w-full overflow-hidden rounded-lg border">
             <Image src={recipe.imageUrl} alt={recipe.name} fill className="object-cover" priority />
           </div>
         )}
 
-        {/* Description */}
-        {recipe.description && (
-          <div className="space-y-2">
-            <h2 className="text-2xl font-semibold">Mô tả</h2>
-            <p className="whitespace-pre-wrap text-gray-700">{recipe.description}</p>
+        {/* Right: Title, Labels, Author, Description, Buttons */}
+        <div className="space-y-4">
+          {/* Title */}
+          <h1 className="text-3xl font-bold text-[#99b94a]">{recipe.name}</h1>
+
+          {/* Labels */}
+          {recipe.labels && recipe.labels.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {recipe.labels.map((label) => (
+                <span
+                  key={label.id}
+                  className={styles.labelBadge}
+                  style={{ backgroundColor: label.colorCode }}
+                >
+                  {label.name}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Meta Info: Difficulty, Time, Ration */}
+          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+            <div className="flex items-center gap-1">
+              <ChefHat className="h-4 w-4" />
+              <span>
+                {difficultyMap[recipe.difficulty.value as string] || recipe.difficulty.value}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="h-4 w-4" />
+              <span>{recipe.cookTime} phút</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Users className="h-4 w-4" />
+              <span>{recipe.ration} người</span>
+            </div>
           </div>
-        )}
+
+          {/* Author Info */}
+          {(recipe.createdBy || recipe.author) && (
+            <div className="flex items-center gap-3 border-t pt-4">
+              {recipe.createdBy?.avatarUrl || recipe.author?.avatarUrl ? (
+                <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border">
+                  <Image
+                    src={recipe.createdBy?.avatarUrl || recipe.author?.avatarUrl || ''}
+                    alt={
+                      recipe.createdBy?.userName ||
+                      `${recipe.author?.firstName} ${recipe.author?.lastName}` ||
+                      'Author'
+                    }
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-lg font-semibold text-gray-600">
+                  {(
+                    recipe.createdBy?.userName?.charAt(0) ||
+                    recipe.author?.firstName?.charAt(0) ||
+                    'A'
+                  ).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500">Tác Giả</p>
+                <p className="font-semibold text-gray-800">
+                  {recipe.createdBy?.userName ||
+                    `${recipe.author?.firstName} ${recipe.author?.lastName}`}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Description */}
+          {recipe.description && (
+            <div className="pt-2">
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-700">
+                {recipe.description}
+              </p>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-2 pt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                /* TODO: Implement edit */
+              }}
+            >
+              <Edit className="h-4 w-4" />
+              Chỉnh sửa
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-red-500 hover:text-red-600"
+              onClick={() => {
+                /* TODO: Implement delete */
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+              Xóa
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                /* TODO: Implement share */
+              }}
+            >
+              <Share2 className="h-4 w-4" />
+              Chia sẻ
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Ingredients */}
@@ -165,32 +244,6 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                 </CardContent>
               </Card>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* Author Info */}
-      {recipe.createdBy && (
-        <div className="border-t pt-6">
-          <div className="flex items-center gap-3">
-            {recipe.createdBy.avatarUrl ? (
-              <div className="relative h-12 w-12 overflow-hidden rounded-full border">
-                <Image
-                  src={recipe.createdBy.avatarUrl}
-                  alt={recipe.createdBy.userName}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ) : (
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-semibold text-gray-600">
-                {recipe.createdBy.userName.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <div>
-              <p className="text-sm text-gray-500">Được tạo bởi</p>
-              <p className="font-semibold">{recipe.createdBy.userName}</p>
-            </div>
           </div>
         </div>
       )}

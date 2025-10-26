@@ -1,0 +1,14 @@
+.labelBadge {
+  display: inline-block;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+}
+
+@media (min-width: 640px) {
+  .labelBadge {
+    font-size: 0.875rem;
+  }
+}
