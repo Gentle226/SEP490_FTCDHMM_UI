@@ -196,7 +196,7 @@ export function IngredientCategoryManagementTable() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-[#99b94a]">Quản Lý Nhóm Thức Ăn</h2>
+        <h2 className="text-3xl font-bold text-[#99b94a]">Quản Lý Nhóm Nguyên Liệu</h2>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-[#99b94a] hover:bg-[#7a8f3a]">
@@ -263,63 +263,61 @@ export function IngredientCategoryManagementTable() {
           </div>
         </div>
       </div>
-      <div className="flex w-full justify-center">
-        <div className="mx-auto mt-2 w-full max-w-5xl rounded-md">
-          <Table>
-            <TableHeader>
+      <div className="w-full rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-3/4 pl-32">Tên</TableHead>
+              <TableHead className="w-1/4">Hành Động</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {categoriesData?.items?.length === 0 ? (
               <TableRow>
-                <TableHead className="w-3/4 pl-32">Tên</TableHead>
-                <TableHead className="w-1/4">Hành Động</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {categoriesData?.items?.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={2} className="h-24 text-center">
-                    {debouncedSearchTerm ? (
-                      <div className="flex flex-col items-center justify-center space-y-2">
-                        <Search className="size-8 text-gray-400" />
-                        <p className="text-gray-500">
-                          Không tìm thấy danh mục nào với từ khóa &ldquo;{debouncedSearchTerm}
-                          &rdquo;
-                        </p>
-                      </div>
-                    ) : (
+                <TableCell colSpan={2} className="h-24 text-center">
+                  {debouncedSearchTerm ? (
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <Search className="size-8 text-gray-400" />
                       <p className="text-gray-500">
-                        {isLoading ? 'Đang tải...' : 'Không có danh mục nào'}
+                        Không tìm thấy danh mục nào với từ khóa &ldquo;{debouncedSearchTerm}
+                        &rdquo;
                       </p>
-                    )}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">
+                      {isLoading ? 'Đang tải...' : 'Không có danh mục nào'}
+                    </p>
+                  )}
+                </TableCell>
+              </TableRow>
+            ) : (
+              categoriesData?.items?.map((category) => (
+                <TableRow key={category.id}>
+                  <TableCell className="pl-32 font-medium">{category.name}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Mở menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteCategory(category)}
+                          className="text-red-600"
+                        >
+                          <Trash className="mr-2 h-4 w-4" />
+                          Xóa
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ) : (
-                categoriesData?.items?.map((category) => (
-                  <TableRow key={category.id}>
-                    <TableCell className="pl-32 font-medium">{category.name}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Mở menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteCategory(category)}
-                            className="text-red-600"
-                          >
-                            <Trash className="mr-2 h-4 w-4" />
-                            Xóa
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       {/* Search Results Info */}

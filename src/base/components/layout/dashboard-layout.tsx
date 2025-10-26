@@ -110,14 +110,14 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
           icon: Salad,
         },
         {
-          title: 'Quản Lý Nhãn Thực Phẩm',
-          url: '/moderator/label',
-          icon: Tags,
-        },
-        {
-          title: 'Quản Lý Nhóm Thực Phẩm',
+          title: 'Quản Lý Nhóm Nguyên Liệu',
           url: '/moderator/category',
           icon: ClipboardList,
+        },
+        {
+          title: 'Quản Lý Nhãn Món Ăn',
+          url: '/moderator/label',
+          icon: Tags,
         },
         {
           title: 'Nguyên Tắc Đăng Bài',
