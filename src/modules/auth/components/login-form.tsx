@@ -6,6 +6,7 @@ import { AlertCircleIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/base/components/ui/alert';
 import { Card, CardContent } from '@/base/components/ui/card';
@@ -22,6 +23,11 @@ interface LoginFormProps extends React.ComponentProps<'div'> {
 
 export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProps) {
   const searchParams = useSearchParams();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const {
     mutate: triggerLogin,
@@ -52,16 +58,18 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
           <div className="p-6 md:p-8">
             <div className="flex flex-col gap-6">
               {/* Logo for mobile - hidden on desktop */}
-              <div className="flex justify-center md:hidden">
-                <Image
-                  src="/FitFood Tracker Logo.png"
-                  alt="FitFood Tracker Logo"
-                  width={120}
-                  height={120}
-                  className="h-24 w-auto"
-                  priority
-                />
-              </div>
+              {isClient && (
+                <div className="flex justify-center md:hidden">
+                  <Image
+                    src="/FitFood Tracker Logo.png"
+                    alt="FitFood Tracker Logo"
+                    width={120}
+                    height={120}
+                    className="h-24 w-auto"
+                    priority
+                  />
+                </div>
+              )}
 
               <div className="flex flex-col items-center text-center">
                 <h1 className="text-2xl font-bold text-[#99b94a]">Chào mừng trở lại</h1>

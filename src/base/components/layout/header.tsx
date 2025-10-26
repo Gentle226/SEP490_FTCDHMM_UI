@@ -11,7 +11,7 @@ import { authService } from '@/modules/auth/services/auth.service';
 import { UserActions } from './user-actions';
 
 export function Header() {
-  const { user, setUser } = useAuth();
+  const { user, setUser, isLoading } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -28,7 +28,7 @@ export function Header() {
   };
 
   return (
-    <header className="border-b bg-white">
+    <header className="sticky top-0 z-50 border-b bg-white">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center space-x-4">
           <Link href="/" className="flex items-center">
@@ -36,23 +36,30 @@ export function Header() {
           </Link>
         </div>
 
-        <div className="flex items-center space-x-4">
-          {user ? (
-            <UserActions user={user} onLogout={handleLogout} />
-          ) : (
-            <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-4">
+          {!isLoading && user?.id ? (
+            <>
+              <Link href="/recipe/new">
+                <Button size="sm" className="bg-[#99b94a] whitespace-nowrap hover:bg-[#7a8f3a]">
+                  + Viết món mới
+                </Button>
+              </Link>
+              <UserActions user={user} onLogout={handleLogout} />
+            </>
+          ) : !isLoading ? (
+            <div className="flex items-center gap-2">
               <Link href="/auth/login">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="whitespace-nowrap">
                   Đăng Nhập
                 </Button>
               </Link>
               <Link href="/auth/register">
-                <Button size="sm" className="bg-[#99b94a] hover:bg-[#7a8f3a]">
+                <Button size="sm" className="bg-[#99b94a] whitespace-nowrap hover:bg-[#7a8f3a]">
                   Đăng Ký
                 </Button>
               </Link>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </header>

@@ -1,10 +1,11 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MoreVertical, Search, X } from 'lucide-react';
 import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ReactNode, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Pagination } from '@/base/components/layout/pagination';
 import { Badge } from '@/base/components/ui/badge';
@@ -38,6 +39,7 @@ import {
   PaginationParams,
   ingredientManagementService,
 } from '../services/ingredient-management.service';
+import { CreateIngredientDialog } from './create-ingredient-dialog';
 import { EditIngredientDialog } from './edit-ingredient-dialog';
 
 // Custom debounce hook
@@ -75,6 +77,7 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   // Sync state with URL params
   useEffect(() => {
@@ -105,6 +108,33 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
     queryKey: ['ingredient-categories'],
     queryFn: () => ingredientManagementService.getCategories(),
     staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Fetch full ingredient details when detail dialog opens
+  const { data: detailedIngredient } = useQuery({
+    queryKey: ['ingredient-detail', selectedIngredient?.id],
+    queryFn: () => {
+      if (!selectedIngredient?.id) throw new Error('No ingredient ID');
+      return ingredientManagementService.getIngredientById(selectedIngredient.id);
+    },
+    enabled: detailDialogOpen && !!selectedIngredient?.id,
+  });
+
+  const queryClient = useQueryClient();
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (ingredientId: string) => {
+      return ingredientManagementService.deleteIngredient(ingredientId);
+    },
+    onSuccess: () => {
+      toast.success('Xóa nguyên liệu thành công');
+      queryClient.invalidateQueries({ queryKey: ['ingredients'] });
+    },
+    onError: (error: Error) => {
+      console.warn('Delete error:', error);
+      toast.error(error.message || 'Không thể xóa nguyên liệu');
+    },
   });
 
   // Helper function to convert API response to PaginationType
@@ -179,12 +209,15 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
     setEditDialogOpen(true);
   };
 
+  const handleDelete = (ingredientId: string) => {
+    if (confirm('Bạn có chắc muốn xóa nguyên liệu này?')) {
+      deleteMutation.mutate(ingredientId);
+    }
+  };
+
   const handleClearSearch = () => {
     setSearchTerm('');
-    const params = new URLSearchParams(searchParams);
-    params.delete('search');
-    params.set('page', '1');
-    router.push(`${pathname}?${params.toString()}`);
+    setPage(1);
   };
 
   if (error) {
@@ -203,25 +236,36 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>{title}</div>
 
-        {/* Search */}
-        <div className="relative w-full sm:w-64">
-          <Search className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
-          <Input
-            placeholder="Tìm kiếm nguyên liệu..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pr-8 pl-8"
-          />
-          {searchTerm && (
-            <button
-              onClick={handleClearSearch}
-              className="text-muted-foreground hover:text-foreground absolute top-2.5 right-2.5"
-              aria-label="Clear search"
-              title="Clear search"
-            >
-              <X className="size-4" />
-            </button>
-          )}
+        {/* Actions */}
+        <div className="flex w-full gap-2 sm:w-auto sm:flex-row-reverse">
+          {/* Create button */}
+          <Button
+            onClick={() => setCreateDialogOpen(true)}
+            className="flex bg-[#99b94a] hover:bg-[#88a839] sm:flex-initial"
+          >
+            + Thêm nguyên liệu mới
+          </Button>
+
+          {/* Search */}
+          <div className="relative flex-1 sm:w-64">
+            <Search className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
+            <Input
+              placeholder="Tìm kiếm nguyên liệu..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pr-8 pl-8"
+            />
+            {searchTerm && (
+              <button
+                onClick={handleClearSearch}
+                className="text-muted-foreground hover:text-foreground absolute top-2.5 right-2.5"
+                aria-label="Clear search"
+                title="Clear search"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -232,7 +276,7 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
             <TableRow>
               <TableHead className="w-[30%] pl-12">Tên nguyên liệu</TableHead>
               <TableHead className="w-[30%]">Phân loại</TableHead>
-              <TableHead className="w-[25%]">Cập nhật</TableHead>
+              <TableHead className="w-[25%]">Cập nhật Lần Cuối</TableHead>
               <TableHead className="w-[15%] pr-12 text-right">Hành động</TableHead>
             </TableRow>
           </TableHeader>
@@ -250,11 +294,6 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                 <TableCell colSpan={4} className="h-32 text-center">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <p className="text-muted-foreground">Không tìm thấy nguyên liệu nào.</p>
-                    {searchTerm && (
-                      <Button variant="link" onClick={handleClearSearch} className="text-[#99b94a]">
-                        Xóa bộ lọc
-                      </Button>
-                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -306,6 +345,13 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                         <DropdownMenuItem onClick={() => handleEdit(ingredient)}>
                           Chỉnh sửa
                         </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDelete(ingredient.id)}
+                          disabled={deleteMutation.isPending}
+                          className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                        >
+                          {deleteMutation.isPending ? 'Đang xóa...' : 'Xóa'}
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -331,92 +377,107 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
             <DialogDescription>Thông tin chi tiết và hàm lượng dinh dưỡng</DialogDescription>
           </DialogHeader>
 
-          {selectedIngredient && (
+          {(detailedIngredient || selectedIngredient) && (
             <div className="space-y-4">
-              {/* Image */}
-              {selectedIngredient.image && (
-                <div className="flex justify-center">
-                  <Image
-                    src={selectedIngredient.image}
-                    alt={selectedIngredient.name}
-                    width={192}
-                    height={192}
-                    className="h-48 w-48 rounded-lg object-cover"
-                  />
-                </div>
-              )}
-
-              {/* Basic Info */}
-              <div className="space-y-2">
-                <div>
-                  <span className="font-semibold">Tên: </span>
-                  <span>{selectedIngredient.name}</span>
-                </div>
-
-                {selectedIngredient.description && (
-                  <div>
-                    <span className="font-semibold">Mô tả: </span>
-                    <span>{selectedIngredient.description}</span>
-                  </div>
-                )}
-
-                <div>
-                  <span className="font-semibold">Phân loại: </span>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {selectedIngredient.ingredientCategoryIds &&
-                    selectedIngredient.ingredientCategoryIds.length > 0 ? (
-                      getCategoryNames(selectedIngredient.ingredientCategoryIds).map((category) => (
-                        <Badge key={category} variant="secondary">
-                          {category}
-                        </Badge>
-                      ))
-                    ) : (
-                      <span className="text-muted-foreground text-sm">Chưa phân loại</span>
+              {/* Use detailedIngredient if available, otherwise fall back to selectedIngredient */}
+              {(() => {
+                const ingredient = detailedIngredient || selectedIngredient;
+                return (
+                  <>
+                    {/* Image */}
+                    {ingredient?.image && (
+                      <div className="flex justify-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={ingredient.image}
+                          alt={ingredient.name}
+                          className="h-48 w-48 rounded-lg object-cover"
+                        />
+                      </div>
                     )}
-                  </div>
-                </div>
 
-                <div>
-                  <span className="font-semibold">Cập nhật lần cuối: </span>
-                  <span>{formatDate(selectedIngredient.lastUpdatedUtc)}</span>
-                </div>
-              </div>
+                    {/* Basic Info */}
+                    <div className="space-y-2">
+                      <div>
+                        <span className="font-semibold">Tên: </span>
+                        <span>{ingredient?.name}</span>
+                      </div>
 
-              {/* Nutrients */}
-              <div className="space-y-2">
-                <h4 className="font-semibold text-[#99b94a]">Hàm lượng dinh dưỡng</h4>
-                {!selectedIngredient.nutrients || selectedIngredient.nutrients.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">Chưa có thông tin dinh dưỡng</p>
-                ) : (
-                  <div className="space-y-2">
-                    {selectedIngredient.nutrients.map((nutrient, index) => (
-                      <div key={index} className="rounded-lg border bg-gray-50 p-3">
-                        <div className="font-medium">{nutrient.name}</div>
-                        <div className="mt-1 grid grid-cols-3 gap-2 text-sm">
-                          {nutrient.min !== undefined && (
-                            <div>
-                              <span className="text-muted-foreground">Min: </span>
-                              <span className="font-medium">{nutrient.min}</span>
-                            </div>
-                          )}
-                          {nutrient.max !== undefined && (
-                            <div>
-                              <span className="text-muted-foreground">Max: </span>
-                              <span className="font-medium">{nutrient.max}</span>
-                            </div>
-                          )}
-                          {nutrient.median !== undefined && (
-                            <div>
-                              <span className="text-muted-foreground">Median: </span>
-                              <span className="font-medium">{nutrient.median}</span>
-                            </div>
+                      {ingredient?.description && (
+                        <div>
+                          <span className="font-semibold">Mô tả: </span>
+                          <span>{ingredient.description}</span>
+                        </div>
+                      )}
+
+                      <div>
+                        <span className="font-semibold">Phân loại: </span>
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {ingredient?.ingredientCategoryIds &&
+                          ingredient.ingredientCategoryIds.length > 0 ? (
+                            getCategoryNames(ingredient.ingredientCategoryIds).map((category) => (
+                              <Badge key={category} variant="secondary">
+                                {category}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-muted-foreground text-sm">Chưa phân loại</span>
                           )}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+
+                      <div>
+                        <span className="font-semibold">Cập nhật lần cuối: </span>
+                        <span>{formatDate(ingredient?.lastUpdatedUtc)}</span>
+                      </div>
+                    </div>
+
+                    {/* Nutrients */}
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-[#99b94a]">Hàm lượng dinh dưỡng</h4>
+                      {!ingredient?.nutrients || ingredient.nutrients.length === 0 ? (
+                        <p className="text-muted-foreground text-sm">
+                          Chưa có thông tin dinh dưỡng
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {ingredient.nutrients.map((nutrient, index) => {
+                            // Find nutrient details to get name
+                            const nutrientDetails = nutrient.vietnameseName ? nutrient : null;
+                            return (
+                              <div key={index} className="rounded-lg border bg-gray-50 p-3">
+                                <div className="font-medium">
+                                  {nutrientDetails?.vietnameseName || `Dinh dưỡng ${index + 1}`}
+                                </div>
+                                <div className="mt-1 grid grid-cols-3 gap-2 text-sm">
+                                  {nutrient.min !== undefined && (
+                                    <div>
+                                      <span className="text-muted-foreground">Min: </span>
+                                      <span className="font-medium">{nutrient.min}</span>
+                                    </div>
+                                  )}
+                                  {nutrient.max !== undefined && (
+                                    <div>
+                                      <span className="text-muted-foreground">Max: </span>
+                                      <span className="font-medium">{nutrient.max}</span>
+                                    </div>
+                                  )}
+                                  {nutrient.median !== undefined && (
+                                    <div>
+                                      <span className="text-muted-foreground">Median: </span>
+                                      <span className="font-medium">{nutrient.median}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           )}
         </DialogContent>
@@ -428,6 +489,9 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
       />
+
+      {/* Create Dialog */}
+      <CreateIngredientDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
     </div>
   );
 }

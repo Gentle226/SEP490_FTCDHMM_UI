@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { useState } from 'react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
-import { Header } from '@/base/components/layout/header';
 import { Button } from '@/base/components/ui/button';
 import { Input } from '@/base/components/ui/input';
 import { RecipeCard } from '@/base/components/ui/recipe-card';
@@ -154,10 +153,5 @@ export default function HomePage() {
   }
 
   // If user is not logged in, show with regular header
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      {mainContent}
-    </div>
-  );
+  return <div className="min-h-screen bg-gray-50">{mainContent}</div>;
 }

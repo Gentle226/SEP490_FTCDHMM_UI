@@ -1,6 +1,6 @@
-import { DocsContainer, DocsContextProps } from '@storybook/blocks';
-import type { Preview } from '@storybook/react';
-import { ThemeVars, create, themes } from '@storybook/theming';
+import { DocsContainer, DocsContextProps } from '@storybook/addon-docs/blocks';
+import type { Preview } from '@storybook/nextjs';
+import { ThemeVars, create, themes } from 'storybook/theming';
 import { useTheme } from 'next-themes';
 import React, { useEffect } from 'react';
 import { DARK_MODE_EVENT_NAME, useDarkMode } from 'storybook-dark-mode';

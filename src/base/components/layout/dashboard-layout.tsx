@@ -1,8 +1,11 @@
 'use client';
 
 import {
+  BookHeart,
+  BookMarked,
   ClipboardList,
-  FileText,
+  CookingPot,
+  History,
   Home,
   KeyRound,
   Salad,
@@ -13,7 +16,9 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 
+import { Button } from '@/base/components/ui/button';
 import {
   Sidebar,
   SidebarContent,
@@ -31,18 +36,21 @@ import {
 import { useSidebarStateFromCookie } from '@/base/hooks/use-sidebar-cookie';
 import { Role, useAuth } from '@/modules/auth';
 import { authService } from '@/modules/auth/services/auth.service';
+import { IngredientDetectionDialog } from '@/modules/ingredients/components/ingredient-detection-dialog';
 
 import { UserActions } from './user-actions';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
+  showHeader?: boolean;
 }
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+export function DashboardLayout({ children, showHeader = true }: DashboardLayoutProps) {
   const { user, setUser } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const sidebarDefaultOpen = useSidebarStateFromCookie();
+  const [detectionDialogOpen, setDetectionDialogOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -123,9 +131,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     return [
       ...commonItems,
       {
-        title: 'Công Thức Nấu Ăn',
-        url: '/customer/recipes',
-        icon: FileText,
+        title: 'Công Thức Của Tôi',
+        url: '/myrecipe',
+        icon: CookingPot,
+      },
+      {
+        title: 'Công Thức Đã Lưu',
+        url: '/saved-recipes',
+        icon: BookMarked,
+      },
+      {
+        title: 'Công Thức Ưa Thích',
+        url: '/favorite-recipes',
+        icon: BookHeart,
+      },
+      {
+        title: 'Công Thức Đã Xem',
+        url: '/history',
+        icon: History,
       },
     ];
   };
@@ -191,13 +214,41 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <div className="flex flex-1 items-center justify-end">
-            {user && <UserActions user={user} onLogout={handleLogout} />}
-          </div>
-        </header>
+        {showHeader && (
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+            <SidebarTrigger className="-ml-1" />
+            <div className="flex flex-1 items-center justify-end gap-4">
+              {/* Ingredient Detection Button */}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setDetectionDialogOpen(true)}
+                className="border-[#99b94a] whitespace-nowrap text-[#99b94a] hover:bg-[#99b94a]/10"
+                title="Quét nguyên liệu từ ảnh"
+              >
+                Quét Nguyên Liệu
+              </Button>
+
+              <Link href="/recipe/new">
+                <Button size="sm" className="bg-[#99b94a] whitespace-nowrap hover:bg-[#7a8f3a]">
+                  + Viết món mới
+                </Button>
+              </Link>
+              {user && <UserActions user={user} onLogout={handleLogout} />}
+            </div>
+          </header>
+        )}
         <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
+
+        {/* Ingredient Detection Dialog */}
+        <IngredientDetectionDialog
+          open={detectionDialogOpen}
+          onOpenChange={setDetectionDialogOpen}
+          onSelect={(ingredients) => {
+            // TODO: Implement search by selected ingredients
+            console.warn('Selected ingredients:', ingredients);
+          }}
+        />
       </SidebarInset>
     </SidebarProvider>
   );
