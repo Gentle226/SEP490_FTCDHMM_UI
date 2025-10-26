@@ -2,7 +2,9 @@
 
 import { ChefHat, Clock, Edit, Share2, Trash2, Users } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/base/components/ui/button';
 import { Card, CardContent } from '@/base/components/ui/card';
@@ -17,9 +19,11 @@ interface RecipeDetailViewProps {
 }
 
 export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
+  const router = useRouter();
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     async function fetchRecipe() {
@@ -40,6 +44,49 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
       fetchRecipe();
     }
   }, [recipeId]);
+
+  const handleDelete = async () => {
+    if (!confirm('Bạn chắc chắn muốn xóa công thức này? Hành động này không thể hoàn tác.')) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await recipeService.deleteRecipe(recipeId);
+      toast.success('Công thức đã được xóa thành công');
+      router.push('/myrecipe');
+    } catch (err) {
+      console.error('Delete recipe error:', err);
+      toast.error('Có lỗi xảy ra khi xóa công thức');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!recipe) return;
+
+    const recipeUrl = `${window.location.origin}/recipe/${recipeId}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: recipe.name,
+          text: `Xem công thức "${recipe.name}" trên FitFood Tracker`,
+          url: recipeUrl,
+        });
+      } catch (error) {
+        console.error('Error sharing:', error);
+      }
+    } else {
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(recipeUrl);
+        toast.success('Đã sao chép link công thức!');
+      } catch (_error) {
+        toast.error('Không thể sao chép link');
+      }
+    }
+  };
 
   if (isLoading) {
     return <RecipeDetailSkeleton />;
@@ -66,11 +113,19 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
       {/* Header: Image + Title, Labels, Author, Description, Buttons */}
       <div className="grid grid-cols-1 gap-8 md:grid-cols-[350px_1fr]">
         {/* Left: Main Image */}
-        {recipe.imageUrl && (
-          <div className="relative h-80 w-full overflow-hidden rounded-lg border">
+        <div className="relative h-80 w-full overflow-hidden rounded-lg border bg-gray-100">
+          {recipe.imageUrl ? (
             <Image src={recipe.imageUrl} alt={recipe.name} fill className="object-cover" priority />
-          </div>
-        )}
+          ) : (
+            <Image
+              src="/Outline Illustration Card.png"
+              alt="No recipe image"
+              fill
+              className="object-cover"
+              priority
+            />
+          )}
+        </div>
 
         {/* Right: Title, Labels, Author, Description, Buttons */}
         <div className="space-y-4">
@@ -160,9 +215,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => {
-                /* TODO: Implement edit */
-              }}
+              onClick={() => router.push(`/recipe/${recipeId}/edit`)}
             >
               <Edit className="h-4 w-4" />
               Chỉnh sửa
@@ -171,21 +224,13 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
               variant="outline"
               size="sm"
               className="gap-2 text-red-500 hover:text-red-600"
-              onClick={() => {
-                /* TODO: Implement delete */
-              }}
+              onClick={handleDelete}
+              disabled={isDeleting}
             >
               <Trash2 className="h-4 w-4" />
-              Xóa
+              {isDeleting ? 'Đang xóa...' : 'Xóa'}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => {
-                /* TODO: Implement share */
-              }}
-            >
+            <Button variant="outline" size="sm" className="gap-2" onClick={handleShare}>
               <Share2 className="h-4 w-4" />
               Chia sẻ
             </Button>
@@ -215,35 +260,37 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold">Các bước nấu</h2>
           <div className="space-y-6">
-            {recipe.cookingSteps.map((step) => (
-              <Card key={step.stepOrder}>
-                <CardContent className="pt-6">
-                  <div className="flex gap-4">
-                    {/* Step Number */}
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#99b94a] text-xl font-bold text-white">
-                      {step.stepOrder}
-                    </div>
+            {recipe.cookingSteps
+              .sort((a, b) => a.stepOrder - b.stepOrder)
+              .map((step) => (
+                <Card key={step.stepOrder}>
+                  <CardContent className="pt-2 pb-2">
+                    <div className="flex gap-4">
+                      {/* Step Number */}
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#99b94a] text-xl font-bold text-white">
+                        {step.stepOrder}
+                      </div>
 
-                    {/* Step Content */}
-                    <div className="flex-1 space-y-3">
-                      <p className="whitespace-pre-wrap text-gray-800">{step.instruction}</p>
+                      {/* Step Content */}
+                      <div className="flex-1 space-y-3">
+                        <p className="whitespace-pre-wrap text-gray-800">{step.instruction}</p>
 
-                      {/* Step Image */}
-                      {step.imageURL && (
-                        <div className="relative h-64 w-full overflow-hidden rounded-lg border md:w-96">
-                          <Image
-                            src={step.imageURL}
-                            alt={`Bước ${step.stepOrder}`}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      )}
+                        {/* Step Image */}
+                        {step.imageUrl && (
+                          <div className="relative h-64 w-full overflow-hidden rounded-lg border md:w-96">
+                            <Image
+                              src={step.imageUrl}
+                              alt={`Bước ${step.stepOrder}`}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))}
           </div>
         </div>
       )}

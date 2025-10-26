@@ -32,7 +32,7 @@ import {
 } from '@/modules/labels/services/label-management.service';
 
 import { recipeService } from '../services/recipe.service';
-import { CookingStep } from '../types';
+import { CookingStep, RecipeDetail } from '../types';
 import { ImageCropDialog } from './image-crop-dialog';
 
 interface SelectedIngredient {
@@ -46,10 +46,13 @@ interface SelectedLabel {
   colorCode: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface RecipeFormProps {}
+interface RecipeFormProps {
+  recipeId?: string;
+  initialData?: RecipeDetail;
+  mode?: 'create' | 'edit';
+}
 
-export function RecipeForm({}: RecipeFormProps) {
+export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -134,6 +137,57 @@ export function RecipeForm({}: RecipeFormProps) {
 
     searchIngredients();
   }, [debouncedIngredientSearch, isIngredientPopoverOpen]);
+
+  // Initialize form with existing data in edit mode
+  useEffect(() => {
+    if (mode === 'edit' && initialData) {
+      setName(initialData.name);
+      setDescription(initialData.description || '');
+      setDifficulty(initialData.difficulty.value as 'Easy' | 'Medium' | 'Hard');
+      setCookTime(initialData.cookTime);
+      setRation(initialData.ration);
+
+      // Set labels
+      if (initialData.labels && initialData.labels.length > 0) {
+        setSelectedLabels(
+          initialData.labels.map((label) => ({
+            id: label.id,
+            name: label.name,
+            colorCode: label.colorCode,
+          })),
+        );
+      }
+
+      // Set ingredients
+      if (initialData.ingredients && initialData.ingredients.length > 0) {
+        setSelectedIngredients(
+          initialData.ingredients.map((ingredient) => ({
+            id: ingredient.id,
+            name: ingredient.name,
+          })),
+        );
+      }
+
+      // Set cooking steps
+      if (initialData.cookingSteps && initialData.cookingSteps.length > 0) {
+        setCookingSteps(
+          initialData.cookingSteps
+            .sort((a, b) => a.stepOrder - b.stepOrder)
+            .map((step) => ({
+              stepOrder: step.stepOrder,
+              instruction: step.instruction,
+              image: undefined,
+              imagePreview: step.imageUrl,
+            })),
+        );
+      }
+
+      // Set main image preview
+      if (initialData.imageUrl) {
+        setMainImagePreview(initialData.imageUrl);
+      }
+    }
+  }, [mode, initialData]);
 
   const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -298,7 +352,8 @@ export function RecipeForm({}: RecipeFormProps) {
       return;
     }
 
-    if (!mainImage) {
+    // In edit mode, image is optional
+    if (!mainImage && mode === 'create') {
       toast.error('Vui lòng tải lên hình ảnh món ăn');
       return;
     }
@@ -331,7 +386,7 @@ export function RecipeForm({}: RecipeFormProps) {
     setIsSubmitting(true);
 
     try {
-      await recipeService.createRecipe({
+      const recipeData = {
         name,
         description,
         difficulty,
@@ -341,13 +396,24 @@ export function RecipeForm({}: RecipeFormProps) {
         labelIds: selectedLabels.map((l) => l.id),
         ingredientIds: selectedIngredients.map((i) => i.id),
         cookingSteps,
-      });
+      };
 
-      toast.success('Công thức đã được tạo thành công');
+      if (mode === 'edit' && recipeId) {
+        await recipeService.updateRecipe(recipeId, recipeData);
+        toast.success('Công thức đã được cập nhật thành công');
+      } else {
+        await recipeService.createRecipe(recipeData);
+        toast.success('Công thức đã được tạo thành công');
+      }
+
       router.push('/myrecipe');
     } catch (error) {
-      console.error('Create recipe error:', error);
-      toast.error('Có lỗi xảy ra khi tạo công thức');
+      console.error('Submit recipe error:', error);
+      toast.error(
+        mode === 'edit'
+          ? 'Có lỗi xảy ra khi cập nhật công thức'
+          : 'Có lỗi xảy ra khi tạo công thức',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -801,7 +867,13 @@ export function RecipeForm({}: RecipeFormProps) {
           Lưu và Đóng
         </Button>
         <Button type="submit" disabled={isSubmitting} className="bg-[#99b94a] hover:bg-[#7a9a3d]">
-          {isSubmitting ? 'Đang lưu...' : 'Lên bài'}
+          {isSubmitting
+            ? mode === 'edit'
+              ? 'Đang cập nhật...'
+              : 'Đang lưu...'
+            : mode === 'edit'
+              ? 'Cập nhật'
+              : 'Lên bài'}
         </Button>
       </div>
 

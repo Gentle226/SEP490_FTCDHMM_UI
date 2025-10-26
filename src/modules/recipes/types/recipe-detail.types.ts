@@ -10,9 +10,10 @@ export interface RecipeLabel {
 }
 
 export interface CookingStepDetail {
+  id: string;
   stepOrder: number;
   instruction: string;
-  imageURL?: string;
+  imageUrl?: string;
 }
 
 export interface RecipeDetail {
