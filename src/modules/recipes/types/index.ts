@@ -25,3 +25,4 @@ export interface Recipe extends Omit<CreateRecipeRequest, 'image' | 'cookingStep
 }
 
 export * from './my-recipe.types';
+export * from './recipe-detail.types';

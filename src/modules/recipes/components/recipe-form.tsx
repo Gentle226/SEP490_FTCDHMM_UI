@@ -344,7 +344,7 @@ export function RecipeForm({}: RecipeFormProps) {
       });
 
       toast.success('Công thức đã được tạo thành công');
-      router.push('/profile');
+      router.push('/myrecipe');
     } catch (error) {
       console.error('Create recipe error:', error);
       toast.error('Có lỗi xảy ra khi tạo công thức');

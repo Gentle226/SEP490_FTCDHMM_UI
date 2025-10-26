@@ -1,6 +1,6 @@
 import { HttpClient } from '@/base/lib';
 
-import { CreateRecipeRequest, MyRecipeResponse, Recipe } from '../types';
+import { CreateRecipeRequest, MyRecipeResponse, Recipe, RecipeDetail } from '../types';
 
 interface PaginationParams {
   pageNumber?: number;
@@ -24,6 +24,15 @@ class RecipeService extends HttpClient {
         PageNumber: pageNumber,
         PageSize: pageSize,
       },
+    });
+  }
+
+  /**
+   * Get recipe by ID
+   */
+  public async getRecipeById(recipeId: string) {
+    return this.get<RecipeDetail>(`api/Recipe/${recipeId}`, {
+      isPrivateRoute: true,
     });
   }
 
