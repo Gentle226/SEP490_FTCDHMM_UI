@@ -1,8 +1,9 @@
 import { HttpClient } from '@/base/lib';
 
 export interface Nutrient {
-  id: string; // Nutrient ID from the API
-  vietnameseName?: string; // Nutrient name in Vietnamese (from detail API)
+  id: string;
+  vietnameseName?: string;
+  unit?: string;
   min?: number;
   max?: number;
   median?: number;
@@ -135,6 +136,7 @@ class IngredientManagementService extends HttpClient {
         return {
           id: nutrientId,
           vietnameseName: nutrientInfo?.vietnameseName || vietnameseName,
+          unit: n.unit || nutrientInfo?.unit || '',
           min: n.min,
           max: n.max,
           median: n.median,
