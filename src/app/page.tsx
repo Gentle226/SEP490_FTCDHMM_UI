@@ -2,29 +2,46 @@
 
 import { ChevronRightIcon, SearchIcon } from 'lucide-react';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { Button } from '@/base/components/ui/button';
+import { IngredientCard } from '@/base/components/ui/ingredient-card';
 import { Input } from '@/base/components/ui/input';
 import { RecipeCard } from '@/base/components/ui/recipe-card';
 import { useAuth } from '@/modules/auth';
+import { IngredientDetailsResponse, ingredientPublicService } from '@/modules/ingredients';
 
 export default function HomePage() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [ingredients, setIngredients] = useState<IngredientDetailsResponse[]>([]);
+  const [isLoadingIngredients, setIsLoadingIngredients] = useState(true);
 
-  // Mock data for categories (sẽ thay bằng API sau)
-  const categories = [
-    { name: 'thịt', image: '/placeholder-meat.jpg' },
-    { name: 'thực đơn món ngon mỗi ngày', image: '/placeholder-daily.jpg' },
-    { name: 'trứng', image: '/placeholder-egg.jpg' },
-    { name: 'cá', image: '/placeholder-fish.jpg' },
-    { name: 'bánh', image: '/placeholder-bread.jpg' },
-    { name: 'tàu hũ', image: '/placeholder-tofu.jpg' },
-    { name: 'gỏi gà', image: '/placeholder-salad.jpg' },
-    { name: 'gà', image: '/placeholder-chicken.jpg' },
-  ];
+  // Fetch ingredients on mount
+  useEffect(() => {
+    const fetchIngredients = async () => {
+      try {
+        setIsLoadingIngredients(true);
+        // Fetch with pageSize of 20 (API requires 10, 20, or 50)
+        const response = await ingredientPublicService.getIngredients({
+          pageNumber: 1,
+          pageSize: 20,
+        });
+        // Get detailed ingredients with imageUrl, show 9 on mobile, 8 on desktop
+        const detailedIngredients = await ingredientPublicService.getIngredientDetailsForHomepage(
+          response.items.slice(0, 9).map((item) => item.id),
+        );
+        setIngredients(detailedIngredients);
+      } catch (error) {
+        console.warn('Error fetching ingredients:', error);
+      } finally {
+        setIsLoadingIngredients(false);
+      }
+    };
+
+    fetchIngredients();
+  }, []);
 
   // Mock data for recent recipes (sẽ thay bằng API sau)
   const recentRecipes = Array.from({ length: 6 }, (_, i) => ({
@@ -42,7 +59,7 @@ export default function HomePage() {
 
   // Common search and recipes section
   const mainContent = (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen">
       {/* Search Section */}
       <div className="bg-white py-8">
         <div className="container mx-auto px-4">
@@ -78,35 +95,37 @@ export default function HomePage() {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Categories Section */}
+        {/* Ingredients Section */}
         <section className="mb-12">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Từ Khóa Thịnh Hành</h2>
+            <h2 className="text-2xl font-bold text-[#99b94a]">Nguyên Liệu Nổi Bật</h2>
             <Button variant="ghost" className="text-[#99b94a] hover:text-[#7a8f3a]">
               <span>Cập nhật 4:36</span>
               <ChevronRightIcon className="ml-1 h-4 w-4" />
             </Button>
           </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
-            {categories.map((category, index) => (
-              <div
-                key={index}
-                className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-gray-200"
-              >
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                  <span className="px-2 text-center text-sm font-medium text-white">
-                    {category.name}
-                  </span>
-                </div>
-              </div>
-            ))}
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8">
+            {isLoadingIngredients
+              ? Array.from({ length: 9 }, (_, i) => <IngredientCard key={i} isLoading={true} />)
+              : ingredients.map((ingredient, index) => (
+                  <div key={ingredient.id} className={index === 8 ? 'md:hidden' : ''}>
+                    <IngredientCard
+                      name={ingredient.name}
+                      image={ingredient.imageUrl}
+                      onClick={() => {
+                        // TODO: Navigate to ingredient detail page
+                        console.warn('Navigate to ingredient:', ingredient.id);
+                      }}
+                    />
+                  </div>
+                ))}
           </div>
         </section>
 
         {/* Recent Recipes Section - Only show for logged in users */}
         {user && (
           <section className="mb-12">
-            <h2 className="mb-6 text-2xl font-bold">Món bạn mới xem gần đây</h2>
+            <h2 className="mb-6 text-2xl font-bold text-[#99b94a]">Món bạn mới xem gần đây</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
               {recentRecipes.map((recipe) => (
                 <RecipeCard
@@ -123,7 +142,7 @@ export default function HomePage() {
 
         {/* All Recipes Section */}
         <section>
-          <h2 className="mb-6 text-2xl font-bold">Tất Cả Công Thức</h2>
+          <h2 className="mb-6 text-2xl font-bold text-[#99b94a]">Khám Phá Công Thức</h2>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {Array.from({ length: 20 }, (_, i) => (
               <RecipeCard
