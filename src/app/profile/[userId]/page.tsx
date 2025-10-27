@@ -25,6 +25,7 @@ import {
   useUpdateProfile,
   useUserProfile,
 } from '@/modules/profile';
+import { UserRecipesList } from '@/modules/recipes/components';
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -33,6 +34,7 @@ export default function UserProfilePage() {
   const userId = params.userId as string;
   const isOwnProfile = currentUser?.id === userId;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [recipeCount, setRecipeCount] = useState(0);
 
   // Fetch profile data based on whether it's own profile or other's
   const { data: ownProfile, isLoading: isLoadingOwn } = useProfile();
@@ -62,7 +64,7 @@ export default function UserProfilePage() {
         avatarUrl:
           profileData.avatarUrl ||
           `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.firstName)}+${encodeURIComponent(profileData.lastName)}&background=random`,
-        recipesCount: 36, // TODO: Get from API
+        recipesCount: recipeCount,
         followersCount: profileData.followersCount ?? 0,
         followingCount: profileData.followingCount ?? 0,
         isFollowing: profileData.isFollowing ?? false,
@@ -388,12 +390,11 @@ export default function UserProfilePage() {
           </TabsList>
 
           <TabsContent value="recipes" className="mt-4 sm:mt-6">
-            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-              {/* Recipe Cards - Using Skeleton as placeholder */}
-              {Array.from({ length: 6 }).map((_, index) => (
-                <RecipeCardSkeleton key={index} />
-              ))}
-            </div>
+            <UserRecipesList
+              userId={userId}
+              isOwnProfile={isOwnProfile}
+              onRecipeCountChange={setRecipeCount}
+            />
           </TabsContent>
 
           <TabsContent value="cooksnaps" className="mt-4 sm:mt-6">

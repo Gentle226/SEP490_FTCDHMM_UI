@@ -156,12 +156,20 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
         {/* Left: Main Image */}
         <div className="relative h-80 w-full overflow-hidden rounded-lg border bg-gray-100">
           {recipe.imageUrl ? (
-            <Image src={recipe.imageUrl} alt={recipe.name} fill className="object-cover" priority />
+            <Image
+              src={recipe.imageUrl}
+              alt={recipe.name}
+              fill
+              sizes="350px"
+              className="object-cover"
+              priority
+            />
           ) : (
             <Image
               src="/Outline Illustration Card.png"
               alt="No recipe image"
               fill
+              sizes="350px"
               className="object-cover"
               priority
             />
@@ -227,7 +235,9 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                       'Author'
                     }
                     fill
+                    sizes="48px"
                     className="object-cover"
+                    priority={false}
                   />
                 </div>
               ) : (
@@ -364,7 +374,9 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                               src={step.imageUrl}
                               alt={`Bước ${step.stepOrder}`}
                               fill
+                              sizes="(max-width: 768px) 100vw, 384px"
                               className="object-cover"
+                              priority={false}
                             />
                           </div>
                         )}
