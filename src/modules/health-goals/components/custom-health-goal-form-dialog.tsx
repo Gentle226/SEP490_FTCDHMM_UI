@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Sliders, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -18,6 +18,7 @@ import {
 } from '@/base/components/ui/dialog';
 import { Input } from '@/base/components/ui/input';
 import { Label } from '@/base/components/ui/label';
+import { RangeSlider } from '@/base/components/ui/range-slider';
 import { Select, SelectOption } from '@/base/components/ui/select';
 import { Textarea } from '@/base/components/ui/textarea';
 import { NutrientInfo, nutrientService } from '@/modules/nutrients/services/nutrient.service';
@@ -59,6 +60,7 @@ export function CustomHealthGoalFormDialog({
 }: CustomHealthGoalFormDialogProps) {
   const [nutrients, setNutrients] = useState<NutrientInfo[]>([]);
   const [isNameFocused, setIsNameFocused] = useState(false);
+  const [useSliderMode, setUseSliderMode] = useState<Record<number, boolean>>({});
   const createGoal = useCreateCustomHealthGoal();
   const updateGoal = useUpdateCustomHealthGoal();
 
@@ -218,20 +220,50 @@ export function CustomHealthGoalFormDialog({
 
             {fields.map((field, index) => {
               const currentNutrientId = watch(`targets.${index}.nutrientId`);
+              const currentNutrient = nutrients.find((n) => n.id === currentNutrientId);
+              const minValue = watch(`targets.${index}.minValue`) || 0;
+              const maxValue = watch(`targets.${index}.maxValue`) || 0;
+              const isSliderMode = useSliderMode[index] || false;
+
+              // Determine slider range based on nutrient type
+              const getSliderMax = () => {
+                if (!currentNutrient) return 500;
+                // Common ranges for different nutrients
+                if (currentNutrient.vietnameseName.includes('Protein')) return 300;
+                if (currentNutrient.vietnameseName.includes('Carb')) return 500;
+                if (currentNutrient.vietnameseName.includes('Fat')) return 150;
+                if (currentNutrient.vietnameseName.includes('Calo')) return 5000;
+                return 500; // Default
+              };
+
               return (
                 <div key={field.id} className="space-y-3 rounded-lg border p-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium">Chỉ Số {index + 1}</p>
-                    {fields.length > 1 && (
+                    <div className="flex items-center gap-2">
                       <Button
-                        onClick={() => remove(index)}
-                        size="icon"
+                        onClick={() =>
+                          setUseSliderMode((prev) => ({ ...prev, [index]: !prev[index] }))
+                        }
+                        size="sm"
                         type="button"
-                        variant="ghost"
+                        variant={isSliderMode ? 'default' : 'outline'}
+                        className={isSliderMode ? 'bg-[#99b94a] hover:bg-[#7a8f3a]' : ''}
                       >
-                        <Trash2 className="h-4 w-4 text-red-600" />
+                        <Sliders className="mr-2 h-4 w-4" />
+                        {isSliderMode ? 'Ẩn Slider' : 'Hiện Slider'}
                       </Button>
-                    )}
+                      {fields.length > 1 && (
+                        <Button
+                          onClick={() => remove(index)}
+                          size="icon"
+                          type="button"
+                          variant="ghost"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -282,6 +314,25 @@ export function CustomHealthGoalFormDialog({
                       )}
                     </div>
                   </div>
+
+                  {isSliderMode && currentNutrientId && (
+                    <div className="space-y-2 border-t pt-4">
+                      <Label>Điều Chỉnh Bằng Slider</Label>
+                      <RangeSlider
+                        min={0}
+                        max={getSliderMax()}
+                        step={1}
+                        value={[minValue, maxValue]}
+                        onChange={(value) => {
+                          setValue(`targets.${index}.minValue`, value[0]);
+                          setValue(`targets.${index}.maxValue`, value[1]);
+                        }}
+                        numberFormat={(value) =>
+                          currentNutrient ? `${value} ${currentNutrient.unit}` : value.toString()
+                        }
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })}
