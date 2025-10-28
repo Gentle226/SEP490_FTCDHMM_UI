@@ -11,6 +11,7 @@ import {
   Salad,
   ScrollText,
   Tags,
+  Target,
   Users,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -93,6 +94,11 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
           url: '/admin/permissions',
           icon: KeyRound,
         },
+        {
+          title: 'Quản Lý Mục Tiêu Sức Khỏe',
+          url: '/admin/health-goals',
+          icon: Target,
+        },
       ];
     }
 
@@ -149,6 +155,11 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
         title: 'Công Thức Đã Xem',
         url: '/history',
         icon: History,
+      },
+      {
+        title: 'Mục Tiêu Sức Khỏe',
+        url: '/profile/health-goals',
+        icon: Target,
       },
     ];
   };

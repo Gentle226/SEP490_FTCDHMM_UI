@@ -109,6 +109,7 @@ export function EditPermissionsDialog({
       Ingredient: 'Quản lý Nguyên liệu',
       Recipe: 'Quản lý Công thức',
       Nutrient: 'Quản lý Chất dinh dưỡng',
+      HealthGoal: 'Quản lý Mục tiêu sức khỏe',
     };
     return domainMap[domainName] || domainName;
   };
