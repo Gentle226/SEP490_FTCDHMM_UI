@@ -76,14 +76,9 @@ export function CustomHealthGoalList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-[#99b94a]">
-            Mục Tiêu Sức Khỏe Tùy Chỉnh Của Tôi
-          </h2>
-          <p className="text-muted-foreground">
-            Tạo và quản lý các mục tiêu sức khỏe cá nhân hóa của bạn
-          </p>
-        </div>
+        <p className="text-muted-foreground">
+          Tạo và quản lý các mục tiêu sức khỏe cá nhân hóa của bạn
+        </p>
         <Button onClick={handleCreateNew} className="bg-[#99b94a] hover:bg-[#7a8f3a]">
           Tạo Mục Tiêu Tùy Chỉnh
         </Button>

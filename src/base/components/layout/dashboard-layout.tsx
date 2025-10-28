@@ -5,13 +5,13 @@ import {
   BookMarked,
   ClipboardList,
   CookingPot,
+  Goal,
   History,
   Home,
   KeyRound,
   Salad,
   ScrollText,
   Tags,
-  Target,
   Users,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -97,7 +97,7 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
         {
           title: 'Quản Lý Mục Tiêu Sức Khỏe',
           url: '/admin/health-goals',
-          icon: Target,
+          icon: Goal,
         },
       ];
     }
@@ -159,7 +159,7 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
       {
         title: 'Mục Tiêu Sức Khỏe',
         url: '/profile/health-goals',
-        icon: Target,
+        icon: Goal,
       },
     ];
   };

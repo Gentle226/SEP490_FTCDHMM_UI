@@ -17,12 +17,14 @@ class UserHealthGoalService extends HttpClient {
   }
 
   /**
-   * Get the user's current active health goal
+   * Get the user's current active health goals (can be multiple)
    */
   public async getCurrentGoal() {
-    return this.get<HealthGoalResponse>('api/UserHealthGoal/current', {
+    const response = await this.get<HealthGoalResponse[]>('api/UserHealthGoal/current', {
       isPrivateRoute: true,
     });
+    // API returns an array of active goals
+    return response && response.length > 0 ? response : [];
   }
 
   /**
