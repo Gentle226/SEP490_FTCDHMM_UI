@@ -105,8 +105,12 @@ export default function HomePage() {
             </Button>
           </div>
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8">
-            {isLoadingIngredients
-              ? Array.from({ length: 9 }, (_, i) => <IngredientCard key={i} isLoading={true} />)
+            {isLoadingIngredients || ingredients.length === 0
+              ? Array.from({ length: 9 }, (_, i) => (
+                  <div key={i} className={i === 8 ? 'md:hidden' : ''}>
+                    <IngredientCard isLoading={true} />
+                  </div>
+                ))
               : ingredients.map((ingredient, index) => (
                   <div key={ingredient.id} className={index === 8 ? 'md:hidden' : ''}>
                     <IngredientCard
