@@ -1,7 +1,14 @@
 export interface CookingStep {
+  id?: string;
   stepOrder: number;
   instruction: string;
   image?: File | string;
+  imagePreview?: string;
+}
+
+export interface RecipeIngredient {
+  ingredientId: string;
+  quantityGram: number;
 }
 
 export interface CreateRecipeRequest {
@@ -12,13 +19,15 @@ export interface CreateRecipeRequest {
   image?: File;
   ration: number;
   labelIds: string[];
-  ingredientIds: string[];
+  ingredients: RecipeIngredient[];
   cookingSteps: CookingStep[];
 }
 
-export interface Recipe extends Omit<CreateRecipeRequest, 'image' | 'cookingSteps'> {
+export interface Recipe
+  extends Omit<CreateRecipeRequest, 'image' | 'cookingSteps' | 'ingredients'> {
   id: string;
   imageUrl?: string;
+  ingredientIds: string[];
   cookingSteps: CookingStep[];
   createdAt: string;
   updatedAt: string;

@@ -109,14 +109,18 @@ export function MyRecipeCard({ recipe }: MyRecipeCardProps) {
           {recipe.ingredients && recipe.ingredients.length > 0 && (
             <div className="border-t pt-3">
               <p className="mb-2 text-xs font-semibold text-gray-700">Nguyên liệu:</p>
-              <div className="flex flex-wrap gap-1">
-                {recipe.ingredients.slice(0, 4).map((ingredient) => (
-                  <Badge key={ingredient.id} variant="outline" className="text-xs">
+              <div className="flex flex-wrap gap-2">
+                {recipe.ingredients.slice(0, 4).map((ingredient, index) => (
+                  <Badge
+                    key={`ingredient-${ingredient.id || index}`}
+                    variant="outline"
+                    className="text-xs"
+                  >
                     {ingredient.name}
                   </Badge>
                 ))}
                 {recipe.ingredients.length > 4 && (
-                  <Badge variant="outline" className="text-xs">
+                  <Badge key="more-ingredients" variant="outline" className="text-xs">
                     +{recipe.ingredients.length - 4}
                   </Badge>
                 )}
@@ -127,9 +131,9 @@ export function MyRecipeCard({ recipe }: MyRecipeCardProps) {
           {/* Labels */}
           {recipe.labels && recipe.labels.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {recipe.labels.slice(0, 3).map((label) => (
+              {recipe.labels.slice(0, 3).map((label, index) => (
                 <Badge
-                  key={label.id}
+                  key={`${label.id}-${index}`}
                   className="text-xs"
                   style={{
                     backgroundColor: label.colorCode,
@@ -140,7 +144,7 @@ export function MyRecipeCard({ recipe }: MyRecipeCardProps) {
                 </Badge>
               ))}
               {recipe.labels.length > 3 && (
-                <Badge variant="secondary" className="text-xs">
+                <Badge key="more-labels" variant="secondary" className="text-xs">
                   +{recipe.labels.length - 3}
                 </Badge>
               )}

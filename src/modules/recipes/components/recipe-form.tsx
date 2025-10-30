@@ -38,6 +38,7 @@ import { ImageCropDialog } from './image-crop-dialog';
 interface SelectedIngredient {
   id: string;
   name: string;
+  quantityGram: number;
 }
 
 interface SelectedLabel {
@@ -71,7 +72,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [cookingSteps, setCookingSteps] = useState<CookingStep[]>([
-    { stepOrder: 1, instruction: '', image: undefined },
+    { id: crypto.randomUUID(), stepOrder: 1, instruction: '', image: undefined },
   ]);
   const [draggedStepIndex, setDraggedStepIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -158,12 +159,13 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         );
       }
 
-      // Set ingredients
+      // Set ingredients - API uses 'ingredientId' field
       if (initialData.ingredients && initialData.ingredients.length > 0) {
         setSelectedIngredients(
           initialData.ingredients.map((ingredient) => ({
-            id: ingredient.id,
+            id: ingredient.ingredientId || ingredient.id || '',
             name: ingredient.name,
+            quantityGram: ingredient.quantityGram,
           })),
         );
       }
@@ -174,6 +176,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
           initialData.cookingSteps
             .sort((a, b) => a.stepOrder - b.stepOrder)
             .map((step) => ({
+              id: crypto.randomUUID(),
               stepOrder: step.stepOrder,
               instruction: step.instruction,
               image: undefined,
@@ -253,7 +256,12 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
   const addCookingStep = () => {
     setCookingSteps([
       ...cookingSteps,
-      { stepOrder: cookingSteps.length + 1, instruction: '', image: undefined },
+      {
+        id: crypto.randomUUID(),
+        stepOrder: cookingSteps.length + 1,
+        instruction: '',
+        image: undefined,
+      },
     ]);
   };
 
@@ -323,7 +331,10 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
   const addIngredient = (ingredient: Ingredient) => {
     if (!selectedIngredients.some((i) => i.id === ingredient.id)) {
-      setSelectedIngredients((prev) => [...prev, { id: ingredient.id, name: ingredient.name }]);
+      setSelectedIngredients((prev) => [
+        ...prev,
+        { id: ingredient.id, name: ingredient.name, quantityGram: 0 },
+      ]);
     }
     setIsIngredientPopoverOpen(false);
     setIngredientSearch('');
@@ -331,6 +342,12 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
   const removeIngredient = (ingredientId: string) => {
     setSelectedIngredients((prev) => prev.filter((i) => i.id !== ingredientId));
+  };
+
+  const updateIngredientQuantity = (ingredientId: string, quantityGram: number) => {
+    setSelectedIngredients((prev) =>
+      prev.map((ing) => (ing.id === ingredientId ? { ...ing, quantityGram } : ing)),
+    );
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -368,6 +385,11 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
       return;
     }
 
+    if (selectedIngredients.some((ingredient) => ingredient.quantityGram <= 0)) {
+      toast.error('Vui lòng nhập khối lượng cho tất cả các nguyên liệu');
+      return;
+    }
+
     if (cookingSteps.some((step) => !step.instruction.trim())) {
       toast.error('Vui lòng nhập mô tả cho tất cả các bước');
       return;
@@ -386,6 +408,15 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     setIsSubmitting(true);
 
     try {
+      // Validate ingredient IDs before submission
+      const invalidIngredients = selectedIngredients.filter((i) => !i.id);
+      if (invalidIngredients.length > 0) {
+        console.error('Invalid ingredients found:', invalidIngredients);
+        toast.error('Có lỗi với dữ liệu nguyên liệu. Vui lòng thử lại.');
+        setIsSubmitting(false);
+        return;
+      }
+
       const recipeData = {
         name,
         description,
@@ -394,7 +425,10 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         image: mainImage || undefined,
         ration,
         labelIds: selectedLabels.map((l) => l.id),
-        ingredientIds: selectedIngredients.map((i) => i.id),
+        ingredients: selectedIngredients.map((i) => ({
+          ingredientId: i.id,
+          quantityGram: i.quantityGram,
+        })),
         cookingSteps,
       };
 
@@ -420,7 +454,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="mx-auto w-full max-w-screen-2xl space-y-6 px-4">
       {/* Main Image and Basic Info */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-[300px_1fr]">
         {/* Image Section - Left */}
@@ -663,197 +697,218 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         </Popover>
       </div>
 
-      {/* Ingredients */}
-      <div className="space-y-2">
-        <Label>Nguyên liệu</Label>
+      {/* Ingredients and Cooking Steps - Side by Side */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr]">
+        {/* Left Column: Ingredients (1/3 width) */}
+        <div className="space-y-2">
+          <Label>Nguyên liệu</Label>
 
-        {/* Selected Ingredients */}
-        <div className="min-h-[100px] rounded-lg border p-3">
-          {selectedIngredients.length === 0 ? (
-            <div className="flex h-full items-center justify-center pt-5 text-sm text-gray-400">
-              Chưa có nguyên liệu nào được chọn
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
-              {selectedIngredients.map((ingredient) => (
-                <div
-                  key={ingredient.id}
-                  className="flex items-center justify-between gap-2 rounded border bg-gray-50 px-3 py-2"
-                >
-                  <span className="flex-1 truncate text-sm">{ingredient.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeIngredient(ingredient.id)}
-                    className="flex-shrink-0 rounded-full p-1 hover:bg-gray-200"
-                    aria-label={`Remove ${ingredient.name}`}
+          {/* Selected Ingredients */}
+          <div className="min-h-[100px] rounded-lg border p-3">
+            {selectedIngredients.length === 0 ? (
+              <div className="flex h-full items-center justify-center pt-5 text-sm text-gray-400">
+                Chưa có nguyên liệu nào được chọn
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {selectedIngredients.map((ingredient) => (
+                  <div
+                    key={ingredient.id}
+                    className="flex items-center gap-3 rounded border bg-gray-50 px-3 py-2"
                   >
-                    <X className="h-3 w-3 text-gray-600" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+                    <span className="flex-1 text-sm font-medium">{ingredient.name}</span>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        key={`ingredient-quantity-${ingredient.id}`}
+                        type="number"
+                        placeholder="0"
+                        value={ingredient.quantityGram || ''}
+                        onChange={(e) => {
+                          const newValue = parseFloat(e.target.value) || 0;
+                          updateIngredientQuantity(ingredient.id, newValue);
+                        }}
+                        min="0"
+                        step="0.1"
+                        className="w-20 text-right [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        required
+                      />
+                      <span className="text-sm text-gray-500">g</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeIngredient(ingredient.id)}
+                      className="flex-shrink-0 rounded-full p-1 hover:bg-gray-200"
+                      aria-label={`Remove ${ingredient.name}`}
+                    >
+                      <X className="h-3 w-3 text-gray-600" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Search and Add Ingredients */}
+          <Popover open={isIngredientPopoverOpen} onOpenChange={setIsIngredientPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button type="button" variant="outline" className="w-full">
+                <Plus className="mr-2 h-4 w-4" />
+                Nguyên liệu
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[400px] p-0" align="start">
+              <Command shouldFilter={false}>
+                <CommandInput
+                  placeholder="Tìm kiếm nguyên liệu..."
+                  value={ingredientSearch}
+                  onValueChange={setIngredientSearch}
+                />
+                <CommandList>
+                  {isLoadingIngredients ? (
+                    <div className="py-6 text-center text-sm text-gray-500">Đang tải...</div>
+                  ) : ingredientSearchResults.length === 0 ? (
+                    <CommandEmpty>Không tìm thấy nguyên liệu nào.</CommandEmpty>
+                  ) : (
+                    <CommandGroup>
+                      {ingredientSearchResults.map((ingredient) => {
+                        const isSelected = selectedIngredients.some((i) => i.id === ingredient.id);
+                        return (
+                          <CommandItem
+                            key={ingredient.id}
+                            onSelect={() => addIngredient(ingredient)}
+                            disabled={isSelected}
+                            className="cursor-pointer"
+                          >
+                            <div className="flex w-full items-center gap-2">
+                              <span className="flex-1">{ingredient.name}</span>
+                              {isSelected && <span className="text-xs text-gray-500">Đã chọn</span>}
+                            </div>
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  )}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
 
-        {/* Search and Add Ingredients */}
-        <Popover open={isIngredientPopoverOpen} onOpenChange={setIsIngredientPopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button type="button" variant="outline" className="w-full">
-              <Plus className="mr-2 h-4 w-4" />
-              Nguyên liệu
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-0" align="start">
-            <Command shouldFilter={false}>
-              <CommandInput
-                placeholder="Tìm kiếm nguyên liệu..."
-                value={ingredientSearch}
-                onValueChange={setIngredientSearch}
-              />
-              <CommandList>
-                {isLoadingIngredients ? (
-                  <div className="py-6 text-center text-sm text-gray-500">Đang tải...</div>
-                ) : ingredientSearchResults.length === 0 ? (
-                  <CommandEmpty>Không tìm thấy nguyên liệu nào.</CommandEmpty>
-                ) : (
-                  <CommandGroup>
-                    {ingredientSearchResults.map((ingredient) => {
-                      const isSelected = selectedIngredients.some((i) => i.id === ingredient.id);
-                      return (
-                        <CommandItem
-                          key={ingredient.id}
-                          onSelect={() => addIngredient(ingredient)}
-                          disabled={isSelected}
-                          className="cursor-pointer"
-                        >
-                          <div className="flex w-full items-center gap-2">
-                            <span className="flex-1">{ingredient.name}</span>
-                            {isSelected && <span className="text-xs text-gray-500">Đã chọn</span>}
-                          </div>
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                )}
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-      </div>
+        {/* Right Column: Cooking Steps (2/3 width) */}
+        <div className="space-y-4">
+          <Label>Các bước nấu</Label>
 
-      {/* Cooking Steps */}
-      <div className="space-y-4">
-        <Label>Các bước nấu</Label>
-
-        {cookingSteps.map((step, index) => (
-          <Card
-            key={index}
-            className={`relative cursor-move transition-all ${
-              dragOverIndex === index ? 'border-green-500 bg-green-50' : ''
-            }`}
-            draggable
-            onDragStart={() => handleCookStepDragStart(index)}
-            onDragOver={(e) => handleCookStepDragOver(e, index)}
-            onDragLeave={handleCookStepDragLeave}
-            onDrop={(e) => handleCookStepDrop(e, index)}
-          >
-            <CardContent className="pt-4 pb-4">
-              <div className="flex gap-3">
-                {/* Left Column: Step Number and Drag Handle */}
-                <div className="flex flex-col items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#99b94a] text-2xl font-semibold text-white">
-                    {step.stepOrder}
+          {cookingSteps.map((step, index) => (
+            <Card
+              key={step.id}
+              className={`relative cursor-move transition-all ${
+                dragOverIndex === index ? 'border-green-500 bg-green-50' : ''
+              }`}
+              draggable
+              onDragStart={() => handleCookStepDragStart(index)}
+              onDragOver={(e) => handleCookStepDragOver(e, index)}
+              onDragLeave={handleCookStepDragLeave}
+              onDrop={(e) => handleCookStepDrop(e, index)}
+            >
+              <CardContent className="pt-4 pb-4">
+                <div className="flex gap-3">
+                  {/* Left Column: Step Number and Drag Handle */}
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#99b94a] text-2xl font-semibold text-white">
+                      {step.stepOrder}
+                    </div>
+                    <div className="cursor-grab text-gray-400 active:cursor-grabbing">
+                      <GripVertical className="h-5 w-5" />
+                    </div>
                   </div>
-                  <div className="cursor-grab text-gray-400 active:cursor-grabbing">
-                    <GripVertical className="h-5 w-5" />
+
+                  {/* Main Content */}
+                  <div className="flex-1">
+                    <div className="space-y-1">
+                      <Textarea
+                        placeholder="Ướp cá hồi với mật ong, dầu oliu và tiêu 15 phút."
+                        value={step.instruction}
+                        onChange={(e) => updateStepDescription(index, e.target.value.slice(0, 500))}
+                        onFocus={() => setFocusedStepIndex(index)}
+                        onBlur={() => setFocusedStepIndex(null)}
+                        maxLength={500}
+                        rows={3}
+                        className="break-words"
+                      />
+                      <p
+                        className={`text-right text-xs transition-opacity ${focusedStepIndex === index ? 'text-gray-500 opacity-100' : 'text-gray-300 opacity-0'}`}
+                      >
+                        {step.instruction.length}/500
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      {step.image || step.imagePreview ? (
+                        <div className="relative h-32 w-48 overflow-hidden rounded-lg border">
+                          <Image
+                            src={
+                              step.image instanceof File
+                                ? URL.createObjectURL(step.image)
+                                : step.imagePreview || step.image || ''
+                            }
+                            alt={`Step ${step.stepOrder}`}
+                            fill
+                            className="object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newSteps = [...cookingSteps];
+                              newSteps[index].image = undefined;
+                              newSteps[index].imagePreview = undefined;
+                              setCookingSteps(newSteps);
+                            }}
+                            className="absolute top-1 right-1 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                            aria-label="Remove step image"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex h-32 w-48 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400">
+                          <Upload className="h-6 w-6 text-gray-400" />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleStepImageChange(index, file);
+                            }}
+                            aria-label={`Upload image for step ${step.stepOrder}`}
+                          />
+                        </label>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Main Content */}
-                <div className="flex-1">
-                  <div className="space-y-1">
-                    <Textarea
-                      placeholder="Ướp cá hồi với mật ong, dầu oliu và tiêu 15 phút."
-                      value={step.instruction}
-                      onChange={(e) => updateStepDescription(index, e.target.value.slice(0, 500))}
-                      onFocus={() => setFocusedStepIndex(index)}
-                      onBlur={() => setFocusedStepIndex(null)}
-                      maxLength={500}
-                      rows={3}
-                      className="break-words"
-                    />
-                    <p
-                      className={`text-right text-xs transition-opacity ${focusedStepIndex === index ? 'text-gray-500 opacity-100' : 'text-gray-300 opacity-0'}`}
+                {cookingSteps.length > 1 && (
+                  <div className="absolute right-3 bottom-3">
+                    <button
+                      type="button"
+                      onClick={() => removeCookingStep(index)}
+                      className="rounded-lg p-1.5 text-red-500 transition-colors hover:bg-red-100"
+                      aria-label={`Remove step ${step.stepOrder}`}
                     >
-                      {step.instruction.length}/500
-                    </p>
+                      <Trash2 className="h-5 w-5" />
+                    </button>
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
 
-                  <div className="flex items-center gap-4">
-                    {step.image ? (
-                      <div className="relative h-32 w-48 overflow-hidden rounded-lg border">
-                        <Image
-                          src={
-                            step.image instanceof File
-                              ? URL.createObjectURL(step.image)
-                              : step.image
-                          }
-                          alt={`Step ${step.stepOrder}`}
-                          fill
-                          className="object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newSteps = [...cookingSteps];
-                            newSteps[index].image = undefined;
-                            setCookingSteps(newSteps);
-                          }}
-                          className="absolute top-1 right-1 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
-                          aria-label="Remove step image"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="flex h-32 w-48 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400">
-                        <Upload className="h-6 w-6 text-gray-400" />
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleStepImageChange(index, file);
-                          }}
-                          aria-label={`Upload image for step ${step.stepOrder}`}
-                        />
-                      </label>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {cookingSteps.length > 1 && (
-                <div className="absolute right-3 bottom-3">
-                  <button
-                    type="button"
-                    onClick={() => removeCookingStep(index)}
-                    className="rounded-lg p-1.5 text-red-500 transition-colors hover:bg-red-100"
-                    aria-label={`Remove step ${step.stepOrder}`}
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-
-        <Button type="button" onClick={addCookingStep} variant="outline" className="w-full">
-          <Plus className="mr-2 h-4 w-4" />
-          Bước Làm
-        </Button>
+          <Button type="button" onClick={addCookingStep} variant="outline" className="w-full">
+            <Plus className="mr-2 h-4 w-4" />
+            Bước làm
+          </Button>
+        </div>
       </div>
 
       {/* Submit Buttons */}

@@ -79,16 +79,17 @@ class RecipeService extends HttpClient {
       formData.append('Image', data.image);
     }
 
-    // Append array fields (LabelIds and IngredientIds)
+    // Append array fields (LabelIds and Ingredients)
     if (data.labelIds && data.labelIds.length > 0) {
       data.labelIds.forEach((id) => {
         formData.append('LabelIds', id);
       });
     }
 
-    if (data.ingredientIds && data.ingredientIds.length > 0) {
-      data.ingredientIds.forEach((id) => {
-        formData.append('IngredientIds', id);
+    if (data.ingredients && data.ingredients.length > 0) {
+      data.ingredients.forEach((ingredient, index) => {
+        formData.append(`Ingredients[${index}].IngredientId`, ingredient.ingredientId);
+        formData.append(`Ingredients[${index}].QuantityGram`, String(ingredient.quantityGram));
       });
     }
 
@@ -132,16 +133,17 @@ class RecipeService extends HttpClient {
       formData.append('Image', data.image);
     }
 
-    // Append array fields (LabelIds and IngredientIds)
+    // Append array fields (LabelIds and Ingredients)
     if (data.labelIds && data.labelIds.length > 0) {
       data.labelIds.forEach((id) => {
         formData.append('LabelIds', id);
       });
     }
 
-    if (data.ingredientIds && data.ingredientIds.length > 0) {
-      data.ingredientIds.forEach((id) => {
-        formData.append('IngredientIds', id);
+    if (data.ingredients && data.ingredients.length > 0) {
+      data.ingredients.forEach((ingredient, index) => {
+        formData.append(`Ingredients[${index}].IngredientId`, ingredient.ingredientId);
+        formData.append(`Ingredients[${index}].QuantityGram`, String(ingredient.quantityGram));
       });
     }
 

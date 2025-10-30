@@ -150,7 +150,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+    <div className="mx-auto w-[60%] space-y-6 px-4 py-8">
       {/* Header: Image + Title, Labels, Author, Description, Buttons */}
       <div className="grid grid-cols-1 gap-8 md:grid-cols-[350px_1fr]">
         {/* Left: Main Image */}
@@ -330,71 +330,79 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
         </div>
       </div>
 
-      {/* Ingredients */}
-      {recipe.ingredients && recipe.ingredients.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-semibold">Nguyên liệu</h2>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-            {recipe.ingredients.map((ingredient) => (
-              <div
-                key={ingredient.id}
-                className="flex items-center rounded-lg border bg-gray-50 px-4 py-3"
-              >
-                <span className="text-sm font-medium">{ingredient.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Cooking Steps */}
-      {recipe.cookingSteps && recipe.cookingSteps.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-semibold">Các bước nấu</h2>
-          <div className="space-y-6">
-            {recipe.cookingSteps
-              .sort((a, b) => a.stepOrder - b.stepOrder)
-              .map((step) => (
-                <Card key={step.stepOrder}>
-                  <CardContent className="pt-2 pb-2">
-                    <div className="flex gap-4">
-                      {/* Step Number */}
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#99b94a] text-xl font-bold text-white">
-                        {step.stepOrder}
-                      </div>
-
-                      {/* Step Content */}
-                      <div className="flex-1 space-y-3">
-                        <p className="whitespace-pre-wrap text-gray-800">{step.instruction}</p>
-
-                        {/* Step Image */}
-                        {step.imageUrl && (
-                          <div className="relative h-64 w-full overflow-hidden rounded-lg border md:w-96">
-                            <Image
-                              src={step.imageUrl}
-                              alt={`Bước ${step.stepOrder}`}
-                              fill
-                              sizes="(max-width: 768px) 100vw, 384px"
-                              className="object-cover"
-                              priority={false}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+      {/* Ingredients and Cooking Steps - Side by Side */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr]">
+        {/* Left Column: Ingredients (1/3 width) */}
+        {recipe.ingredients && recipe.ingredients.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold">Nguyên liệu</h2>
+            <div className="space-y-3">
+              {recipe.ingredients.map((ingredient, index) => (
+                <div
+                  key={`ingredient-${ingredient.id || index}`}
+                  className="flex items-center justify-between rounded-lg border bg-gray-50 px-4 py-3"
+                >
+                  <span className="flex-1 text-sm font-semibold text-gray-800">
+                    {ingredient.name || 'Không tên'}
+                  </span>
+                  <span className="ml-2 text-xs font-medium text-gray-600">
+                    {ingredient.quantityGram ? `${ingredient.quantityGram}g` : ''}
+                  </span>
+                </div>
               ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Right Column: Cooking Steps (2/3 width) */}
+        {recipe.cookingSteps && recipe.cookingSteps.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold">Các bước nấu</h2>
+            <div className="space-y-6">
+              {recipe.cookingSteps
+                .sort((a, b) => a.stepOrder - b.stepOrder)
+                .map((step, index) => (
+                  <Card key={`step-${step.id || step.stepOrder}-${index}`}>
+                    <CardContent className="pt-2 pb-2">
+                      <div className="flex gap-4">
+                        {/* Step Number */}
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#99b94a] text-xl font-bold text-white">
+                          {step.stepOrder}
+                        </div>
+
+                        {/* Step Content */}
+                        <div className="flex-1 space-y-3">
+                          <p className="whitespace-pre-wrap text-gray-800">{step.instruction}</p>
+
+                          {/* Step Image */}
+                          {step.imageUrl && (
+                            <div className="relative h-64 w-full overflow-hidden rounded-lg border md:w-96">
+                              <Image
+                                src={step.imageUrl}
+                                alt={`Bước ${step.stepOrder}`}
+                                fill
+                                sizes="(max-width: 768px) 100vw, 384px"
+                                className="object-cover"
+                                priority={false}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 function RecipeDetailSkeleton() {
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
+    <div className="mx-auto w-[70%] space-y-6 px-4 py-8">
       <div className="space-y-4">
         <Skeleton className="h-12 w-3/4" />
         <div className="flex gap-2">
