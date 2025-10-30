@@ -55,6 +55,24 @@ class CustomHealthGoalService extends HttpClient {
       isPrivateRoute: true,
     });
   }
+
+  /**
+   * Activate a custom health goal
+   */
+  public async activate(id: string) {
+    return this.put<void>(`api/CustomHealthGoal/${id}/active`, undefined, {
+      isPrivateRoute: true,
+    });
+  }
+
+  /**
+   * De-active a custom health goal
+   */
+  public async deactive(id: string) {
+    return this.put<void>(`api/CustomHealthGoal/${id}/de-active`, undefined, {
+      isPrivateRoute: true,
+    });
+  }
 }
 
 export const customHealthGoalService = new CustomHealthGoalService();

@@ -204,13 +204,7 @@ export function CustomHealthGoalFormDialog({
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label>Chỉ Số Dinh Dưỡng</Label>
-              <Button onClick={handleAddTarget} size="sm" type="button" variant="outline">
-                <Plus className="mr-2 h-4 w-4" />
-                Thêm Chỉ Số
-              </Button>
-            </div>
+            <Label>Chỉ Số Dinh Dưỡng</Label>
 
             {fields.length === 0 && (
               <p className="text-muted-foreground text-center text-sm">
@@ -229,9 +223,9 @@ export function CustomHealthGoalFormDialog({
               const getSliderMax = () => {
                 if (!currentNutrient) return 500;
                 // Common ranges for different nutrients
-                if (currentNutrient.vietnameseName.includes('Protein')) return 300;
-                if (currentNutrient.vietnameseName.includes('Carb')) return 500;
-                if (currentNutrient.vietnameseName.includes('Fat')) return 150;
+                if (currentNutrient.vietnameseName.includes('Chất đạm')) return 300;
+                if (currentNutrient.vietnameseName.includes('Tinh bột')) return 500;
+                if (currentNutrient.vietnameseName.includes('Chất béo')) return 150;
                 if (currentNutrient.vietnameseName.includes('Calo')) return 5000;
                 return 500; // Default
               };
@@ -336,6 +330,17 @@ export function CustomHealthGoalFormDialog({
                 </div>
               );
             })}
+
+            <Button
+              onClick={handleAddTarget}
+              size="sm"
+              type="button"
+              variant="outline"
+              className="w-full"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Thêm Chỉ Số
+            </Button>
           </div>
 
           <DialogFooter>

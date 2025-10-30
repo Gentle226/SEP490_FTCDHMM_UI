@@ -20,7 +20,13 @@ import {
 } from '@/base/components/ui/dropdown-menu';
 import { Skeleton } from '@/base/components/ui/skeleton';
 
-import { useDeleteCustomHealthGoal, useMyCustomHealthGoals, useSetHealthGoal } from '../hooks';
+import {
+  useActivateCustomHealthGoal,
+  useDeactiveCustomHealthGoal,
+  useDeleteCustomHealthGoal,
+  useMyCustomHealthGoals,
+  useSetHealthGoal,
+} from '../hooks';
 import { CustomHealthGoalResponse } from '../types';
 import { CustomHealthGoalFormDialog } from './custom-health-goal-form-dialog';
 
@@ -28,6 +34,8 @@ export function CustomHealthGoalList() {
   const { data: customGoals, isLoading } = useMyCustomHealthGoals();
   const deleteGoal = useDeleteCustomHealthGoal();
   const setGoal = useSetHealthGoal();
+  const activateGoal = useActivateCustomHealthGoal();
+  const deactiveGoal = useDeactiveCustomHealthGoal();
   const [editingGoal, setEditingGoal] = useState<CustomHealthGoalResponse | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
@@ -52,6 +60,24 @@ export function CustomHealthGoalList() {
   const handleEdit = (goal: CustomHealthGoalResponse) => {
     setEditingGoal(goal);
     setIsFormOpen(true);
+  };
+
+  const handleActivate = async (id: string) => {
+    try {
+      await activateGoal.mutateAsync(id);
+      toast.success('Mục tiêu đã được kích hoạt');
+    } catch (_err) {
+      toast.error('Lỗi khi kích hoạt mục tiêu');
+    }
+  };
+
+  const handleDeactive = async (id: string) => {
+    try {
+      await deactiveGoal.mutateAsync(id);
+      toast.success('Mục tiêu đã được vô hiệu hóa');
+    } catch (_err) {
+      toast.error('Lỗi khi vô hiệu hóa mục tiêu');
+    }
   };
 
   const handleCreateNew = () => {
@@ -115,6 +141,12 @@ export function CustomHealthGoalList() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleActivate(goal.id)}>
+                      Kích Hoạt
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDeactive(goal.id)}>
+                      Vô Hiệu Hóa
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleSetAsCurrent(goal.id)}>
                       <Target className="mr-2 h-4 w-4" />
                       Đặt Làm Hiện Tại
