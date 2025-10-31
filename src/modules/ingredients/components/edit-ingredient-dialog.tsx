@@ -548,7 +548,7 @@ export function EditIngredientDialog({
           {/* Actions */}
           <div className="flex justify-end gap-3 border-t pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Xóa
+              Hủy
             </Button>
             <Button
               type="submit"

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MoreVertical, Search, X } from 'lucide-react';
+import { Edit, Eye, Search, Trash2, X } from 'lucide-react';
 import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ReactNode, useEffect, useState } from 'react';
@@ -17,12 +17,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/base/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/base/components/ui/dropdown-menu';
 import { Input } from '@/base/components/ui/input';
 import {
   Table,
@@ -274,16 +268,19 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[30%] pl-12">Tên nguyên liệu</TableHead>
-              <TableHead className="w-[30%]">Phân loại</TableHead>
-              <TableHead className="w-[25%]">Cập nhật Lần Cuối</TableHead>
-              <TableHead className="w-[15%] pr-12 text-right">Hành động</TableHead>
+              <TableHead className="w-[23%] pl-12">Tên nguyên liệu</TableHead>
+              <TableHead className="w-[15%]">Phân loại</TableHead>
+              <TableHead className="w-[22%] text-center">Năng Lượng (kcal)</TableHead>
+              <TableHead className="w-[20%] text-center">Cập nhật Lần Cuối</TableHead>
+              <TableHead className="w-[7%] text-center">Chi Tiết</TableHead>
+              <TableHead className="w-[7%] text-center">Chỉnh Sửa</TableHead>
+              <TableHead className="w-[6%] pr-12 text-center">Xóa</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-32 text-center">
+                <TableCell colSpan={7} className="h-32 text-center">
                   <div className="flex items-center justify-center">
                     <div className="text-muted-foreground">Đang tải...</div>
                   </div>
@@ -291,7 +288,7 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
               </TableRow>
             ) : !ingredientsData?.items || ingredientsData.items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-32 text-center">
+                <TableCell colSpan={7} className="h-32 text-center">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <p className="text-muted-foreground">Không tìm thấy nguyên liệu nào.</p>
                   </div>
@@ -330,30 +327,43 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm">{formatDate(ingredient.lastUpdatedUtc)}</TableCell>
-                  <TableCell className="pr-24 text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreVertical className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewDetails(ingredient)}>
-                          Xem chi tiết
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEdit(ingredient)}>
-                          Chỉnh sửa
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDelete(ingredient.id)}
-                          disabled={deleteMutation.isPending}
-                          className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                        >
-                          {deleteMutation.isPending ? 'Đang xóa...' : 'Xóa'}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  <TableCell className="text-center">
+                    <span className="text-sm font-medium">-</span>
+                  </TableCell>
+                  <TableCell className="text-center text-sm">
+                    {formatDate(ingredient.lastUpdatedUtc)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewDetails(ingredient)}
+                      title="Xem chi tiết"
+                    >
+                      <Eye className="size-4" />
+                    </Button>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(ingredient)}
+                      title="Chỉnh sửa"
+                    >
+                      <Edit className="size-4" />
+                    </Button>
+                  </TableCell>
+                  <TableCell className="pr-12 text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(ingredient.id)}
+                      disabled={deleteMutation.isPending}
+                      title="Xóa"
+                      className="hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))

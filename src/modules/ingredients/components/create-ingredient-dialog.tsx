@@ -66,21 +66,22 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
 
   // Initialize form with required nutrients when dialog opens
   useEffect(() => {
-    if (open && requiredNutrients.length > 0) {
-      initializedRef.current = false;
-      if (!initializedRef.current) {
-        // Initialize with required nutrients
-        const initialRows = requiredNutrients.map((nutrient) => ({
-          nutrientId: nutrient.id,
-          min: undefined,
-          max: undefined,
-          median: undefined,
-        }));
-        setNutrientRows(initialRows);
-        initializedRef.current = true;
-      }
-    } else if (!open) {
-      // Reset form when dialog closes
+    if (open && requiredNutrients.length > 0 && !initializedRef.current) {
+      // Initialize with required nutrients
+      const initialRows = requiredNutrients.map((nutrient) => ({
+        nutrientId: nutrient.id,
+        min: undefined,
+        max: undefined,
+        median: undefined,
+      }));
+      setNutrientRows(initialRows);
+      initializedRef.current = true;
+    }
+  }, [open, requiredNutrients]);
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open && initializedRef.current) {
       setName('');
       setSelectedCategoryIds([]);
       setDescription('');
@@ -89,7 +90,7 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
       setNutrientRows([]);
       initializedRef.current = false;
     }
-  }, [open, requiredNutrients]);
+  }, [open]);
 
   const createMutation = useMutation({
     mutationFn: async (data: {
