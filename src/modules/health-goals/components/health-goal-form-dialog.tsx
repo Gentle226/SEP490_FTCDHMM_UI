@@ -193,6 +193,7 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
               placeholder="Mô tả mục tiêu sức khỏe..."
               rows={3}
               {...register('description')}
+              className="break-words"
             />
             {errors.description && (
               <p className="text-sm text-red-600">{errors.description.message}</p>

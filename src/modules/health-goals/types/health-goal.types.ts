@@ -1,14 +1,26 @@
 export interface NutrientTarget {
   nutrientId: string;
   name: string;
+  targetType?: string;
   minValue: number;
+  medianValue?: number;
   maxValue: number;
+  minEnergyPct?: number;
+  medianEnergyPct?: number;
+  maxEnergyPct?: number;
+  weight?: number;
 }
 
 export interface NutrientTargetDto {
   nutrientId: string;
+  targetType?: string;
   minValue: number;
+  medianValue?: number;
   maxValue: number;
+  minEnergyPct?: number;
+  medianEnergyPct?: number;
+  maxEnergyPct?: number;
+  weight?: number;
 }
 
 export interface HealthGoalResponse {

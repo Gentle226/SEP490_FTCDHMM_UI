@@ -25,7 +25,6 @@ import {
   useDeactiveCustomHealthGoal,
   useDeleteCustomHealthGoal,
   useMyCustomHealthGoals,
-  useSetHealthGoal,
 } from '../hooks';
 import { CustomHealthGoalResponse } from '../types';
 import { CustomHealthGoalFormDialog } from './custom-health-goal-form-dialog';
@@ -33,7 +32,6 @@ import { CustomHealthGoalFormDialog } from './custom-health-goal-form-dialog';
 export function CustomHealthGoalList() {
   const { data: customGoals, isLoading } = useMyCustomHealthGoals();
   const deleteGoal = useDeleteCustomHealthGoal();
-  const setGoal = useSetHealthGoal();
   const activateGoal = useActivateCustomHealthGoal();
   const deactiveGoal = useDeactiveCustomHealthGoal();
   const [editingGoal, setEditingGoal] = useState<CustomHealthGoalResponse | null>(null);
@@ -45,15 +43,6 @@ export function CustomHealthGoalList() {
       toast.success('Mục tiêu sức khỏe đã được xóa thành công');
     } catch (_error) {
       toast.error('Lỗi khi xóa mục tiêu sức khỏe');
-    }
-  };
-
-  const handleSetAsCurrent = async (id: string) => {
-    try {
-      await setGoal.mutateAsync(id);
-      toast.success('Mục tiêu sức khỏe đã được đặt làm mục tiêu hiện tại');
-    } catch (_error) {
-      toast.error('Lỗi khi đặt mục tiêu sức khỏe làm mục tiêu hiện tại');
     }
   };
 
@@ -123,7 +112,7 @@ export function CustomHealthGoalList() {
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {customGoals?.map((goal) => (
           <Card key={goal.id}>
             <CardHeader>
@@ -146,10 +135,6 @@ export function CustomHealthGoalList() {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleDeactive(goal.id)}>
                       Vô Hiệu Hóa
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleSetAsCurrent(goal.id)}>
-                      <Target className="mr-2 h-4 w-4" />
-                      Đặt Làm Hiện Tại
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleEdit(goal)}>
                       <Pencil className="mr-2 h-4 w-4" />

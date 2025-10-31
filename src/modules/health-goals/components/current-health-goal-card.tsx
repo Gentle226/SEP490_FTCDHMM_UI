@@ -49,7 +49,7 @@ export function CurrentHealthGoalCard() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-4 gap-3">
       {currentGoals.map((goal) => (
         <Card key={goal.id}>
           <CardHeader>
