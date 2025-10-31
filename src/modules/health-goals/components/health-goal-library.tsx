@@ -13,10 +13,11 @@ import {
 } from '@/base/components/ui/card';
 import { Skeleton } from '@/base/components/ui/skeleton';
 
-import { useHealthGoals, useSetHealthGoal } from '../hooks';
+import { useCurrentHealthGoal, useHealthGoals, useSetHealthGoal } from '../hooks';
 
 export function HealthGoalLibrary() {
   const { data: healthGoals, isLoading } = useHealthGoals();
+  const { data: currentGoals = [] } = useCurrentHealthGoal();
   const setGoal = useSetHealthGoal();
 
   const handleSelectGoal = async (id: string) => {
@@ -26,6 +27,11 @@ export function HealthGoalLibrary() {
     } catch (_error) {
       toast.error('Lỗi khi chọn mục tiêu sức khỏe');
     }
+  };
+
+  // Check if a goal is already selected as current
+  const isGoalSelected = (goalId: string) => {
+    return currentGoals.some((currentGoal) => currentGoal.id === goalId);
   };
 
   if (isLoading) {
@@ -86,10 +92,10 @@ export function HealthGoalLibrary() {
 
                 <Button
                   className="w-full bg-[#99b94a] hover:bg-[#7a8f3a]"
-                  disabled={setGoal.isPending}
+                  disabled={setGoal.isPending || isGoalSelected(goal.id)}
                   onClick={() => handleSelectGoal(goal.id)}
                 >
-                  Chọn Mục Tiêu Này
+                  {isGoalSelected(goal.id) ? 'Đã Chọn' : 'Chọn Mục Tiêu Này'}
                 </Button>
               </div>
             </CardContent>

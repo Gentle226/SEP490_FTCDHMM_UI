@@ -1,9 +1,10 @@
 'use client';
 
-import { MoreVertical, Pencil, Target, Trash2 } from 'lucide-react';
+import { CheckCircle2, Circle, MoreVertical, Pencil, Target, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { Badge } from '@/base/components/ui/badge';
 import { Button } from '@/base/components/ui/button';
 import {
   Card,
@@ -117,9 +118,24 @@ export function CustomHealthGoalList() {
           <Card key={goal.id}>
             <CardHeader>
               <div className="flex items-start justify-between">
-                <div className="space-y-1">
+                <div className="flex-1 space-y-2">
                   <CardTitle className="text-lg text-[#99b94a]">{goal.name}</CardTitle>
-                  <CardDescription className="line-clamp-2">
+                  <Badge
+                    variant="outline"
+                    className={
+                      goal.isActive
+                        ? 'border-green-200 bg-green-50 text-green-700'
+                        : 'border-gray-200 bg-gray-50 text-gray-700'
+                    }
+                  >
+                    {goal.isActive ? (
+                      <CheckCircle2 className="mr-1 h-3 w-3" />
+                    ) : (
+                      <Circle className="mr-1 h-3 w-3" />
+                    )}
+                    {goal.isActive ? 'Đang Hoạt Động' : 'Vô Hiệu'}
+                  </Badge>
+                  <CardDescription className="line-clamp-2 pt-1">
                     {goal.description || 'Không có mô tả'}
                   </CardDescription>
                 </div>
@@ -132,10 +148,12 @@ export function CustomHealthGoalList() {
                   <DropdownMenuContent align="end">
                     {goal.isActive ? (
                       <DropdownMenuItem onClick={() => handleDeactive(goal.id)}>
+                        <Circle className="mr-2 h-4 w-4" />
                         Vô Hiệu Hóa
                       </DropdownMenuItem>
                     ) : (
                       <DropdownMenuItem onClick={() => handleActivate(goal.id)}>
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
                         Kích Hoạt
                       </DropdownMenuItem>
                     )}
