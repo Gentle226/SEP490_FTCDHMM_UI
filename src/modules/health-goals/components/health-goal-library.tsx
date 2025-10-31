@@ -68,7 +68,7 @@ export function HealthGoalLibrary() {
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <p className="mb-2 text-sm font-medium">Chỉ Số Dinh Dưỡng:</p>
+                  <p className="mb-2 text-sm font-medium">Chỉ Số Dinh Dưỡng (Trên 100g):</p>
                   <div className="space-y-2">
                     {goal.targets.map((target) => (
                       <div
@@ -77,7 +77,7 @@ export function HealthGoalLibrary() {
                       >
                         <span className="font-medium">{target.name}</span>
                         <span className="text-muted-foreground">
-                          {target.minValue} - {target.maxValue}
+                          {target.minValue} - {target.maxValue} g
                         </span>
                       </div>
                     ))}

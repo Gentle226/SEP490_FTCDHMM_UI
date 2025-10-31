@@ -113,13 +113,13 @@ export function HealthGoalList() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <p className="text-sm font-medium">Chỉ số Dinh Dưỡng:</p>
+                <p className="text-sm font-medium">Chỉ số Dinh Dưỡng (Trên 100g):</p>
                 <div className="space-y-1">
                   {goal.targets.map((target) => (
                     <div key={target.nutrientId} className="flex justify-between text-sm">
                       <span className="text-muted-foreground">{target.name}</span>
                       <span className="font-medium">
-                        {target.minValue} - {target.maxValue}
+                        {target.minValue} - {target.maxValue} g
                       </span>
                     </div>
                   ))}

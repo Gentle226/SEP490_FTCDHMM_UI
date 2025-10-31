@@ -27,6 +27,7 @@ export interface HealthGoalResponse {
   id: string;
   name: string;
   description?: string;
+  isActive: boolean;
   targets: NutrientTarget[];
 }
 

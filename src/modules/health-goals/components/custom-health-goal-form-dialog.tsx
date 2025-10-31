@@ -254,7 +254,7 @@ export function CustomHealthGoalFormDialog({
           </div>
 
           <div className="space-y-4">
-            <Label>Chỉ Số Dinh Dưỡng</Label>
+            <Label>Chỉ Số Dinh Dưỡng (Trên 100g)</Label>
 
             {fields.length === 0 && (
               <p className="text-muted-foreground text-center text-sm">

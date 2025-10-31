@@ -71,20 +71,18 @@ export function CurrentHealthGoalCard() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <h4 className="mb-3 text-sm font-semibold">Chỉ Số Dinh Dưỡng Hàng Ngày</h4>
+                <p className="mb-2 text-sm font-medium">Chỉ Số Dinh Dưỡng (Trên 100g):</p>
                 <div className="space-y-2">
                   {goal.targets && goal.targets.length > 0 ? (
                     goal.targets.map((target) => (
                       <div
                         key={target.nutrientId}
-                        className="flex items-center justify-between rounded-lg border p-3"
+                        className="flex items-center justify-between rounded-lg border p-2 text-sm"
                       >
                         <span className="font-medium">{target.name}</span>
-                        <div className="text-right">
-                          <p className="text-sm font-semibold">
-                            {target.minValue} - {target.maxValue}
-                          </p>
-                        </div>
+                        <span className="text-muted-foreground">
+                          {target.minValue} - {target.maxValue} g
+                        </span>
                       </div>
                     ))
                   ) : (

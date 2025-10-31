@@ -130,12 +130,15 @@ export function CustomHealthGoalList() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleActivate(goal.id)}>
-                      Kích Hoạt
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDeactive(goal.id)}>
-                      Vô Hiệu Hóa
-                    </DropdownMenuItem>
+                    {goal.isActive ? (
+                      <DropdownMenuItem onClick={() => handleDeactive(goal.id)}>
+                        Vô Hiệu Hóa
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem onClick={() => handleActivate(goal.id)}>
+                        Kích Hoạt
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={() => handleEdit(goal)}>
                       <Pencil className="mr-2 h-4 w-4" />
                       Chỉnh Sửa
@@ -153,13 +156,13 @@ export function CustomHealthGoalList() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <p className="text-sm font-medium text-[#99b94a]">Chỉ Số Dinh Dưỡng:</p>
+                <p className="text-sm font-medium text-[#99b94a]">Chỉ Số Dinh Dưỡng (Trên 100g):</p>
                 <div className="space-y-1">
                   {goal.targets.map((target) => (
                     <div key={target.nutrientId} className="flex justify-between text-sm">
                       <span className="text-muted-foreground">{target.name}</span>
                       <span className="font-medium">
-                        {target.minValue} - {target.maxValue}
+                        {target.minValue} - {target.maxValue} g
                       </span>
                     </div>
                   ))}
