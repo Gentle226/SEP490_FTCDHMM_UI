@@ -5,6 +5,7 @@ import {
   BookMarked,
   ClipboardList,
   CookingPot,
+  Goal,
   History,
   Home,
   KeyRound,
@@ -93,6 +94,11 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
           url: '/admin/permissions',
           icon: KeyRound,
         },
+        {
+          title: 'Quản Lý Mục Tiêu Sức Khỏe',
+          url: '/admin/health-goals',
+          icon: Goal,
+        },
       ];
     }
 
@@ -110,14 +116,14 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
           icon: Salad,
         },
         {
-          title: 'Quản Lý Nhãn Thực Phẩm',
-          url: '/moderator/label',
-          icon: Tags,
-        },
-        {
-          title: 'Quản Lý Nhóm Thực Phẩm',
+          title: 'Quản Lý Nhóm Nguyên Liệu',
           url: '/moderator/category',
           icon: ClipboardList,
+        },
+        {
+          title: 'Quản Lý Nhãn Món Ăn',
+          url: '/moderator/label',
+          icon: Tags,
         },
         {
           title: 'Nguyên Tắc Đăng Bài',
@@ -149,6 +155,11 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
         title: 'Công Thức Đã Xem',
         url: '/history',
         icon: History,
+      },
+      {
+        title: 'Mục Tiêu Sức Khỏe',
+        url: '/profile/health-goals',
+        icon: Goal,
       },
     ];
   };

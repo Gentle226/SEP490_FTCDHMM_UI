@@ -1,6 +1,8 @@
 export interface RecipeIngredient {
-  id: string;
+  id?: string; // Optional for backward compatibility
+  ingredientId?: string; // API might use this field name instead
   name: string;
+  quantityGram: number;
 }
 
 export interface RecipeLabel {

@@ -1,6 +1,7 @@
+import Image from 'next/image';
+
 import { Skeleton } from '@/base/components/ui/skeleton';
 import { cn } from '@/base/lib';
-import Image from 'next/image';
 
 interface RecipeCardProps {
   title?: string;
@@ -34,7 +35,9 @@ export function RecipeCard({ title, author, image, className, isLoading = true }
             alt={title || 'Recipe Image'}
             width={400}
             height={300}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+            priority={false}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400">

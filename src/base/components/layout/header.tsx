@@ -32,7 +32,14 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center space-x-4">
           <Link href="/" className="flex items-center">
-            <Image src="/Fitfood Tracker Logo.png" alt="FitFood Tracker" width={120} height={120} />
+            <Image
+              src="/Fitfood Tracker Logo.png"
+              alt="FitFood Tracker"
+              width={120}
+              height={120}
+              priority
+              className="h-auto w-auto"
+            />
           </Link>
         </div>
 

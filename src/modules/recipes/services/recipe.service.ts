@@ -28,6 +28,25 @@ class RecipeService extends HttpClient {
   }
 
   /**
+   * Get recipes by user ID (for viewing other users' recipes)
+   * TODO: This endpoint needs to be implemented in the backend
+   * For now, it uses the same endpoint as getMyRecipes
+   */
+  public async getRecipesByUserId(_userId: string, params: PaginationParams = {}) {
+    const { pageNumber = 1, pageSize = 10 } = params;
+
+    // TODO: Replace with actual endpoint when backend is ready
+    // return this.get<MyRecipeResponse>(`api/Recipe/user/${userId}`, {
+    return this.get<MyRecipeResponse>('api/Recipe/myRecipe', {
+      isPrivateRoute: true,
+      params: {
+        PageNumber: pageNumber,
+        PageSize: pageSize,
+      },
+    });
+  }
+
+  /**
    * Get recipe by ID
    */
   public async getRecipeById(recipeId: string) {
@@ -60,16 +79,17 @@ class RecipeService extends HttpClient {
       formData.append('Image', data.image);
     }
 
-    // Append array fields (LabelIds and IngredientIds)
+    // Append array fields (LabelIds and Ingredients)
     if (data.labelIds && data.labelIds.length > 0) {
       data.labelIds.forEach((id) => {
         formData.append('LabelIds', id);
       });
     }
 
-    if (data.ingredientIds && data.ingredientIds.length > 0) {
-      data.ingredientIds.forEach((id) => {
-        formData.append('IngredientIds', id);
+    if (data.ingredients && data.ingredients.length > 0) {
+      data.ingredients.forEach((ingredient, index) => {
+        formData.append(`Ingredients[${index}].IngredientId`, ingredient.ingredientId);
+        formData.append(`Ingredients[${index}].QuantityGram`, String(ingredient.quantityGram));
       });
     }
 
@@ -113,16 +133,17 @@ class RecipeService extends HttpClient {
       formData.append('Image', data.image);
     }
 
-    // Append array fields (LabelIds and IngredientIds)
+    // Append array fields (LabelIds and Ingredients)
     if (data.labelIds && data.labelIds.length > 0) {
       data.labelIds.forEach((id) => {
         formData.append('LabelIds', id);
       });
     }
 
-    if (data.ingredientIds && data.ingredientIds.length > 0) {
-      data.ingredientIds.forEach((id) => {
-        formData.append('IngredientIds', id);
+    if (data.ingredients && data.ingredients.length > 0) {
+      data.ingredients.forEach((ingredient, index) => {
+        formData.append(`Ingredients[${index}].IngredientId`, ingredient.ingredientId);
+        formData.append(`Ingredients[${index}].QuantityGram`, String(ingredient.quantityGram));
       });
     }
 

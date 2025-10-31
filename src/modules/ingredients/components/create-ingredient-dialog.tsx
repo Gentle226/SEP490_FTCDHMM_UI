@@ -341,7 +341,7 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Nguồn protein nạc, ít chất béo..."
               rows={3}
-              className="resize-none"
+              className="resize-none break-words"
             />
           </div>
 

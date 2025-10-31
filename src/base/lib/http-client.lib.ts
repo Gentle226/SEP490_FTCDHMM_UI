@@ -58,8 +58,13 @@ export class HttpClient {
   }
 
   protected onResponseFailed(error: AxiosError) {
-    // TODO: Additional handling for different status codes here
-    throw error;
+    // Extract error message from response data if available
+    const errorData = error.response?.data as { code?: string; message?: string } | undefined;
+    const errorMessage = errorData?.code || errorData?.message || error.message;
+
+    // Create a new error with the extracted message
+    const newError = new Error(errorMessage);
+    throw newError;
   }
 
   public get<T>(url: string, config?: CustomAxiosRequestConfig) {

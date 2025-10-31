@@ -94,6 +94,20 @@ export function PermissionManagementTable() {
     },
   });
 
+  const getErrorMessage = (error: Error, isDeactivating: boolean): string => {
+    const errorMessage = error.message;
+
+    // Check for INVALID_ACTION error code from backend
+    if (errorMessage.includes('INVALID_ACTION')) {
+      if (isDeactivating) {
+        return 'Không thể vô hiệu hóa vai trò này vì có người dùng đang sử dụng nó. Vui lòng chuyển tất cả người dùng sang vai trò khác trước khi vô hiệu hóa.';
+      }
+      return 'Không thể thực hiện hành động này. Vai trò có thể đã ở trạng thái này rồi.';
+    }
+
+    return errorMessage || 'Không thể cập nhật trạng thái vai trò.';
+  };
+
   // Toggle role active status mutation
   const toggleRoleActiveMutation = useMutation({
     mutationFn: ({ roleId, isActive }: { roleId: string; isActive: boolean }) => {
@@ -105,8 +119,10 @@ export function PermissionManagementTable() {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       toast.success('Trạng thái vai trò đã được cập nhật.');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Không thể cập nhật trạng thái vai trò.');
+    onError: (error: Error, variables) => {
+      const isDeactivating = variables.isActive;
+      const message = getErrorMessage(error, isDeactivating);
+      toast.error(message);
     },
   });
 
@@ -135,115 +151,132 @@ export function PermissionManagementTable() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-[#99b94a]">Quản Lý Phân Quyền</h2>
-        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-[#99b94a] hover:bg-[#7a8f3a]">
-              <Plus className="mr-2 h-4 w-4" />
-              Tạo Vai Trò
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Tạo Vai Trò Mới</DialogTitle>
-              <DialogDescription>
-                Nhập tên cho vai trò mới. Bạn có thể cấu hình quyền sau khi tạo.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label className="mb-2" htmlFor="roleName">
-                  Tên Vai Trò
-                </Label>
-                <Input
-                  id="roleName"
-                  type="text"
-                  value={newRoleName}
-                  onChange={(e) => setNewRoleName(e.target.value)}
-                  placeholder="Nhập tên vai trò"
-                />
+    <>
+      <style>{`
+        [data-permissions-switch][data-state="checked"] {
+          background-color: #99b94a;
+        }
+        [data-permissions-switch][data-state="unchecked"] {
+          background-color: #f0f0f0;
+        }
+        [data-permissions-switch][data-state="checked"] [data-slot="switch-thumb"] {
+          background-color: white;
+        }
+        [data-permissions-switch][data-state="unchecked"] [data-slot="switch-thumb"] {
+          background-color: #99b94a;
+        }
+      `}</style>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-3xl font-bold text-[#99b94a]">Quản Lý Phân Quyền</h2>
+          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-[#99b94a] hover:bg-[#7a8f3a]">
+                <Plus className="mr-2 h-4 w-4" />
+                Tạo Vai Trò
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Tạo Vai Trò Mới</DialogTitle>
+                <DialogDescription>
+                  Nhập tên cho vai trò mới. Bạn có thể cấu hình quyền sau khi tạo.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label className="mb-2" htmlFor="roleName">
+                    Tên Vai Trò
+                  </Label>
+                  <Input
+                    id="roleName"
+                    type="text"
+                    value={newRoleName}
+                    onChange={(e) => setNewRoleName(e.target.value)}
+                    placeholder="Nhập tên vai trò"
+                  />
+                </div>
               </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                Hủy
-              </Button>
-              <Button
-                onClick={handleCreateRole}
-                disabled={!newRoleName.trim() || createRoleMutation.isPending}
-              >
-                {createRoleMutation.isPending ? 'Đang tạo...' : 'Tạo Vai Trò'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-36 pl-6">Vai Trò</TableHead>
-              <TableHead className="w-36">Trạng Thái</TableHead>
-              <TableHead className="w-36">Hành Động</TableHead>
-              <TableHead className="w-36">Quyền</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rolesData?.items?.map((role) => (
-              <TableRow key={role.id}>
-                <TableCell className="w-36 pl-6 font-medium">{role.name}</TableCell>
-                <TableCell className="w-36">
-                  {role.isActive ? (
-                    <Badge className="w-32 justify-center bg-[#99b94a]">Hoạt động</Badge>
-                  ) : (
-                    <Badge variant="danger" className="w-32 justify-center">
-                      Không hoạt động
-                    </Badge>
-                  )}
-                </TableCell>
-                <TableCell className="w-36">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      checked={role.isActive}
-                      onCheckedChange={() => handleToggleActive(role)}
-                      disabled={toggleRoleActiveMutation.isPending}
-                    />
-                    <span className="w-8 text-sm text-gray-600">
-                      {role.isActive ? 'Bật' : 'Tắt'}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell className="w-36">
-                  <Button variant="outline" size="sm" onClick={() => handleEditPermissions(role)}>
-                    <Edit className="mr-1 h-3 w-3" />
-                    Chỉnh Sửa
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Pagination */}
-      {rolesData && rolesData.totalPages > 1 && (
-        <div className="flex justify-center">
-          <Pagination pagination={convertToPaginationType(rolesData)} />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                  Hủy
+                </Button>
+                <Button
+                  onClick={handleCreateRole}
+                  disabled={!newRoleName.trim() || createRoleMutation.isPending}
+                >
+                  {createRoleMutation.isPending ? 'Đang tạo...' : 'Tạo Vai Trò'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
-      )}
 
-      {/* Edit Permissions Dialog */}
-      {selectedRole && (
-        <EditPermissionsDialog
-          open={editPermissionsDialogOpen}
-          onOpenChange={setEditPermissionsDialogOpen}
-          roleId={selectedRole.id}
-          roleName={selectedRole.name}
-        />
-      )}
-    </div>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-36 pl-6">Vai Trò</TableHead>
+                <TableHead className="w-36">Trạng Thái</TableHead>
+                <TableHead className="w-36">Hành Động</TableHead>
+                <TableHead className="w-36">Quyền</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rolesData?.items?.map((role) => (
+                <TableRow key={role.id}>
+                  <TableCell className="w-36 pl-6 font-medium">{role.name}</TableCell>
+                  <TableCell className="w-36">
+                    {role.isActive ? (
+                      <Badge className="w-32 justify-center bg-[#99b94a]">Hoạt động</Badge>
+                    ) : (
+                      <Badge variant="danger" className="w-32 justify-center">
+                        Không hoạt động
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="w-36">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        checked={role.isActive}
+                        onCheckedChange={() => handleToggleActive(role)}
+                        disabled={toggleRoleActiveMutation.isPending}
+                        data-permissions-switch
+                      />
+                      <span className="w-8 text-sm text-gray-600">
+                        {role.isActive ? 'Bật' : 'Tắt'}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="w-36 text-[#99b94a]">
+                    <Button variant="outline" size="sm" onClick={() => handleEditPermissions(role)}>
+                      <Edit className="mr-1 h-3 w-3" />
+                      Chỉnh Sửa
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Pagination */}
+        {rolesData && rolesData.totalPages > 1 && (
+          <div className="flex justify-center">
+            <Pagination pagination={convertToPaginationType(rolesData)} />
+          </div>
+        )}
+
+        {/* Edit Permissions Dialog */}
+        {selectedRole && (
+          <EditPermissionsDialog
+            open={editPermissionsDialogOpen}
+            onOpenChange={setEditPermissionsDialogOpen}
+            roleId={selectedRole.id}
+            roleName={selectedRole.name}
+          />
+        )}
+      </div>
+    </>
   );
 }

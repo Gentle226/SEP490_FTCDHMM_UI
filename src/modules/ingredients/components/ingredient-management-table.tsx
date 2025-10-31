@@ -371,9 +371,9 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
 
       {/* Detail Dialog */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[600px]">
+        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[700px]">
           <DialogHeader>
-            <DialogTitle className="text-[#99b94a]">Chi tiết nguyên liệu</DialogTitle>
+            <DialogTitle className="text-3xl text-[#99b94a]">Chi tiết nguyên liệu</DialogTitle>
             <DialogDescription>Thông tin chi tiết và hàm lượng dinh dưỡng</DialogDescription>
           </DialogHeader>
 
@@ -384,72 +384,90 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                 const ingredient = detailedIngredient || selectedIngredient;
                 return (
                   <>
-                    {/* Image */}
-                    {ingredient?.image && (
-                      <div className="flex justify-center">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={ingredient.image}
-                          alt={ingredient.name}
-                          className="h-48 w-48 rounded-lg object-cover"
-                        />
+                    {/* Image and Basic Info - Side by Side Layout */}
+                    <div className="flex flex-col gap-4 sm:flex-row">
+                      {/* Image on the left */}
+                      <div className="flex-shrink-0">
+                        {ingredient?.image ? (
+                          <div className="flex justify-center">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={ingredient.image}
+                              alt={ingredient.name}
+                              className="h-48 w-48 rounded-lg object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex h-48 w-48 items-center justify-center rounded-lg bg-gray-100">
+                            <span className="text-muted-foreground text-sm">Không có hình ảnh</span>
+                          </div>
+                        )}
                       </div>
-                    )}
 
-                    {/* Basic Info */}
-                    <div className="space-y-2">
-                      <div>
-                        <span className="font-semibold">Tên: </span>
-                        <span>{ingredient?.name}</span>
-                      </div>
-
-                      {ingredient?.description && (
+                      {/* Info on the right */}
+                      <div className="flex-1 space-y-3">
                         <div>
-                          <span className="font-semibold">Mô tả: </span>
-                          <span>{ingredient.description}</span>
+                          <span className="font-semibold">Tên: </span>
+                          <span>{ingredient?.name}</span>
                         </div>
-                      )}
 
-                      <div>
-                        <span className="font-semibold">Phân loại: </span>
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          {ingredient?.ingredientCategoryIds &&
-                          ingredient.ingredientCategoryIds.length > 0 ? (
-                            getCategoryNames(ingredient.ingredientCategoryIds).map((category) => (
-                              <Badge key={category} variant="secondary">
-                                {category}
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="text-muted-foreground text-sm">Chưa phân loại</span>
-                          )}
+                        {ingredient?.description && (
+                          <div>
+                            <span className="font-semibold">Mô tả: </span>
+                            <span>{ingredient.description}</span>
+                          </div>
+                        )}
+
+                        <div>
+                          <span className="font-semibold">Phân loại: </span>
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {ingredient?.ingredientCategoryIds &&
+                            ingredient.ingredientCategoryIds.length > 0 ? (
+                              getCategoryNames(ingredient.ingredientCategoryIds).map((category) => (
+                                <Badge key={category} variant="secondary">
+                                  {category}
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-muted-foreground text-sm">Chưa phân loại</span>
+                            )}
+                          </div>
                         </div>
-                      </div>
 
-                      <div>
-                        <span className="font-semibold">Cập nhật lần cuối: </span>
-                        <span>{formatDate(ingredient?.lastUpdatedUtc)}</span>
+                        <div>
+                          <span className="font-semibold">Cập nhật lần cuối: </span>
+                          <span>{formatDate(ingredient?.lastUpdatedUtc)}</span>
+                        </div>
                       </div>
                     </div>
 
                     {/* Nutrients */}
                     <div className="space-y-2">
-                      <h4 className="font-semibold text-[#99b94a]">Hàm lượng dinh dưỡng</h4>
+                      <h4 className="font-semibold text-[#99b94a]">
+                        Hàm lượng dinh dưỡng (trên 100g)
+                      </h4>
                       {!ingredient?.nutrients || ingredient.nutrients.length === 0 ? (
                         <p className="text-muted-foreground text-sm">
                           Chưa có thông tin dinh dưỡng
                         </p>
                       ) : (
-                        <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
                           {ingredient.nutrients.map((nutrient, index) => {
                             // Find nutrient details to get name
                             const nutrientDetails = nutrient.vietnameseName ? nutrient : null;
                             return (
                               <div key={index} className="rounded-lg border bg-gray-50 p-3">
-                                <div className="font-medium">
-                                  {nutrientDetails?.vietnameseName || `Dinh dưỡng ${index + 1}`}
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium">
+                                    {nutrientDetails?.vietnameseName || `Dinh dưỡng ${index + 1}`}
+                                  </span>
+                                  {nutrient.unit && (
+                                    <span className="text-muted-foreground text-xs">
+                                      ({nutrient.unit})
+                                    </span>
+                                  )}
                                 </div>
-                                <div className="mt-1 grid grid-cols-3 gap-2 text-sm">
+                                <div className="mt-1 space-y-1 text-xs">
                                   {nutrient.min !== undefined && (
                                     <div>
                                       <span className="text-muted-foreground">Min: </span>

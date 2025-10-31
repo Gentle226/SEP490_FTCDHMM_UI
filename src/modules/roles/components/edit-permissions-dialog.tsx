@@ -4,6 +4,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/base/components/ui/accordion';
 import { Button } from '@/base/components/ui/button';
 import { Checkbox } from '@/base/components/ui/checkbox';
 import {
@@ -96,19 +102,35 @@ export function EditPermissionsDialog({
 
   const getDomainDisplayName = (domainName: string) => {
     const domainMap: Record<string, string> = {
-      ModeratorManagement: 'Quản lý Moderator',
+      ModeratorManagement: 'Quản lý Kiểm duyệt viên',
       CustomerManagement: 'Quản lý Khách hàng',
+      Label: 'Quản lý Nhãn món ăn',
+      IngredientCategory: 'Quản lý Nhóm nguyên liệu',
+      Ingredient: 'Quản lý Nguyên liệu',
+      Recipe: 'Quản lý Công thức',
+      Nutrient: 'Quản lý Chất dinh dưỡng',
+      HealthGoal: 'Quản lý Mục tiêu sức khỏe',
     };
     return domainMap[domainName] || domainName;
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      <style>{`
+        [data-permissions-checkbox][data-state="checked"] {
+          background-color: #99b94a;
+          border-color: #99b94a;
+        }
+        [data-permissions-checkbox][data-state="checked"] svg {
+          color: white;
+        }
+      `}</style>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Chỉnh Sửa Quyền - {roleName}</DialogTitle>
+          <DialogTitle className="text-[#99b94a]">Chỉnh Sửa Quyền - {roleName}</DialogTitle>
           <DialogDescription>
-            Chọn các quyền cho vai trò này. Thay đổi sẽ được áp dụng ngay lập tức.
+            Chọn các quyền cho vai trò này. Thay đổi sẽ được áp dụng sau khi người dùng đăng nhập
+            lại.
           </DialogDescription>
         </DialogHeader>
 
@@ -116,42 +138,49 @@ export function EditPermissionsDialog({
           {isLoading ? (
             <div className="flex justify-center p-8">Đang tải...</div>
           ) : (
-            <div className="space-y-6">
+            <Accordion type="multiple" className="w-full">
               {permissionsData?.map((domain) => (
-                <div key={domain.domainName} className="space-y-3">
-                  <h3 className="text-sm font-semibold text-gray-900">
+                <AccordionItem key={domain.domainName} value={domain.domainName}>
+                  <AccordionTrigger className="text-sm font-semibold text-[#99b94a]">
                     {getDomainDisplayName(domain.domainName)}
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3 pl-4">
-                    {domain.actions.map((action) => (
-                      <div key={action.actionId} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={action.actionId}
-                          checked={permissions.get(action.actionId) || false}
-                          onCheckedChange={(checked) =>
-                            handleTogglePermission(action.actionId, checked === true)
-                          }
-                        />
-                        <Label
-                          htmlFor={action.actionId}
-                          className="cursor-pointer text-sm font-normal"
-                        >
-                          {getActionDisplayName(action.actionName)}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="grid grid-cols-2 gap-3 pl-4">
+                      {domain.actions.map((action) => (
+                        <div key={action.actionId} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={action.actionId}
+                            checked={permissions.get(action.actionId) || false}
+                            onCheckedChange={(checked) =>
+                              handleTogglePermission(action.actionId, checked === true)
+                            }
+                            data-permissions-checkbox
+                          />
+                          <Label
+                            htmlFor={action.actionId}
+                            className="cursor-pointer text-sm font-normal"
+                          >
+                            {getActionDisplayName(action.actionName)}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               ))}
-            </div>
+            </Accordion>
           )}
         </ScrollArea>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" className="text-[#99b94a]" onClick={() => onOpenChange(false)}>
             Hủy
           </Button>
-          <Button onClick={handleSave} disabled={updatePermissionsMutation.isPending}>
+          <Button
+            className="bg-[#99b94a]"
+            onClick={handleSave}
+            disabled={updatePermissionsMutation.isPending}
+          >
             {updatePermissionsMutation.isPending ? 'Đang lưu...' : 'Lưu Thay Đổi'}
           </Button>
         </DialogFooter>

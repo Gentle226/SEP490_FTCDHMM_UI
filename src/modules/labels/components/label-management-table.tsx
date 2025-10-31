@@ -231,7 +231,7 @@ export function LabelManagementTable() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-[#99b94a]">Quản Lý Nhãn Thực Phẩm</h2>
+        <h2 className="text-3xl font-bold text-[#99b94a]">Quản Lý Nhãn Món Ăn</h2>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-[#99b94a] hover:bg-[#7a8f3a]">
@@ -319,77 +319,75 @@ export function LabelManagementTable() {
           </div>
         </div>
       </div>
-      <div className="flex w-full justify-center pt-2">
-        <div className="w-full max-w-5xl rounded-md">
-          <Table>
-            <TableHeader>
+      <div className="w-full rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[45%] pl-12">Tên</TableHead>
+              <TableHead className="w-[45%]">Mã Màu</TableHead>
+              <TableHead className="w-[10%]">Hành Động</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {labelsData?.items?.length === 0 ? (
               <TableRow>
-                <TableHead className="w-[45%] pl-12">Tên</TableHead>
-                <TableHead className="w-[45%]">Mã Màu</TableHead>
-                <TableHead className="w-[10%]">Hành Động</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {labelsData?.items?.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={3} className="h-24 text-center">
-                    {debouncedSearchTerm ? (
-                      <div className="flex flex-col items-center justify-center space-y-2">
-                        <Search className="size-8 text-gray-400" />
-                        <p className="text-gray-500">
-                          Không tìm thấy nhãn nào với từ khóa &ldquo;{debouncedSearchTerm}&rdquo;
-                        </p>
-                      </div>
-                    ) : (
+                <TableCell colSpan={3} className="h-24 text-center">
+                  {debouncedSearchTerm ? (
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <Search className="size-8 text-gray-400" />
                       <p className="text-gray-500">
-                        {isLoading ? 'Đang tải...' : 'Không có nhãn nào'}
+                        Không tìm thấy nhãn nào với từ khóa &ldquo;{debouncedSearchTerm}&rdquo;
                       </p>
-                    )}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">
+                      {isLoading ? 'Đang tải...' : 'Không có nhãn nào'}
+                    </p>
+                  )}
+                </TableCell>
+              </TableRow>
+            ) : (
+              labelsData?.items?.map((label) => (
+                <TableRow key={label.id}>
+                  <TableCell className="pl-12 font-medium">{label.name}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="size-6 rounded border"
+                        style={{ backgroundColor: label.colorCode } as React.CSSProperties}
+                        aria-label={`Color: ${label.colorCode}`}
+                      />
+                      <span className="font-mono text-sm">{label.colorCode}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Mở menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditLabel(label)}>
+                          <Edit className="mr-2 h-4 w-4 text-[#99b94a]" />
+                          Chỉnh sửa
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteLabel(label)}
+                          className="text-red-600"
+                        >
+                          <Trash className="mr-2 h-4 w-4 text-red-600" />
+                          Xóa
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ) : (
-                labelsData?.items?.map((label) => (
-                  <TableRow key={label.id}>
-                    <TableCell className="pl-12 font-medium">{label.name}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="size-6 rounded border"
-                          style={{ backgroundColor: label.colorCode } as React.CSSProperties}
-                          aria-label={`Color: ${label.colorCode}`}
-                        />
-                        <span className="font-mono text-sm">{label.colorCode}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Mở menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditLabel(label)}>
-                            <Edit className="mr-2 h-4 w-4 text-[#99b94a]" />
-                            Chỉnh sửa
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteLabel(label)}
-                            className="text-red-600"
-                          >
-                            <Trash className="mr-2 h-4 w-4 text-red-600" />
-                            Xóa
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       {/* Search Results Info */}

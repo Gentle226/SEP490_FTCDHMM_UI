@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Lock, MoreHorizontal, Plus, Search, SquareUserRound, Unlock, X } from 'lucide-react';
+import { Lock, Plus, Search, Unlock, X } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ReactNode, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -18,12 +18,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/base/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/base/components/ui/dropdown-menu';
 import { Input } from '@/base/components/ui/input';
 import { Label } from '@/base/components/ui/label';
 import {
@@ -398,35 +392,50 @@ export function UserManagementTable({
             ) : (
               usersData?.items?.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell className="pl-6">{`${user.firstName} ${user.lastName}`}</TableCell>
-                  <TableCell>{user.email}</TableCell>
+                  <TableCell className="pl-6">
+                    <button
+                      onClick={() => handleUserDetail(user)}
+                      className="cursor-pointer font-medium text-[#99b94a] transition-colors hover:underline"
+                    >
+                      {`${user.firstName} ${user.lastName}`}
+                    </button>
+                  </TableCell>
+                  <TableCell>
+                    <button
+                      onClick={() => handleUserDetail(user)}
+                      className="cursor-pointer text-blue-600 transition-colors hover:underline"
+                    >
+                      {user.email}
+                    </button>
+                  </TableCell>
                   <TableCell>{getStatusBadge(user.status)}</TableCell>
                   <TableCell>{formatDate(user.createdAtUTC)}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="size-4" />
+                  <TableCell className="">
+                    <div className="flex items-center gap-2">
+                      {user.status === 'Locked' ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleUnlock(user)}
+                          className="text-[#99b94a] hover:bg-green-50"
+                          title="Mở khóa tài khoản"
+                        >
+                          <Unlock className="mr-1 h-4 w-4" />
+                          Mở Khóa
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleUserDetail(user)}>
-                          <SquareUserRound className="mr-2 h-4 w-4 text-[#99b94a]" />
-                          Xem Hồ Sơ
-                        </DropdownMenuItem>
-                        {user.status === 'Locked' ? (
-                          <DropdownMenuItem onClick={() => handleUnlock(user)}>
-                            <Unlock className="mr-2 h-4 w-4 text-[#99b94a]" />
-                            Mở Khóa
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem onClick={() => handleLock(user)}>
-                            <Lock className="mr-2 h-4 w-4 text-[#99b94a]" />
-                            Khóa Tài Khoản
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleLock(user)}
+                          className="text-red-600 hover:bg-red-50"
+                          title="Khóa tài khoản"
+                        >
+                          <Lock className="mr-1 h-4 w-4" />
+                          Khóa
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
