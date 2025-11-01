@@ -112,3 +112,8 @@
   background-color: #8aa942 !important;
   color: white !important;
 }
+
+/* Range slider input: prevent touch gesture drag when typing */
+.slider-input {
+  touch-action: manipulation;
+}

@@ -18,6 +18,7 @@ import {
 } from '@/base/components/ui/dialog';
 import { Input } from '@/base/components/ui/input';
 import { Label } from '@/base/components/ui/label';
+import { RangeSlider } from '@/base/components/ui/range-slider';
 import { Select, SelectOption } from '@/base/components/ui/select';
 import { Textarea } from '@/base/components/ui/textarea';
 import { NutrientInfo, nutrientService } from '@/modules/nutrients/services/nutrient.service';
@@ -134,11 +135,11 @@ export function CustomHealthGoalFormDialog({
             targetType: '',
             minValue: 0,
             medianValue: 0,
-            maxValue: 0,
+            maxValue: 220,
             minEnergyPct: 0,
             medianEnergyPct: 0,
-            maxEnergyPct: 0,
-            weight: 0,
+            maxEnergyPct: 50,
+            weight: 3,
           },
         ],
       });
@@ -187,11 +188,11 @@ export function CustomHealthGoalFormDialog({
       targetType: '',
       minValue: 0,
       medianValue: 0,
-      maxValue: 0,
+      maxValue: 220,
       minEnergyPct: 0,
       medianEnergyPct: 0,
-      maxEnergyPct: 0,
-      weight: 1,
+      maxEnergyPct: 50,
+      weight: 3,
     });
   };
 
@@ -312,55 +313,32 @@ export function CustomHealthGoalFormDialog({
                         Vi Chất (Micronutrients)
                       </p>
 
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor={`targets.${index}.minValue`}>
-                            Min ({currentNutrient?.unit || 'gam'})
-                          </Label>
-                          <Input
-                            id={`targets.${index}.minValue`}
-                            placeholder="0"
-                            type="number"
-                            step="0.01"
-                            {...register(`targets.${index}.minValue`)}
-                          />
-                          {errors.targets?.[index]?.minValue && (
-                            <p className="text-sm text-red-600">
-                              {errors.targets[index]?.minValue?.message}
-                            </p>
-                          )}
-                        </div>
+                      <div className="space-y-3">
+                        <RangeSlider
+                          min={0}
+                          max={1000}
+                          step={0.01}
+                          value={[minValue || 0, maxValue || 0]}
+                          onChange={(newRange) => {
+                            setValue(`targets.${index}.minValue`, newRange[0]);
+                            setValue(`targets.${index}.maxValue`, newRange[1]);
+                          }}
+                          unit={currentNutrient?.unit || 'gam'}
+                          numberFormat={(value) => value.toFixed(2)}
+                        />
+                      </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor={`targets.${index}.maxValue`}>
-                            Max ({currentNutrient?.unit || 'gam'})
-                          </Label>
-                          <Input
-                            id={`targets.${index}.maxValue`}
-                            placeholder="0"
-                            type="number"
-                            step="0.01"
-                            {...register(`targets.${index}.maxValue`)}
-                          />
-                          {errors.targets?.[index]?.maxValue && (
-                            <p className="text-sm text-red-600">
-                              {errors.targets[index]?.maxValue?.message}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor={`targets.${index}.weight`}>Ưu Tiên (1-5)</Label>
-                          <Input
-                            id={`targets.${index}.weight`}
-                            placeholder="1"
-                            type="number"
-                            step="1"
-                            min="1"
-                            max="5"
-                            {...register(`targets.${index}.weight`)}
-                          />
-                        </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`targets.${index}.weight`}>Ưu Tiên (1-5)</Label>
+                        <Input
+                          id={`targets.${index}.weight`}
+                          placeholder="1"
+                          type="number"
+                          step="1"
+                          min="1"
+                          max="5"
+                          {...register(`targets.${index}.weight`)}
+                        />
                       </div>
                     </div>
                   )}
@@ -387,45 +365,26 @@ export function CustomHealthGoalFormDialog({
 
                       {/* Min, Max, Weight - only for ABSOLUTE */}
                       {currentTargetType === 'ABSOLUTE' && (
-                        <div className="grid grid-cols-3 gap-3">
-                          <div className="space-y-2">
-                            <Label htmlFor={`targets.${index}.minValue-macro`} className="text-xs">
-                              Min (gam)
-                            </Label>
-                            <Input
-                              id={`targets.${index}.minValue-macro`}
-                              placeholder="0"
-                              type="number"
-                              step="0.01"
-                              value={minValue}
-                              onChange={(e) =>
-                                setValue(`targets.${index}.minValue`, Number(e.target.value))
-                              }
-                            />
-                          </div>
+                        <div className="space-y-3">
+                          <RangeSlider
+                            min={0}
+                            max={500}
+                            step={0.01}
+                            value={[minValue || 0, maxValue || 0]}
+                            onChange={(newRange) => {
+                              setValue(`targets.${index}.minValue`, newRange[0]);
+                              setValue(`targets.${index}.maxValue`, newRange[1]);
+                            }}
+                            unit="gam"
+                            numberFormat={(value) => value.toFixed(2)}
+                          />
 
                           <div className="space-y-2">
-                            <Label htmlFor={`targets.${index}.maxValue-macro`} className="text-xs">
-                              Max (gam)
-                            </Label>
-                            <Input
-                              id={`targets.${index}.maxValue-macro`}
-                              placeholder="0"
-                              type="number"
-                              step="0.01"
-                              value={maxValue}
-                              onChange={(e) =>
-                                setValue(`targets.${index}.maxValue`, Number(e.target.value))
-                              }
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor={`targets.${index}.weight`} className="text-xs">
+                            <Label htmlFor={`targets.${index}.weight-macro`} className="text-xs">
                               Ưu Tiên (1-5)
                             </Label>
                             <Input
-                              id={`targets.${index}.weight`}
+                              id={`targets.${index}.weight-macro`}
                               placeholder="1"
                               type="number"
                               step="1"
@@ -439,43 +398,29 @@ export function CustomHealthGoalFormDialog({
 
                       {/* Energy Percentage Fields - only for ENERGYPERCENT */}
                       {currentTargetType === 'ENERGYPERCENT' && (
-                        <div className="grid grid-cols-3 gap-3">
-                          <div className="space-y-2">
-                            <Label htmlFor={`targets.${index}.minEnergyPct`} className="text-xs">
-                              % Min
-                            </Label>
-                            <Input
-                              id={`targets.${index}.minEnergyPct`}
-                              placeholder="0"
-                              type="number"
-                              step="0.1"
-                              min="0"
-                              max="100"
-                              {...register(`targets.${index}.minEnergyPct`)}
-                            />
-                          </div>
+                        <div className="space-y-3">
+                          <RangeSlider
+                            min={0}
+                            max={100}
+                            step={0.1}
+                            value={[
+                              watch(`targets.${index}.minEnergyPct`) || 0,
+                              watch(`targets.${index}.maxEnergyPct`) || 0,
+                            ]}
+                            onChange={(newRange) => {
+                              setValue(`targets.${index}.minEnergyPct`, newRange[0]);
+                              setValue(`targets.${index}.maxEnergyPct`, newRange[1]);
+                            }}
+                            unit="%"
+                            numberFormat={(value) => value.toFixed(1)}
+                          />
 
                           <div className="space-y-2">
-                            <Label htmlFor={`targets.${index}.maxEnergyPct`} className="text-xs">
-                              % Max
-                            </Label>
-                            <Input
-                              id={`targets.${index}.maxEnergyPct`}
-                              placeholder="0"
-                              type="number"
-                              step="0.1"
-                              min="0"
-                              max="100"
-                              {...register(`targets.${index}.maxEnergyPct`)}
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor={`targets.${index}.weight`} className="text-xs">
+                            <Label htmlFor={`targets.${index}.weight-energy`} className="text-xs">
                               Ưu Tiên (1-5)
                             </Label>
                             <Input
-                              id={`targets.${index}.weight`}
+                              id={`targets.${index}.weight-energy`}
                               placeholder="1"
                               type="number"
                               step="1"
