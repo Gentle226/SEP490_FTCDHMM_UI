@@ -1,8 +1,8 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { ChevronDown, Edit, Plus } from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -18,6 +18,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/base/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/base/components/ui/dropdown-menu';
 import { Input } from '@/base/components/ui/input';
 import { Label } from '@/base/components/ui/label';
 import { Switch } from '@/base/components/ui/switch';
@@ -41,13 +47,35 @@ import { EditPermissionsDialog } from './edit-permissions-dialog';
 
 export function PermissionManagementTable() {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
+  const currentPageSize = parseInt(searchParams.get('pageSize') || '10', 10);
+
   const [page, setPage] = useState(currentPage);
+  const [pageSize, setPageSize] = useState(currentPageSize);
 
   // Sync state with URL params
   useEffect(() => {
     setPage(currentPage);
-  }, [currentPage]);
+    setPageSize(currentPageSize);
+  }, [currentPage, currentPageSize]);
+
+  // Update URL when page changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', page.toString());
+    router.push(`${pathname}?${params.toString()}`);
+  }, [page, pathname, router, searchParams]);
+
+  // Update URL when pageSize changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    params.set('pageSize', pageSize.toString());
+    params.set('page', '1'); // Reset to page 1 when changing page size
+    router.push(`${pathname}?${params.toString()}`);
+  }, [pageSize, pathname, router, searchParams]);
 
   // Helper function to convert API response to PaginationType
   const convertToPaginationType = (data: {
@@ -69,13 +97,13 @@ export function PermissionManagementTable() {
   const [newRoleName, setNewRoleName] = useState('');
 
   const queryClient = useQueryClient();
-  const queryKey = ['roles', { page }];
+  const queryKey = ['roles', { page, pageSize }];
 
   // Fetch roles
   const { data: rolesData, isLoading } = useQuery({
     queryKey,
     queryFn: () => {
-      const params: PaginationParams = { pageNumber: page, pageSize: 10 };
+      const params: PaginationParams = { pageNumber: page, pageSize: pageSize };
       return roleManagementService.getRoles(params);
     },
   });
@@ -178,14 +206,14 @@ export function PermissionManagementTable() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Tạo Vai Trò Mới</DialogTitle>
+                <DialogTitle className="text-[#99b94a]">Tạo Vai Trò Mới</DialogTitle>
                 <DialogDescription>
                   Nhập tên cho vai trò mới. Bạn có thể cấu hình quyền sau khi tạo.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label className="mb-2" htmlFor="roleName">
+                  <Label className="mb-2 text-[#99b94a]" htmlFor="roleName">
                     Tên Vai Trò
                   </Label>
                   <Input
@@ -202,6 +230,7 @@ export function PermissionManagementTable() {
                   Hủy
                 </Button>
                 <Button
+                  className="bg-[#99b94a]"
                   onClick={handleCreateRole}
                   disabled={!newRoleName.trim() || createRoleMutation.isPending}
                 >
@@ -261,9 +290,41 @@ export function PermissionManagementTable() {
         </div>
 
         {/* Pagination */}
-        {rolesData && rolesData.totalPages > 1 && (
-          <div className="flex justify-center">
-            <Pagination pagination={convertToPaginationType(rolesData)} />
+        {rolesData && (
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="text-sm text-gray-500">
+              Hiển thị <span className="font-medium">{rolesData.items.length}</span> trên tổng số{' '}
+              <span className="font-medium">{rolesData.totalCount}</span> vai trò
+            </div>
+
+            {/* Page Size Selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Hiển thị:</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="min-w-[100px] gap-2">
+                    {pageSize} mục
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {[10, 20, 50].map((size) => (
+                    <DropdownMenuItem
+                      key={size}
+                      onClick={() => setPageSize(size)}
+                      className={pageSize === size ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+                    >
+                      {size} mục
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Pagination */}
+            {rolesData.totalPages > 1 && (
+              <Pagination pagination={convertToPaginationType(rolesData)} />
+            )}
           </div>
         )}
 

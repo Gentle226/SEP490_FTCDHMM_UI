@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Eye, Search, Trash2, X } from 'lucide-react';
+import { ChevronDown, Edit, Eye, Search, Trash2, X } from 'lucide-react';
 import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ReactNode, useEffect, useState } from 'react';
@@ -17,6 +17,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/base/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/base/components/ui/dropdown-menu';
 import { Input } from '@/base/components/ui/input';
 import {
   Table,
@@ -64,9 +70,11 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
 
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
   const currentSearch = searchParams.get('search') || '';
+  const currentPageSize = parseInt(searchParams.get('pageSize') || '10', 10);
 
   const [page, setPage] = useState(currentPage);
   const [searchTerm, setSearchTerm] = useState(currentSearch);
+  const [pageSize, setPageSize] = useState(currentPageSize);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -77,7 +85,8 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
   useEffect(() => {
     setPage(currentPage);
     setSearchTerm(currentSearch);
-  }, [currentPage, currentSearch]);
+    setPageSize(currentPageSize);
+  }, [currentPage, currentSearch, currentPageSize]);
 
   // Update URL when search term changes
   useEffect(() => {
@@ -96,6 +105,21 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
 
     router.push(`${pathname}?${params.toString()}`);
   }, [debouncedSearchTerm, pathname, router, searchParams, currentSearch]);
+
+  // Update URL when page changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', page.toString());
+    router.push(`${pathname}?${params.toString()}`);
+  }, [page, pathname, router, searchParams]);
+
+  // Update URL when pageSize changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    params.set('pageSize', pageSize.toString());
+    params.set('page', '1'); // Reset to page 1 when changing page size
+    router.push(`${pathname}?${params.toString()}`);
+  }, [pageSize, pathname, router, searchParams]);
 
   // Fetch categories for mapping
   const { data: categories } = useQuery({
@@ -152,11 +176,11 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['ingredients', page, debouncedSearchTerm],
+    queryKey: ['ingredients', page, debouncedSearchTerm, pageSize],
     queryFn: async () => {
       const params: PaginationParams = {
         pageNumber: page,
-        pageSize: 10,
+        pageSize: pageSize,
         search: debouncedSearchTerm || undefined,
       };
       return ingredientManagementService.getIngredients(params);
@@ -226,45 +250,40 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>{title}</div>
+      {/* Header Title */}
+      <div>{title}</div>
 
-        {/* Actions */}
-        <div className="flex w-full gap-2 sm:w-auto sm:flex-row-reverse">
-          {/* Create button */}
-          <Button
-            onClick={() => setCreateDialogOpen(true)}
-            className="flex bg-[#99b94a] hover:bg-[#88a839] sm:flex-initial"
-          >
-            + Thêm nguyên liệu mới
-          </Button>
-
-          {/* Search */}
-          <div className="relative flex-1 sm:w-64">
-            <Search className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
-            <Input
-              placeholder="Tìm kiếm nguyên liệu..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-8 pl-8"
-            />
-            {searchTerm && (
-              <button
-                onClick={handleClearSearch}
-                className="text-muted-foreground hover:text-foreground absolute top-2.5 right-2.5"
-                aria-label="Clear search"
-                title="Clear search"
-              >
-                <X className="size-4" />
-              </button>
-            )}
-          </div>
+      {/* Actions Row: Search + Add button */}
+      <div className="flex w-full flex-row items-center justify-end gap-2">
+        <div className="relative max-w-xs flex-1">
+          <Search className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
+          <Input
+            placeholder="Tìm kiếm nguyên liệu..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pr-8 pl-8"
+          />
+          {searchTerm && (
+            <button
+              onClick={handleClearSearch}
+              className="text-muted-foreground hover:text-foreground absolute top-2.5 right-2.5"
+              aria-label="Clear search"
+              title="Clear search"
+            >
+              <X className="size-4" />
+            </button>
+          )}
         </div>
+        <Button
+          onClick={() => setCreateDialogOpen(true)}
+          className="flex bg-[#99b94a] hover:bg-[#88a839]"
+        >
+          + Thêm nguyên liệu mới
+        </Button>
       </div>
 
       {/* Table */}
-      <div className="rounded-lg border">
+      <div className="mt-6 rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -350,7 +369,7 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                       onClick={() => handleEdit(ingredient)}
                       title="Chỉnh sửa"
                     >
-                      <Edit className="size-4" />
+                      <Edit className="size-4 text-[#99b94a]" />
                     </Button>
                   </TableCell>
                   <TableCell className="pr-12 text-center">
@@ -362,7 +381,7 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                       title="Xóa"
                       className="hover:bg-red-50 hover:text-red-600"
                     >
-                      <Trash2 className="size-4" />
+                      <Trash2 className="size-4 text-red-600" />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -372,8 +391,42 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
         </Table>
       </div>
 
-      {/* Pagination */}
-      {ingredientsData && ingredientsData.items.length > 0 && (
+      {/* Info + Page size selector: flex row, info left, selector right */}
+      {ingredientsData && (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-sm text-gray-500">
+            Hiển thị <span className="font-medium">{ingredientsData.items.length}</span> trên tổng
+            số <span className="font-medium">{ingredientsData.totalCount}</span> nguyên liệu
+          </div>
+          {ingredientsData.totalCount > 10 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Hiển thị:</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="min-w-[100px] gap-2">
+                    {pageSize} mục
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {[10, 20, 50].map((size) => (
+                    <DropdownMenuItem
+                      key={size}
+                      onClick={() => setPageSize(size)}
+                      className={pageSize === size ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+                    >
+                      {size} mục
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Pagination: only show if > 10 items */}
+      {ingredientsData && ingredientsData.totalCount > 10 && (
         <div className="flex justify-center">
           <Pagination pagination={convertToPaginationType(ingredientsData)} />
         </div>

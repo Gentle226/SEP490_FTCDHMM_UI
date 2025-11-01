@@ -64,6 +64,12 @@ class LabelManagementService extends HttpClient {
       isPrivateRoute: true,
     });
   }
+
+  public async updateLabel(id: string, request: CreateLabelRequest) {
+    return this.put<void>(`api/Label/${id}`, request, {
+      isPrivateRoute: true,
+    });
+  }
 }
 
 export const labelManagementService = new LabelManagementService();

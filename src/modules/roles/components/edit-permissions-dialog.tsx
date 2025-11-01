@@ -141,7 +141,7 @@ export function EditPermissionsDialog({
             <Accordion type="multiple" className="w-full">
               {permissionsData?.map((domain) => (
                 <AccordionItem key={domain.domainName} value={domain.domainName}>
-                  <AccordionTrigger className="text-sm font-semibold text-[#99b94a]">
+                  <AccordionTrigger className="text-sm font-semibold text-[#57701a]">
                     {getDomainDisplayName(domain.domainName)}
                   </AccordionTrigger>
                   <AccordionContent>
