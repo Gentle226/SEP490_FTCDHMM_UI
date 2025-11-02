@@ -94,7 +94,7 @@ class IngredientManagementService extends HttpClient {
     const englishToVietnameseName: { [key: string]: string } = {
       Protein: 'Chất đạm',
       Calories: 'Năng lượng',
-      Fat: 'Tổng chất béo',
+      Fat: 'Chất béo',
       Carbohydrate: 'Tinh bột',
       Phosphorus: 'Phốt pho',
       Zinc: 'Kẽm',
