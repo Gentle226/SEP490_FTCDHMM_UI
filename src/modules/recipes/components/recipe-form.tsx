@@ -34,6 +34,7 @@ import {
 import { recipeService } from '../services/recipe.service';
 import { CookingStep, RecipeDetail } from '../types';
 import { ImageCropDialog } from './image-crop-dialog';
+import { IngredientCardWithDetails } from './ingredient-card-with-details';
 
 interface SelectedIngredient {
   id: string;
@@ -704,45 +705,20 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
           <Label>Nguyên liệu</Label>
 
           {/* Selected Ingredients */}
-          <div className="min-h-[100px] rounded-lg border p-3">
+          <div className="min-h-[150px] rounded-lg border p-3">
             {selectedIngredients.length === 0 ? (
-              <div className="flex h-full items-center justify-center pt-5 text-sm text-gray-400">
+              <div className="flex h-full items-center justify-center pt-13 text-sm text-gray-400">
                 Chưa có nguyên liệu nào được chọn
               </div>
             ) : (
               <div className="space-y-3">
                 {selectedIngredients.map((ingredient) => (
-                  <div
+                  <IngredientCardWithDetails
                     key={ingredient.id}
-                    className="flex items-center gap-3 rounded border bg-gray-50 px-3 py-2"
-                  >
-                    <span className="flex-1 text-sm font-medium">{ingredient.name}</span>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        key={`ingredient-quantity-${ingredient.id}`}
-                        type="number"
-                        placeholder="0"
-                        value={ingredient.quantityGram || ''}
-                        onChange={(e) => {
-                          const newValue = parseFloat(e.target.value) || 0;
-                          updateIngredientQuantity(ingredient.id, newValue);
-                        }}
-                        min="0"
-                        step="0.1"
-                        className="w-20 text-right [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                        required
-                      />
-                      <span className="text-sm text-gray-500">g</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeIngredient(ingredient.id)}
-                      className="flex-shrink-0 rounded-full p-1 hover:bg-gray-200"
-                      aria-label={`Remove ${ingredient.name}`}
-                    >
-                      <X className="h-3 w-3 text-gray-600" />
-                    </button>
-                  </div>
+                    ingredient={ingredient}
+                    onUpdateQuantity={updateIngredientQuantity}
+                    onRemove={removeIngredient}
+                  />
                 ))}
               </div>
             )}

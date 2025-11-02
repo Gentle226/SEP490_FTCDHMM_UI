@@ -77,7 +77,7 @@ export default function HomePage() {
             <form onSubmit={handleSearch} className="relative">
               <Input
                 type="text"
-                placeholder="Tìm tên món hay nguyên liệu"
+                placeholder="Tìm món ăn hoặc người dùng"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-12 border-2 border-gray-200 pr-12 text-lg focus:border-[#99b94a]"
