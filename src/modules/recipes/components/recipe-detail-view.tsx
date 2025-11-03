@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Bookmark,
   BookmarkCheck,
@@ -37,6 +38,7 @@ interface RecipeDetailViewProps {
 
 export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -65,6 +67,10 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
     try {
       setIsDeleting(true);
       await recipeService.deleteRecipe(recipeId);
+
+      // Invalidate all myRecipes queries to refresh the list
+      await queryClient.invalidateQueries({ queryKey: ['myRecipes'] });
+
       toast.success('Công thức đã được xóa thành công');
       router.push('/myrecipe');
     } catch (err) {
