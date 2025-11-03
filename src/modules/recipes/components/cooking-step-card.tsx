@@ -99,6 +99,7 @@ export function CookingStepCard({
                     src={imageUrl}
                     alt={`Step ${step.stepOrder}`}
                     fill
+                    sizes="192px"
                     className="object-cover"
                   />
                   <button

@@ -156,7 +156,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   };
 
   return (
-    <div className="mx-auto w-[60%] space-y-6 px-4 py-8">
+    <div className="mx-auto w-[70%] space-y-6 px-4 py-8">
       {/* Header: Image + Title, Labels, Author, Description, Buttons */}
       <div className="grid grid-cols-1 gap-8 md:grid-cols-[350px_1fr]">
         {/* Left: Main Image */}

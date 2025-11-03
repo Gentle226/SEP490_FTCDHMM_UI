@@ -350,6 +350,26 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     );
   };
 
+  const handleInvalidField = (e: React.InvalidEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const input = e.target as HTMLInputElement;
+    if (input.validity.valueMissing) {
+      input.setCustomValidity('Vui lòng điền vào trường này');
+    } else if (input.validity.rangeUnderflow) {
+      input.setCustomValidity('Giá trị phải lớn hơn 0');
+    } else if (input.validity.rangeOverflow) {
+      input.setCustomValidity('Giá trị quá lớn');
+    }
+  };
+
+  const handleInvalidTextarea = (e: React.InvalidEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+    const textarea = e.target as HTMLTextAreaElement;
+    if (textarea.validity.valueMissing) {
+      textarea.setCustomValidity('Vui lòng điền vào trường này');
+    }
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -462,7 +482,13 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
           <Label>Hình ảnh món ăn</Label>
           {mainImagePreview ? (
             <div className="relative h-75 w-full overflow-hidden rounded-lg border">
-              <Image src={mainImagePreview} alt="Recipe preview" fill className="object-cover" />
+              <Image
+                src={mainImagePreview}
+                alt="Recipe preview"
+                fill
+                sizes="(max-width: 768px) 100vw, 300px"
+                className="object-cover"
+              />
               <button
                 type="button"
                 onClick={() => {
@@ -520,8 +546,8 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
               onChange={(e) => setName(e.target.value.slice(0, 100))}
               onFocus={() => setIsNameFocused(true)}
               onBlur={() => setIsNameFocused(false)}
+              onInvalid={handleInvalidField}
               maxLength={100}
-              required
             />
             <p
               className={`text-right text-xs transition-opacity ${isNameFocused ? 'text-gray-500 opacity-100' : 'text-gray-300 opacity-0'}`}
@@ -541,6 +567,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
               onChange={(e) => setDescription(e.target.value.slice(0, 1500))}
               onFocus={() => setIsDescriptionFocused(true)}
               onBlur={() => setIsDescriptionFocused(false)}
+              onInvalid={handleInvalidTextarea}
               maxLength={1500}
               className="break-words sm:min-h-24 md:min-h-28"
             />
@@ -599,9 +626,9 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
                   placeholder="2"
                   value={ration}
                   onChange={(e) => setRation(parseInt(e.target.value) || 1)}
+                  onInvalid={handleInvalidField}
                   min="1"
                   className="pr-12 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                  required
                 />
                 <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm font-medium text-gray-500">
                   người
@@ -617,9 +644,9 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         <Label>Nhãn</Label>
 
         {/* Selected Labels */}
-        <div className="flex min-h-[40px] flex-wrap gap-2 rounded-lg border p-3">
+        <div className="flex min-h-[60px] flex-wrap gap-2 rounded-lg border p-3">
           {selectedLabels.length === 0 ? (
-            <span className="text-sm text-gray-400">Chưa có nhãn nào được chọn</span>
+            <span className="pt-2 text-sm text-gray-400 flex w-full justify-center">Chưa có nhãn nào được chọn</span>
           ) : (
             selectedLabels.map((label) => {
               const labelStyle = { backgroundColor: label.colorCode } as React.CSSProperties;
@@ -628,6 +655,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
                   key={label.id}
                   className="flex items-center gap-1 rounded-full px-3 py-1 text-sm text-white"
                   style={labelStyle}
+                  suppressHydrationWarning
                 >
                   <span>{label.name}</span>
                   <button
@@ -682,6 +710,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
                             <div
                               className="h-4 w-4 flex-shrink-0 rounded-full"
                               style={colorStyle}
+                              suppressHydrationWarning
                             />
                             <span className="flex-1">{label.name}</span>
                             {isSelected && <span className="text-xs text-gray-500">Đã chọn</span>}
@@ -731,7 +760,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
                 Nguyên liệu
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[400px] p-0" align="start">
+            <PopoverContent className="w-[354px] p-0" align="start">
               <Command shouldFilter={false}>
                 <CommandInput
                   placeholder="Tìm kiếm nguyên liệu..."
