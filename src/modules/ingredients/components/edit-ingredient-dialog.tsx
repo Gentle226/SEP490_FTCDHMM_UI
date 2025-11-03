@@ -97,17 +97,40 @@ export function EditIngredientDialog({
       setImagePreview(detailedIngredient.image || null);
       setImageFile(null);
 
-      // Load nutrients
-      const existingNutrientRows =
+      // Load nutrients - prioritize macronutrients
+      const allNutrientRows =
         detailedIngredient.nutrients?.map((n) => ({
           nutrientId: n.id,
+          vietnameseName: n.vietnameseName,
           min: n.min,
           max: n.max,
           median: n.median,
         })) || [];
 
-      console.warn('Loaded nutrients:', existingNutrientRows);
-      setNutrientRows(existingNutrientRows);
+      // Separate macronutrients and others
+      const macroKeywords = [
+        'protein',
+        'chất đạm',
+        'fat',
+        'tổng chất béo',
+        'carbohydrate',
+        'tinh bột',
+      ];
+      const macroNutrients = allNutrientRows.filter((n) =>
+        macroKeywords.some((keyword) => (n.vietnameseName || '').toLowerCase().includes(keyword)),
+      );
+      const otherNutrients = allNutrientRows.filter(
+        (n) =>
+          !macroKeywords.some((keyword) =>
+            (n.vietnameseName || '').toLowerCase().includes(keyword),
+          ),
+      );
+
+      // Combine: macronutrients first, then others
+      const sortedNutrientRows = [...macroNutrients.slice(0, 3), ...otherNutrients];
+
+      console.warn('Loaded nutrients:', sortedNutrientRows);
+      setNutrientRows(sortedNutrientRows);
     }
   }, [open, ingredient?.id, detailedIngredient]);
 

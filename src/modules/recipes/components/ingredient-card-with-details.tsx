@@ -84,10 +84,34 @@ export function IngredientCardWithDetails({
     return new Date(dateString).toLocaleDateString('vi-VN');
   };
 
-  // Get key nutrients for popover preview
+  // Get key nutrients for popover preview - prioritize macronutrients
   const getKeyNutrients = () => {
     if (!ingredientDetails?.nutrients) return [];
-    return ingredientDetails.nutrients.slice(0, 4); // Show first 4 nutrients
+
+    const nutrients = ingredientDetails.nutrients;
+    const macroKeywords = [
+      'protein',
+      'chất đạm',
+      'fat',
+      'tổng chất béo',
+      'carbohydrate',
+      'tinh bột',
+    ];
+    const prioritizedNutrients: typeof nutrients = [];
+    const remainingNutrients: typeof nutrients = [];
+
+    // Separate macronutrients and others
+    nutrients.forEach((nutrient) => {
+      const name = (nutrient.vietnameseName || '').toLowerCase();
+      if (macroKeywords.some((keyword) => name.includes(keyword))) {
+        prioritizedNutrients.push(nutrient);
+      } else {
+        remainingNutrients.push(nutrient);
+      }
+    });
+
+    // Return top 3 macronutrients + 1 other
+    return [...prioritizedNutrients.slice(0, 3), ...remainingNutrients.slice(0, 1)];
   };
 
   return (
