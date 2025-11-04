@@ -4,7 +4,12 @@ import { SuccessResponse } from '@/base/types';
 
 export const loginSchema = z.object({
   email: z.string().trim().nonempty('Email không được để trống').email('Email không hợp lệ'),
-  password: z.string().trim().nonempty('Mật khẩu không được để trống'),
+  password: z
+    .string()
+    .trim()
+    .nonempty('Mật khẩu không được để trống')
+    .min(8, 'Mật khẩu phải có tối thiểu 8 ký tự')
+    .max(100, 'Mật khẩu không được quá 100 ký tự'),
 });
 
 export type LoginSchema = z.infer<typeof loginSchema>;

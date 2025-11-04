@@ -85,7 +85,7 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
                   <AlertDescription>
                     {(() => {
                       if (error instanceof AxiosError) {
-                        const status = error.status ?? error.response?.status;
+                        const status = error.response?.status;
                         if (status === 404) {
                           return 'Email hoặc mật khẩu không đúng.';
                         } else if (status === 402) {

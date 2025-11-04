@@ -123,17 +123,26 @@ export function PermissionManagementTable() {
   });
 
   const getErrorMessage = (error: Error, isDeactivating: boolean): string => {
-    const errorMessage = error.message;
+    // Check if error is AxiosError with response data
+    if ('response' in error && error.response) {
+      const responseData = (error.response as { data?: { code?: string; message?: string } }).data;
+      const errorCode = responseData?.code;
 
-    // Check for INVALID_ACTION error code from backend
-    if (errorMessage.includes('INVALID_ACTION')) {
-      if (isDeactivating) {
-        return 'Không thể vô hiệu hóa vai trò này vì có người dùng đang sử dụng nó. Vui lòng chuyển tất cả người dùng sang vai trò khác trước khi vô hiệu hóa.';
+      if (errorCode === 'INVALID_ACTION') {
+        if (isDeactivating) {
+          return 'Không thể vô hiệu hóa vai trò này vì có người dùng đang sử dụng nó. Vui lòng chuyển tất cả người dùng sang vai trò khác trước khi vô hiệu hóa.';
+        }
+        return 'Không thể thực hiện hành động này. Vai trò có thể đã ở trạng thái này rồi.';
       }
-      return 'Không thể thực hiện hành động này. Vai trò có thể đã ở trạng thái này rồi.';
+
+      // Return backend message if available
+      if (responseData?.message) {
+        return responseData.message;
+      }
     }
 
-    return errorMessage || 'Không thể cập nhật trạng thái vai trò.';
+    // Fallback to error message or default
+    return error.message || 'Không thể cập nhật trạng thái vai trò.';
   };
 
   // Toggle role active status mutation
