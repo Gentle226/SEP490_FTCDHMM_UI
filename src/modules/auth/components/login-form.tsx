@@ -61,8 +61,8 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
               {isClient && (
                 <div className="flex justify-center md:hidden">
                   <Image
-                    src="/FitFood Tracker Logo.png"
-                    alt="FitFood Tracker Logo"
+                    src="/Fitfood Tracker Logo.png"
+                    alt="Fitfood Tracker Logo"
                     width={120}
                     height={120}
                     className="h-24 w-auto"
