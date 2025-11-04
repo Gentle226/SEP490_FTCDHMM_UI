@@ -89,7 +89,7 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
                         if (status === 404) {
                           return 'Email hoặc mật khẩu không đúng.';
                         } else if (status === 402) {
-                          return 'Email chưa được xác thực.';
+                          return 'Email chưa được xác thực. Đăng ký lại để xác thực.';
                         } else if (status === 403) {
                           return 'Tài khoản đã bị khóa.';
                         } else if (status === 410) {
