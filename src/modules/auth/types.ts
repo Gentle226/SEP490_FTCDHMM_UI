@@ -146,6 +146,40 @@ export const changePasswordSchema = z
   });
 export type ChangePasswordSchema = z.infer<typeof changePasswordSchema>;
 
+// Schema chỉ nhập OTP
+export const otpOnlySchema = z.object({
+  code: z.string().trim().nonempty('Verification code is required'),
+});
+
+// Schema chỉ nhập password mới và xác nhận
+export const passwordOnlySchema = z
+  .object({
+    newPassword: z
+      .string()
+      .trim()
+      .min(8, 'Mật khẩu phải có tối thiểu 8 ký tự')
+      .max(100, 'Mật khẩu không được quá 100 ký tự')
+      .refine((val) => /[a-z]/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một chữ thường',
+      })
+      .refine((val) => /[A-Z]/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một chữ hoa',
+      })
+      .refine((val) => /\d/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một chữ số',
+      })
+      .refine((val) => /[@$!%*?&]/.test(val), {
+        message: 'Mật khẩu phải có ít nhất một ký tự đặc biệt (@$!%*?&)',
+      }),
+    rePassword: z.string().trim().min(8, 'Mật khẩu xác nhận phải có tối thiểu 8 ký tự'),
+  })
+  .refine((v) => v.newPassword === v.rePassword, {
+    message: 'Mật khẩu xác nhận không khớp',
+    path: ['rePassword'],
+  });
+
+export type Step = 'email' | 'otp' | 'password' | 'success';
+
 export enum Role {
   CUSTOMER = 'Customer',
   MODERATOR = 'Moderator',

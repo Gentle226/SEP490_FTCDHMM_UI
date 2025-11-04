@@ -5,7 +5,6 @@ import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { z } from 'zod';
 
 import { Button } from '@/base/components/ui/button';
 import {
@@ -24,34 +23,7 @@ import { Textarea } from '@/base/components/ui/textarea';
 import { NutrientInfo, nutrientService } from '@/modules/nutrients/services/nutrient.service';
 
 import { useCreateHealthGoal, useUpdateHealthGoal } from '../hooks';
-import { HealthGoalResponse } from '../types';
-
-const healthGoalSchema = z.object({
-  name: z
-    .string()
-    .min(3, 'Tên phải có ít nhất 3 ký tự')
-    .max(100, 'Tên không được vượt quá 100 ký tự'),
-  description: z.string().optional(),
-  targets: z
-    .array(
-      z.object({
-        nutrientId: z.string().min(1, 'Bắt buộc phải chọn ít nhất một chất dinh dưỡng'),
-        targetType: z.string().optional(),
-        minValue: z.coerce.number().min(0, 'Giá trị tối thiểu phải lớn hơn hoặc bằng 0'),
-        medianValue: z.coerce.number().min(0).optional(),
-        maxValue: z.coerce.number().min(0, 'Giá trị tối đa phải lớn hơn 0'),
-        minEnergyPct: z.coerce.number().min(0).max(100).optional(),
-        medianEnergyPct: z.coerce.number().min(0).max(100).optional(),
-        maxEnergyPct: z.coerce.number().min(0).max(100).optional(),
-        weight: z.coerce.number().min(0).optional(),
-      }),
-    )
-    .refine((targets) => targets.every((t) => t.maxValue > t.minValue), {
-      message: 'Giá trị tối đa phải lớn hơn giá trị tối thiểu',
-    }),
-});
-
-type HealthGoalFormData = z.infer<typeof healthGoalSchema>;
+import { HealthGoalFormData, HealthGoalResponse, healthGoalSchema } from '../types';
 
 interface HealthGoalFormDialogProps {
   goal?: HealthGoalResponse | null;
