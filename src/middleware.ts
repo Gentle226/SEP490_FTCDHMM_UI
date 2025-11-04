@@ -72,8 +72,6 @@ export async function middleware(request: NextRequest) {
           return deleteCookieAndRedirect(redirectUrl);
         } else if (isTokenExpired) {
           console.warn('Token expired but user valid - allowing access for debugging');
-        } else {
-          console.warn('Valid user and token, allowing access');
         }
       }
 

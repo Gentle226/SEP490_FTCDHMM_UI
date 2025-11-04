@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, MoreHorizontal, Plus, Search, Trash, X } from 'lucide-react';
+import { ChevronDown, Edit, Plus, Search, Trash, X } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -25,14 +25,6 @@ import {
 } from '@/base/components/ui/dropdown-menu';
 import { Input } from '@/base/components/ui/input';
 import { Label as UILabel } from '@/base/components/ui/label';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/base/components/ui/table';
 import { Pagination as PaginationType } from '@/base/types';
 
 import {
@@ -83,28 +75,33 @@ export function LabelManagementTable() {
 
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
   const currentSearch = searchParams.get('search') || '';
+  const currentPageSize = parseInt(searchParams.get('pageSize') || '10', 10);
 
   const [page, setPage] = useState(currentPage);
   const [searchTerm, setSearchTerm] = useState(currentSearch);
+  const [pageSize, setPageSize] = useState(currentPageSize);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editColorOnlyDialogOpen, setEditColorOnlyDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState<Label | null>(null);
 
   const [newLabelName, setNewLabelName] = useState('');
   const [newLabelColor, setNewLabelColor] = useState('#99b94a');
+  const [editLabelName, setEditLabelName] = useState('');
   const [editLabelColor, setEditLabelColor] = useState('#99b94a');
 
   const queryClient = useQueryClient();
-  const queryKey = ['labels', { page, search: debouncedSearchTerm }];
+  const queryKey = ['labels', { page, search: debouncedSearchTerm, pageSize }];
 
   // Sync state with URL params
   useEffect(() => {
     setPage(currentPage);
     setSearchTerm(currentSearch);
-  }, [currentPage, currentSearch]);
+    setPageSize(currentPageSize);
+  }, [currentPage, currentSearch, currentPageSize]);
 
   // Update URL when search term changes
   useEffect(() => {
@@ -124,13 +121,28 @@ export function LabelManagementTable() {
     router.push(`${pathname}?${params.toString()}`);
   }, [debouncedSearchTerm, pathname, router, searchParams, currentSearch]);
 
+  // Update URL when page changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', page.toString());
+    router.push(`${pathname}?${params.toString()}`);
+  }, [page, pathname, router, searchParams]);
+
+  // Update URL when pageSize changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    params.set('pageSize', pageSize.toString());
+    params.set('page', '1'); // Reset to page 1 when changing page size
+    router.push(`${pathname}?${params.toString()}`);
+  }, [pageSize, pathname, router, searchParams]);
+
   // Fetch labels
   const { data: labelsData, isLoading } = useQuery({
     queryKey,
     queryFn: () => {
       const params: PaginationParams = {
         pageNumber: page,
-        pageSize: 10,
+        pageSize: pageSize,
         keyword: debouncedSearchTerm || undefined,
       };
       return labelManagementService.getLabels(params);
@@ -152,7 +164,25 @@ export function LabelManagementTable() {
     },
   });
 
-  // Update label color mutation
+  // Update label mutation (name + color)
+  const updateLabelMutation = useMutation({
+    mutationFn: (request: { id: string; name: string; colorCode: string }) =>
+      labelManagementService.updateLabel(request.id, {
+        name: request.name,
+        colorCode: request.colorCode,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['labels'] });
+      setEditDialogOpen(false);
+      setSelectedLabel(null);
+      toast.success('Nhãn đã được cập nhật thành công.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Không thể cập nhật nhãn.');
+    },
+  });
+
+  // Update label color only mutation
   const updateColorMutation = useMutation({
     mutationFn: ({ id, colorCode }: { id: string; colorCode: string }) =>
       labelManagementService.updateColorCode(id, { colorCode }),
@@ -192,13 +222,30 @@ export function LabelManagementTable() {
 
   const handleEditLabel = (label: Label) => {
     setSelectedLabel(label);
+    setEditLabelName(label.name);
     setEditLabelColor(label.colorCode);
     setEditDialogOpen(true);
+  };
+
+  const handleEditColorOnly = (label: Label) => {
+    setSelectedLabel(label);
+    setEditLabelColor(label.colorCode);
+    setEditColorOnlyDialogOpen(true);
   };
 
   const handleDeleteLabel = (label: Label) => {
     setSelectedLabel(label);
     setDeleteDialogOpen(true);
+  };
+
+  const confirmUpdateLabel = () => {
+    if (selectedLabel && editLabelName.trim()) {
+      updateLabelMutation.mutate({
+        id: selectedLabel.id,
+        name: editLabelName.trim(),
+        colorCode: editLabelColor,
+      });
+    }
   };
 
   const confirmUpdateColor = () => {
@@ -230,8 +277,33 @@ export function LabelManagementTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div>
         <h2 className="text-3xl font-bold text-[#99b94a]">Quản Lý Nhãn Món Ăn</h2>
+      </div>
+
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-1" />
+        <div className="flex w-1/4 items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />
+            <Input
+              placeholder="Tìm kiếm nhãn..."
+              value={searchTerm}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="pr-10 pl-10"
+            />
+            {searchTerm && (
+              <button
+                onClick={handleClearSearch}
+                className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label="Xóa tìm kiếm"
+                title="Xóa tìm kiếm"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
+        </div>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-[#99b94a] hover:bg-[#7a8f3a]">
@@ -294,105 +366,73 @@ export function LabelManagementTable() {
           </DialogContent>
         </Dialog>
       </div>
-
-      {/* Search Bar */}
-      <div className="flex w-full justify-end">
-        <div className="flex w-1/4 items-center space-x-2">
-          <div className="relative flex-1">
-            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              placeholder="Tìm kiếm nhãn..."
-              value={searchTerm}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="pr-10 pl-10"
-            />
-            {searchTerm && (
-              <button
-                onClick={handleClearSearch}
-                className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                aria-label="Xóa tìm kiếm"
-                title="Xóa tìm kiếm"
-              >
-                <X className="size-4" />
-              </button>
+      <div className="w-full overflow-hidden rounded-md border">
+        {labelsData?.items?.length === 0 ? (
+          <div className="flex h-24 items-center justify-center">
+            {debouncedSearchTerm ? (
+              <div className="flex flex-col items-center justify-center space-y-2">
+                <Search className="size-8 text-gray-400" />
+                <p className="text-gray-500">
+                  Không tìm thấy nhãn nào với từ khóa &ldquo;{debouncedSearchTerm}&rdquo;
+                </p>
+              </div>
+            ) : (
+              <p className="text-gray-500">{isLoading ? 'Đang tải...' : 'Không có nhãn nào'}</p>
             )}
           </div>
-        </div>
-      </div>
-      <div className="w-full rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[45%] pl-12">Tên</TableHead>
-              <TableHead className="w-[45%]">Mã Màu</TableHead>
-              <TableHead className="w-[10%]">Hành Động</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {labelsData?.items?.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={3} className="h-24 text-center">
-                  {debouncedSearchTerm ? (
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <Search className="size-8 text-gray-400" />
-                      <p className="text-gray-500">
-                        Không tìm thấy nhãn nào với từ khóa &ldquo;{debouncedSearchTerm}&rdquo;
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-gray-500">
-                      {isLoading ? 'Đang tải...' : 'Không có nhãn nào'}
-                    </p>
-                  )}
-                </TableCell>
-              </TableRow>
-            ) : (
-              labelsData?.items?.map((label) => (
-                <TableRow key={label.id}>
-                  <TableCell className="pl-12 font-medium">{label.name}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
+        ) : (
+          <div className="grid grid-cols-1 gap-0 sm:grid-cols-2 lg:grid-cols-2">
+            {labelsData?.items?.map((label) => (
+              <div
+                key={label.id}
+                className="flex items-center justify-between gap-3 border-r border-b px-4 py-3 transition-colors hover:bg-gray-50"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-col gap-3">
+                    <div className="text-base font-bold text-gray-900">{label.name}</div>
+                    <div
+                      className="flex w-fit cursor-pointer items-center gap-2 rounded p-1 transition-colors hover:bg-gray-100"
+                      onClick={() => handleEditColorOnly(label)}
+                      title="Click để chỉnh sửa màu"
+                    >
                       <div
-                        className="size-6 rounded border"
+                        className="size-5 rounded border"
                         style={{ backgroundColor: label.colorCode } as React.CSSProperties}
                         aria-label={`Color: ${label.colorCode}`}
                       />
-                      <span className="font-mono text-sm">{label.colorCode}</span>
+                      <span className="font-mono text-xs">{label.colorCode}</span>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Mở menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditLabel(label)}>
-                          <Edit className="mr-2 h-4 w-4 text-[#99b94a]" />
-                          Chỉnh sửa
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteLabel(label)}
-                          className="text-red-600"
-                        >
-                          <Trash className="mr-2 h-4 w-4 text-red-600" />
-                          Xóa
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                  </div>
+                </div>
+                <div className="flex flex-shrink-0 items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEditLabel(label)}
+                    title="Chỉnh sửa"
+                    className="h-8 w-8 p-0 text-[#99b94a] hover:bg-[#99b94a]/10"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteLabel(label)}
+                    title="Xóa"
+                    className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Search Results Info */}
       {labelsData && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="text-sm text-gray-500">
             {debouncedSearchTerm ? (
               <>
@@ -406,6 +446,30 @@ export function LabelManagementTable() {
               </>
             )}
           </div>
+
+          {/* Page Size Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Hiển thị:</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="min-w-[100px] gap-2">
+                  {pageSize} mục
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {[10, 20, 50].map((size) => (
+                  <DropdownMenuItem
+                    key={size}
+                    onClick={() => setPageSize(size)}
+                    className={pageSize === size ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+                  >
+                    {size} mục
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       )}
 
@@ -416,23 +480,35 @@ export function LabelManagementTable() {
         </div>
       )}
 
-      {/* Edit Label Dialog */}
+      {/* Edit Label Dialog - Edit name + color */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Chỉnh Sửa Màu Nhãn</DialogTitle>
+            <DialogTitle>Chỉnh Sửa Nhãn</DialogTitle>
             <DialogDescription>
-              Cập nhật màu cho nhãn &ldquo;{selectedLabel?.name}&rdquo;
+              Cập nhật tên và màu cho nhãn &ldquo;{selectedLabel?.name}&rdquo;
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <UILabel htmlFor="edit-color" className="mb-3">
+              <UILabel htmlFor="edit-name" className="mb-3">
+                Tên Nhãn
+              </UILabel>
+              <Input
+                id="edit-name"
+                type="text"
+                value={editLabelName}
+                onChange={(e) => setEditLabelName(e.target.value)}
+                placeholder="Nhập tên nhãn..."
+              />
+            </div>
+            <div>
+              <UILabel htmlFor="edit-color-label" className="mb-3">
                 Mã Màu
               </UILabel>
               <div className="flex gap-2">
                 <Input
-                  id="edit-color"
+                  id="edit-color-label"
                   type="color"
                   value={editLabelColor}
                   onChange={(e) => setEditLabelColor(e.target.value)}
@@ -453,7 +529,57 @@ export function LabelManagementTable() {
               Hủy
             </Button>
             <Button
-              onClick={confirmUpdateColor}
+              onClick={confirmUpdateLabel}
+              disabled={updateLabelMutation.isPending || !editLabelName.trim()}
+              className="bg-[#99b94a] hover:bg-[#7a8f3a]"
+            >
+              {updateLabelMutation.isPending ? 'Đang cập nhật...' : 'Cập Nhật'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Color Only Dialog - Quick edit color via hover */}
+      <Dialog open={editColorOnlyDialogOpen} onOpenChange={setEditColorOnlyDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Chỉnh Sửa Màu Nhãn</DialogTitle>
+            <DialogDescription>
+              Cập nhật màu cho nhãn &ldquo;{selectedLabel?.name}&rdquo;
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <UILabel htmlFor="edit-color-only" className="mb-3">
+                Mã Màu
+              </UILabel>
+              <div className="flex gap-2">
+                <Input
+                  id="edit-color-only"
+                  type="color"
+                  value={editLabelColor}
+                  onChange={(e) => setEditLabelColor(e.target.value)}
+                  className="h-10 w-20 cursor-pointer"
+                />
+                <Input
+                  type="text"
+                  value={editLabelColor}
+                  onChange={(e) => setEditLabelColor(e.target.value)}
+                  placeholder="#99b94a"
+                  className="flex-1"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditColorOnlyDialogOpen(false)}>
+              Hủy
+            </Button>
+            <Button
+              onClick={() => {
+                confirmUpdateColor();
+                setEditColorOnlyDialogOpen(false);
+              }}
               disabled={updateColorMutation.isPending}
               className="bg-[#99b94a] hover:bg-[#7a8f3a]"
             >

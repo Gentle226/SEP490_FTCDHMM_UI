@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Lock, Plus, Search, Unlock, X } from 'lucide-react';
+import { ChevronDown, Lock, Plus, Search, Unlock, X } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ReactNode, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -18,6 +18,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/base/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/base/components/ui/dropdown-menu';
 import { Input } from '@/base/components/ui/input';
 import { Label } from '@/base/components/ui/label';
 import {
@@ -73,16 +79,19 @@ export function UserManagementTable({
 
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
   const currentSearch = searchParams.get('search') || '';
+  const currentPageSize = parseInt(searchParams.get('pageSize') || '10', 10);
 
   const [page, setPage] = useState(currentPage);
   const [searchTerm, setSearchTerm] = useState(currentSearch);
+  const [pageSize, setPageSize] = useState(currentPageSize);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // Sync state with URL params
   useEffect(() => {
     setPage(currentPage);
     setSearchTerm(currentSearch);
-  }, [currentPage, currentSearch]);
+    setPageSize(currentPageSize);
+  }, [currentPage, currentSearch, currentPageSize]);
 
   // Update URL when search term changes
   useEffect(() => {
@@ -101,6 +110,21 @@ export function UserManagementTable({
 
     router.push(`${pathname}?${params.toString()}`);
   }, [debouncedSearchTerm, pathname, router, searchParams, currentSearch]);
+
+  // Update URL when page changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', page.toString());
+    router.push(`${pathname}?${params.toString()}`);
+  }, [page, pathname, router, searchParams]);
+
+  // Update URL when pageSize changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    params.set('pageSize', pageSize.toString());
+    params.set('page', '1'); // Reset to page 1 when changing page size
+    router.push(`${pathname}?${params.toString()}`);
+  }, [pageSize, pathname, router, searchParams]);
 
   // Helper function to convert API response to PaginationType
   const convertToPaginationType = (data: {
@@ -124,7 +148,7 @@ export function UserManagementTable({
   const [newModeratorEmail, setNewModeratorEmail] = useState('');
 
   const queryClient = useQueryClient();
-  const queryKey = [userType, { page, search: debouncedSearchTerm }];
+  const queryKey = [userType, { page, search: debouncedSearchTerm, pageSize }];
 
   // Fetch users
   const { data: usersData, isLoading } = useQuery({
@@ -132,7 +156,7 @@ export function UserManagementTable({
     queryFn: () => {
       const params: PaginationParams = {
         pageNumber: page,
-        pageSize: 10,
+        pageSize: pageSize,
         search: debouncedSearchTerm || undefined,
       };
       return userType === 'customers'
@@ -446,7 +470,7 @@ export function UserManagementTable({
 
       {/* Search Results Info */}
       {usersData && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="text-sm text-gray-500">
             {debouncedSearchTerm ? (
               <>
@@ -460,6 +484,30 @@ export function UserManagementTable({
                 {userType === 'customers' ? 'khách hàng' : 'moderator'}
               </>
             )}
+          </div>
+
+          {/* Page Size Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Hiển thị:</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="min-w-[100px] gap-2">
+                  {pageSize} mục
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {[10, 20, 50].map((size) => (
+                  <DropdownMenuItem
+                    key={size}
+                    onClick={() => setPageSize(size)}
+                    className={pageSize === size ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+                  >
+                    {size} mục
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       )}

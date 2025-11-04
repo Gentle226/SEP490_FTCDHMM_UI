@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MoreHorizontal, Plus, Search, Trash, X } from 'lucide-react';
+import { ChevronDown, Plus, Search, Trash, X } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -25,14 +25,6 @@ import {
 } from '@/base/components/ui/dropdown-menu';
 import { Input } from '@/base/components/ui/input';
 import { Label as UILabel } from '@/base/components/ui/label';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/base/components/ui/table';
 import { Pagination as PaginationType } from '@/base/types';
 
 import {
@@ -83,9 +75,11 @@ export function IngredientCategoryManagementTable() {
 
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
   const currentSearch = searchParams.get('search') || '';
+  const currentPageSize = parseInt(searchParams.get('pageSize') || '20', 10);
 
   const [page, setPage] = useState(currentPage);
   const [searchTerm, setSearchTerm] = useState(currentSearch);
+  const [pageSize, setPageSize] = useState(currentPageSize);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -94,13 +88,14 @@ export function IngredientCategoryManagementTable() {
   const [newCategoryName, setNewCategoryName] = useState('');
 
   const queryClient = useQueryClient();
-  const queryKey = ['ingredient-categories', { page, search: debouncedSearchTerm }];
+  const queryKey = ['ingredient-categories', { page, search: debouncedSearchTerm, pageSize }];
 
   // Sync state with URL params
   useEffect(() => {
     setPage(currentPage);
     setSearchTerm(currentSearch);
-  }, [currentPage, currentSearch]);
+    setPageSize(currentPageSize);
+  }, [currentPage, currentSearch, currentPageSize]);
 
   // Update URL when search term changes
   useEffect(() => {
@@ -120,13 +115,28 @@ export function IngredientCategoryManagementTable() {
     router.push(`${pathname}?${params.toString()}`);
   }, [debouncedSearchTerm, pathname, router, searchParams, currentSearch]);
 
+  // Update URL when page changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', page.toString());
+    router.push(`${pathname}?${params.toString()}`);
+  }, [page, pathname, router, searchParams]);
+
+  // Update URL when pageSize changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    params.set('pageSize', pageSize.toString());
+    params.set('page', '1'); // Reset to page 1 when changing page size
+    router.push(`${pathname}?${params.toString()}`);
+  }, [pageSize, pathname, router, searchParams]);
+
   // Fetch categories
   const { data: categoriesData, isLoading } = useQuery({
     queryKey,
     queryFn: () => {
       const params: PaginationParams = {
         pageNumber: page,
-        pageSize: 10,
+        pageSize: pageSize,
         keyword: debouncedSearchTerm || undefined,
       };
       return ingredientCategoryManagementService.getCategories(params);
@@ -195,8 +205,29 @@ export function IngredientCategoryManagementTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-[#99b94a]">Quản Lý Nhóm Nguyên Liệu</h2>
+      <h2 className="text-3xl font-bold text-[#99b94a]">Quản Lý Nhóm Nguyên Liệu</h2>
+
+      {/* Search Bar + Create Button: flex row, cả hai bên phải */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+        <div className="relative ml-0 sm:ml-4 sm:w-1/4">
+          <Search className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
+          <Input
+            placeholder="Tìm kiếm danh mục..."
+            value={searchTerm}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="pr-10 pl-10"
+          />
+          {searchTerm && (
+            <button
+              onClick={handleClearSearch}
+              className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              aria-label="Xóa tìm kiếm"
+              title="Xóa tìm kiếm"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-[#99b94a] hover:bg-[#7a8f3a]">
@@ -238,91 +269,48 @@ export function IngredientCategoryManagementTable() {
           </DialogContent>
         </Dialog>
       </div>
-
-      {/* Search Bar */}
-      <div className="flex w-full justify-end">
-        <div className="flex w-1/4 items-center space-x-2">
-          <div className="relative flex-1">
-            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              placeholder="Tìm kiếm danh mục..."
-              value={searchTerm}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="pr-10 pl-10"
-            />
-            {searchTerm && (
-              <button
-                onClick={handleClearSearch}
-                className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                aria-label="Xóa tìm kiếm"
-                title="Xóa tìm kiếm"
-              >
-                <X className="size-4" />
-              </button>
+      <div className="w-full overflow-hidden rounded-md border">
+        {categoriesData?.items?.length === 0 ? (
+          <div className="flex h-24 items-center justify-center">
+            {debouncedSearchTerm ? (
+              <div className="flex flex-col items-center justify-center space-y-2">
+                <Search className="size-8 text-gray-400" />
+                <p className="text-gray-500">
+                  Không tìm thấy danh mục nào với từ khóa &ldquo;{debouncedSearchTerm}&rdquo;
+                </p>
+              </div>
+            ) : (
+              <p className="text-gray-500">{isLoading ? 'Đang tải...' : 'Không có danh mục nào'}</p>
             )}
           </div>
-        </div>
-      </div>
-      <div className="w-full rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-3/4 pl-32">Tên</TableHead>
-              <TableHead className="w-1/4">Hành Động</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {categoriesData?.items?.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={2} className="h-24 text-center">
-                  {debouncedSearchTerm ? (
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <Search className="size-8 text-gray-400" />
-                      <p className="text-gray-500">
-                        Không tìm thấy danh mục nào với từ khóa &ldquo;{debouncedSearchTerm}
-                        &rdquo;
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-gray-500">
-                      {isLoading ? 'Đang tải...' : 'Không có danh mục nào'}
-                    </p>
-                  )}
-                </TableCell>
-              </TableRow>
-            ) : (
-              categoriesData?.items?.map((category) => (
-                <TableRow key={category.id}>
-                  <TableCell className="pl-32 font-medium">{category.name}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Mở menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteCategory(category)}
-                          className="text-red-600"
-                        >
-                          <Trash className="mr-2 h-4 w-4" />
-                          Xóa
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        ) : (
+          <div className="grid grid-cols-1 gap-0 sm:grid-cols-2 lg:grid-cols-2">
+            {categoriesData?.items?.map((category) => (
+              <div
+                key={category.id}
+                className="flex items-center justify-between gap-3 border-r border-b px-4 py-3 transition-colors hover:bg-gray-50"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{category.name}</div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDeleteCategory(category)}
+                  className="h-8 w-8 flex-shrink-0 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+                  title="Xóa danh mục"
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Search Results Info */}
       {categoriesData && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="text-sm text-gray-500">
             {debouncedSearchTerm ? (
               <>
@@ -335,6 +323,30 @@ export function IngredientCategoryManagementTable() {
                 tổng số <span className="font-medium">{categoriesData.totalCount}</span> danh mục
               </>
             )}
+          </div>
+
+          {/* Page Size Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Hiển thị:</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="min-w-[100px] gap-2">
+                  {pageSize} mục
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {[10, 20, 50].map((size) => (
+                  <DropdownMenuItem
+                    key={size}
+                    onClick={() => setPageSize(size)}
+                    className={pageSize === size ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+                  >
+                    {size} mục
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       )}

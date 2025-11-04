@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Upload, X } from 'lucide-react';
+import { HelpCircle, Lock, Plus, Trash2, Upload, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -52,6 +52,7 @@ export function EditIngredientDialog({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [nutrientRows, setNutrientRows] = useState<NutrientRow[]>([]);
+  const [showNutrientHelp, setShowNutrientHelp] = useState(false);
 
   // Fetch categories
   const { data: categories = [] } = useQuery({
@@ -96,17 +97,40 @@ export function EditIngredientDialog({
       setImagePreview(detailedIngredient.image || null);
       setImageFile(null);
 
-      // Load nutrients
-      const existingNutrientRows =
+      // Load nutrients - prioritize macronutrients
+      const allNutrientRows =
         detailedIngredient.nutrients?.map((n) => ({
           nutrientId: n.id,
+          vietnameseName: n.vietnameseName,
           min: n.min,
           max: n.max,
           median: n.median,
         })) || [];
 
-      console.warn('Loaded nutrients:', existingNutrientRows);
-      setNutrientRows(existingNutrientRows);
+      // Separate macronutrients and others
+      const macroKeywords = [
+        'protein',
+        'chất đạm',
+        'fat',
+        'tổng chất béo',
+        'carbohydrate',
+        'tinh bột',
+      ];
+      const macroNutrients = allNutrientRows.filter((n) =>
+        macroKeywords.some((keyword) => (n.vietnameseName || '').toLowerCase().includes(keyword)),
+      );
+      const otherNutrients = allNutrientRows.filter(
+        (n) =>
+          !macroKeywords.some((keyword) =>
+            (n.vietnameseName || '').toLowerCase().includes(keyword),
+          ),
+      );
+
+      // Combine: macronutrients first, then others
+      const sortedNutrientRows = [...macroNutrients.slice(0, 3), ...otherNutrients];
+
+      console.warn('Loaded nutrients:', sortedNutrientRows);
+      setNutrientRows(sortedNutrientRows);
     }
   }, [open, ingredient?.id, detailedIngredient]);
 
@@ -296,13 +320,17 @@ export function EditIngredientDialog({
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Name (readonly) */}
           <div className="space-y-2">
-            <Label htmlFor="name">Tên nguyên liệu</Label>
+            <Label htmlFor="name">
+              Tên nguyên liệu <span className="font-bold text-red-500">*</span>
+            </Label>
             <Input id="name" value={name} readOnly className="bg-muted" />
           </div>
 
           {/* Category (multi-select with tags) */}
           <div className="space-y-2">
-            <Label htmlFor="categories">Phân loại</Label>
+            <Label htmlFor="categories">
+              Phân loại <span className="font-bold text-red-500">*</span>
+            </Label>
             <div className="space-y-2">
               {/* Display selected categories as badges */}
               <div className="flex min-h-[42px] flex-wrap gap-2 rounded-md border p-3">
@@ -360,7 +388,9 @@ export function EditIngredientDialog({
 
           {/* Image Upload */}
           <div className="space-y-2">
-            <Label>Hình ảnh nguyên liệu</Label>
+            <Label>
+              Hình ảnh nguyên liệu <span className="font-bold text-red-500">*</span>
+            </Label>
             <div className="flex justify-center">
               {imagePreview && imagePreview.trim() ? (
                 <div className="relative">
@@ -419,39 +449,73 @@ export function EditIngredientDialog({
           </div>
 
           {/* Nutrients */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-base font-semibold">Thành phần dinh dưỡng (Trên 100g)</Label>
-              <span className="text-muted-foreground text-xs">
-                <Badge variant="warning" className="mr-1 text-xs">
-                  *
-                </Badge>
-                Bắt buộc
-              </span>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label className="text-base font-semibold">Thành phần Dinh Dưỡng (Trên 100g)</Label>
+                <span className="font-bold text-red-500">*</span>
+                <button
+                  type="button"
+                  onClick={() => setShowNutrientHelp(!showNutrientHelp)}
+                  className="ml-auto rounded-md p-1 transition-colors hover:bg-gray-100"
+                  title="Xem hướng dẫn"
+                >
+                  <HelpCircle className="size-5 text-gray-500 hover:text-gray-700" />
+                </button>
+              </div>
+              {showNutrientHelp && (
+                <div className="animate-in fade-in rounded-lg border border-lime-200 bg-lime-50 p-3">
+                  <div className="space-y-1 text-sm text-lime-900">
+                    <p className="font-medium">📌 Hướng dẫn:</p>
+                    <ul className="list-inside list-disc space-y-0.5 text-xs">
+                      <li>
+                        <span className="font-semibold">3 Macronutrients bắt buộc:</span> Protein,
+                        Chất béo, Tinh bột
+                      </li>
+                      <li>
+                        <span className="font-semibold">Min:</span> Giá trị tối thiểu (tùy chọn)
+                      </li>
+                      <li>
+                        <span className="font-semibold">Median:</span> Giá trị trung bình
+                        <span className="font-bold text-red-600"> (bắt buộc)</span>
+                      </li>
+                      <li>
+                        <span className="font-semibold">Max:</span> Giá trị tối đa (tùy chọn)
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              )}
             </div>
 
             {nutrientRows.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {/* Table header */}
-                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-2 border-b pb-2 text-sm font-medium">
-                  <div>Tên dinh dưỡng</div>
-                  <div>Tối thiểu (Min)</div>
-                  <div>Trung bình (Median)</div>
-                  <div>Tối đa (Max)</div>
-                  <div>Hành động</div>
+                <div className="grid grid-cols-[1.6fr_0.9fr_0.9fr_0.9fr_0.6fr] gap-2 rounded-t-lg border-b-2 bg-lime-50 px-3 py-2">
+                  <div className="text-sm font-bold text-lime-900">Tên Dinh Dưỡng</div>
+                  <div className="text-center text-sm font-bold text-lime-900">Min</div>
+                  <div className="text-center text-sm font-bold text-lime-900">
+                    Median
+                    <span className="ml-1 text-red-500">*</span>
+                  </div>
+                  <div className="text-center text-sm font-bold text-lime-900">Max</div>
+                  <div className="text-center text-sm font-bold text-lime-900">Xóa</div>
                 </div>
 
                 {/* Nutrient rows */}
                 {nutrientRows.map((row, index) => {
                   const isRequired = isRequiredNutrient(row.nutrientId);
+                  const unit = getNutrientUnit(row.nutrientId);
                   return (
                     <div
                       key={index}
-                      className={`grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center gap-2 ${
-                        isRequired ? 'rounded bg-yellow-50/50 p-2' : ''
+                      className={`grid grid-cols-[1.8fr_0.9fr_0.9fr_0.9fr_0.6fr] items-center gap-2 rounded-lg border-2 px-3 py-2 transition-all ${
+                        isRequired
+                          ? 'border-lime-200 bg-lime-50'
+                          : 'border-gray-200 bg-white hover:border-lime-300'
                       }`}
                     >
-                      {/* Nutrient dropdown */}
+                      {/* Nutrient dropdown - Tên dinh dưỡng */}
                       <div className="flex items-center gap-2">
                         <Select
                           options={getAvailableNutrientOptions(index)}
@@ -459,7 +523,7 @@ export function EditIngredientDialog({
                           onChange={(value) =>
                             handleNutrientChange(index, 'nutrientId', value || '')
                           }
-                          placeholder="Chọn: Dinh dưỡng..."
+                          placeholder="Chọn dinh dưỡng..."
                           className="w-full"
                           disabled={isRequired}
                         />
@@ -470,13 +534,14 @@ export function EditIngredientDialog({
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="30"
+                          placeholder="min"
                           value={row.min ?? ''}
                           onChange={(e) => handleNutrientChange(index, 'min', e.target.value)}
-                          className="w-full"
+                          className="w-full text-sm [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                          title="Tối thiểu"
                         />
-                        <span className="text-muted-foreground text-xs">
-                          {getNutrientUnit(row.nutrientId)}
+                        <span className="text-muted-foreground w-5 shrink-0 text-xs font-medium">
+                          {unit}
                         </span>
                       </div>
 
@@ -485,13 +550,16 @@ export function EditIngredientDialog({
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="31"
+                          placeholder="median"
                           value={row.median ?? ''}
                           onChange={(e) => handleNutrientChange(index, 'median', e.target.value)}
-                          className="w-full"
+                          className={`w-full border-2 text-sm font-medium [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+                            !row.median ? 'border-red-300 bg-red-50' : 'border-lime-300 bg-lime-50'
+                          }`}
+                          title="Bắt buộc"
                         />
-                        <span className="text-muted-foreground text-xs">
-                          {getNutrientUnit(row.nutrientId)}
+                        <span className="text-muted-foreground w-5 shrink-0 text-xs font-medium">
+                          {unit}
                         </span>
                       </div>
 
@@ -500,13 +568,14 @@ export function EditIngredientDialog({
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="32"
+                          placeholder="max"
                           value={row.max ?? ''}
                           onChange={(e) => handleNutrientChange(index, 'max', e.target.value)}
-                          className="w-full"
+                          className="w-full text-sm [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                          title="Tối đa"
                         />
-                        <span className="text-muted-foreground text-xs">
-                          {getNutrientUnit(row.nutrientId)}
+                        <span className="text-muted-foreground w-5 shrink-0 text-xs font-medium">
+                          {unit}
                         </span>
                       </div>
 
@@ -519,12 +588,12 @@ export function EditIngredientDialog({
                         disabled={isRequired}
                         className={
                           isRequired
-                            ? 'text-muted-foreground cursor-not-allowed'
-                            : 'text-red-600 hover:bg-red-50 hover:text-red-700'
+                            ? 'text-muted-foreground cursor-not-allowed justify-center hover:bg-transparent'
+                            : 'justify-center text-red-600 hover:bg-red-50 hover:text-red-700'
                         }
-                        title={isRequired ? 'Không thể xóa thành phần bắt buộc' : 'Xóa'}
+                        title={isRequired ? 'Không thể xóa dinh dưỡng bắt buộc' : 'Xóa'}
                       >
-                        Xóa
+                        {isRequired ? <Lock className="size-4" /> : <Trash2 className="size-4" />}
                       </Button>
                     </div>
                   );
@@ -537,18 +606,17 @@ export function EditIngredientDialog({
               type="button"
               onClick={handleAddNutrient}
               variant="outline"
-              size="sm"
-              className="w-full border-dashed"
+              className="w-full border-2 border-dashed border-lime-300 text-lime-700 hover:border-lime-400 hover:bg-lime-50"
             >
               <Plus className="mr-2 size-4" />
-              Thêm thành phần dinh dưỡng
+              Thêm Micronutrient (Khác)
             </Button>
           </div>
 
           {/* Actions */}
           <div className="flex justify-end gap-3 border-t pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Xóa
+              Hủy
             </Button>
             <Button
               type="submit"
