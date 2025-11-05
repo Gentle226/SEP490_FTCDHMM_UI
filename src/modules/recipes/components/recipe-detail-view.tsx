@@ -30,6 +30,7 @@ import {
   useSaveRecipe,
   useUnsaveRecipe,
 } from '../hooks/use-recipe-actions';
+import { IngredientCardDetail } from './ingredient-card-detail';
 import styles from './recipe-detail-view.module.css';
 
 interface RecipeDetailViewProps {
@@ -343,19 +344,20 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold">Nguyên liệu</h2>
             <div className="space-y-3">
-              {recipe.ingredients.map((ingredient, index) => (
-                <div
-                  key={`ingredient-${ingredient.id || index}`}
-                  className="flex items-center justify-between rounded-lg border bg-gray-50 px-4 py-3"
-                >
-                  <span className="flex-1 text-sm font-semibold text-gray-800">
-                    {ingredient.name || 'Không tên'}
-                  </span>
-                  <span className="ml-2 text-xs font-medium text-gray-600">
-                    {ingredient.quantityGram ? `${ingredient.quantityGram}g` : ''}
-                  </span>
-                </div>
-              ))}
+              {recipe.ingredients.map((ingredient, index) => {
+                // Use ingredientId if available, fallback to id
+                const ingredientId = ingredient.ingredientId || ingredient.id;
+                return (
+                  <IngredientCardDetail
+                    key={`ingredient-${ingredientId || index}`}
+                    ingredient={{
+                      id: ingredientId,
+                      name: ingredient.name,
+                      quantityGram: ingredient.quantityGram,
+                    }}
+                  />
+                );
+              })}
             </div>
           </div>
         )}

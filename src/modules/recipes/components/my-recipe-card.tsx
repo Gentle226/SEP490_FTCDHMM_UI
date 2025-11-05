@@ -50,7 +50,7 @@ export function MyRecipeCard({ recipe }: MyRecipeCardProps) {
 
   return (
     <Link href={`/recipe/${recipe.id}`}>
-      <Card className="group overflow-hidden transition-shadow hover:shadow-lg">
+      <Card className="group flex h-full flex-col overflow-hidden transition-shadow hover:shadow-lg">
         <div className="relative aspect-video overflow-hidden bg-gray-100">
           {recipe.imageUrl ? (
             <Image
@@ -73,83 +73,87 @@ export function MyRecipeCard({ recipe }: MyRecipeCardProps) {
           )}
         </div>
 
-        <CardContent className="space-y-3 p-4">
-          {/* Recipe Name */}
-          <h3 className="line-clamp-2 min-h-[3rem] text-lg font-semibold group-hover:text-[#99b94a]">
-            {recipe.name}
-          </h3>
+        <CardContent className="flex flex-1 flex-col justify-between p-4">
+          <div className="space-y-3">
+            {/* Recipe Name */}
+            <h3 className="line-clamp-2 min-h-[3rem] text-lg font-semibold group-hover:text-[#99b94a]">
+              {recipe.name}
+            </h3>
 
-          {/* Description */}
-          {recipe.description && (
-            <p className="line-clamp-2 text-sm text-gray-600">{recipe.description}</p>
-          )}
+            {/* Description */}
+            {recipe.description && (
+              <p className="line-clamp-2 text-sm text-gray-600">{recipe.description}</p>
+            )}
 
-          {/* Meta Info */}
-          <div className="flex items-center gap-4 text-sm text-gray-500">
-            <div className="flex items-center gap-1">
-              <Clock className="h-4 w-4" />
-              <span>{recipe.cookTime} phút</span>
+            {/* Meta Info */}
+            <div className="flex items-center gap-4 text-sm text-gray-500">
+              <div className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
+                <span>{recipe.cookTime} phút</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                <span>{recipe.ration} người</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1">
-              <Users className="h-4 w-4" />
-              <span>{recipe.ration} người</span>
-            </div>
-          </div>
 
-          {/* Difficulty Badge */}
-          <div>
+            {/* Difficulty Badge */}
             {recipe.difficulty && (
-              <Badge className={cn('text-xs', getDifficultyColor(difficultyValue))}>
-                {getDifficultyLabel(difficultyValue)}
-              </Badge>
+              <div>
+                <Badge className={cn('text-xs', getDifficultyColor(difficultyValue))}>
+                  {getDifficultyLabel(difficultyValue)}
+                </Badge>
+              </div>
             )}
           </div>
 
-          {/* Ingredients */}
-          {recipe.ingredients && recipe.ingredients.length > 0 && (
-            <div className="border-t pt-3">
-              <p className="mb-2 text-xs font-semibold text-gray-700">Nguyên liệu:</p>
-              <div className="flex flex-wrap gap-2">
-                {recipe.ingredients.slice(0, 4).map((ingredient, index) => (
+          <div className="space-y-3 pt-3">
+            {/* Ingredients */}
+            {recipe.ingredients && recipe.ingredients.length > 0 && (
+              <div className="border-t pt-3">
+                <p className="mb-2 text-xs font-semibold text-gray-700">Nguyên liệu:</p>
+                <div className="flex flex-wrap gap-2">
+                  {recipe.ingredients.slice(0, 4).map((ingredient, index) => (
+                    <Badge
+                      key={`ingredient-${ingredient.id || index}`}
+                      variant="outline"
+                      className="text-xs"
+                    >
+                      {ingredient.name}
+                    </Badge>
+                  ))}
+                  {recipe.ingredients.length > 4 && (
+                    <Badge key="more-ingredients" variant="outline" className="text-xs">
+                      +{recipe.ingredients.length - 4}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Labels */}
+            {recipe.labels && recipe.labels.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {recipe.labels.slice(0, 3).map((label, index) => (
                   <Badge
-                    key={`ingredient-${ingredient.id || index}`}
-                    variant="outline"
+                    key={`${label.id}-${index}`}
                     className="text-xs"
+                    style={{
+                      backgroundColor: label.colorCode,
+                      color: '#fff',
+                    }}
                   >
-                    {ingredient.name}
+                    {label.name}
                   </Badge>
                 ))}
-                {recipe.ingredients.length > 4 && (
-                  <Badge key="more-ingredients" variant="outline" className="text-xs">
-                    +{recipe.ingredients.length - 4}
+                {recipe.labels.length > 3 && (
+                  <Badge key="more-labels" variant="secondary" className="text-xs">
+                    +{recipe.labels.length - 3}
                   </Badge>
                 )}
               </div>
-            </div>
-          )}
-
-          {/* Labels */}
-          {recipe.labels && recipe.labels.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {recipe.labels.slice(0, 3).map((label, index) => (
-                <Badge
-                  key={`${label.id}-${index}`}
-                  className="text-xs"
-                  style={{
-                    backgroundColor: label.colorCode,
-                    color: '#fff',
-                  }}
-                >
-                  {label.name}
-                </Badge>
-              ))}
-              {recipe.labels.length > 3 && (
-                <Badge key="more-labels" variant="secondary" className="text-xs">
-                  +{recipe.labels.length - 3}
-                </Badge>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </CardContent>
       </Card>
     </Link>
