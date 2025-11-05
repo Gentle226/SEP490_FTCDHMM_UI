@@ -16,6 +16,7 @@ import { LoginSchema, loginSchema } from '@/modules/auth/types';
 
 import { authService } from '../services/auth.service';
 import { GoogleSignInButton } from './google-signin-button';
+import styles from './login-form.module.css';
 
 interface LoginFormProps extends React.ComponentProps<'div'> {
   onLoginSuccess?: () => void;
@@ -53,7 +54,7 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
-      <Card className="overflow-hidden p-0">
+      <Card className={`overflow-hidden p-0 ${styles.cardContainer}`}>
         <CardContent className="grid p-0 md:grid-cols-2">
           <div className="p-6 md:p-8">
             <div className="flex flex-col gap-6">
@@ -201,7 +202,7 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
         </CardContent>
       </Card>
 
-      <div className="text-muted-foreground text-center text-xs text-balance">
+      <div className="text-center text-xs text-balance text-neutral-50">
         Bằng cách tiếp tục, bạn đồng ý với{' '}
         <a href="#" className="hover:text-primary underline underline-offset-4">
           Điều khoản dịch vụ

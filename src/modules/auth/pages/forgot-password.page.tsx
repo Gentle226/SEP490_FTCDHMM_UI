@@ -12,6 +12,7 @@ import {
 } from '@/base/components/ui/card';
 
 import { ForgotPasswordForm } from '../components/forgot-password-form';
+import styles from './forgot-password.page.module.css';
 
 export function ForgotPasswordPage() {
   const router = useRouter();
@@ -21,8 +22,10 @@ export function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-svh grow items-center justify-center p-4 sm:p-6 md:p-10 lg:p-24">
-      <Card className="border-border/60 w-full max-w-md shadow-xl">
+    <div
+      className={`flex min-h-svh grow items-center justify-center p-4 sm:p-6 md:p-10 lg:p-24 ${styles.backgroundContainer}`}
+    >
+      <Card className={`border-border/60 w-full max-w-md shadow-xl ${styles.cardContainer}`}>
         <CardHeader className="space-y-2 sm:space-y-3">
           <div className="flex justify-center">
             <Image
