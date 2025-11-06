@@ -157,11 +157,11 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   };
 
   return (
-    <div className="mx-auto w-[70%] space-y-6 px-4 py-8">
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:py-8">
       {/* Header: Image + Title, Labels, Author, Description, Buttons */}
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-[350px_1fr]">
+      <div className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-[300px_1fr] xl:grid-cols-[350px_1fr]">
         {/* Left: Main Image */}
-        <div className="relative h-80 w-full overflow-hidden rounded-lg border bg-gray-100">
+        <div className="relative h-64 w-full overflow-hidden rounded-lg border bg-gray-100 sm:h-80 lg:h-full">
           {recipe.imageUrl ? (
             <Image
               src={recipe.imageUrl}
@@ -184,9 +184,9 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
         </div>
 
         {/* Right: Title, Labels, Author, Description, Buttons */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* Title */}
-          <h1 className="text-3xl font-bold text-[#99b94a]">{recipe.name}</h1>
+          <h1 className="text-2xl font-bold text-[#99b94a] sm:text-3xl">{recipe.name}</h1>
 
           {/* Labels */}
           {recipe.labels && recipe.labels.length > 0 && (
@@ -204,7 +204,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
           )}
 
           {/* Meta Info: Difficulty, Time, Ration */}
-          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+          <div className="flex flex-wrap gap-2 text-xs text-gray-600 sm:gap-4 sm:text-sm">
             <div className="flex items-center gap-1">
               <ChefHat className="h-4 w-4" />
               <span>
@@ -230,10 +230,10 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                   router.push(`/profile/${authorId}`);
                 }
               }}
-              className="-mx-3 flex w-full cursor-pointer items-center gap-3 rounded-lg border-t px-3 py-2 pt-4 text-left transition-all hover:bg-gray-50"
+              className="-mx-2 flex w-full cursor-pointer items-center gap-2 rounded-lg border-t px-2 py-2 text-left transition-all hover:bg-gray-50 sm:-mx-3 sm:gap-3 sm:px-3 sm:pt-4"
             >
               {recipe.createdBy?.avatarUrl || recipe.author?.avatarUrl ? (
-                <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border">
+                <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border sm:h-12 sm:w-12">
                   <Image
                     src={recipe.createdBy?.avatarUrl || recipe.author?.avatarUrl || ''}
                     alt={
@@ -242,13 +242,13 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                       'Author'
                     }
                     fill
-                    sizes="48px"
+                    sizes="(max-width: 640px) 40px, 48px"
                     className="object-cover"
                     priority={false}
                   />
                 </div>
               ) : (
-                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-lg font-semibold text-gray-600">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-base font-semibold text-gray-600 sm:h-12 sm:w-12 sm:text-lg">
                   {(
                     recipe.createdBy?.userName?.charAt(0) ||
                     recipe.author?.firstName?.charAt(0) ||
@@ -258,7 +258,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
               )}
               <div className="min-w-0">
                 <p className="text-xs text-gray-500">Tác Giả</p>
-                <p className="font-semibold text-gray-800 transition-colors hover:text-[#99b94a]">
+                <p className="text-sm font-semibold text-gray-800 transition-colors hover:text-[#99b94a] sm:text-base">
                   {recipe.createdBy?.userName ||
                     `${recipe.author?.firstName} ${recipe.author?.lastName}`}
                 </p>
@@ -268,15 +268,15 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
 
           {/* Description */}
           {recipe.description && (
-            <div className="pt-2">
-              <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-700">
+            <div className="pt-1 sm:pt-2">
+              <p className="text-xs leading-relaxed whitespace-pre-wrap text-gray-700 sm:text-sm">
                 {recipe.description}
               </p>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2 pt-4">
+          <div className="flex flex-wrap gap-1 pt-2 sm:gap-2 sm:pt-4">
             {isAuthor ? (
               <>
                 {/* Author buttons: Edit and Delete */}
@@ -341,8 +341,8 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr]">
         {/* Left Column: Ingredients (1/3 width) */}
         {recipe.ingredients && recipe.ingredients.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold">Nguyên liệu</h2>
+          <div className="space-y-3 sm:space-y-4">
+            <h2 className="text-xl font-semibold sm:text-2xl">Nguyên liệu</h2>
             <div className="space-y-3">
               {recipe.ingredients.map((ingredient, index) => {
                 // Use ingredientId if available, fallback to id
@@ -364,32 +364,34 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
 
         {/* Right Column: Cooking Steps (2/3 width) */}
         {recipe.cookingSteps && recipe.cookingSteps.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold">Các bước nấu</h2>
-            <div className="space-y-6">
+          <div className="space-y-3 sm:space-y-4">
+            <h2 className="text-xl font-semibold sm:text-2xl">Các bước nấu</h2>
+            <div className="space-y-4 sm:space-y-6">
               {recipe.cookingSteps
                 .sort((a, b) => a.stepOrder - b.stepOrder)
                 .map((step, index) => (
                   <Card key={`step-${step.id || step.stepOrder}-${index}`}>
                     <CardContent className="pt-2 pb-2">
-                      <div className="flex gap-4">
+                      <div className="flex gap-3 sm:gap-4">
                         {/* Step Number */}
-                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#99b94a] text-xl font-bold text-white">
+                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#99b94a] text-sm font-bold text-white sm:h-10 sm:w-10 sm:text-xl">
                           {step.stepOrder}
                         </div>
 
                         {/* Step Content */}
-                        <div className="flex-1 space-y-3">
-                          <p className="whitespace-pre-wrap text-gray-800">{step.instruction}</p>
+                        <div className="flex-1 space-y-2 sm:space-y-3">
+                          <p className="text-xs whitespace-pre-wrap text-gray-800 sm:text-sm">
+                            {step.instruction}
+                          </p>
 
                           {/* Step Image */}
                           {step.imageUrl && (
-                            <div className="relative h-64 w-full overflow-hidden rounded-lg border md:w-96">
+                            <div className="relative h-40 w-full overflow-hidden rounded-lg border sm:h-64 lg:w-96">
                               <Image
                                 src={step.imageUrl}
                                 alt={`Bước ${step.stepOrder}`}
                                 fill
-                                sizes="(max-width: 768px) 100vw, 384px"
+                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 384px"
                                 className="object-cover"
                                 priority={false}
                               />
@@ -410,35 +412,35 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
 
 function RecipeDetailSkeleton() {
   return (
-    <div className="mx-auto w-[70%] space-y-6 px-4 py-8">
-      <div className="space-y-4">
-        <Skeleton className="h-12 w-3/4" />
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:py-8">
+      <div className="space-y-2 sm:space-y-4">
+        <Skeleton className="h-8 w-3/4 sm:h-12" />
         <div className="flex gap-2">
-          <Skeleton className="h-8 w-20" />
-          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-6 w-16 sm:h-8 sm:w-20" />
+          <Skeleton className="h-6 w-20 sm:h-8 sm:w-24" />
         </div>
-        <div className="flex gap-4">
-          <Skeleton className="h-6 w-24" />
-          <Skeleton className="h-6 w-28" />
-          <Skeleton className="h-6 w-32" />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-[400px_1fr]">
-        <Skeleton className="h-80 w-full" />
-        <div className="space-y-3">
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-3/4" />
+        <div className="flex gap-2 sm:gap-4">
+          <Skeleton className="h-4 w-20 sm:h-6 sm:w-24" />
+          <Skeleton className="h-4 w-24 sm:h-6 sm:w-28" />
+          <Skeleton className="h-4 w-28 sm:h-6 sm:w-32" />
         </div>
       </div>
 
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-40" />
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-[300px_1fr] xl:grid-cols-[350px_1fr]">
+        <Skeleton className="h-64 w-full sm:h-80" />
+        <div className="space-y-2 sm:space-y-3">
+          <Skeleton className="h-6 w-32 sm:h-8" />
+          <Skeleton className="h-3 w-full sm:h-4" />
+          <Skeleton className="h-3 w-full sm:h-4" />
+          <Skeleton className="h-3 w-3/4 sm:h-4" />
+        </div>
+      </div>
+
+      <div className="space-y-3 sm:space-y-4">
+        <Skeleton className="h-6 w-40 sm:h-8" />
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-12 w-full" />
+            <Skeleton key={i} className="h-10 w-full sm:h-12" />
           ))}
         </div>
       </div>
