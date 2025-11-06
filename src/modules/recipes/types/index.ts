@@ -33,5 +33,6 @@ export interface Recipe
   updatedAt: string;
 }
 
+export * from './comment.types';
 export * from './my-recipe.types';
 export * from './recipe-detail.types';
