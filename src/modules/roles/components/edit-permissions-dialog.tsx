@@ -110,6 +110,8 @@ export function EditPermissionsDialog({
       Recipe: 'Quản lý Công thức',
       Nutrient: 'Quản lý Chất dinh dưỡng',
       HealthGoal: 'Quản lý Mục tiêu sức khỏe',
+      Rating: 'Quản lý Đánh giá',
+      Comment: 'Quản lý Bình luận',
     };
     return domainMap[domainName] || domainName;
   };
