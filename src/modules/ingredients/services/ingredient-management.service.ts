@@ -12,9 +12,9 @@ export interface Nutrient {
 export interface NutrientResponse {
   name: string;
   unit: string;
-  min?: number;
-  max?: number;
-  median?: number;
+  minValue?: number;
+  maxValue?: number;
+  medianValue?: number;
 }
 
 export interface NutrientInfo {
@@ -137,9 +137,9 @@ class IngredientManagementService extends HttpClient {
           id: nutrientId,
           vietnameseName: nutrientInfo?.vietnameseName || vietnameseName,
           unit: n.unit || nutrientInfo?.unit || '',
-          min: n.min,
-          max: n.max,
-          median: n.median,
+          min: n.minValue,
+          max: n.maxValue,
+          median: n.medianValue,
         };
       }),
       lastUpdatedUtc: apiResponse.lastUpdatedUtc,

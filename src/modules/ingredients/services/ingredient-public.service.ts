@@ -27,9 +27,9 @@ export interface IngredientDetailsResponse {
   nutrients: Array<{
     name: string;
     unit: string;
-    min?: number;
-    max?: number;
-    median?: number;
+    minValue?: number;
+    maxValue?: number;
+    medianValue?: number;
   }>;
 }
 

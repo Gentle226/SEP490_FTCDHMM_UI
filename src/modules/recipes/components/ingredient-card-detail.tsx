@@ -59,9 +59,9 @@ export function IngredientCardDetail({ ingredient }: IngredientCardDetailProps) 
         nutrients: (details.nutrients || []).map((n) => ({
           vietnameseName: n.name,
           unit: n.unit,
-          min: n.min,
-          max: n.max,
-          median: n.median,
+          min: n.minValue,
+          max: n.maxValue,
+          median: n.medianValue,
         })),
       });
     } catch (error) {
