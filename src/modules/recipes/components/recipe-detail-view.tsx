@@ -35,6 +35,7 @@ import {
 import { CommentList } from './comment-list';
 import { IngredientCardDetail } from './ingredient-card-detail';
 import styles from './recipe-detail-view.module.css';
+import { RecipeRating } from './recipe-rating';
 
 interface RecipeDetailViewProps {
   recipeId: string;
@@ -479,6 +480,11 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Comments Section */}
+      <div className="mt-12 border-t border-gray-200 pt-8">
+        <RecipeRating recipeId={recipeId} enableRating={!!user} showAverageRating={true} />
       </div>
 
       {/* Comments Section */}
