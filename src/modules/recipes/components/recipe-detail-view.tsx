@@ -20,9 +20,11 @@ import { toast } from 'sonner';
 import { Button } from '@/base/components/ui/button';
 import { Card, CardContent } from '@/base/components/ui/card';
 import { Skeleton } from '@/base/components/ui/skeleton';
+import { getToken } from '@/base/lib/get-token.lib';
 import { useAuth } from '@/modules/auth/contexts/auth.context';
 import { recipeService } from '@/modules/recipes/services/recipe.service';
 
+import { useCommentManager, useSignalRConnection } from '../hooks';
 import {
   useAddToFavorite,
   useRecipeDetail,
@@ -30,6 +32,7 @@ import {
   useSaveRecipe,
   useUnsaveRecipe,
 } from '../hooks/use-recipe-actions';
+import { CommentList } from './comment-list';
 import { IngredientCardDetail } from './ingredient-card-detail';
 import styles from './recipe-detail-view.module.css';
 
@@ -46,6 +49,9 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   // Fetch recipe using React Query
   const { data: recipe, isLoading, error } = useRecipeDetail(recipeId);
 
+  // SignalR connection for real-time updates
+  const signalRConnection = useSignalRConnection(recipeId);
+
   // React Query mutations
   const addToFavorite = useAddToFavorite();
   const removeFromFavorite = useRemoveFromFavorite();
@@ -54,11 +60,24 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
 
   // Check if current user is the author
   const isAuthor =
-    user && recipe && (recipe.author?.id === user.id || recipe.createdBy?.id === user.id);
+    user && recipe ? recipe.author?.id === user.id || recipe.createdBy?.id === user.id : false;
 
   // Get favorite and saved state from recipe data
   const isFavorited = recipe?.isFavorited ?? false;
   const isSaved = recipe?.isSaved ?? false;
+
+  // Load comments with real-time updates (pass SignalR connection)
+  const {
+    comments,
+    loading: commentsLoading,
+    createComment,
+    deleteComment,
+    deleteCommentAsAuthor,
+    deleteCommentAsAdmin,
+  } = useCommentManager(recipeId, signalRConnection);
+
+  // Assume admin for now - adjust based on user role if available
+  const isAdmin = user?.role === 'Admin' || false;
 
   const handleDelete = async () => {
     if (!confirm('Bạn chắc chắn muốn xóa công thức này? Hành động này không thể hoàn tác.')) {
@@ -120,6 +139,61 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
       unsaveRecipe.mutate(recipeId);
     } else {
       saveRecipe.mutate(recipeId);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      const token = getToken();
+      if (!token) {
+        toast.error('Vui lòng đăng nhập để xóa bình luận');
+        return;
+      }
+
+      // Pass token to the delete methods
+      if (isAdmin) {
+        await deleteCommentAsAdmin(commentId, token);
+      } else if (isAuthor) {
+        await deleteCommentAsAuthor(commentId, token);
+      } else {
+        await deleteComment(commentId, token);
+      }
+    } catch (error) {
+      // Error already handled by toast in the hook
+      console.error('Delete comment error:', error);
+    }
+  };
+
+  const handleCreateComment = async (parentCommentId: string | undefined, content: string) => {
+    try {
+      const token = getToken();
+      if (!token) {
+        toast.error('Vui lòng đăng nhập để thêm bình luận');
+        return;
+      }
+
+      console.warn('[RecipeDetailView] Creating comment:', {
+        parentCommentId,
+        contentLength: content.length,
+        hasToken: !!token,
+      });
+
+      await createComment(
+        {
+          content,
+          parentCommentId: parentCommentId || null,
+        },
+        token, // Pass the actual JWT token
+      );
+      console.warn('[RecipeDetailView] Comment created successfully');
+    } catch (error) {
+      // Error already handled by hook and form
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create comment';
+      console.error('[RecipeDetailView] Create comment error:', {
+        message: errorMessage,
+        stack: error instanceof Error ? error.stack : 'No stack',
+      });
+      throw error;
     }
   };
 
@@ -405,6 +479,21 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Comments Section */}
+      <div className="mt-8 border-t pt-8">
+        <h2 className="mb-6 text-2xl font-semibold">Bình luận</h2>
+        <CommentList
+          comments={comments}
+          recipeId={recipeId}
+          currentUserId={user?.id}
+          isRecipeAuthor={isAuthor}
+          isAdmin={isAdmin}
+          onDelete={handleDeleteComment}
+          onCreateComment={handleCreateComment}
+          loading={commentsLoading}
+        />
       </div>
     </div>
   );

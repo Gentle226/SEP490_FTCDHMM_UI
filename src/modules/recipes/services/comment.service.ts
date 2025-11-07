@@ -1,21 +1,45 @@
 import { Comment, CreateCommentRequest } from '../types/comment.types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7116').replace(
+  /\/$/,
+  '',
+);
 
+/**
+ * CommentService sử dụng fetch trực tiếp (KHÔNG dùng HttpClient wrapper)
+ * để tránh timeout/AbortController ảnh hưởng đến request
+ */
 class CommentService {
+  private readonly TIMEOUT_MS = 60000; // 60 seconds timeout
+
   async getComments(recipeId: string): Promise<Comment[]> {
-    const response = await fetch(`${API_BASE_URL}/api/recipes/${recipeId}/comments`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch comments: ${response.statusText}`);
+      const response = await fetch(`${API_BASE_URL}/api/recipes/${recipeId}/comments`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Gửi cookies/credentials
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch comments: ${response.statusText}`);
+      }
+
+      return response.json();
+    } catch (err) {
+      console.error('[CommentService] getComments error:', {
+        message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : 'No stack',
+      });
+      throw err;
     }
-
-    return response.json();
   }
 
   async createComment(
@@ -23,67 +47,154 @@ class CommentService {
     request: CreateCommentRequest,
     token: string,
   ): Promise<Comment> {
-    const response = await fetch(`${API_BASE_URL}/api/recipes/${recipeId}/comments`, {
-      method: 'POST',
-      headers: {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
+
+      const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(request),
-    });
+      };
 
-    if (!response.ok) {
-      throw new Error(`Failed to create comment: ${response.statusText}`);
+      // Add Authorization header if token is provided
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/recipes/${recipeId}/comments`, {
+        method: 'POST',
+        headers,
+        credentials: 'include', // Gửi cookies/credentials
+        body: JSON.stringify(request),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Failed to create comment: ${response.statusText}`);
+      }
+
+      return response.json();
+    } catch (err) {
+      console.error('[CommentService] createComment error:', {
+        message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : 'No stack',
+      });
+      throw err;
     }
-
-    return response.json();
   }
 
   async deleteComment(recipeId: string, commentId: string, token: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/api/recipes/${recipeId}/comments/${commentId}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
 
-    if (!response.ok) {
-      throw new Error(`Failed to delete comment: ${response.statusText}`);
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add Authorization header if token is provided
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/recipes/${recipeId}/comments/${commentId}`,
+        {
+          method: 'DELETE',
+          headers,
+          credentials: 'include',
+          signal: controller.signal,
+        },
+      );
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete comment: ${response.statusText}`);
+      }
+    } catch (err) {
+      console.error('[CommentService] deleteComment error:', {
+        message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : 'No stack',
+      });
+      throw err;
     }
   }
 
   async deleteCommentAsAuthor(recipeId: string, commentId: string, token: string): Promise<void> {
-    const response = await fetch(
-      `${API_BASE_URL}/api/recipes/${recipeId}/comments/${commentId}/by-author`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
 
-    if (!response.ok) {
-      throw new Error(`Failed to delete comment: ${response.statusText}`);
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add Authorization header if token is provided
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/recipes/${recipeId}/comments/${commentId}/by-author`,
+        {
+          method: 'DELETE',
+          headers,
+          credentials: 'include',
+          signal: controller.signal,
+        },
+      );
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete comment: ${response.statusText}`);
+      }
+    } catch (err) {
+      console.error('[CommentService] deleteCommentAsAuthor error:', {
+        message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : 'No stack',
+      });
+      throw err;
     }
   }
 
   async deleteCommentAsAdmin(recipeId: string, commentId: string, token: string): Promise<void> {
-    const response = await fetch(
-      `${API_BASE_URL}/api/recipes/${recipeId}/comments/${commentId}/manage`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
 
-    if (!response.ok) {
-      throw new Error(`Failed to delete comment: ${response.statusText}`);
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add Authorization header if token is provided
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/recipes/${recipeId}/comments/${commentId}/manage`,
+        {
+          method: 'DELETE',
+          headers,
+          credentials: 'include',
+          signal: controller.signal,
+        },
+      );
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete comment: ${response.statusText}`);
+      }
+    } catch (err) {
+      console.error('[CommentService] deleteCommentAsAdmin error:', {
+        message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : 'No stack',
+      });
+      throw err;
     }
   }
 }

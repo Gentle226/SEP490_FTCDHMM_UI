@@ -11,27 +11,51 @@ export const useCommentManager = (recipeId: string, connection: any | null) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch comments on mount
+  // Fetch comments on mount with abort support
   useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+
     const fetchComments = async () => {
       setLoading(true);
       setError(null);
       try {
+        console.warn(`[CommentManager] Fetching comments for recipe: ${recipeId}`);
         const data = await commentService.getComments(recipeId);
+
+        if (!isMounted) {
+          console.warn('[CommentManager] Component unmounted, skipping state update');
+          return;
+        }
+
         setComments(data);
+        console.warn(`[CommentManager] Successfully loaded ${data.length} comments`);
       } catch (err) {
+        if (abortController.signal.aborted) {
+          console.warn('[CommentManager] Fetch aborted');
+          return;
+        }
+
         const errorMessage = err instanceof Error ? err.message : 'Failed to fetch comments';
         setError(errorMessage);
-        console.error('Error fetching comments:', err);
+        console.error('[CommentManager] Error fetching comments:', {
+          message: errorMessage,
+          stack: err instanceof Error ? err.stack : 'No stack trace',
+        });
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchComments();
-  }, [recipeId]);
 
-  // Handle real-time comment deletion
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
+  }, [recipeId]); // Handle real-time comment deletion
   const removeDeletedComment = useCallback(
     (commentList: Comment[], deletedCommentId: string): Comment[] => {
       return commentList
