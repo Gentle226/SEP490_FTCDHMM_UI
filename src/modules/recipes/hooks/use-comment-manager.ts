@@ -70,16 +70,70 @@ export const useCommentManager = (recipeId: string, connection: any | null) => {
     [],
   );
 
-  // Handle real-time comment creation
-  const addNewComment = useCallback((newComment: Comment) => {
-    setComments((prev) => {
-      // If it's a top-level comment
-      if (!newComment.replies || newComment.replies.length === 0) {
-        return [...prev, newComment];
+  // Helper function to find a comment by ID in the tree
+  const findCommentInTree = useCallback((commentList: Comment[], commentId: string): boolean => {
+    for (const comment of commentList) {
+      if (comment.id === commentId) return true;
+      if (comment.replies && comment.replies.length > 0) {
+        if (findCommentInTree(comment.replies, commentId)) return true;
       }
-      return prev;
-    });
+    }
+    return false;
   }, []);
+
+  // Helper function to add comment to correct place in tree (with deduplication)
+  const addCommentToTree = useCallback(
+    (
+      commentList: Comment[],
+      newComment: Comment,
+      skipDuplicateCheck: boolean = false,
+    ): Comment[] => {
+      // Check if comment already exists (to prevent duplicates from optimistic + SignalR)
+      if (!skipDuplicateCheck) {
+        const commentExists = findCommentInTree(commentList, newComment.id);
+        if (commentExists) {
+          console.warn('[CommentManager] Comment already exists, skipping:', newComment.id);
+          return commentList;
+        }
+      }
+
+      // If it's a top-level comment (no parent)
+      if (!newComment.parentCommentId) {
+        console.warn('[CommentManager] Adding top-level comment:', newComment.id);
+        return [...commentList, newComment];
+      }
+
+      // It's a reply - find the parent and add to its replies
+      return commentList.map((comment) => {
+        if (comment.id === newComment.parentCommentId) {
+          console.warn('[CommentManager] Adding reply to parent:', newComment.parentCommentId);
+          return {
+            ...comment,
+            replies: comment.replies ? [...comment.replies, newComment] : [newComment],
+          };
+        }
+
+        // Recursively search in nested replies
+        if (comment.replies && comment.replies.length > 0) {
+          return {
+            ...comment,
+            replies: addCommentToTree(comment.replies, newComment, skipDuplicateCheck),
+          };
+        }
+
+        return comment;
+      });
+    },
+    [findCommentInTree],
+  );
+
+  // Handle real-time comment creation
+  const addNewComment = useCallback(
+    (newComment: Comment) => {
+      setComments((prev) => addCommentToTree(prev, newComment));
+    },
+    [addCommentToTree],
+  );
 
   // Setup real-time event listeners
   useEffect(() => {
@@ -107,7 +161,11 @@ export const useCommentManager = (recipeId: string, connection: any | null) => {
     async (request: CreateCommentRequest, token: string): Promise<Comment> => {
       try {
         const newComment = await commentService.createComment(recipeId, request, token);
-        // Don't manually add - let SignalR handle it for real-time sync
+
+        // Optimistic update: immediately add to UI (don't wait for SignalR)
+        console.warn('[CommentManager] Optimistic update - adding comment:', newComment.id);
+        setComments((prev) => addCommentToTree(prev, newComment));
+
         return newComment;
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to create comment';
@@ -115,7 +173,7 @@ export const useCommentManager = (recipeId: string, connection: any | null) => {
         throw err;
       }
     },
-    [recipeId],
+    [recipeId, addCommentToTree],
   );
 
   // Delete comment (own comment)
