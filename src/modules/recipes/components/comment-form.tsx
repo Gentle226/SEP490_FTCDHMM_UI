@@ -134,7 +134,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
 
       {/* Cancel button for replies */}
       {parentCommentId && onCancel && (
-        <div className="flex justify-end pl-5 sm:pl-11">
+        <div className="flex justify-start pl-5 sm:pl-11">
           <button
             type="button"
             onClick={onCancel}
