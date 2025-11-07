@@ -29,15 +29,11 @@ class RecipeService extends HttpClient {
 
   /**
    * Get recipes by user ID (for viewing other users' recipes)
-   * TODO: This endpoint needs to be implemented in the backend
-   * For now, it uses the same endpoint as getMyRecipes
    */
-  public async getRecipesByUserId(_userId: string, params: PaginationParams = {}) {
+  public async getRecipesByUserId(userId: string, params: PaginationParams = {}) {
     const { pageNumber = 1, pageSize = 10 } = params;
 
-    // TODO: Replace with actual endpoint when backend is ready
-    // return this.get<MyRecipeResponse>(`api/Recipe/user/${userId}`, {
-    return this.get<MyRecipeResponse>('api/Recipe/myRecipe', {
+    return this.get<MyRecipeResponse>(`api/Recipe/user/${userId}`, {
       isPrivateRoute: true,
       params: {
         PageNumber: pageNumber,
