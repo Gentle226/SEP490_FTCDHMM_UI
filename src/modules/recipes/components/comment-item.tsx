@@ -20,6 +20,8 @@ interface CommentItemProps {
   onCreateComment?: (parentCommentId: string | undefined, content: string) => Promise<void>;
   isDeleting?: boolean;
   level?: number;
+  index?: number;
+  siblingsCount?: number;
   replyingTo?: string | null;
 }
 
@@ -34,11 +36,14 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   onCreateComment,
   isDeleting = false,
   level = 0,
+  index = 0,
+  siblingsCount = 1,
   replyingTo = null,
 }) => {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const canDelete = currentUserId === comment.userId || isRecipeAuthor || isAdmin;
+  const isLastChild = index === siblingsCount - 1;
 
   const handleDeleteClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -81,21 +86,25 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     }[Math.min(level, 3)] || 'ml-0';
 
   return (
-    <div className={`relative py-2 ${indentClass}`}>
-      <div className="flex gap-2">
-        {/* Tree Line Connector for nested replies */}
-        {level > 0 && (
-          <>
-            {/* Vertical line */}
-            <div
-              className="absolute top-0 left-0 h-full w-px bg-gray-300"
-              style={{ left: '-12px' }}
-            />
-            {/* Horizontal line */}
-            <div className="absolute top-6 h-px w-3 bg-gray-300" style={{ left: '-12px' }} />
-          </>
-        )}
+    <div className={`relative py-3 ${indentClass}`}>
+      {/* Tree connector lines for nested replies */}
+      {level > 0 && (
+        <>
+          {/* Vertical line - shorter for last child */}
+          <div
+            className={`pointer-events-none absolute -left-6 flex justify-center ${
+              isLastChild ? 'top-0 h-6' : 'top-0 bottom-0'
+            }`}
+          >
+            <div className="w-px bg-gray-400" />
+          </div>
 
+          {/* Elbow connector to avatar */}
+          <div className="pointer-events-none absolute top-4 -left-6 h-4 w-5 rounded-bl-md border-b border-l border-gray-400" />
+        </>
+      )}
+
+      <div className="flex gap-3">
         {/* Avatar */}
         <button
           onClick={handleProfileClick}
@@ -191,7 +200,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
       {/* Replies */}
       {comment.replies && comment.replies.length > 0 && (
         <div className="mt-2 space-y-1">
-          {comment.replies.map((reply) => (
+          {comment.replies.map((reply, i) => (
             <CommentItem
               key={reply.id}
               comment={reply}
@@ -203,6 +212,8 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               onReplyClick={onReplyClick}
               onCreateComment={onCreateComment}
               level={level + 1}
+              index={i}
+              siblingsCount={comment.replies?.length ?? 0}
               replyingTo={replyingTo}
             />
           ))}

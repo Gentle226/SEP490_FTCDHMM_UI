@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import { Skeleton } from '@/base/components/ui/skeleton';
 
 import { Comment } from '../types/comment.types';
+import { flattenDeepNestedComments } from '../utils/comment.utils';
 import { CommentForm } from './comment-form';
 import { CommentItem } from './comment-item';
 
@@ -34,10 +35,11 @@ export const CommentList: React.FC<CommentListProps> = ({
 }) => {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
-  const topLevelComments = useMemo(
-    () => comments.filter((comment) => !comment.parentCommentId),
-    [comments],
-  );
+  // Flatten deeply nested comments to max 2 levels and filter top-level
+  const topLevelComments = useMemo(() => {
+    const flattened = flattenDeepNestedComments(comments);
+    return flattened.filter((comment) => !comment.parentCommentId);
+  }, [comments]);
 
   const handleReplyClick = (parentCommentId: string) => {
     // If empty string, close the reply form
@@ -60,7 +62,7 @@ export const CommentList: React.FC<CommentListProps> = ({
           <MessageSquare className="h-5 w-5 text-gray-600" />
           <span>Bình luận</span>
         </div>
-        
+
         {/* Loading skeletons */}
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
@@ -88,10 +90,7 @@ export const CommentList: React.FC<CommentListProps> = ({
       {/* Comment Form - Only show for top-level comments (not replying) */}
       {!replyingTo && (
         <div className="pb-4">
-          <CommentForm
-            onSuccess={handleFormClose}
-            onCreateComment={onCreateComment}
-          />
+          <CommentForm onSuccess={handleFormClose} onCreateComment={onCreateComment} />
         </div>
       )}
 
