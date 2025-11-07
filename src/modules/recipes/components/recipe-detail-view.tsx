@@ -482,8 +482,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
       </div>
 
       {/* Comments Section */}
-      <div className="mt-8 border-t pt-8">
-        <h2 className="mb-6 text-2xl font-semibold">Bình luận</h2>
+      <div className="mt-12 border-t border-gray-200 pt-8">
         <CommentList
           comments={comments}
           recipeId={recipeId}

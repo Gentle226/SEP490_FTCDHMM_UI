@@ -3,8 +3,6 @@
 import { MessageSquare } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { Button } from '@/base/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/base/components/ui/card';
 import { Skeleton } from '@/base/components/ui/skeleton';
 
 import { Comment } from '../types/comment.types';
@@ -42,7 +40,12 @@ export const CommentList: React.FC<CommentListProps> = ({
   );
 
   const handleReplyClick = (parentCommentId: string) => {
-    setReplyingTo(parentCommentId);
+    // If empty string, close the reply form
+    if (parentCommentId === '') {
+      setReplyingTo(null);
+    } else {
+      setReplyingTo(parentCommentId);
+    }
   };
 
   const handleFormClose = () => {
@@ -51,72 +54,74 @@ export const CommentList: React.FC<CommentListProps> = ({
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
-            Bình luận
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <div className="space-y-6">
+        {/* Comment count header */}
+        <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+          <MessageSquare className="h-5 w-5 text-gray-600" />
+          <span>Bình luận</span>
+        </div>
+        
+        {/* Loading skeletons */}
+        <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-3/4" />
+            <div key={i} className="flex gap-2">
+              <Skeleton className="h-9 w-9 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-16 w-3/4 rounded-2xl" />
+                <Skeleton className="h-3 w-32" />
+              </div>
             </div>
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MessageSquare className="h-5 w-5" />
-          Bình luận ({topLevelComments.length})
-        </CardTitle>
-      </CardHeader>
+    <div className="space-y-6">
+      {/* Comment count header */}
+      <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+        <MessageSquare className="h-5 w-5 text-gray-600" />
+        <span>Bình luận ({topLevelComments.length})</span>
+      </div>
 
-      <CardContent className="space-y-4">
-        {/* Comment Form - Always visible */}
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 sm:p-4">
+      {/* Comment Form - Only show for top-level comments (not replying) */}
+      {!replyingTo && (
+        <div className="pb-4">
           <CommentForm
-            parentCommentId={replyingTo || undefined}
             onSuccess={handleFormClose}
-            onCancel={replyingTo ? handleFormClose : undefined}
             onCreateComment={onCreateComment}
           />
         </div>
+      )}
 
-        {/* Comments List */}
-        {topLevelComments.length > 0 ? (
-          <div className="space-y-2 divide-y divide-gray-200">
-            {topLevelComments.map((comment) => (
-              <CommentItem
-                key={comment.id}
-                comment={comment}
-                recipeId={recipeId}
-                currentUserId={currentUserId}
-                isRecipeAuthor={isRecipeAuthor}
-                isAdmin={isAdmin}
-                onDelete={onDelete}
-                onReplyClick={handleReplyClick}
-                isDeleting={isDeleting}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="py-8 text-center">
-            <MessageSquare className="mx-auto mb-2 h-8 w-8 text-gray-300" />
-            <p className="text-sm text-gray-500">
-              Chưa có bình luận nào. Hãy trở thành người đầu tiên nào!
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      {/* Comments List */}
+      {topLevelComments.length > 0 ? (
+        <div className="space-y-1">
+          {topLevelComments.map((comment) => (
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              recipeId={recipeId}
+              currentUserId={currentUserId}
+              isRecipeAuthor={isRecipeAuthor}
+              isAdmin={isAdmin}
+              onDelete={onDelete}
+              onReplyClick={handleReplyClick}
+              onCreateComment={onCreateComment}
+              isDeleting={isDeleting}
+              replyingTo={replyingTo}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="py-12 text-center">
+          <MessageSquare className="mx-auto mb-3 h-12 w-12 text-gray-300" />
+          <p className="text-sm text-gray-500">
+            Chưa có bình luận nào. Hãy trở thành người đầu tiên nào!
+          </p>
+        </div>
+      )}
+    </div>
   );
 };
