@@ -32,7 +32,8 @@ class CommentService {
         throw new Error(`Failed to fetch comments: ${response.statusText}`);
       }
 
-      return response.json();
+      const data = await response.json();
+      return data;
     } catch (err) {
       console.error('[CommentService] getComments error:', {
         message: err instanceof Error ? err.message : 'Unknown error',
@@ -74,7 +75,8 @@ class CommentService {
         throw new Error(`Failed to create comment: ${response.statusText}`);
       }
 
-      return response.json();
+      const data = await response.json();
+      return data;
     } catch (err) {
       console.error('[CommentService] createComment error:', {
         message: err instanceof Error ? err.message : 'Unknown error',

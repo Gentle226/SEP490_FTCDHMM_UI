@@ -1,7 +1,10 @@
 'use client';
 
 import { Reply, Trash2 } from 'lucide-react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/base/components/ui/button';
 
@@ -30,6 +33,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   isDeleting = false,
   level = 0,
 }) => {
+  const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const canDelete = currentUserId === comment.userId || isRecipeAuthor || isAdmin;
 
@@ -44,6 +48,10 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     setDeleting(true);
     try {
       await onDelete(comment.id);
+      toast.success('Bình luận đã được xóa');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Lỗi khi xóa bình luận';
+      toast.error(errorMessage);
     } finally {
       setDeleting(false);
     }
@@ -53,6 +61,12 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     e.preventDefault();
     e.stopPropagation();
     onReplyClick?.(comment.id);
+  };
+
+  const handleProfileClick = () => {
+    if (comment.userId) {
+      router.push(`/profile/${comment.userId}`);
+    }
   };
 
   const indentClass =
@@ -66,11 +80,43 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   return (
     <div className={`space-y-3 border-l-2 border-gray-200 py-3 pl-3 sm:pl-4 ${indentClass}`}>
       {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-gray-900">
+      <div className="flex items-center gap-3">
+        {/* Avatar */}
+        <button
+          onClick={handleProfileClick}
+          className="flex-shrink-0 cursor-pointer transition-opacity hover:opacity-80"
+          disabled={!comment.userId}
+          title={`Avatar URL: ${comment.avatarUrl ? 'Present' : 'Missing'}`}
+        >
+          {comment.avatarUrl ? (
+            <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-gray-200">
+              <Image
+                src={comment.avatarUrl}
+                alt={`${comment.firstName} ${comment.lastName}`}
+                fill
+                sizes="40px"
+                className="object-cover"
+                onError={() => {
+                  console.error('[CommentItem] Image failed to load from URL:', comment.avatarUrl);
+                }}
+              />
+            </div>
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-200 bg-gray-100 text-sm font-semibold text-gray-600">
+              {(comment.firstName?.charAt(0) || 'U').toUpperCase()}
+            </div>
+          )}
+        </button>
+
+        {/* User Info */}
+        <div className="flex flex-1 flex-col gap-1">
+          <button
+            onClick={handleProfileClick}
+            disabled={!comment.userId}
+            className="text-left text-sm font-semibold text-gray-900 transition-colors hover:text-[#99b94a] disabled:cursor-default disabled:hover:text-gray-900"
+          >
             {comment.firstName} {comment.lastName}
-          </p>
+          </button>
           <p className="text-xs text-gray-500">
             {new Date(comment.createdAtUtc).toLocaleDateString('vi-VN', {
               day: '2-digit',

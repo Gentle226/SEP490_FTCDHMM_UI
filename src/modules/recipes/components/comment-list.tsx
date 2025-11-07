@@ -34,7 +34,6 @@ export const CommentList: React.FC<CommentListProps> = ({
   loading = false,
   isDeleting = false,
 }) => {
-  const [showForm, setShowForm] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
   const topLevelComments = useMemo(
@@ -44,11 +43,9 @@ export const CommentList: React.FC<CommentListProps> = ({
 
   const handleReplyClick = (parentCommentId: string) => {
     setReplyingTo(parentCommentId);
-    setShowForm(true);
   };
 
   const handleFormClose = () => {
-    setShowForm(false);
     setReplyingTo(null);
   };
 
@@ -84,31 +81,15 @@ export const CommentList: React.FC<CommentListProps> = ({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Add Comment Button */}
-        {!showForm && (
-          <Button
-            variant="outline"
-            className="w-full sm:w-auto"
-            onClick={() => {
-              setShowForm(true);
-              setReplyingTo(null);
-            }}
-          >
-            Thêm bình luận
-          </Button>
-        )}
-
-        {/* Comment Form */}
-        {showForm && (
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 sm:p-4">
-            <CommentForm
-              parentCommentId={replyingTo || undefined}
-              onSuccess={handleFormClose}
-              onCancel={handleFormClose}
-              onCreateComment={onCreateComment}
-            />
-          </div>
-        )}
+        {/* Comment Form - Always visible */}
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 sm:p-4">
+          <CommentForm
+            parentCommentId={replyingTo || undefined}
+            onSuccess={handleFormClose}
+            onCancel={replyingTo ? handleFormClose : undefined}
+            onCreateComment={onCreateComment}
+          />
+        </div>
 
         {/* Comments List */}
         {topLevelComments.length > 0 ? (
@@ -130,7 +111,9 @@ export const CommentList: React.FC<CommentListProps> = ({
         ) : (
           <div className="py-8 text-center">
             <MessageSquare className="mx-auto mb-2 h-8 w-8 text-gray-300" />
-            <p className="text-sm text-gray-500">Chưa có bình luận nào. Hãy là người đầu tiên!</p>
+            <p className="text-sm text-gray-500">
+              Chưa có bình luận nào. Hãy trở thành người đầu tiên nào!
+            </p>
           </div>
         )}
       </CardContent>

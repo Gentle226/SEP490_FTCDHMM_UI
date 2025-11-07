@@ -3,6 +3,7 @@ export interface Comment {
   content: string;
   firstName: string;
   lastName: string;
+  avatarUrl?: string;
   createdAtUtc: string;
   updatedAtUtc?: string;
   parentCommentId?: string | null;

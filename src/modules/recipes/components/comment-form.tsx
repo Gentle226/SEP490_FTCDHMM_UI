@@ -1,5 +1,6 @@
 'use client';
 
+import { SendHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -51,7 +52,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
       }
 
       setContent('');
-      toast.success(parentCommentId ? 'Trả lời đã được gửi' : 'Bình luận đã được gửi');
+      toast.success(parentCommentId ? 'Đã trả lời bình luận' : 'Bình luận đã được gửi');
       onSuccess?.();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Lỗi khi gửi bình luận';
@@ -62,27 +63,49 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <textarea
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder={parentCommentId ? 'Viết trả lời...' : 'Viết bình luận của bạn...'}
-        disabled={submitting}
-        className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none disabled:bg-gray-100"
-        rows={3}
-        maxLength={1000}
-      />
-
-      <div className="text-right text-xs text-gray-500">{content.length} / 1000 ký tự</div>
-
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={submitting}>
-          Hủy
-        </Button>
-        <Button type="submit" size="sm" disabled={submitting || !content.trim()}>
-          {submitting ? 'Đang gửi...' : 'Gửi'}
-        </Button>
+    <form onSubmit={handleSubmit} className="space-y-2">
+      <div className="flex items-end gap-2">
+        <div className="flex-1">
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder={parentCommentId ? 'Viết trả lời...' : 'Viết bình luận của bạn...'}
+            disabled={submitting}
+            className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none disabled:bg-gray-100"
+            rows={2}
+            maxLength={1000}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                handleSubmit(e);
+              }
+            }}
+          />
+          <div className="mt-1 text-right text-xs text-gray-500">{content.length} / 1000 ký tự</div>
+        </div>
+        <button
+          type="submit"
+          disabled={submitting || !content.trim()}
+          className="mb-5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#99b94a] text-white transition-all hover:bg-[#8aa83f] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:opacity-50"
+          title="Gửi (Ctrl + Enter)"
+        >
+          <SendHorizontal className="h-5 w-5" />
+        </button>
       </div>
+      {parentCommentId && onCancel && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onCancel}
+            disabled={submitting}
+            className="text-xs"
+          >
+            Hủy
+          </Button>
+        </div>
+      )}
     </form>
   );
 };
