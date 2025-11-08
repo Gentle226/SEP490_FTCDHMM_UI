@@ -69,6 +69,9 @@ export function UserActions({ user, onLogout }: UserActionsProps) {
               <DropdownMenuItem asChild>
                 <Link href="/profile">Bếp cá nhân</Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/profile/health-metrics">Sức khỏe</Link>
+              </DropdownMenuItem>
               {/* {(user?.role === Role.ADMIN || user?.role === Role.MODERATOR) && (
                 <DropdownMenuItem asChild>
                   <Link href="/admin/dashboard">Bảng điều khiển</Link>
