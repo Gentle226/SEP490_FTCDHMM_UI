@@ -46,19 +46,59 @@ export const ACTIVITY_LEVEL_MAP: Record<ActivityLevel, ActivityLevelInfo> = {
   },
 };
 
+/**
+ * Convert backend activity level string (uppercase) to frontend format (PascalCase)
+ * Backend stores: "MODERATE", "SEDENTARY", "LIGHT", "ACTIVE", "VERYACTIVE"
+ * Frontend expects: "Moderate", "Sedentary", "Light", "Active", "VeryActive"
+ */
+function normalizeActivityLevel(value: string): ActivityLevel {
+  const normalized = value.trim().toUpperCase();
+  switch (normalized) {
+    case 'SENDENTARY': // Note: typo in backend, handle both spellings
+    case 'SEDENTARY':
+      return 'Sedentary';
+    case 'LIGHT':
+      return 'Light';
+    case 'MODERATE':
+      return 'Moderate';
+    case 'ACTIVE':
+      return 'Active';
+    case 'VERYACTIVE':
+      return 'VeryActive';
+    default:
+      console.warn(`Unknown activity level: ${value}, defaulting to Sedentary`);
+      return 'Sedentary';
+  }
+}
+
 class ActivityLevelService extends HttpClient {
   constructor() {
     super();
   }
 
   /**
+   * Get user's current activity level
+   * GET /api/User/activity-level
+   * Note: Backend returns uppercase values (e.g., "MODERATE"), converts to PascalCase
+   */
+  public async getActivityLevel(): Promise<ActivityLevel> {
+    const response = await this.get<{ activityLevel: string }>('api/User/activity-level', {
+      isPrivateRoute: true,
+    });
+    return normalizeActivityLevel(response.activityLevel);
+  }
+
+  /**
    * Update user's activity level
    * PUT /api/User/activity-level
+   * Note: Converts frontend format (PascalCase) to backend format (uppercase)
    */
   public async changeActivityLevel(activityLevel: ActivityLevel): Promise<void> {
+    // Convert PascalCase to UPPERCASE for backend
+    const backendValue = activityLevel.toUpperCase();
     return this.put<void>(
       'api/User/activity-level',
-      { activityLevel },
+      { ActivityLevel: backendValue },
       {
         isPrivateRoute: true,
       },

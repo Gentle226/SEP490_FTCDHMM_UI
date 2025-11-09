@@ -11,6 +11,7 @@ export interface ProfileDto {
   followersCount?: number;
   followingCount?: number;
   isFollowing?: boolean;
+  activityLevel?: string;
 }
 
 // Update Profile Schema for form validation

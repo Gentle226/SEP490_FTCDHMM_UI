@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, Lightbulb } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/base/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/base/components/ui/card';
@@ -28,6 +28,14 @@ export function ActivityLevelSelector({ currentLevel, onSave }: Props) {
   const [selectedLevel, setSelectedLevel] = useState<ActivityLevel>(currentLevel || 'Sedentary');
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Sync selectedLevel when currentLevel prop changes (e.g., after page load with profile data)
+  useEffect(() => {
+    if (currentLevel) {
+      setSelectedLevel(currentLevel);
+      setHasChanges(false);
+    }
+  }, [currentLevel]);
 
   const activityLevels = activityLevelService.getAllActivityLevels();
 

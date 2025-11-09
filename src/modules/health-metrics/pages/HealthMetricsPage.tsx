@@ -29,9 +29,22 @@ export function HealthMetricsPage() {
   const [showActivityLevelSuccess, setShowActivityLevelSuccess] = useState(false);
 
   useEffect(() => {
-    getHistory();
-    // Load activity level from user profile (you may need to fetch this)
-    // For now, defaulting to Sedentary
+    const loadData = async () => {
+      try {
+        // Load user's current activity level
+        const activityLevel = await activityLevelService.getActivityLevel();
+        console.warn('🏃 Loaded activity level:', activityLevel);
+        if (activityLevel) {
+          setCurrentActivityLevel(activityLevel);
+          console.warn('✅ Set current activity level to:', activityLevel);
+        }
+        // Load metrics history
+        await getHistory();
+      } catch (error) {
+        console.error('❌ Failed to load activity level:', error);
+      }
+    };
+    loadData();
   }, [getHistory]);
 
   const handleCreateMetric = async (data: CreateUserHealthMetricRequest) => {
