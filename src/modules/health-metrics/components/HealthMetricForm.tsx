@@ -105,8 +105,7 @@ export function HealthMetricForm({ onSubmit, onCancel, initialData, isEdit = fal
   return (
     <Card className="rounded-tl-lg border-0 pt-0 pb-6 shadow-md">
       <CardHeader className="rounded-tl-lg border-b-2 border-[#99b94a] bg-gradient-to-r from-[#f0f5f2] to-white px-4 py-3">
-        <CardTitle className="flex items-center gap-2 text-lg text-[#5a6f2a]">
-          <div className="h-1 w-1 rounded-full bg-[#99b94a]"></div>
+        <CardTitle className="flex items-center gap-2 pt-1 text-xl text-[#5a6f2a]">
           {isEdit ? 'Chỉnh Sửa' : 'Ghi Lại'} Số Liệu Sức Khỏe
         </CardTitle>
       </CardHeader>

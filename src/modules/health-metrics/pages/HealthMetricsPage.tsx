@@ -106,7 +106,7 @@ export function HealthMetricsPage() {
         <div className="mb-6">
           <h1 className="mb-2 text-4xl font-bold text-[#99b94a]">Số Liệu Sức Khỏe</h1>
           <p className="text-gray-600">
-            Theo dõi và quản lý dữ liệu sức khỏe của bạn để đạt được mục tiêu thể dục
+            Theo dõi và quản lý dữ liệu sức khỏe của bạn để đạt được mục tiêu sức khỏe
           </p>
         </div>
 
