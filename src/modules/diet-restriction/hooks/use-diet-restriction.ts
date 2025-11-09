@@ -51,12 +51,12 @@ export function useCreateIngredientCategoryRestriction() {
       dietRestrictionService.createIngredientCategoryRestriction(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dietRestrictions'] });
-      toast.success('Đã thêm hạn chế danh mục thành công');
+      toast.success('Đã thêm hạn chế nhóm thành phần thành công');
     },
     onError: (error: unknown) => {
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        'Không thể thêm hạn chế danh mục';
+        'Không thể thêm hạn chế nhóm thành phần';
       toast.error(errorMessage);
     },
   });

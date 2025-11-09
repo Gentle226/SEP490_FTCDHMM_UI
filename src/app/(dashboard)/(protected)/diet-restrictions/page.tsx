@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import {
   CreateRestrictionDialog,
   DietRestrictionsList,
@@ -20,11 +21,11 @@ export default function DietRestrictionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-4xl px-4 py-8">
+    <DashboardLayout>
+      <div className="space-y-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold text-[#99b94a]">Quản lý thành phần bị hạn chế</h1>
+        <div>
+          <h1 className="mb-2 text-4xl font-bold text-[#99b94a]">Quản lý thành phần bị hạn chế</h1>
           <p className="text-gray-600">
             Quản lý các hạn chế thành phần của bạn, bao gồm dị ứng, sở thích và các hạn chế tạm
             thời.
@@ -32,17 +33,16 @@ export default function DietRestrictionsPage() {
         </div>
 
         {/* Action Button */}
-        <div className="mb-8">
-          <button
-            onClick={() => setIsDialogOpen(true)}
-            className="rounded-md bg-[#99b94a] px-4 py-2 font-medium text-white transition-colors hover:bg-[#7a8c36]"
-          >
-            + Thêm hạn chế
-          </button>
-        </div>
+        <button
+          onClick={() => setIsDialogOpen(true)}
+          className="inline-flex items-center gap-2 rounded-lg bg-[#99b94a] px-6 py-3 font-medium text-white shadow-md transition-all hover:bg-[#88a43a] hover:shadow-lg active:scale-95"
+        >
+          <span className="text-lg">+</span>
+          Thêm hạn chế
+        </button>
 
         {/* Restrictions List */}
-        <div className="rounded-lg bg-white shadow">
+        <div className="rounded-lg bg-white shadow-md">
           <DietRestrictionsList key={refreshKey} />
         </div>
       </div>
@@ -53,6 +53,6 @@ export default function DietRestrictionsPage() {
         onClose={() => setIsDialogOpen(false)}
         onSuccess={handleSuccess}
       />
-    </div>
+    </DashboardLayout>
   );
 }
