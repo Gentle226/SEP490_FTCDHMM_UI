@@ -1,7 +1,7 @@
 'use client';
 
 import { Calendar as CalendarIcon, ChevronDown, Clock, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Calendar } from '@/base/components/ui/calendar';
 import {
@@ -32,6 +32,8 @@ export function CreateIngredientCategoryRestrictionForm({
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const categoryDropdownRef = useRef<HTMLDivElement>(null);
+  const typeDropdownRef = useRef<HTMLDivElement>(null);
 
   const { mutate: createRestriction, isPending } = useCreateIngredientCategoryRestriction();
 
@@ -70,6 +72,26 @@ export function CreateIngredientCategoryRestrictionForm({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showCalendar]);
+
+  // Handle click outside to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        categoryDropdownRef.current &&
+        !categoryDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowCategoryDropdown(false);
+      }
+      if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target as Node)) {
+        setShowTypeDropdown(false);
+      }
+    };
+
+    if (showCategoryDropdown || showTypeDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showCategoryDropdown, showTypeDropdown]);
 
   // Fetch categories on component mount and when search changes
   useEffect(() => {
@@ -137,7 +159,7 @@ export function CreateIngredientCategoryRestrictionForm({
         <label className="mb-2 block text-sm font-medium text-gray-900">
           Thể loại thành phần <span className="text-red-500">*</span>
         </label>
-        <div className="relative">
+        <div className="relative" ref={categoryDropdownRef}>
           <button
             type="button"
             onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
@@ -198,7 +220,7 @@ export function CreateIngredientCategoryRestrictionForm({
         <label className="mb-2 block text-sm font-medium text-gray-900">
           Loại hạn chế <span className="text-red-500">*</span>
         </label>
-        <div className="relative">
+        <div className="relative" ref={typeDropdownRef}>
           <button
             type="button"
             onClick={() => setShowTypeDropdown(!showTypeDropdown)}

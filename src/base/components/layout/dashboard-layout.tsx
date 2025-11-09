@@ -13,6 +13,7 @@ import {
   ScrollText,
   Tags,
   Users,
+  WheatOff,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -159,7 +160,7 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
       {
         title: 'Hạn Chế Thành Phần',
         url: '/diet-restrictions',
-        icon: Salad,
+        icon: WheatOff,
       },
       {
         title: 'Mục Tiêu Sức Khỏe',

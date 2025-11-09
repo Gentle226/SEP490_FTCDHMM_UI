@@ -22,7 +22,7 @@ export default function DietRestrictionsPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
+      <div className="space-y-8 px-4">
         {/* Header */}
         <div>
           <h1 className="mb-2 text-4xl font-bold text-[#99b94a]">Quản lý thành phần bị hạn chế</h1>

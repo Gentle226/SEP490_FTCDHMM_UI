@@ -427,9 +427,14 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
             {/* Show alert if user has diet restrictions affecting this recipe */}
             {user &&
               userRestrictions.length > 0 &&
-              recipe.ingredients.some(
-                (ing) => checkIngredientRestriction(ing.name, userRestrictions).length > 0,
-              ) && (
+              recipe.ingredients.some((ing) => {
+                // Check ingredient name restrictions
+                const ingredientRestrictions = checkIngredientRestriction(
+                  ing.name,
+                  userRestrictions,
+                );
+                return ingredientRestrictions.length > 0;
+              }) && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
                   <p className="text-sm font-medium text-amber-900">
                     <TriangleAlert className="inline-block h-4 w-4" />

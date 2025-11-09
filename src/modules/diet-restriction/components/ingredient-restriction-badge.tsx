@@ -56,7 +56,6 @@ export function IngredientRestrictionBadge({
         }}
       >
         {getIcon()}
-        {activeRestrictions.length > 1 && <span>+{activeRestrictions.length - 1}</span>}
       </div>
     );
   }
@@ -72,9 +71,6 @@ export function IngredientRestrictionBadge({
     >
       {getIcon()}
       <span>{config.label}</span>
-      {activeRestrictions.length > 1 && (
-        <span className="ml-1 text-xs">({activeRestrictions.length})</span>
-      )}
     </div>
   );
 }

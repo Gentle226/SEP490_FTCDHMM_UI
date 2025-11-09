@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/base/components/ui/po
 import {
   IngredientRestrictionBadge,
   UserDietRestrictionResponse,
+  checkIngredientCategoryRestriction,
   checkIngredientRestriction,
 } from '@/modules/diet-restriction';
 import { ingredientPublicService } from '@/modules/ingredients';
@@ -33,6 +34,10 @@ interface IngredientDetails {
   description?: string;
   image?: string;
   ingredientCategoryIds?: string[];
+  categories?: Array<{
+    id: string;
+    name: string;
+  }>;
   lastUpdatedUtc?: string;
   nutrients?: Array<{
     vietnameseName?: string;
@@ -52,8 +57,13 @@ export function IngredientCardDetail({
   const [ingredientDetails, setIngredientDetails] = useState<IngredientDetails | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
-  // Check if this ingredient has any diet restrictions
+  // Check if this ingredient has any diet restrictions (by name)
   const restrictionMatches = checkIngredientRestriction(ingredient.name, dietRestrictions);
+
+  // Check if this ingredient's categories have restrictions
+  const categoryRestrictionMatches = ingredientDetails?.ingredientCategoryIds
+    ? checkIngredientCategoryRestriction(ingredientDetails.ingredientCategoryIds, dietRestrictions)
+    : [];
 
   const fetchIngredientDetails = async () => {
     if (ingredientDetails || !ingredient.id) return; // Already loaded or no ID
@@ -67,6 +77,7 @@ export function IngredientCardDetail({
         description: details.description,
         image: details.imageUrl,
         ingredientCategoryIds: details.categories?.map((c) => c.id) || [],
+        categories: details.categories || [],
         lastUpdatedUtc: details.lastUpdatedUtc,
         nutrients: (details.nutrients || []).map((n) => ({
           vietnameseName: n.name,
@@ -142,8 +153,11 @@ export function IngredientCardDetail({
             <div className="flex-1 space-y-1">
               <span className="flex items-center gap-2 text-sm font-semibold text-gray-800 group-hover:text-lime-700">
                 {ingredient.name || 'Không tên'}
-                {restrictionMatches.length > 0 && (
-                  <IngredientRestrictionBadge restrictions={restrictionMatches} compact />
+                {(restrictionMatches.length > 0 || categoryRestrictionMatches.length > 0) && (
+                  <IngredientRestrictionBadge
+                    restrictions={[...restrictionMatches, ...categoryRestrictionMatches]}
+                    compact
+                  />
                 )}
               </span>
             </div>
@@ -168,6 +182,22 @@ export function IngredientCardDetail({
                   </p>
                 )}
               </div>
+
+              {ingredientDetails.categories && ingredientDetails.categories.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-gray-700">Danh mục:</p>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {ingredientDetails.categories.map((category) => (
+                      <span
+                        key={category.id}
+                        className="inline-flex rounded-full bg-lime-100 px-2 py-1 text-xs text-lime-700"
+                      >
+                        {category.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {getKeyNutrients().length > 0 && (
                 <div className="space-y-1">
@@ -252,6 +282,22 @@ export function IngredientCardDetail({
                     <span className="font-semibold">Cập nhật lần cuối: </span>
                     <span>{formatDate(ingredientDetails.lastUpdatedUtc)}</span>
                   </div>
+
+                  {ingredientDetails.categories && ingredientDetails.categories.length > 0 && (
+                    <div>
+                      <span className="font-semibold">Danh mục: </span>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {ingredientDetails.categories.map((category) => (
+                          <span
+                            key={category.id}
+                            className="inline-flex rounded-full bg-[#f0f7e8] px-3 py-1 text-sm font-medium text-[#99b94a]"
+                          >
+                            {category.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
