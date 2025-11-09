@@ -157,6 +157,11 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
         icon: History,
       },
       {
+        title: 'Hạn Chế Thành Phần',
+        url: '/diet-restrictions',
+        icon: Salad,
+      },
+      {
         title: 'Mục Tiêu Sức Khỏe',
         url: '/profile/health-goals',
         icon: Goal,
