@@ -57,11 +57,12 @@ export function RecipeRating({
               <Star
                 key={star}
                 size={20}
-                className={
+                style={
                   star <= Math.round(averageRating || 0)
-                    ? 'fill-yellow-400 text-yellow-400'
-                    : 'text-gray-300'
+                    ? { fill: '#99b94a', color: '#99b94a' }
+                    : undefined
                 }
+                className={star <= Math.round(averageRating || 0) ? '' : 'text-gray-300'}
               />
             ))}
           </div>
@@ -90,11 +91,12 @@ export function RecipeRating({
               >
                 <Star
                   size={24}
-                  className={
+                  style={
                     star <= (hoveredScore || selectedScore)
-                      ? 'fill-yellow-400 text-yellow-400'
-                      : 'text-gray-300'
+                      ? { fill: '#99b94a', color: '#99b94a' }
+                      : undefined
                   }
+                  className={star <= (hoveredScore || selectedScore) ? '' : 'text-gray-300'}
                 />
               </button>
             ))}
@@ -105,7 +107,7 @@ export function RecipeRating({
               type="button"
               onClick={handleSubmitRating}
               disabled={isSubmitting}
-              className="mt-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 disabled:opacity-50"
+              className="mt-2 rounded-lg bg-[#99b94a] px-4 py-2 text-sm font-medium text-white hover:bg-[#88a43a] disabled:opacity-50"
             >
               {isSubmitting ? 'Đang gửi...' : 'Gửi đánh giá'}
             </button>
