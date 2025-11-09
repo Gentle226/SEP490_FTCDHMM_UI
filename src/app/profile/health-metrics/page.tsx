@@ -1,3 +1,4 @@
+import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { HealthMetricsPage } from '@/modules/health-metrics';
 
 export const metadata = {
@@ -5,5 +6,9 @@ export const metadata = {
 };
 
 export default function Page() {
-  return <HealthMetricsPage />;
+  return (
+    <DashboardLayout>
+      <HealthMetricsPage />
+    </DashboardLayout>
+  );
 }

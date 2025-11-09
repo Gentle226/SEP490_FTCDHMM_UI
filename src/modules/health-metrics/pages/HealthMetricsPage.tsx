@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { ActivityLevelSelector } from '../components/ActivityLevelSelector';
 import { HealthMetricForm } from '../components/HealthMetricForm';
@@ -33,15 +34,13 @@ export function HealthMetricsPage() {
       try {
         // Load user's current activity level
         const activityLevel = await activityLevelService.getActivityLevel();
-        console.warn('🏃 Loaded activity level:', activityLevel);
         if (activityLevel) {
           setCurrentActivityLevel(activityLevel);
-          console.warn('✅ Set current activity level to:', activityLevel);
         }
         // Load metrics history
         await getHistory();
       } catch (error) {
-        console.error('❌ Failed to load activity level:', error);
+        console.error('Failed to load activity level:', error);
       }
     };
     loadData();
@@ -50,7 +49,7 @@ export function HealthMetricsPage() {
   const handleCreateMetric = async (data: CreateUserHealthMetricRequest) => {
     const success = await create(data);
     if (success) {
-      alert('Ghi lại số liệu sức khỏe thành công!');
+      toast.success('Ghi lại số liệu sức khỏe thành công!');
     }
     return success;
   };
@@ -59,7 +58,7 @@ export function HealthMetricsPage() {
     if (!editingMetric) return false;
     const success = await update(editingMetric.id, data);
     if (success) {
-      alert('Cập nhật số liệu sức khỏe thành công!');
+      toast.success('Cập nhật số liệu sức khỏe thành công!');
       setEditingMetric(null);
     }
     return success;
@@ -68,7 +67,9 @@ export function HealthMetricsPage() {
   const handleDeleteMetric = async (metricId: string) => {
     const success = await deleteMetric(metricId);
     if (success) {
-      alert('Xóa số liệu sức khỏe thành công!');
+      toast.success('Xóa số liệu sức khỏe thành công!');
+    } else {
+      toast.error(`Không thể xóa số liệu: ${error || 'Lỗi không xác định'}`);
     }
     return success;
   };
@@ -77,13 +78,14 @@ export function HealthMetricsPage() {
     try {
       await activityLevelService.changeActivityLevel(level);
       setCurrentActivityLevel(level);
+      toast.success('Mức độ hoạt động đã được cập nhật thành công!');
       setShowActivityLevelSuccess(true);
       setTimeout(() => setShowActivityLevelSuccess(false), 3000);
       // Refresh metrics to get updated TDEE
       await getHistory();
       return true;
     } catch {
-      alert('Không thể cập nhật mức độ hoạt động');
+      toast.error('Không thể cập nhật mức độ hoạt động');
       return false;
     }
   };
@@ -99,7 +101,7 @@ export function HealthMetricsPage() {
 
   return (
     <div className="min-h-screenbg-gradient-to-b from-white to-[#f0f5f2]">
-      <div className="container mx-auto max-w-7xl px-4 pt-8">
+      <div className="container mx-auto max-w-7xl px-4 pt-2">
         {/* Header */}
         <div className="mb-6">
           <h1 className="mb-2 text-4xl font-bold text-[#99b94a]">Số Liệu Sức Khỏe</h1>

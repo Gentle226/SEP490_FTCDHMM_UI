@@ -66,14 +66,17 @@ export function useHealthMetrics() {
       setError(null);
       try {
         await userHealthMetricService.deleteMetric(metricId);
-        setMetrics(metrics.filter((m) => m.id !== metricId));
+        // Refresh the list from server to ensure consistency
+        await getHistory();
         return true;
-      } catch {
-        setError('Failed to delete metric');
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Không thể xóa số liệu sức khỏe';
+        setError(errorMessage);
         return false;
       }
     },
-    [metrics],
+    [getHistory],
   );
 
   const getLatest = useCallback((): UserHealthMetricResponse | undefined => {

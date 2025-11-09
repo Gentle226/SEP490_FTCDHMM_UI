@@ -54,7 +54,6 @@ export const ACTIVITY_LEVEL_MAP: Record<ActivityLevel, ActivityLevelInfo> = {
 function normalizeActivityLevel(value: string): ActivityLevel {
   const normalized = value.trim().toUpperCase();
   switch (normalized) {
-    case 'SENDENTARY': // Note: typo in backend, handle both spellings
     case 'SEDENTARY':
       return 'Sedentary';
     case 'LIGHT':
@@ -91,14 +90,11 @@ class ActivityLevelService extends HttpClient {
   /**
    * Update user's activity level
    * PUT /api/User/activity-level
-   * Note: Converts frontend format (PascalCase) to backend format (uppercase)
    */
   public async changeActivityLevel(activityLevel: ActivityLevel): Promise<void> {
-    // Convert PascalCase to UPPERCASE for backend
-    const backendValue = activityLevel.toUpperCase();
     return this.put<void>(
       'api/User/activity-level',
-      { ActivityLevel: backendValue },
+      { ActivityLevel: activityLevel.toUpperCase() },
       {
         isPrivateRoute: true,
       },
