@@ -24,7 +24,7 @@ export default function DietRestrictionsPage() {
       <div className="mx-auto max-w-4xl px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold text-gray-900">Quản lý hạn chế thành phần</h1>
+          <h1 className="mb-2 text-3xl font-bold text-[#99b94a]">Quản lý thành phần bị hạn chế</h1>
           <p className="text-gray-600">
             Quản lý các hạn chế thành phần của bạn, bao gồm dị ứng, sở thích và các hạn chế tạm
             thời.
@@ -35,7 +35,7 @@ export default function DietRestrictionsPage() {
         <div className="mb-8">
           <button
             onClick={() => setIsDialogOpen(true)}
-            className="rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
+            className="rounded-md bg-[#99b94a] px-4 py-2 font-medium text-white transition-colors hover:bg-[#7a8c36]"
           >
             + Thêm hạn chế
           </button>

@@ -11,6 +11,11 @@ import {
   DialogTitle,
 } from '@/base/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/base/components/ui/popover';
+import {
+  IngredientRestrictionBadge,
+  UserDietRestrictionResponse,
+  checkIngredientRestriction,
+} from '@/modules/diet-restriction';
 import { ingredientPublicService } from '@/modules/ingredients';
 
 interface IngredientCardDetailProps {
@@ -19,6 +24,7 @@ interface IngredientCardDetailProps {
     name: string;
     quantityGram: number;
   };
+  dietRestrictions?: UserDietRestrictionResponse[];
 }
 
 interface IngredientDetails {
@@ -37,11 +43,17 @@ interface IngredientDetails {
   }>;
 }
 
-export function IngredientCardDetail({ ingredient }: IngredientCardDetailProps) {
+export function IngredientCardDetail({
+  ingredient,
+  dietRestrictions = [],
+}: IngredientCardDetailProps) {
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [isHoverPopoverOpen, setIsHoverPopoverOpen] = useState(false);
   const [ingredientDetails, setIngredientDetails] = useState<IngredientDetails | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+
+  // Check if this ingredient has any diet restrictions
+  const restrictionMatches = checkIngredientRestriction(ingredient.name, dietRestrictions);
 
   const fetchIngredientDetails = async () => {
     if (ingredientDetails || !ingredient.id) return; // Already loaded or no ID
@@ -127,9 +139,14 @@ export function IngredientCardDetail({ ingredient }: IngredientCardDetailProps) 
             className="group flex cursor-pointer items-center justify-between rounded-lg border bg-gray-50 px-4 py-3 transition-all hover:border-lime-400 hover:bg-lime-50 hover:shadow-md"
             title="Nhấp để xem chi tiết đầy đủ"
           >
-            <span className="flex-1 text-sm font-semibold text-gray-800 group-hover:text-lime-700">
-              {ingredient.name || 'Không tên'}
-            </span>
+            <div className="flex-1 space-y-1">
+              <span className="flex items-center gap-2 text-sm font-semibold text-gray-800 group-hover:text-lime-700">
+                {ingredient.name || 'Không tên'}
+                {restrictionMatches.length > 0 && (
+                  <IngredientRestrictionBadge restrictions={restrictionMatches} compact />
+                )}
+              </span>
+            </div>
             <span className="ml-2 text-xs font-medium text-gray-600">
               {ingredient.quantityGram ? `${ingredient.quantityGram}g` : ''}
             </span>

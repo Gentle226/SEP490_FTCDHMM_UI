@@ -10,6 +10,7 @@ import {
   Heart,
   Share2,
   Trash2,
+  TriangleAlert,
   Users,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -22,6 +23,7 @@ import { Card, CardContent } from '@/base/components/ui/card';
 import { Skeleton } from '@/base/components/ui/skeleton';
 import { getToken } from '@/base/lib/get-token.lib';
 import { useAuth } from '@/modules/auth/contexts/auth.context';
+import { checkIngredientRestriction, useGetUserDietRestrictions } from '@/modules/diet-restriction';
 import { recipeService } from '@/modules/recipes/services/recipe.service';
 
 import { useCommentManager, useSignalRConnection } from '../hooks';
@@ -49,6 +51,9 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
 
   // Fetch recipe using React Query
   const { data: recipe, isLoading, error } = useRecipeDetail(recipeId);
+
+  // Fetch user's diet restrictions (only if user is logged in)
+  const { data: userRestrictions = [] } = useGetUserDietRestrictions(user ? {} : undefined);
 
   // SignalR connection for real-time updates
   const signalRConnection = useSignalRConnection(recipeId);
@@ -418,6 +423,24 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
         {recipe.ingredients && recipe.ingredients.length > 0 && (
           <div className="space-y-3 sm:space-y-4">
             <h2 className="text-xl font-semibold sm:text-2xl">Nguyên liệu</h2>
+
+            {/* Show alert if user has diet restrictions affecting this recipe */}
+            {user &&
+              userRestrictions.length > 0 &&
+              recipe.ingredients.some(
+                (ing) => checkIngredientRestriction(ing.name, userRestrictions).length > 0,
+              ) && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                  <p className="text-sm font-medium text-amber-900">
+                    <TriangleAlert className="inline-block h-4 w-4" />
+                    <span> Công thức này chứa thành phần bị hạn chế theo danh sách của bạn</span>
+                  </p>
+                  <p className="mt-1 text-xs text-amber-800 italic">
+                    Chú ý các thành phần có ký hiệu để tránh hoặc thay thế cho phù hợp chế độ ăn
+                    uống của bạn.
+                  </p>
+                </div>
+              )}
             <div className="space-y-3">
               {recipe.ingredients.map((ingredient, index) => {
                 // Use ingredientId if available, fallback to id
@@ -430,6 +453,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                       name: ingredient.name,
                       quantityGram: ingredient.quantityGram,
                     }}
+                    dietRestrictions={userRestrictions}
                   />
                 );
               })}
