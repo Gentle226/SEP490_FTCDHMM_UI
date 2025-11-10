@@ -58,6 +58,16 @@ export const registerSchema = z
       .trim()
       .nonempty('Số điện thoại không được để trống')
       .regex(/^0\d{8,9}$/, 'Số điện thoại phải bắt đầu bằng 0 và có 9-10 chữ số'),
+    dateOfBirth: z
+      .date()
+      .max(new Date(), 'Ngày sinh không được là tương lai')
+      .refine((date) => {
+        const age = new Date().getFullYear() - date.getFullYear();
+        return age >= 13;
+      }, 'Bạn phải ít nhất 13 tuổi để đăng ký'),
+    gender: z.enum(['Male', 'Female', 'Other'], {
+      errorMap: () => ({ message: 'Giới tính là bắt buộc' }),
+    }),
   })
   .refine((v) => v.password === v.rePassword, {
     message: 'Mật khẩu xác nhận không khớp',

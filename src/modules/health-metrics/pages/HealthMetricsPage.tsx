@@ -172,14 +172,14 @@ export function HealthMetricsPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">BMR:</span>
-                    <span className="font-semibold text-gray-900">{metrics[0].bmr} kcal</span>
+                    <span className="font-semibold text-gray-900">{metrics[0].bmr}</span>
                   </div>
                   <div className="border-t border-[#99b94a] pt-3">
                     <div className="flex justify-between">
                       <span className="text-sm font-medium text-[#5a6f2a]">
                         Calo Hàng Ngày (TDEE):
                       </span>
-                      <span className="font-bold text-[#99b94a]">{metrics[0].tdee} kcal</span>
+                      <span className="font-bold text-[#99b94a]">{metrics[0].tdee}</span>
                     </div>
                   </div>
                 </div>

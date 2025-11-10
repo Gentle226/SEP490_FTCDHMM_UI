@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Save, Upload } from 'lucide-react';
+import { ChevronDownIcon, Save, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -9,6 +9,13 @@ import { useForm } from 'react-hook-form';
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { Avatar, AvatarFallback, AvatarImage } from '@/base/components/ui/avatar';
 import { Button } from '@/base/components/ui/button';
+import { DatePickerWithInput } from '@/base/components/ui/date-picker-with-input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/base/components/ui/dropdown-menu';
 import { Input } from '@/base/components/ui/input';
 import { Label } from '@/base/components/ui/label';
 import { Skeleton } from '@/base/components/ui/skeleton';
@@ -21,6 +28,8 @@ export default function EditProfilePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [selectedGender, setSelectedGender] = useState<'Male' | 'Female' | 'Other' | ''>('');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
 
   const { data: profile, isLoading } = useProfile();
   const updateProfile = useUpdateProfile();
@@ -32,6 +41,7 @@ export default function EditProfilePage() {
       lastName: '',
       phoneNumber: '',
       gender: '',
+      dateOfBirth: undefined,
       avatarUrl: null,
     },
   });
@@ -39,11 +49,16 @@ export default function EditProfilePage() {
   // Populate form when profile data is loaded
   useEffect(() => {
     if (profile) {
+      const dob = profile.dateOfBirth ? new Date(profile.dateOfBirth) : undefined;
+      setSelectedDate(dob);
+      setSelectedGender((profile.gender as 'Male' | 'Female' | 'Other') || '');
+
       form.reset({
         firstName: profile.firstName,
         lastName: profile.lastName,
         phoneNumber: profile.phoneNumber,
         gender: profile.gender,
+        dateOfBirth: dob,
         avatarUrl: null,
       });
 
@@ -61,6 +76,7 @@ export default function EditProfilePage() {
         lastName: data.lastName,
         phoneNumber: data.phoneNumber,
         gender: data.gender,
+        dateOfBirth: data.dateOfBirth,
         avatarUrl: data.avatarUrl || null,
       });
 
@@ -197,7 +213,7 @@ export default function EditProfilePage() {
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label className="text-[#99b94a]" htmlFor="firstName">
-                  Họ *
+                  Họ <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="firstName"
@@ -211,7 +227,7 @@ export default function EditProfilePage() {
 
               <div className="space-y-2">
                 <Label className="text-[#99b94a]" htmlFor="lastName">
-                  Tên *
+                  Tên <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="lastName"
@@ -226,7 +242,7 @@ export default function EditProfilePage() {
 
             <div className="space-y-2">
               <Label className="text-[#99b94a]" htmlFor="phoneNumber">
-                Số điện thoại *
+                Số điện thoại <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="phoneNumber"
@@ -238,23 +254,85 @@ export default function EditProfilePage() {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="gender" className="text-[#99b94a]">
-                Giới tính *
-              </Label>
-              <select
-                id="gender"
-                className="border-input focus-visible:ring-ring flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                {...form.register('gender')}
-              >
-                <option value="">Chọn giới tính</option>
-                <option value="Male">Nam</option>
-                <option value="Female">Nữ</option>
-                <option value="Other">Khác</option>
-              </select>
-              {form.formState.errors.gender && (
-                <p className="text-danger text-sm">{form.formState.errors.gender.message}</p>
-              )}
+            {/* Date of Birth and Gender on same line */}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {/* Date of Birth with DatePickerWithInput */}
+              <div className="space-y-2">
+                <Label className="text-[#99b94a]">
+                  Ngày sinh <span className="text-red-500">*</span>
+                </Label>
+                <DatePickerWithInput
+                  date={selectedDate}
+                  onDateChange={(date) => {
+                    setSelectedDate(date);
+                    if (date) {
+                      form.setValue('dateOfBirth', date);
+                    }
+                  }}
+                  placeholder="dd/MM/yyyy"
+                />
+                {form.formState.errors.dateOfBirth && (
+                  <p className="text-sm text-red-500">
+                    {form.formState.errors.dateOfBirth.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Gender with Dropdown */}
+              <div className="space-y-2">
+                <Label className="text-[#99b94a]">
+                  Giới tính <span className="text-red-500">*</span>
+                </Label>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" variant="outline" className="w-full justify-between">
+                      <span>
+                        {selectedGender === 'Male'
+                          ? 'Nam'
+                          : selectedGender === 'Female'
+                            ? 'Nữ'
+                            : selectedGender === 'Other'
+                              ? 'Khác'
+                              : 'Chọn giới tính'}
+                      </span>
+                      <ChevronDownIcon className="size-4 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-[--radix-dropdown-menu-trigger-width]"
+                  >
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setSelectedGender('Male');
+                        form.setValue('gender', 'Male');
+                      }}
+                    >
+                      Nam
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setSelectedGender('Female');
+                        form.setValue('gender', 'Female');
+                      }}
+                    >
+                      Nữ
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setSelectedGender('Other');
+                        form.setValue('gender', 'Other');
+                      }}
+                    >
+                      Khác
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <input type="hidden" {...form.register('gender')} value={selectedGender} />
+                {form.formState.errors.gender && (
+                  <p className="text-sm text-red-500">{form.formState.errors.gender.message}</p>
+                )}
+              </div>
             </div>
 
             <div className="flex justify-end gap-3">
@@ -266,7 +344,11 @@ export default function EditProfilePage() {
               >
                 Trở về
               </Button>
-              <Button className="bg-[#99b94a]" type="submit" loading={updateProfile.isPending}>
+              <Button
+                className="bg-[#99b94a] hover:bg-[#88a43a]"
+                type="submit"
+                loading={updateProfile.isPending}
+              >
                 <Save className="size-4" />
                 Lưu thay đổi
               </Button>

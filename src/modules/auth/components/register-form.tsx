@@ -3,13 +3,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { AxiosError, HttpStatusCode } from 'axios';
-import { AlertCircleIcon, Eye, EyeOff } from 'lucide-react';
+import { AlertCircleIcon, ChevronDownIcon, Eye, EyeOff } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { Alert, AlertDescription, AlertTitle } from '@/base/components/ui/alert';
 import { Button } from '@/base/components/ui/button';
+import { DatePickerWithInput } from '@/base/components/ui/date-picker-with-input';
 import {
   Dialog,
   DialogContent,
@@ -18,6 +19,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/base/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/base/components/ui/dropdown-menu';
 import { Form } from '@/base/components/ui/form';
 import { Input } from '@/base/components/ui/input';
 import { Label } from '@/base/components/ui/label';
@@ -45,7 +52,9 @@ function PasswordInput({ id, label, placeholder, disabled, error, register }: Pa
 
   return (
     <div className="flex-1 space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id}>
+        {label} <span className="text-red-500">*</span>
+      </Label>
       <div className="relative">
         <Input
           id={id}
@@ -144,6 +153,8 @@ type RegisterStep1Props = {
     password: string;
     rePassword: string;
     phoneNumber: string;
+    dateOfBirth: Date;
+    gender: 'Male' | 'Female' | 'Other';
   }) => void;
   onSkipToEmailVerification?: (email: string) => void;
 };
@@ -159,12 +170,15 @@ function RegisterStep1({
     handleSubmit,
     formState: { errors },
     getValues,
+    setValue,
   } = useForm<RegisterSchema>({
     resolver: zodResolver(registerSchema),
   });
 
   const [showEmailVerifyDialog, setShowEmailVerifyDialog] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string>('');
+  const [selectedGender, setSelectedGender] = useState<'Male' | 'Female' | 'Other' | ''>('');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
 
   // Mutation to resend OTP
   const { mutate: sendOtp, isPending: isSendingOtp } = useMutation({
@@ -252,7 +266,9 @@ function RegisterStep1({
         {/* Họ và Tên trên cùng một hàng - sử dụng flex để không ảnh hưởng width của form */}
         <div className="flex gap-3">
           <div className="flex-1 space-y-2">
-            <Label htmlFor="firstName">Họ</Label>
+            <Label htmlFor="firstName">
+              Họ <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="firstName"
               type="text"
@@ -263,7 +279,9 @@ function RegisterStep1({
             {errors.firstName && <p className="text-sm text-red-500">{errors.firstName.message}</p>}
           </div>
           <div className="flex-1 space-y-2">
-            <Label htmlFor="lastName">Tên</Label>
+            <Label htmlFor="lastName">
+              Tên <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="lastName"
               type="text"
@@ -277,7 +295,9 @@ function RegisterStep1({
 
         {/* Email */}
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">
+            Email <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="email"
             type="text"
@@ -290,7 +310,9 @@ function RegisterStep1({
 
         {/* Số điện thoại */}
         <div className="space-y-2">
-          <Label htmlFor="phoneNumber">Số điện thoại</Label>
+          <Label htmlFor="phoneNumber">
+            Số điện thoại <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="phoneNumber"
             type="text"
@@ -301,6 +323,86 @@ function RegisterStep1({
           {errors.phoneNumber && (
             <p className="text-sm text-red-500">{errors.phoneNumber.message}</p>
           )}
+        </div>
+
+        {/* Date of Birth and Gender on same line */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          {/* Date of Birth with DatePickerWithInput */}
+          <div className="space-y-2">
+            <Label>
+              Ngày sinh <span className="text-red-500">*</span>
+            </Label>
+            <DatePickerWithInput
+              date={selectedDate}
+              onDateChange={(date) => {
+                setSelectedDate(date);
+                if (date) {
+                  setValue('dateOfBirth', date);
+                }
+              }}
+              disabled={loading}
+              placeholder="dd/MM/yyyy"
+            />
+            {errors.dateOfBirth && (
+              <p className="text-sm text-red-500">{errors.dateOfBirth.message}</p>
+            )}
+          </div>
+
+          {/* Gender with Dropdown */}
+          <div className="space-y-2">
+            <Label>
+              Giới tính <span className="text-red-500">*</span>
+            </Label>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-between"
+                  disabled={loading}
+                >
+                  <span>
+                    {selectedGender === 'Male'
+                      ? 'Nam'
+                      : selectedGender === 'Female'
+                        ? 'Nữ'
+                        : selectedGender === 'Other'
+                          ? 'Khác'
+                          : 'Chọn giới tính'}
+                  </span>
+                  <ChevronDownIcon className="size-4 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[--radix-dropdown-menu-trigger-width]">
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSelectedGender('Male');
+                    setValue('gender', 'Male');
+                  }}
+                >
+                  Nam
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSelectedGender('Female');
+                    setValue('gender', 'Female');
+                  }}
+                >
+                  Nữ
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSelectedGender('Other');
+                    setValue('gender', 'Other');
+                  }}
+                >
+                  Khác
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <input type="hidden" {...register('gender')} value={selectedGender} />
+            {errors.gender && <p className="text-sm text-red-500">{errors.gender.message}</p>}
+          </div>
         </div>
 
         {/* Mật khẩu */}

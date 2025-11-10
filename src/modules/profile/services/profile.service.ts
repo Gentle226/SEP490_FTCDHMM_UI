@@ -29,6 +29,11 @@ class ProfileService extends HttpClient {
     formData.append('phoneNumber', data.phoneNumber);
     formData.append('gender', data.gender);
 
+    if (data.dateOfBirth) {
+      // Format date as ISO string (yyyy-MM-dd)
+      const dateString = data.dateOfBirth.toISOString().split('T')[0];
+      formData.append('dateOfBirth', dateString);
+    }
     if (data.avatarUrl) {
       formData.append('Avatar', data.avatarUrl);
     }

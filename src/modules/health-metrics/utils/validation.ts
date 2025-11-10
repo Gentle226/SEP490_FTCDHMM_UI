@@ -18,7 +18,7 @@ export function validateHealthMetric(
   ) {
     errors.push({
       field: 'weightKg',
-      message: 'Weight must be between 0.1 and 300 kg',
+      message: 'Cân nặng phải nằm trong khoảng từ 0 đến 300 kg',
     });
   }
 
@@ -30,7 +30,7 @@ export function validateHealthMetric(
   ) {
     errors.push({
       field: 'heightCm',
-      message: 'Height must be between 30 and 250 cm',
+      message: 'Chiều cao phải nằm trong khoảng từ 30 đến 250 cm',
     });
   }
 
@@ -41,7 +41,7 @@ export function validateHealthMetric(
     ) {
       errors.push({
         field: 'bodyFatPercent',
-        message: 'Body fat must be between 2% and 70%',
+        message: 'Tỷ lệ mỡ cơ thể phải nằm trong khoảng từ 2% đến 70%',
       });
     }
   }
@@ -53,7 +53,7 @@ export function validateHealthMetric(
     ) {
       errors.push({
         field: 'muscleMassKg',
-        message: 'Muscle mass must be between 10 and 150 kg',
+        message: 'Khối lượng cơ phải nằm trong khoảng từ 10 đến 150 kg',
       });
     }
   }
@@ -61,7 +61,7 @@ export function validateHealthMetric(
   if (data.notes && typeof data.notes === 'string' && data.notes.length > 300) {
     errors.push({
       field: 'notes',
-      message: 'Notes cannot exceed 300 characters',
+      message: 'Ghi chú không được vượt quá 300 ký tự',
     });
   }
 

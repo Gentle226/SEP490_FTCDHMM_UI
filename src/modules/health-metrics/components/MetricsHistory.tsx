@@ -1,6 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
 import { BarChart3, Calendar, Clock, Edit, Trash2 } from 'lucide-react';
 
 import { Button } from '@/base/components/ui/button';
@@ -72,11 +73,11 @@ export function MetricsHistory({ metrics, onDelete, onEdit, loading }: Props) {
               <div>
                 <CardTitle className="flex items-center gap-2 text-base text-gray-900">
                   <Calendar className="h-4 w-4 text-[#99b94a]" />
-                  {format(new Date(metric.recordedAt), 'PPP')}
+                  {format(new Date(metric.recordedAt), 'PPPP', { locale: vi })}
                 </CardTitle>
                 <p className="mt-1 flex items-center gap-2 text-xs text-gray-500">
                   <Clock className="h-3 w-3 text-[#99b94a]" />
-                  {format(new Date(metric.recordedAt), 'p')}
+                  {format(new Date(metric.recordedAt), 'p', { locale: vi })}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -137,9 +138,7 @@ export function MetricsHistory({ metrics, onDelete, onEdit, loading }: Props) {
               {/* BMR */}
               <div className="rounded-lg bg-gradient-to-br from-[#f0f5f2] to-white p-3">
                 <p className="text-xs font-semibold text-gray-600 uppercase">BMR</p>
-                <p className="mt-1 text-lg font-bold text-gray-900">
-                  {metric.bmr} <span className="text-sm text-gray-500">kcal</span>
-                </p>
+                <p className="mt-1 text-lg font-bold text-gray-900">{metric.bmr}</p>
               </div>
 
               {/* TDEE */}
@@ -147,9 +146,7 @@ export function MetricsHistory({ metrics, onDelete, onEdit, loading }: Props) {
                 <p className="text-xs font-semibold text-[#5a6f2a] uppercase">
                   Calo Hàng Ngày (TDEE)
                 </p>
-                <p className="mt-1 text-lg font-bold text-[#99b94a]">
-                  {metric.tdee} <span className="text-sm text-gray-500">kcal</span>
-                </p>
+                <p className="mt-1 text-lg font-bold text-[#99b94a]">{metric.tdee}</p>
               </div>
 
               {/* Body Fat */}

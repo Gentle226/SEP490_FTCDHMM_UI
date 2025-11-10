@@ -12,6 +12,9 @@ export interface ProfileDto {
   followingCount?: number;
   isFollowing?: boolean;
   activityLevel?: string;
+  dateOfBirth?: string;
+  bio?: string;
+  location?: string;
 }
 
 // Update Profile Schema for form validation
@@ -22,6 +25,7 @@ export const updateProfileSchema = z.object({
     .string()
     .regex(/^0\d{8,9}$/, 'Số điện thoại phải bắt đầu bằng 0 và có 9-10 chữ số'),
   gender: z.string().min(1, 'Giới tính là bắt buộc'),
+  dateOfBirth: z.date().optional(),
   avatarUrl: z.instanceof(File).optional().nullable(),
 });
 
@@ -33,6 +37,7 @@ export interface UpdateProfileDto {
   lastName: string;
   phoneNumber: string;
   gender: string;
+  dateOfBirth?: Date;
   avatarUrl?: File | null;
 }
 

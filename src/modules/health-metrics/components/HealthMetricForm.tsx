@@ -121,7 +121,7 @@ export function HealthMetricForm({ onSubmit, onCancel, initialData, isEdit = fal
               id="weightKg"
               type="number"
               step="0.1"
-              placeholder="70.5"
+              placeholder="0-300 kg"
               value={formData.weightKg || ''}
               onChange={(e) => handleChange('weightKg', parseFloat(e.target.value) || 0)}
               className={`mt-2 border-gray-300 focus:border-[#99b94a] focus:ring-[#99b94a] ${errors.weightKg ? 'border-red-500' : ''}`}
@@ -139,7 +139,7 @@ export function HealthMetricForm({ onSubmit, onCancel, initialData, isEdit = fal
               id="heightCm"
               type="number"
               step="0.1"
-              placeholder="180.5"
+              placeholder="30-250 cm"
               value={formData.heightCm || ''}
               onChange={(e) => handleChange('heightCm', parseFloat(e.target.value) || 0)}
               className={`mt-2 border-gray-300 focus:border-[#99b94a] focus:ring-[#99b94a] ${errors.heightCm ? 'border-red-500' : ''}`}
@@ -183,7 +183,7 @@ export function HealthMetricForm({ onSubmit, onCancel, initialData, isEdit = fal
               id="bodyFatPercent"
               type="number"
               step="0.1"
-              placeholder="25.5"
+              placeholder="2-70 %"
               value={formData.bodyFatPercent || ''}
               onChange={(e) =>
                 handleChange(
@@ -211,7 +211,7 @@ export function HealthMetricForm({ onSubmit, onCancel, initialData, isEdit = fal
               id="muscleMassKg"
               type="number"
               step="0.1"
-              placeholder="45.5"
+              placeholder="10-150 kg"
               value={formData.muscleMassKg || ''}
               onChange={(e) =>
                 handleChange(
