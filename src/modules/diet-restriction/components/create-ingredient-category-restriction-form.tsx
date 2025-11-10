@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar as CalendarIcon, ChevronDown, Clock, Loader2 } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronDown, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { Calendar } from '@/base/components/ui/calendar';
@@ -275,20 +275,6 @@ export function CreateIngredientCategoryRestrictionForm({
         </div>
       </div>
 
-      {/* Notes */}
-      <div>
-        <label className="mb-2 block text-sm font-medium text-gray-900">Ghi chú (tuỳ chọn)</label>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value.slice(0, 255))}
-          maxLength={255}
-          placeholder="Ví dụ: Dị ứng với động vật có vỏ, tránh sữa bò..."
-          className="focus:ring-opacity-30 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-gray-900 placeholder-gray-500 transition-all hover:border-gray-400 focus:border-[#99b94a] focus:ring-2 focus:ring-[#99b94a] focus:outline-none"
-          rows={3}
-        />
-        <p className="mt-2 text-xs text-gray-600">{notes.length}/255 ký tự</p>
-      </div>
-
       {/* Expiry Date - Only shown for TEMPORARYAVOID (input + calendar popover) */}
       {type === RestrictionType.TEMPORARYAVOID && (
         <div>
@@ -405,13 +391,22 @@ export function CreateIngredientCategoryRestrictionForm({
               </div>
             )}
           </div>
-
-          <p className="mt-2 flex items-start gap-2 text-xs text-gray-600">
-            <Clock className="h-4 w-4" />
-            <span>Chọn ngày bằng lịch hoặc nhập trực tiếp giờ/phút</span>
-          </p>
         </div>
       )}
+
+      {/* Notes */}
+      <div>
+        <label className="mb-2 block text-sm font-medium text-gray-900">Ghi chú (tuỳ chọn)</label>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value.slice(0, 255))}
+          maxLength={255}
+          placeholder="Ví dụ: Dị ứng với động vật có vỏ, tránh sữa bò..."
+          className="focus:ring-opacity-30 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-gray-900 placeholder-gray-500 transition-all hover:border-gray-400 focus:border-[#99b94a] focus:ring-2 focus:ring-[#99b94a] focus:outline-none"
+          rows={3}
+        />
+        <p className="mt-2 text-xs text-gray-600">{notes.length}/255 ký tự</p>
+      </div>
 
       {/* Submit Button */}
       <button
