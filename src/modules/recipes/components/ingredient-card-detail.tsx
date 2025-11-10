@@ -185,12 +185,12 @@ export function IngredientCardDetail({
 
               {ingredientDetails.categories && ingredientDetails.categories.length > 0 && (
                 <div>
-                  <p className="text-xs font-medium text-gray-700">Danh mục:</p>
+                  <p className="text-xs font-medium text-gray-700">Phân loại:</p>
                   <div className="mt-1 flex flex-wrap gap-1">
                     {ingredientDetails.categories.map((category) => (
                       <span
                         key={category.id}
-                        className="inline-flex rounded-full bg-lime-100 px-2 py-1 text-xs text-lime-700"
+                        className="inline-flex rounded-md bg-lime-100 px-2 py-1 text-xs font-medium text-lime-700"
                       >
                         {category.name}
                       </span>
@@ -254,11 +254,11 @@ export function IngredientCardDetail({
                       <img
                         src={ingredientDetails.image}
                         alt={ingredientDetails.name}
-                        className="h-48 w-48 rounded-lg object-cover"
+                        className="h-56 w-56 rounded-lg object-cover"
                       />
                     </div>
                   ) : (
-                    <div className="flex h-48 w-48 items-center justify-center rounded-lg bg-gray-100">
+                    <div className="flex h-56 w-56 items-center justify-center rounded-lg bg-gray-100">
                       <span className="text-muted-foreground text-sm">Không có hình ảnh</span>
                     </div>
                   )}
@@ -285,12 +285,12 @@ export function IngredientCardDetail({
 
                   {ingredientDetails.categories && ingredientDetails.categories.length > 0 && (
                     <div>
-                      <span className="font-semibold">Danh mục: </span>
+                      <span className="font-semibold">Phân loại: </span>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {ingredientDetails.categories.map((category) => (
                           <span
                             key={category.id}
-                            className="inline-flex rounded-full bg-[#f0f7e8] px-3 py-1 text-sm font-medium text-[#99b94a]"
+                            className="inline-flex rounded-md bg-lime-100 px-3 py-1 text-sm font-medium text-lime-700"
                           >
                             {category.name}
                           </span>

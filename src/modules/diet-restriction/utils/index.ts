@@ -71,9 +71,11 @@ export function checkIngredientCategoryRestriction(
 
   return categoryRestrictions
     .filter((restriction) => {
-      // Check if category name matches (case-insensitive search)
-      // Note: We're checking by category name, not ID in this implementation
-      return !!restriction.ingredientCategoryName;
+      // Check if the restriction's category ID is in the ingredient's category IDs
+      return (
+        !!restriction.ingredientCategoryId &&
+        ingredientCategoryIds.includes(restriction.ingredientCategoryId)
+      );
     })
     .map((restriction) => {
       const isExpired = restriction.expiredAtUtc

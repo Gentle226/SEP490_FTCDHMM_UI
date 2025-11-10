@@ -231,9 +231,9 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   }
 
   const difficultyMap: Record<string, string> = {
-    Easy: 'Dễ',
-    Medium: 'Trung bình',
-    Hard: 'Khó',
+    EASY: 'Dễ',
+    MEDIUM: 'Trung bình',
+    HARD: 'Khó',
   };
 
   return (

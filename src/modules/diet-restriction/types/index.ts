@@ -30,7 +30,9 @@ export interface UserDietRestrictionFilterRequest {
 
 export interface UserDietRestrictionResponse {
   id: string;
+  ingredientId?: string;
   ingredientName?: string;
+  ingredientCategoryId?: string;
   ingredientCategoryName?: string;
   type: RestrictionType | string;
   notes?: string;
