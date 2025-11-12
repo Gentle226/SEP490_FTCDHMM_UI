@@ -3,11 +3,11 @@ import { z } from 'zod';
 import { SuccessResponse } from '@/base/types';
 
 export const loginSchema = z.object({
-  email: z.string().trim().nonempty('Email không được để trống').email('Email không hợp lệ'),
+  email: z.string().min(1, 'Vui lòng nhập email').trim().email('Email không hợp lệ'),
   password: z
     .string()
+    .min(1, 'Vui lòng nhập mật khẩu')
     .trim()
-    .nonempty('Mật khẩu không được để trống')
     .min(8, 'Mật khẩu phải có tối thiểu 8 ký tự')
     .max(100, 'Mật khẩu không được quá 100 ký tự'),
 });
@@ -26,17 +26,36 @@ export const registerSchema = z
   .object({
     firstName: z
       .string()
+      .min(1, 'Vui lòng nhập họ')
       .trim()
-      .nonempty('Họ không được để trống')
-      .max(50, 'Họ không được quá 50 ký tự'),
+      .max(50, 'Họ không được quá 50 ký tự')
+      .refine(
+        (val) =>
+          /^[a-zA-Zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỡđ\s]*$/.test(
+            val,
+          ),
+        {
+          message: 'Họ chỉ được chứa chữ cái',
+        },
+      ),
     lastName: z
       .string()
+      .min(1, 'Vui lòng nhập tên')
       .trim()
-      .nonempty('Tên không được để trống')
-      .max(50, 'Tên không được quá 50 ký tự'),
-    email: z.string().trim().nonempty('Email không được để trống').email('Email không hợp lệ'),
+      .max(50, 'Tên không được quá 50 ký tự')
+      .refine(
+        (val) =>
+          /^[a-zA-Zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỡđ\s]*$/.test(
+            val,
+          ),
+        {
+          message: 'Tên chỉ được chứa chữ cái',
+        },
+      ),
+    email: z.string().min(1, 'Vui lòng nhập email').trim().email('Email không hợp lệ'),
     password: z
       .string()
+      .min(1, 'Vui lòng nhập mật khẩu')
       .trim()
       .min(8, 'Mật khẩu phải có tối thiểu 8 ký tự')
       .max(100, 'Mật khẩu không được quá 100 ký tự')
@@ -52,21 +71,15 @@ export const registerSchema = z
       .refine((val) => /[@$!%*?&]/.test(val), {
         message: 'Mật khẩu phải có ít nhất một ký tự đặc biệt (@$!%*?&)',
       }),
-    rePassword: z.string().trim().nonempty('Mật khẩu xác nhận không được để trống'),
-    phoneNumber: z
-      .string()
-      .trim()
-      .nonempty('Số điện thoại không được để trống')
-      .regex(/^0\d{8,9}$/, 'Số điện thoại phải bắt đầu bằng 0 và có 9-10 chữ số'),
+    rePassword: z.string().min(1, 'Vui lòng xác nhận mật khẩu'),
     dateOfBirth: z
-      .date()
-      .max(new Date(), 'Ngày sinh không được là tương lai')
-      .refine((date) => {
-        const age = new Date().getFullYear() - date.getFullYear();
-        return age >= 13;
-      }, 'Bạn phải ít nhất 13 tuổi để đăng ký'),
+      .date({
+        required_error: 'Vui lòng chọn ngày sinh',
+        invalid_type_error: 'Ngày sinh không hợp lệ',
+      })
+      .max(new Date(), 'Ngày sinh không được là tương lai'),
     gender: z.enum(['Male', 'Female', 'Other'], {
-      errorMap: () => ({ message: 'Giới tính là bắt buộc' }),
+      errorMap: () => ({ message: 'Vui lòng chọn giới tính' }),
     }),
   })
   .refine((v) => v.password === v.rePassword, {
@@ -78,23 +91,14 @@ export type RegisterSchema = z.infer<typeof registerSchema>;
 
 export const verifyEmailOtpSchema = z.object({
   email: z.string().trim().email(),
-  code: z.string().trim().nonempty('Mã OTP không được để trống'),
+  code: z.string().min(1, 'Vui lòng nhập mã OTP').trim(),
 });
 export type VerifyEmailOtpSchema = z.infer<typeof verifyEmailOtpSchema>;
 
 export const resendOtpSchema = z.object({
   email: z.string().trim().email(),
   purpose: z
-    .enum([
-      'VERIFYACCOUNTEMAIL',
-      'FORGOTPASSWORD',
-      'confirm',
-      'confirmemail',
-      'ConfirmAccountEmail',
-      'forgot',
-      'forgotpassword',
-      'reset',
-    ])
+    .enum(['VERIFYACCOUNTEMAIL', 'FORGOTPASSWORD', 'confirm', 'reset'])
     .default('VERIFYACCOUNTEMAIL'),
 });
 export type ResendOtpSchema = z.infer<typeof resendOtpSchema>;
@@ -107,9 +111,10 @@ export type ForgotPasswordSchema = z.infer<typeof forgotPasswordSchema>;
 export const resetPasswordWithOtpSchema = z
   .object({
     email: z.string().trim().email(),
-    token: z.string().trim().nonempty(),
+    token: z.string().min(1, 'Token không hợp lệ').trim(),
     newPassword: z
       .string()
+      .min(1, 'Vui lòng nhập mật khẩu mới')
       .trim()
       .min(8, 'Mật khẩu phải có tối thiểu 8 ký tự')
       .max(100, 'Mật khẩu không được quá 100 ký tự')
@@ -125,7 +130,11 @@ export const resetPasswordWithOtpSchema = z
       .refine((val) => /[@$!%*?&]/.test(val), {
         message: 'Mật khẩu phải có ít nhất một ký tự đặc biệt (@$!%*?&)',
       }),
-    rePassword: z.string().trim().min(8, 'Mật khẩu xác nhận phải có tối thiểu 8 ký tự'),
+    rePassword: z
+      .string()
+      .min(1, 'Vui lòng nhập xác nhận mật khẩu')
+      .trim()
+      .min(8, 'Mật khẩu xác nhận phải có tối thiểu 8 ký tự'),
   })
   .refine((v) => v.newPassword === v.rePassword, {
     message: 'Mật khẩu xác nhận không khớp',
@@ -135,9 +144,15 @@ export type ResetPasswordWithOtpSchema = z.infer<typeof resetPasswordWithOtpSche
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: z.string().trim().min(8, 'Mật khẩu hiện tại phải có tối thiểu 8 ký tự'),
+    currentPassword: z
+      .string()
+      .min(1, 'Vui lòng nhập mật khẩu hiện tại')
+      .trim()
+      .min(8, 'Mật khẩu hiện tại phải có tối thiểu 8 ký tự')
+      .max(100, 'Mật khẩu hiện tại không được quá 100 ký tự'),
     newPassword: z
       .string()
+      .min(1, 'Vui lòng nhập mật khẩu mới')
       .trim()
       .min(8, 'Mật khẩu mới phải có tối thiểu 8 ký tự')
       .max(100, 'Mật khẩu mới không được quá 100 ký tự')
@@ -153,7 +168,11 @@ export const changePasswordSchema = z
       .refine((val) => /[@$!%*?&]/.test(val), {
         message: 'Mật khẩu phải có ít nhất một ký tự đặc biệt (@$!%*?&)',
       }),
-    rePassword: z.string().trim().min(8, 'Mật khẩu xác nhận phải có tối thiểu 8 ký tự'),
+    rePassword: z
+      .string()
+      .min(1, 'Vui lòng nhập xác nhận mật khẩu')
+      .trim()
+      .min(8, 'Mật khẩu xác nhận phải có tối thiểu 8 ký tự'),
   })
   .refine((v) => v.newPassword === v.rePassword, {
     message: 'Mật khẩu xác nhận không khớp',
@@ -163,7 +182,7 @@ export type ChangePasswordSchema = z.infer<typeof changePasswordSchema>;
 
 // Schema chỉ nhập OTP
 export const otpOnlySchema = z.object({
-  code: z.string().trim().nonempty('Verification code is required'),
+  code: z.string().min(1, 'Vui lòng nhập mã OTP').trim(),
 });
 
 // Schema chỉ nhập password mới và xác nhận

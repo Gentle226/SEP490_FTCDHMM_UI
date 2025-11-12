@@ -39,7 +39,6 @@ export default function EditProfilePage() {
     defaultValues: {
       firstName: '',
       lastName: '',
-      phoneNumber: '',
       gender: '',
       dateOfBirth: undefined,
       avatarUrl: null,
@@ -56,7 +55,6 @@ export default function EditProfilePage() {
       form.reset({
         firstName: profile.firstName,
         lastName: profile.lastName,
-        phoneNumber: profile.phoneNumber,
         gender: profile.gender,
         dateOfBirth: dob,
         avatarUrl: null,
@@ -74,7 +72,6 @@ export default function EditProfilePage() {
       await updateProfile.mutateAsync({
         firstName: data.firstName,
         lastName: data.lastName,
-        phoneNumber: data.phoneNumber,
         gender: data.gender,
         dateOfBirth: data.dateOfBirth,
         avatarUrl: data.avatarUrl || null,
@@ -240,20 +237,6 @@ export default function EditProfilePage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-[#99b94a]" htmlFor="phoneNumber">
-                Số điện thoại <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="phoneNumber"
-                placeholder="Nhập số điện thoại (VD: 0123456789)"
-                {...form.register('phoneNumber')}
-              />
-              {form.formState.errors.phoneNumber && (
-                <p className="text-danger text-sm">{form.formState.errors.phoneNumber.message}</p>
-              )}
-            </div>
-
             {/* Date of Birth and Gender on same line */}
             <div className="grid gap-3 sm:grid-cols-2">
               {/* Date of Birth with DatePickerWithInput */}
@@ -269,7 +252,7 @@ export default function EditProfilePage() {
                       form.setValue('dateOfBirth', date);
                     }
                   }}
-                  placeholder="dd/MM/yyyy"
+                  placeholder="dd/mm/yyyy"
                 />
                 {form.formState.errors.dateOfBirth && (
                   <p className="text-sm text-red-500">

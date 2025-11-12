@@ -152,7 +152,6 @@ type RegisterStep1Props = {
     email: string;
     password: string;
     rePassword: string;
-    phoneNumber: string;
     dateOfBirth: Date;
     gender: 'Male' | 'Female' | 'Other';
   }) => void;
@@ -308,23 +307,6 @@ function RegisterStep1({
           {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
         </div>
 
-        {/* Số điện thoại */}
-        <div className="space-y-2">
-          <Label htmlFor="phoneNumber">
-            Số điện thoại <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="phoneNumber"
-            type="text"
-            placeholder="Nhập số điện thoại của bạn"
-            disabled={loading}
-            {...register('phoneNumber')}
-          />
-          {errors.phoneNumber && (
-            <p className="text-sm text-red-500">{errors.phoneNumber.message}</p>
-          )}
-        </div>
-
         {/* Date of Birth and Gender on same line */}
         <div className="grid gap-3 sm:grid-cols-2">
           {/* Date of Birth with DatePickerWithInput */}
@@ -341,7 +323,7 @@ function RegisterStep1({
                 }
               }}
               disabled={loading}
-              placeholder="dd/MM/yyyy"
+              placeholder="dd/mm/yyyy"
             />
             {errors.dateOfBirth && (
               <p className="text-sm text-red-500">{errors.dateOfBirth.message}</p>

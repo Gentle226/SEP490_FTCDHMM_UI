@@ -26,7 +26,6 @@ class ProfileService extends HttpClient {
     const formData = new FormData();
     formData.append('firstName', data.firstName);
     formData.append('lastName', data.lastName);
-    formData.append('phoneNumber', data.phoneNumber);
     formData.append('gender', data.gender);
 
     if (data.dateOfBirth) {

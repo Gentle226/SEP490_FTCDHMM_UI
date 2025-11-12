@@ -1,6 +1,6 @@
 'use client';
 
-import { format, parse } from 'date-fns';
+import { format } from 'date-fns';
 import { CalendarDaysIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -44,64 +44,31 @@ export function DatePickerWithInput(props: DatePickerWithInputProps) {
   const isMobile = useIsMobile();
 
   const [date, setDate] = useState(props.date);
-  const [inputValue, setInputValue] = useState(date ? format(date, 'dd/MM/yyyy') : '');
   const [isOpen, setIsOpen] = useState(false);
 
   const handleDateChange = (newDate?: Date) => {
     setDate(newDate);
-    if (newDate) {
-      setInputValue(format(newDate, 'dd/MM/yyyy'));
-    }
     props.onDateChange?.(newDate);
     setIsOpen(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value;
-
-    // Remove any non-digit characters
-    const digitsOnly = rawValue.replace(/\D/g, '');
-
-    // Limit to 8 digits (ddmmyyyy)
-    if (digitsOnly.length > 8) {
-      return;
-    }
-
-    // Format as we type: dd/mm/yyyy
-    let formattedValue = '';
-    for (let i = 0; i < digitsOnly.length; i++) {
-      if (i === 2 || i === 4) {
-        formattedValue += '/';
-      }
-      formattedValue += digitsOnly[i];
-    }
-
-    setInputValue(formattedValue);
-
-    // Try to parse the input date when complete (dd/MM/yyyy format = 10 chars)
-    if (formattedValue.length === 10 && /^\d{2}\/\d{2}\/\d{4}$/.test(formattedValue)) {
-      try {
-        const parsedDate = parse(formattedValue, 'dd/MM/yyyy', new Date());
-        // Validate that parsed date is valid
-        if (!isNaN(parsedDate.getTime())) {
-          setDate(parsedDate);
-          props.onDateChange?.(parsedDate);
-        }
-      } catch {
-        // Invalid date, keep the input as is
-      }
-    }
-  };
-
-  const handleInputBlur = () => {
-    // If input is empty, clear the date
-    if (!inputValue.trim()) {
+    const dateString = e.target.value;
+    if (dateString) {
+      const newDate = new Date(dateString);
+      setDate(newDate);
+      props.onDateChange?.(newDate);
+    } else {
       setDate(undefined);
       props.onDateChange?.(undefined);
     }
   };
 
   const formatString = 'dd/MM/yyyy';
+  const inputValue = date ? format(date, 'yyyy-MM-dd') : '';
+
+  // Disable future dates
+  const disabledDays = (day: Date) => day > new Date();
 
   const CalendarContent = (
     <Calendar
@@ -110,6 +77,7 @@ export function DatePickerWithInput(props: DatePickerWithInputProps) {
       onSelect={handleDateChange}
       autoFocus
       captionLayout="dropdown"
+      disabled={disabledDays}
     />
   );
 
@@ -117,14 +85,14 @@ export function DatePickerWithInput(props: DatePickerWithInputProps) {
     return (
       <div className="flex gap-2">
         <Input
-          type="text"
-          inputMode="numeric"
-          placeholder={props.placeholder || 'dd/MM/yyyy'}
+          type="date"
           value={inputValue}
           onChange={handleInputChange}
-          onBlur={handleInputBlur}
           disabled={props.disabled || props.readOnly}
-          className={cn('flex-1', props.inputClassName)}
+          className={cn(
+            'flex-1 [&::-webkit-calendar-picker-indicator]:hidden',
+            props.inputClassName,
+          )}
         />
         <Drawer open={isOpen} onOpenChange={setIsOpen}>
           <DrawerTrigger asChild onClick={props.readOnly ? (e) => e.preventDefault() : undefined}>
@@ -154,14 +122,11 @@ export function DatePickerWithInput(props: DatePickerWithInputProps) {
   return (
     <div className="flex gap-2">
       <Input
-        type="text"
-        inputMode="numeric"
-        placeholder={props.placeholder || 'dd/MM/yyyy'}
+        type="date"
         value={inputValue}
         onChange={handleInputChange}
-        onBlur={handleInputBlur}
         disabled={props.disabled || props.readOnly}
-        className={cn('flex-1', props.inputClassName)}
+        className={cn('flex-1 [&::-webkit-calendar-picker-indicator]:hidden', props.inputClassName)}
       />
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild onClick={props.readOnly ? (e) => e.preventDefault() : undefined}>

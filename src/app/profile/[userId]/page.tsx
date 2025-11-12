@@ -138,8 +138,8 @@ export default function UserProfilePage() {
       await updateProfile.mutateAsync({
         firstName: profileData.firstName,
         lastName: profileData.lastName,
-        phoneNumber: profileData.phoneNumber,
         gender: profileData.gender,
+        dateOfBirth: profileData.dateOfBirth ? new Date(profileData.dateOfBirth) : new Date(),
         avatarUrl: file,
       });
     } catch (error) {

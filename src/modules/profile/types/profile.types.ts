@@ -5,7 +5,6 @@ export interface ProfileDto {
   firstName: string;
   lastName: string;
   email: string;
-  phoneNumber: string;
   gender: string;
   avatarUrl?: string | null;
   followersCount?: number;
@@ -19,14 +18,46 @@ export interface ProfileDto {
 
 // Update Profile Schema for form validation
 export const updateProfileSchema = z.object({
-  firstName: z.string().min(1, 'Tên là bắt buộc').max(50, 'Tên không được vượt quá 50 ký tự'),
-  lastName: z.string().min(1, 'Họ là bắt buộc').max(50, 'Họ không được vượt quá 50 ký tự'),
-  phoneNumber: z
+  firstName: z
     .string()
-    .regex(/^0\d{8,9}$/, 'Số điện thoại phải bắt đầu bằng 0 và có 9-10 chữ số'),
-  gender: z.string().min(1, 'Giới tính là bắt buộc'),
-  dateOfBirth: z.date().optional(),
-  avatarUrl: z.instanceof(File).optional().nullable(),
+    .min(1, 'Vui lòng nhập họ')
+    .max(50, 'Tên không được vượt quá 50 ký tự')
+    .refine(
+      (val) =>
+        /^[a-zA-Zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỡđ\s]*$/.test(
+          val,
+        ),
+      {
+        message: 'Họ chỉ được chứa ký tự chữ cái',
+      },
+    ),
+  lastName: z
+    .string()
+    .min(1, 'Vui lòng nhập tên')
+    .max(50, 'Họ không được vượt quá 50 ký tự')
+    .refine(
+      (val) =>
+        /^[a-zA-Zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỡđ\s]*$/.test(
+          val,
+        ),
+      {
+        message: 'Tên chỉ được chứa ký tự chữ cái',
+      },
+    ),
+  gender: z.string().min(1, 'Vui lòng chọn giới tính'),
+  dateOfBirth: z.date(),
+  avatarUrl: z
+    .instanceof(File)
+    .optional()
+    .nullable()
+    .refine(
+      (file) => !file || ['image/jpeg', 'image/png', 'image/gif'].includes(file.type),
+      'Chỉ hỗ trợ hình ảnh JPG, PNG và GIF',
+    )
+    .refine(
+      (file) => !file || file.size <= 5 * 1024 * 1024,
+      'Kích thước ảnh không được vượt quá 5MB',
+    ),
 });
 
 export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;
@@ -35,9 +66,8 @@ export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;
 export interface UpdateProfileDto {
   firstName: string;
   lastName: string;
-  phoneNumber: string;
   gender: string;
-  dateOfBirth?: Date;
+  dateOfBirth: Date;
   avatarUrl?: File | null;
 }
 
