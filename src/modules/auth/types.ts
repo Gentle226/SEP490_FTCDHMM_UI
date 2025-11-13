@@ -90,8 +90,12 @@ export const registerSchema = z
 export type RegisterSchema = z.infer<typeof registerSchema>;
 
 export const verifyEmailOtpSchema = z.object({
-  email: z.string().trim().email(),
-  code: z.string().min(1, 'Vui lòng nhập mã OTP').trim(),
+  email: z.string().min(1, 'Vui lòng nhập email').trim().email('Email không hợp lệ'),
+  code: z
+    .string()
+    .min(1, 'Vui lòng nhập mã OTP')
+    .trim()
+    .regex(/^\d{6}$/, 'Mã OTP phải là 6 chữ số'),
 });
 export type VerifyEmailOtpSchema = z.infer<typeof verifyEmailOtpSchema>;
 
@@ -104,14 +108,18 @@ export const resendOtpSchema = z.object({
 export type ResendOtpSchema = z.infer<typeof resendOtpSchema>;
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().trim().email(),
+  email: z.string().min(1, 'Vui lòng nhập email').trim().email('Email không hợp lệ'),
 });
 export type ForgotPasswordSchema = z.infer<typeof forgotPasswordSchema>;
 
 export const resetPasswordWithOtpSchema = z
   .object({
-    email: z.string().trim().email(),
-    token: z.string().min(1, 'Token không hợp lệ').trim(),
+    email: z.string().min(1, 'Vui lòng nhập email').trim().email('Email không hợp lệ'),
+    token: z
+      .string()
+      .min(1, 'Vui lòng nhập mã OTP')
+      .trim()
+      .regex(/^\d{6}$/, 'Mã OTP phải là 6 chữ số'),
     newPassword: z
       .string()
       .min(1, 'Vui lòng nhập mật khẩu mới')

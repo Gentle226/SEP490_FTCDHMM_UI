@@ -194,7 +194,10 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
             Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập bằng mật khẩu mới của
             mình.
           </p>
-          <Button onClick={onBackToLogin} className="w-full bg-[#99b94a] text-white">
+          <Button
+            onClick={onBackToLogin}
+            className="w-full bg-[#99b94a] text-white hover:bg-[#7a8f3a]"
+          >
             Về trang đăng nhập
           </Button>
         </div>
@@ -233,7 +236,9 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
               },
             ]}
             renderSubmitButton={(Button) => (
-              <Button className="bg-[#99b94a] text-white">Gửi mã xác minh</Button>
+              <Button className="bg-[#99b94a] text-white hover:bg-[#7a8f3a]">
+                Gửi mã xác minh
+              </Button>
             )}
             onSuccessSubmit={(data) => {
               setEmail(data.email);
@@ -283,7 +288,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
               },
             ]}
             renderSubmitButton={(Button) => (
-              <Button className="bg-[#99b94a] text-white">Xác minh mã</Button>
+              <Button className="bg-[#99b94a] text-white hover:bg-[#7a8f3a]">Xác minh mã</Button>
             )}
             onSuccessSubmit={(data) => {
               const payload = { ...data, email };
@@ -353,7 +358,9 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
               },
             ]}
             renderSubmitButton={(Button) => (
-              <Button className="bg-[#99b94a] text-white">Đặt lại mật khẩu</Button>
+              <Button className="bg-[#99b94a] text-white hover:bg-[#7a8f3a]">
+                Đặt lại mật khẩu
+              </Button>
             )}
             onSuccessSubmit={(data) => {
               const payload = { ...data, email, token: resetToken };
