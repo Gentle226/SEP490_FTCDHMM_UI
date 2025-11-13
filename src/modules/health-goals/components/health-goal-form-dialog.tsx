@@ -29,9 +29,9 @@ import { HealthGoalResponse } from '../types';
 const healthGoalSchema = z.object({
   name: z
     .string()
-    .min(3, 'Tên phải có ít nhất 3 ký tự')
-    .max(100, 'Tên không được vượt quá 100 ký tự'),
-  description: z.string().optional(),
+    .min(1, 'Tên phải có ít nhất 1 ký tự')
+    .max(255, 'Tên không được vượt quá 255 ký tự'),
+  description: z.string().max(1000, 'Mô tả không được vượt quá 1000 ký tự').optional(),
   targets: z
     .array(
       z.object({
@@ -222,13 +222,13 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
             <div className="flex h-6 items-center justify-between">
               <Label htmlFor="name">Tên</Label>
               <span className={`text-xs ${isNameFocused ? 'text-muted-foreground' : 'invisible'}`}>
-                {watch('name')?.length || 0}/100
+                {watch('name')?.length || 0}/255
               </span>
             </div>
             <Input
               id="name"
               placeholder="Tăng cơ bắp"
-              maxLength={100}
+              maxLength={255}
               {...register('name', {
                 onBlur: () => setIsNameFocused(false),
               })}
@@ -238,11 +238,17 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Mô Tả</Label>
+            <div className="flex h-6 items-center justify-between">
+              <Label htmlFor="description">Mô Tả</Label>
+              <span className="text-muted-foreground text-xs">
+                {watch('description')?.length || 0}/1000
+              </span>
+            </div>
             <Textarea
               id="description"
               placeholder="Mô tả mục tiêu sức khỏe..."
               rows={3}
+              maxLength={1000}
               {...register('description')}
               className="break-words"
             />

@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { ChevronDown, Edit, Plus, Search, Trash, X } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -33,6 +34,12 @@ import {
   PaginationParams,
   labelManagementService,
 } from '../services/label-management.service';
+
+interface ApiErrorResponse {
+  code?: string;
+  statusCode?: number;
+  message?: string;
+}
 
 // Custom debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -157,8 +164,15 @@ export function LabelManagementTable() {
       setNewLabelColor('#99b94a');
       toast.success('Nhãn đã được tạo thành công.');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Không thể tạo nhãn.');
+    onError: (error: AxiosError) => {
+      console.warn('Create error:', error);
+      // Check if error is due to duplicate name (EXISTS error code)
+      const responseData = error?.response?.data as ApiErrorResponse;
+      if (responseData?.code === 'EXISTS' || responseData?.statusCode === 415) {
+        toast.error(`Nhãn ${newLabelName} đã tồn tại`);
+      } else {
+        toast.error(error?.message || 'Không thể thêm nhãn mới.');
+      }
     },
   });
 
@@ -193,12 +207,28 @@ export function LabelManagementTable() {
   });
 
   const handleCreateLabel = () => {
-    if (newLabelName.trim()) {
-      createLabelMutation.mutate({
-        name: newLabelName.trim(),
-        colorCode: newLabelColor,
-      });
+    // Validate name
+    if (!newLabelName.trim()) {
+      toast.error('Tên nhãn không được để trống');
+      return;
     }
+
+    if (newLabelName.length > 255) {
+      toast.error('Tên nhãn không được vượt quá 255 ký tự');
+      return;
+    }
+
+    // Validate color code (hex format)
+    const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+    if (!hexColorRegex.test(newLabelColor)) {
+      toast.error('Mã màu phải là hex format hợp lệ (ví dụ: #ffffff hoặc #fff)');
+      return;
+    }
+
+    createLabelMutation.mutate({
+      name: newLabelName.trim(),
+      colorCode: newLabelColor,
+    });
   };
 
   const handleEditColor = (label: Label) => {
@@ -282,15 +312,19 @@ export function LabelManagementTable() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <UILabel htmlFor="name" className="mb-3 text-[#99b94a]">
-                  Tên Nhãn
-                </UILabel>
+                <div className="mb-3 flex h-6 items-center justify-between">
+                  <UILabel htmlFor="name" className="text-[#99b94a]">
+                    Tên Nhãn
+                  </UILabel>
+                  <span className="text-muted-foreground text-xs">{newLabelName.length}/255</span>
+                </div>
                 <Input
                   id="name"
                   type="text"
                   value={newLabelName}
-                  onChange={(e) => setNewLabelName(e.target.value)}
+                  onChange={(e) => setNewLabelName(e.target.value.slice(0, 255))}
                   placeholder="Nhập tên nhãn..."
+                  maxLength={255}
                 />
               </div>
               <div>
