@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+// 5MB
+
 import { Button } from '@/base/components/ui/button';
 import {
   Command,
@@ -36,6 +38,10 @@ import { CookingStepCard } from './cooking-step-card';
 import { ImageCropDialog } from './image-crop-dialog';
 import { IngredientCardWithDetails } from './ingredient-card-with-details';
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+
 interface SelectedIngredient {
   id: string;
   name: string;
@@ -57,6 +63,7 @@ interface RecipeFormProps {
 export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Form fields
   const [name, setName] = useState('');
@@ -93,6 +100,52 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
   const [isIngredientPopoverOpen, setIsIngredientPopoverOpen] = useState(false);
   const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
   const debouncedIngredientSearch = useDebounce(ingredientSearch, 300);
+
+  // Warn user about unsaved changes before leaving page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges && !isSubmitting) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges, isSubmitting]);
+
+  // Track unsaved changes when form fields change
+  useEffect(() => {
+    if (mode === 'create') {
+      if (
+        name ||
+        description ||
+        difficulty !== 'Easy' ||
+        cookTime > 0 ||
+        ration !== 1 ||
+        mainImage ||
+        selectedLabels.length > 0 ||
+        selectedIngredients.length > 0 ||
+        cookingSteps.length > 1 ||
+        cookingSteps.some((s) => s.instruction)
+      ) {
+        setHasUnsavedChanges(true);
+      } else {
+        setHasUnsavedChanges(false);
+      }
+    }
+  }, [
+    name,
+    description,
+    difficulty,
+    cookTime,
+    ration,
+    mainImage,
+    selectedLabels,
+    selectedIngredients,
+    cookingSteps,
+    mode,
+  ]);
 
   // Search labels
   useEffect(() => {
@@ -192,9 +245,36 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     }
   }, [mode, initialData]);
 
+  const validateImageFile = (file: File): string | null => {
+    // Check file type
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      return `Chỉ hỗ trợ hình ảnh JPG, PNG và GIF. Bạn đã tải lên ${file.type}`;
+    }
+
+    // Check file extension
+    const fileName = file.name.toLowerCase();
+    const fileExtension = fileName.split('.').pop();
+    if (!fileExtension || !ALLOWED_IMAGE_EXTENSIONS.includes(fileExtension)) {
+      return `Định dạng tệp không hợp lệ. Vui lòng tải lên JPG, PNG hoặc GIF`;
+    }
+
+    // Check file size
+    if (file.size > MAX_IMAGE_SIZE) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      return `Kích thước hình ảnh không được vượt quá 5MB. Hình ảnh hiện tại là ${sizeMB}MB`;
+    }
+
+    return null;
+  };
+
   const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const error = validateImageFile(file);
+      if (error) {
+        toast.error(error);
+        return;
+      }
       processImageFile(file);
     }
   };
@@ -225,10 +305,13 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     e.stopPropagation();
     setIsDragOver(false);
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file) {
+      const error = validateImageFile(file);
+      if (error) {
+        toast.error(error);
+        return;
+      }
       processImageFile(file);
-    } else if (file) {
-      toast.error('Vui lòng chỉ tải lên tệp ảnh');
     }
   };
 
@@ -244,6 +327,12 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
   };
 
   const handleStepImageChange = (index: number, file: File) => {
+    const error = validateImageFile(file);
+    if (error) {
+      toast.error(error);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onloadend = () => {
       const newSteps = [...cookingSteps];
@@ -460,6 +549,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         toast.success('Công thức đã được tạo thành công');
       }
 
+      setHasUnsavedChanges(false);
       router.push('/myrecipe');
     } catch (error) {
       console.error('Submit recipe error:', error);
@@ -535,7 +625,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         </div>
 
         {/* Right Section - Title, Description, Difficulty, Cook Time, Ration */}
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           {/* Recipe Name */}
           <div className="space-y-2">
             <Label htmlFor="name">Tên món</Label>
@@ -543,16 +633,16 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
               id="name"
               placeholder="Tên món ăn của bạn"
               value={name}
-              onChange={(e) => setName(e.target.value.slice(0, 100))}
+              onChange={(e) => setName(e.target.value.slice(0, 255))}
               onFocus={() => setIsNameFocused(true)}
               onBlur={() => setIsNameFocused(false)}
               onInvalid={handleInvalidField}
-              maxLength={100}
+              maxLength={255}
             />
             <p
               className={`text-right text-xs transition-opacity ${isNameFocused ? 'text-gray-500 opacity-100' : 'text-gray-300 opacity-0'}`}
             >
-              {name.length}/100
+              {name.length}/255
             </p>
           </div>
 
@@ -564,17 +654,17 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
               placeholder="Hãy chia sẻ với mọi người về món này của bạn nhé - ai đã truyền cảm hứng cho bạn, tại sao nó đặc biệt, bạn thích thưởng thức nó như thế nào..."
               rows={2}
               value={description}
-              onChange={(e) => setDescription(e.target.value.slice(0, 1500))}
+              onChange={(e) => setDescription(e.target.value.slice(0, 2000))}
               onFocus={() => setIsDescriptionFocused(true)}
               onBlur={() => setIsDescriptionFocused(false)}
               onInvalid={handleInvalidTextarea}
-              maxLength={1500}
-              className="break-words sm:min-h-24 md:min-h-28"
+              maxLength={2000}
+              className="w-full break-words sm:min-h-24 md:min-h-28"
             />
             <p
               className={`text-right text-xs transition-opacity ${isDescriptionFocused ? 'text-gray-500 opacity-100' : 'text-gray-300 opacity-0'}`}
             >
-              {description.length}/1500
+              {description.length}/2000
             </p>
           </div>
 
@@ -605,8 +695,12 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
                   type="number"
                   placeholder="30"
                   value={cookTime}
-                  onChange={(e) => setCookTime(parseInt(e.target.value) || 0)}
-                  min="0"
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 0;
+                    setCookTime(Math.min(Math.max(val, 1), 1440));
+                  }}
+                  min="1"
+                  max="1440"
                   step="1"
                   className="pr-12 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
@@ -646,7 +740,9 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         {/* Selected Labels */}
         <div className="flex min-h-[60px] flex-wrap gap-2 rounded-lg border p-3">
           {selectedLabels.length === 0 ? (
-            <span className="pt-2 text-sm text-gray-400 flex w-full justify-center">Chưa có nhãn nào được chọn</span>
+            <span className="flex w-full justify-center pt-2 text-sm text-gray-400">
+              Chưa có nhãn nào được chọn
+            </span>
           ) : (
             selectedLabels.map((label) => {
               const labelStyle = { backgroundColor: label.colorCode } as React.CSSProperties;
@@ -846,7 +942,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
           {isSubmitting
             ? mode === 'edit'
               ? 'Đang cập nhật...'
-              : 'Đang lưu...'
+              : 'Đang tạo...'
             : mode === 'edit'
               ? 'Cập nhật'
               : 'Lên bài'}

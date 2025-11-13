@@ -3,11 +3,16 @@
 import { GripVertical, Trash2, Upload, X } from 'lucide-react';
 import Image from 'next/image';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Card, CardContent } from '@/base/components/ui/card';
 import { Textarea } from '@/base/components/ui/textarea';
 
 import { CookingStep } from '../types';
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 interface CookingStepCardProps {
   step: CookingStep;
@@ -40,6 +45,28 @@ export function CookingStepCard({
   onRemoveStep,
 }: CookingStepCardProps) {
   const [focusedStepIndex, setFocusedStepIndex] = useState<number | null>(null);
+
+  const validateImageFile = (file: File): string | null => {
+    // Check file type
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      return `Chỉ hỗ trợ hình ảnh JPG, PNG và GIF. Bạn đã tải lên ${file.type}`;
+    }
+
+    // Check file extension
+    const fileName = file.name.toLowerCase();
+    const fileExtension = fileName.split('.').pop();
+    if (!fileExtension || !ALLOWED_IMAGE_EXTENSIONS.includes(fileExtension)) {
+      return `Định dạng tệp không hợp lệ. Vui lòng tải lên JPG, PNG hoặc GIF`;
+    }
+
+    // Check file size
+    if (file.size > MAX_IMAGE_SIZE) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      return `Kích thước hình ảnh không được vượt quá 5MB. Hình ảnh hiện tại là ${sizeMB}MB`;
+    }
+
+    return null;
+  };
 
   // Memoize object URL for File images to prevent recreation on re-render
   const imageUrl = useMemo(() => {
@@ -78,17 +105,17 @@ export function CookingStepCard({
               <Textarea
                 placeholder="Ướp cá hồi với mật ong, dầu oliu và tiêu 15 phút."
                 value={step.instruction}
-                onChange={(e) => onUpdateInstruction(e.target.value.slice(0, 500))}
+                onChange={(e) => onUpdateInstruction(e.target.value.slice(0, 1000))}
                 onFocus={() => setFocusedStepIndex(index)}
                 onBlur={() => setFocusedStepIndex(null)}
-                maxLength={500}
+                maxLength={1000}
                 rows={3}
-                className="break-words"
+                className="word-break"
               />
               <p
                 className={`text-right text-xs transition-opacity ${focusedStepIndex === index ? 'text-gray-500 opacity-100' : 'text-gray-300 opacity-0'}`}
               >
-                {step.instruction.length}/500
+                {step.instruction.length}/1000
               </p>
             </div>
 
@@ -120,7 +147,14 @@ export function CookingStepCard({
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) onAddImage(file);
+                      if (file) {
+                        const error = validateImageFile(file);
+                        if (error) {
+                          toast.error(error);
+                          return;
+                        }
+                        onAddImage(file);
+                      }
                     }}
                     aria-label={`Upload image for step ${step.stepOrder}`}
                   />

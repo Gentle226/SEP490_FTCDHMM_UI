@@ -5,6 +5,8 @@ import { HelpCircle, Lock, Plus, Trash2, Upload, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+// 5MB
+
 import { Badge } from '@/base/components/ui/badge';
 import { Button } from '@/base/components/ui/button';
 import {
@@ -25,6 +27,10 @@ import {
   Nutrient,
   ingredientManagementService,
 } from '../services/ingredient-management.service';
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 interface EditIngredientDialogProps {
   ingredient: Ingredient | null;
@@ -172,6 +178,29 @@ export function EditIngredientDialog({
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file type
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        toast.error(`Chỉ hỗ trợ hình ảnh JPG, PNG và GIF. Bạn đã tải lên ${file.type}`);
+        return;
+      }
+
+      // Validate file extension
+      const fileName = file.name.toLowerCase();
+      const fileExtension = fileName.split('.').pop();
+      if (!fileExtension || !ALLOWED_IMAGE_EXTENSIONS.includes(fileExtension)) {
+        toast.error('Định dạng tệp không hợp lệ. Vui lòng tải lên JPG, PNG hoặc GIF');
+        return;
+      }
+
+      // Validate file size
+      if (file.size > MAX_IMAGE_SIZE) {
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        toast.error(
+          `Kích thước hình ảnh không được vượt quá 5MB. Hình ảnh hiện tại là ${sizeMB}MB`,
+        );
+        return;
+      }
+
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
