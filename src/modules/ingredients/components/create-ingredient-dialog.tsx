@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { AxiosError } from 'axios';
 import { HelpCircle, Lock, Plus, Trash2, Upload, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -28,6 +29,12 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
 const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif'];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
+interface ApiErrorResponse {
+  code?: string;
+  statusCode?: number;
+  message?: string;
+}
+
 interface CreateIngredientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -52,6 +59,8 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [nutrientRows, setNutrientRows] = useState<NutrientRow[]>([]);
   const [showNutrientHelp, setShowNutrientHelp] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   // Fetch categories
   const { data: categories = [] } = useQuery({
@@ -95,9 +104,18 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
       setImagePreview(null);
       setImageFile(null);
       setNutrientRows([]);
+      setHasUnsavedChanges(false);
+      setShowCancelConfirm(false);
       initializedRef.current = false;
     }
   }, [open]);
+
+  // Track unsaved changes
+  const handleInputChange = () => {
+    if (!hasUnsavedChanges) {
+      setHasUnsavedChanges(true);
+    }
+  };
 
   const createMutation = useMutation({
     mutationFn: async (data: {
@@ -115,9 +133,15 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
       queryClient.invalidateQueries({ queryKey: ['ingredients'] });
       onOpenChange(false);
     },
-    onError: (error: Error) => {
+    onError: (error: AxiosError) => {
       console.warn('Create error:', error);
-      toast.error(error.message || 'Không thể thêm nguyên liệu');
+      // Check if error is due to duplicate name (EXISTS error code)
+      const responseData = error?.response?.data as ApiErrorResponse;
+      if (responseData?.code === 'EXISTS' || responseData?.statusCode === 415) {
+        toast.error('Tên nguyên liệu đã tồn tại');
+      } else {
+        toast.error(error?.message || 'Không thể thêm nguyên liệu');
+      }
     },
   });
 
@@ -228,6 +252,53 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
       return;
     }
 
+    // Validate nutrient value constraints: only median is required, median must > 0
+    // If min/max are provided: min >= 0, max >= 0, min < median <= max
+    for (const row of nutrientRows) {
+      if (row.nutrientId && row.median !== undefined) {
+        const median = row.median;
+
+        if (median < 0) {
+          const nutrientName =
+            nutrients.find((n) => n.id === row.nutrientId)?.vietnameseName || 'Thành phần';
+          toast.error(`${nutrientName}: Median phải lớn hơn 0`);
+          return;
+        }
+
+        // If min is provided, validate: min >= 0 and min < median
+        if (row.min !== undefined && row.min !== null) {
+          if (row.min < 0) {
+            const nutrientName =
+              nutrients.find((n) => n.id === row.nutrientId)?.vietnameseName || 'Thành phần';
+            toast.error(`${nutrientName}: Min không được âm`);
+            return;
+          }
+          if (row.min >= median) {
+            const nutrientName =
+              nutrients.find((n) => n.id === row.nutrientId)?.vietnameseName || 'Thành phần';
+            toast.error(`${nutrientName}: Min phải nhỏ hơn Median`);
+            return;
+          }
+        }
+
+        // If max is provided, validate: max >= 0 and median <= max
+        if (row.max !== undefined && row.max !== null) {
+          if (row.max < 0) {
+            const nutrientName =
+              nutrients.find((n) => n.id === row.nutrientId)?.vietnameseName || 'Thành phần';
+            toast.error(`${nutrientName}: Max không được âm`);
+            return;
+          }
+          if (median > row.max) {
+            const nutrientName =
+              nutrients.find((n) => n.id === row.nutrientId)?.vietnameseName || 'Thành phần';
+            toast.error(`${nutrientName}: Median phải nhỏ hơn hoặc bằng Max`);
+            return;
+          }
+        }
+      }
+    }
+
     // Validate all required nutrients are filled
     const filledNutrientIds = nutrientRows
       .filter((row) => row.nutrientId)
@@ -264,6 +335,7 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
       nutrients: mappedNutrients,
       ingredientCategoryIds: selectedCategoryIds,
     });
+    setHasUnsavedChanges(false);
   };
 
   // Get category options for multi-select
@@ -296,8 +368,20 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[800px]">
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        if (newOpen === false && hasUnsavedChanges) {
+          setShowCancelConfirm(true);
+        } else {
+          onOpenChange(newOpen);
+        }
+      }}
+    >
+      <DialogContent
+        className="max-h-[90vh] overflow-y-auto sm:max-w-[800px]"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-[#99b94a]">
             Thêm nguyên liệu mới
@@ -314,10 +398,15 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
             <Input
               id="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value.slice(0, 255));
+                handleInputChange();
+              }}
               placeholder="Nhập tên nguyên liệu..."
+              maxLength={255}
               required
             />
+            <p className="text-xs text-gray-500">{name.length}/255</p>
           </div>
 
           {/* Category (multi-select with tags) */}
@@ -373,11 +462,16 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
             <Textarea
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value.slice(0, 1000));
+                handleInputChange();
+              }}
               placeholder="Nguồn protein nạc, ít chất béo..."
+              maxLength={1000}
               rows={3}
               className="resize-none break-words"
             />
+            <p className="text-xs text-gray-500">{description.length}/1000</p>
           </div>
 
           {/* Image Upload */}
@@ -609,7 +703,17 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
 
           {/* Actions */}
           <div className="flex justify-end gap-3 border-t pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                if (hasUnsavedChanges) {
+                  setShowCancelConfirm(true);
+                } else {
+                  onOpenChange(false);
+                }
+              }}
+            >
               Hủy
             </Button>
             <Button
@@ -620,6 +724,41 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
               {createMutation.isPending ? 'Đang lưu...' : 'Thêm nguyên liệu'}
             </Button>
           </div>
+
+          {/* Cancel confirmation dialog - overlay the whole form */}
+          {showCancelConfirm && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+              <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
+                <h3 className="mb-4 text-xl font-semibold text-gray-900">
+                  Bạn có chắc muốn thoát?
+                </h3>
+                <p className="mb-6 text-base text-gray-600">
+                  Bạn có thay đổi chưa lưu, bạn có chắc muốn thoát?
+                </p>
+                <div className="flex justify-end gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCancelConfirm(false)}
+                    className="min-w-[140px]"
+                  >
+                    Tiếp tục chỉnh sửa
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setShowCancelConfirm(false);
+                      setHasUnsavedChanges(false);
+                      onOpenChange(false);
+                    }}
+                    className="min-w-[140px] bg-red-600 hover:bg-red-700"
+                  >
+                    Thoát không lưu
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </form>
       </DialogContent>
     </Dialog>

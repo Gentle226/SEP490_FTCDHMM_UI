@@ -179,7 +179,7 @@ export function EditPermissionsDialog({
             Hủy
           </Button>
           <Button
-            className="bg-[#99b94a]"
+            className="bg-[#99b94a] hover:bg-[#88a43a]"
             onClick={handleSave}
             disabled={updatePermissionsMutation.isPending}
           >

@@ -481,20 +481,22 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                           </div>
                         )}
 
-                        <div>
-                          <span className="font-semibold">Phân loại: </span>
-                          <div className="mt-1 flex flex-wrap gap-1">
-                            {ingredient?.ingredientCategoryIds &&
-                            ingredient.ingredientCategoryIds.length > 0 ? (
-                              getCategoryNames(ingredient.ingredientCategoryIds).map((category) => (
-                                <Badge key={category} variant="secondary">
-                                  {category}
-                                </Badge>
-                              ))
-                            ) : (
-                              <span className="text-muted-foreground text-sm">Chưa phân loại</span>
-                            )}
-                          </div>
+                        <div className="flex flex-wrap items-start gap-2">
+                          <span className="font-semibold">Phân loại:</span>
+                          {ingredient?.ingredientCategoryIds &&
+                          ingredient.ingredientCategoryIds.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {getCategoryNames(ingredient.ingredientCategoryIds).map(
+                                (category) => (
+                                  <Badge key={category} variant="secondary">
+                                    {category}
+                                  </Badge>
+                                ),
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">Chưa phân loại</span>
+                          )}
                         </div>
 
                         <div>

@@ -208,14 +208,14 @@ export function PermissionManagementTable() {
           <h2 className="text-3xl font-bold text-[#99b94a]">Quản Lý Phân Quyền</h2>
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#99b94a] hover:bg-[#7a8f3a]">
+              <Button className="bg-[#99b94a] hover:bg-[#88a838]">
                 <Plus className="mr-2 h-4 w-4" />
                 Tạo Vai Trò
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle className="text-[#99b94a]">Tạo Vai Trò Mới</DialogTitle>
+                <DialogTitle className="bg-[#88a838] text-[#99b94a]">Tạo Vai Trò Mới</DialogTitle>
                 <DialogDescription>
                   Nhập tên cho vai trò mới. Bạn có thể cấu hình quyền sau khi tạo.
                 </DialogDescription>
@@ -239,7 +239,7 @@ export function PermissionManagementTable() {
                   Hủy
                 </Button>
                 <Button
-                  className="bg-[#99b94a]"
+                  className="bg-[#99b94a] hover:bg-[#88a838]"
                   onClick={handleCreateRole}
                   disabled={!newRoleName.trim() || createRoleMutation.isPending}
                 >
