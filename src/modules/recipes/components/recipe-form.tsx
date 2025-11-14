@@ -340,13 +340,18 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const newSteps = [...cookingSteps];
-      newSteps[index].image = file;
-      setCookingSteps(newSteps);
-    };
-    reader.readAsDataURL(file);
+    const newSteps = [...cookingSteps];
+    const currentImages = newSteps[index].images || [];
+    const imageOrder = currentImages.length + 1;
+
+    currentImages.push({
+      id: crypto.randomUUID(),
+      image: file,
+      imageOrder: imageOrder,
+    });
+
+    newSteps[index].images = currentImages;
+    setCookingSteps(newSteps);
   };
 
   const addCookingStep = () => {
@@ -918,10 +923,16 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
               onDrop={(e) => handleCookStepDrop(e, index)}
               onUpdateInstruction={(instruction) => updateStepDescription(index, instruction)}
               onAddImage={(file) => handleStepImageChange(index, file)}
-              onRemoveImage={() => {
+              onRemoveImage={(imageIndex) => {
                 const newSteps = [...cookingSteps];
-                newSteps[index].image = undefined;
-                newSteps[index].imagePreview = undefined;
+                newSteps[index].images = (newSteps[index].images || []).filter(
+                  (_, idx) => idx !== imageIndex,
+                );
+                setCookingSteps(newSteps);
+              }}
+              onReorderImages={(reorderedImages) => {
+                const newSteps = [...cookingSteps];
+                newSteps[index].images = reorderedImages;
                 setCookingSteps(newSteps);
               }}
               onRemoveStep={() => removeCookingStep(index)}

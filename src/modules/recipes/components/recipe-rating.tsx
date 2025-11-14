@@ -1,9 +1,13 @@
 'use client';
 
-import { Star } from 'lucide-react';
+import { MessageCircle, Star, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-import { useGetAverageRating, useRateRecipe } from '../hooks/use-recipe-actions';
+import { Button } from '@/base/components/ui/button';
+import { Textarea } from '@/base/components/ui/textarea';
+
+import { useDeleteRating, useGetAverageRating, useRateRecipe } from '../hooks/use-recipe-actions';
+import { FeedbackDialog } from './feedback-dialog';
 
 interface RecipeRatingProps {
   recipeId: string;
@@ -14,7 +18,7 @@ interface RecipeRatingProps {
 
 /**
  * RecipeRating Component
- * Displays average rating and allows users to submit ratings
+ * Displays average rating and allows users to submit ratings with feedback
  */
 export function RecipeRating({
   recipeId,
@@ -23,10 +27,14 @@ export function RecipeRating({
   enableRating = true,
 }: RecipeRatingProps) {
   const [selectedScore, setSelectedScore] = useState<number>(0);
+  const [feedback, setFeedback] = useState<string>('');
   const [hoveredScore, setHoveredScore] = useState<number>(0);
+  const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
+  const [userRatingId, setUserRatingId] = useState<string | null>(null);
 
   const { data: averageRating, isLoading: isLoadingAverage } = useGetAverageRating(recipeId);
   const { mutate: submitRating, isPending: isSubmitting } = useRateRecipe();
+  const { mutate: deleteRating, isPending: isDeleting } = useDeleteRating();
 
   const handleStarClick = (score: number) => {
     if (!enableRating) return;
@@ -36,10 +44,15 @@ export function RecipeRating({
   const handleSubmitRating = () => {
     if (selectedScore > 0) {
       submitRating(
-        { recipeId, score: selectedScore },
+        { recipeId, score: selectedScore, feedback },
         {
-          onSuccess: () => {
+          onSuccess: (response) => {
+            // response is RatingResponse with id
+            if (response?.id) {
+              setUserRatingId(response.id);
+            }
             setSelectedScore(0);
+            setFeedback('');
             onRatingSubmitted?.();
           },
         },
@@ -47,73 +60,153 @@ export function RecipeRating({
     }
   };
 
+  const handleDeleteRating = () => {
+    if (!userRatingId) return;
+
+    deleteRating(
+      { ratingId: userRatingId },
+      {
+        onSuccess: () => {
+          setUserRatingId(null);
+          setSelectedScore(0);
+          setFeedback('');
+          onRatingSubmitted?.();
+        },
+      },
+    );
+  };
+
   return (
-    <div className="space-y-4">
-      {/* Average Rating Display */}
-      {showAverageRating && (
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star
-                key={star}
-                size={20}
-                style={
-                  star <= Math.round(averageRating || 0)
-                    ? { fill: '#99b94a', color: '#99b94a' }
-                    : undefined
-                }
-                className={star <= Math.round(averageRating || 0) ? '' : 'text-gray-300'}
-              />
-            ))}
-          </div>
-          <span className="text-sm font-medium text-gray-700">
-            {isLoadingAverage ? 'Đang tải...' : `${(averageRating || 0).toFixed(1)}/5`}
-          </span>
-        </div>
-      )}
-
-      {/* Rating Input */}
-      {enableRating && (
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-700">Đánh giá công thức</p>
-          <div className="flex items-center gap-1">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={star}
-                type="button"
-                onClick={() => handleStarClick(star)}
-                onMouseEnter={() => setHoveredScore(star)}
-                onMouseLeave={() => setHoveredScore(0)}
-                className="p-0 transition-transform hover:scale-110"
-                disabled={isSubmitting}
-                title={`Đánh giá ${star} sao`}
-                aria-label={`Đánh giá ${star} sao`}
-              >
-                <Star
-                  size={24}
-                  style={
-                    star <= (hoveredScore || selectedScore)
-                      ? { fill: '#99b94a', color: '#99b94a' }
-                      : undefined
-                  }
-                  className={star <= (hoveredScore || selectedScore) ? '' : 'text-gray-300'}
-                />
-              </button>
-            ))}
-          </div>
-
-          {selectedScore > 0 && (
-            <button
-              type="button"
-              onClick={handleSubmitRating}
-              disabled={isSubmitting}
-              className="mt-2 rounded-lg bg-[#99b94a] px-4 py-2 text-sm font-medium text-white hover:bg-[#88a43a] disabled:opacity-50"
+    <>
+      <div className="space-y-4">
+        {/* Average Rating Display */}
+        {showAverageRating && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    size={20}
+                    style={
+                      star <= Math.round(averageRating || 0)
+                        ? { fill: '#99b94a', color: '#99b94a' }
+                        : undefined
+                    }
+                    className={star <= Math.round(averageRating || 0) ? '' : 'text-gray-300'}
+                  />
+                ))}
+              </div>
+              <span className="text-sm font-medium text-gray-700">
+                {isLoadingAverage ? 'Đang tải...' : `${(averageRating || 0).toFixed(1)}/5`}
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+              onClick={() => setIsFeedbackDialogOpen(true)}
             >
-              {isSubmitting ? 'Đang gửi...' : 'Gửi đánh giá'}
-            </button>
-          )}
-        </div>
-      )}
-    </div>
+              <MessageCircle className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">Xem nhận xét</span>
+            </Button>
+          </div>
+        )}
+
+        {/* Rating Input */}
+        {enableRating && (
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-gray-700">Đánh giá công thức</p>
+
+            {/* Star Rating */}
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => handleStarClick(star)}
+                    onMouseEnter={() => setHoveredScore(star)}
+                    onMouseLeave={() => setHoveredScore(0)}
+                    className="p-0 transition-transform hover:scale-110"
+                    disabled={isSubmitting || isDeleting}
+                    title={`Đánh giá ${star} sao`}
+                    aria-label={`Đánh giá ${star} sao`}
+                  >
+                    <Star
+                      size={24}
+                      style={
+                        star <= (hoveredScore || selectedScore)
+                          ? { fill: '#99b94a', color: '#99b94a' }
+                          : undefined
+                      }
+                      className={star <= (hoveredScore || selectedScore) ? '' : 'text-gray-300'}
+                    />
+                  </button>
+                ))}
+              </div>
+
+              {/* Delete Rating Button */}
+              {userRatingId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDeleteRating}
+                  disabled={isDeleting}
+                  className="gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="text-xs sm:text-sm">
+                    {isDeleting ? 'Đang xóa...' : 'Xóa đánh giá'}
+                  </span>
+                </Button>
+              )}
+            </div>
+
+            {/* Feedback Textarea */}
+            {selectedScore > 0 && (
+              <div className="space-y-2">
+                <div>
+                  <label
+                    htmlFor="rating-feedback"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
+                    Nhận xét của bạn (tùy chọn)
+                  </label>
+                  <Textarea
+                    id="rating-feedback"
+                    placeholder="Chia sẻ ý kiến của bạn về công thức này..."
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value.slice(0, 256))}
+                    maxLength={256}
+                    rows={3}
+                    className="resize-none"
+                    disabled={isSubmitting}
+                  />
+                  <p className="mt-1 text-right text-xs text-gray-500">
+                    {feedback.length}/256 ký tự
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSubmitRating}
+                  disabled={isSubmitting}
+                  className="mt-2 rounded-lg bg-[#99b94a] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#88a43a] disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Đang gửi...' : 'Gửi đánh giá'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <FeedbackDialog
+        recipeId={recipeId}
+        isOpen={isFeedbackDialogOpen}
+        onOpenChange={setIsFeedbackDialogOpen}
+      />
+    </>
   );
 }

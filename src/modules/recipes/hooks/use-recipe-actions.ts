@@ -316,3 +316,25 @@ export function useRateRecipe() {
     },
   });
 }
+
+/**
+ * Hook to delete a recipe rating
+ */
+export function useDeleteRating() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ ratingId }: { ratingId: string }) => ratingService.deleteRating(ratingId),
+    onSuccess: () => {
+      // Invalidate all rating queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['averageRating'] });
+      toast.success('Đã xóa đánh giá');
+    },
+    onError: (error: unknown) => {
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        'Không thể xóa đánh giá';
+      toast.error(errorMessage);
+    },
+  });
+}

@@ -143,7 +143,11 @@ export function ImageCropDialog({
             <Button variant="outline" onClick={onCancel} disabled={isProcessing}>
               Hủy
             </Button>
-            <Button onClick={handleConfirm} disabled={isProcessing}>
+            <Button
+              className="bg-[#99b94a] hover:bg-[#88a43a]"
+              onClick={handleConfirm}
+              disabled={isProcessing}
+            >
               {isProcessing ? 'Đang xử lý...' : 'Xác nhận'}
             </Button>
           </div>

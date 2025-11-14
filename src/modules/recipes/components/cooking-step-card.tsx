@@ -2,13 +2,13 @@
 
 import { GripVertical, Trash2, Upload, X } from 'lucide-react';
 import Image from 'next/image';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Card, CardContent } from '@/base/components/ui/card';
 import { Textarea } from '@/base/components/ui/textarea';
 
-import { CookingStep } from '../types';
+import { CookingStep, CookingStepImage } from '../types';
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
 const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif'];
@@ -26,7 +26,8 @@ interface CookingStepCardProps {
   onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
   onUpdateInstruction: (instruction: string) => void;
   onAddImage: (file: File) => void;
-  onRemoveImage: () => void;
+  onRemoveImage: (imageIndex: number) => void;
+  onReorderImages: (images: CookingStepImage[]) => void;
   onRemoveStep: () => void;
 }
 
@@ -42,9 +43,11 @@ export function CookingStepCard({
   onUpdateInstruction,
   onAddImage,
   onRemoveImage,
+  onReorderImages,
   onRemoveStep,
 }: CookingStepCardProps) {
   const [focusedStepIndex, setFocusedStepIndex] = useState<number | null>(null);
+  const [draggedImageIndex, setDraggedImageIndex] = useState<number | null>(null);
 
   const validateImageFile = (file: File): string | null => {
     // Check file type
@@ -68,15 +71,12 @@ export function CookingStepCard({
     return null;
   };
 
-  // Memoize object URL for File images to prevent recreation on re-render
-  const imageUrl = useMemo(() => {
-    if (!step.image && !step.imagePreview) return null;
-
-    if (step.image instanceof File) {
-      return URL.createObjectURL(step.image);
+  const getImageUrl = (img: CookingStepImage): string | null => {
+    if (img.image instanceof File) {
+      return URL.createObjectURL(img.image);
     }
-    return step.imagePreview || null;
-  }, [step.image, step.imagePreview]);
+    return img.imageUrl || (typeof img.image === 'string' ? img.image : null);
+  };
 
   return (
     <Card
@@ -119,47 +119,96 @@ export function CookingStepCard({
               </p>
             </div>
 
-            <div className="flex items-center gap-4">
-              {imageUrl ? (
-                <div className="relative h-32 w-48 overflow-hidden rounded-lg border">
-                  <Image
-                    src={imageUrl}
-                    alt={`Step ${step.stepOrder}`}
-                    fill
-                    sizes="192px"
-                    className="object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={onRemoveImage}
-                    className="absolute top-1 right-1 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
-                    aria-label="Remove step image"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ) : (
-                <label className="flex h-32 w-48 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400">
-                  <Upload className="h-6 w-6 text-gray-400" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const error = validateImageFile(file);
-                        if (error) {
-                          toast.error(error);
-                          return;
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-medium text-gray-600">
+                Hình ảnh ({step.images?.length || 0}/5)
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {step.images && step.images.length > 0
+                  ? step.images.map((img, imgIndex) => {
+                      const imgUrl = getImageUrl(img);
+
+                      return (
+                        <div
+                          key={imgIndex}
+                          draggable
+                          onDragStart={(e) => {
+                            setDraggedImageIndex(imgIndex);
+                            e.dataTransfer.effectAllowed = 'move';
+                          }}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = 'move';
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            if (draggedImageIndex !== null && draggedImageIndex !== imgIndex) {
+                              const newImages = [...step.images!];
+                              const [draggedImg] = newImages.splice(draggedImageIndex, 1);
+                              newImages.splice(imgIndex, 0, draggedImg);
+                              // Update imageOrder for all images
+                              newImages.forEach((img, idx) => {
+                                img.imageOrder = idx + 1;
+                              });
+                              onReorderImages(newImages);
+                              setDraggedImageIndex(null);
+                            }
+                          }}
+                          onDragEnd={() => setDraggedImageIndex(null)}
+                          className={`relative h-20 w-20 cursor-move overflow-hidden rounded-lg border-2 transition-all ${
+                            draggedImageIndex === imgIndex
+                              ? 'border-blue-500 opacity-50'
+                              : 'border-gray-200'
+                          }`}
+                        >
+                          {imgUrl && (
+                            <Image
+                              src={imgUrl}
+                              alt={`Step ${step.stepOrder} Image ${imgIndex + 1}`}
+                              fill
+                              sizes="80px"
+                              className="object-cover"
+                            />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => onRemoveImage(imgIndex)}
+                            className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-bl-lg bg-red-500 p-0.5 text-white hover:bg-red-600"
+                            aria-label="Remove image"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                          <div className="bg-opacity-50 absolute right-0 bottom-0 left-0 bg-black px-1 py-0.5 text-center text-xs font-medium text-white">
+                            {imgIndex + 1}
+                          </div>
+                        </div>
+                      );
+                    })
+                  : null}
+
+                {(!step.images || step.images.length < 5) && (
+                  <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 transition-colors hover:border-gray-400">
+                    <Upload className="h-4 w-4 text-gray-400" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const error = validateImageFile(file);
+                          if (error) {
+                            toast.error(error);
+                            return;
+                          }
+                          onAddImage(file);
                         }
-                        onAddImage(file);
-                      }
-                    }}
-                    aria-label={`Upload image for step ${step.stepOrder}`}
-                  />
-                </label>
-              )}
+                      }}
+                      aria-label={`Upload image for step ${step.stepOrder}`}
+                    />
+                  </label>
+                )}
+              </div>
             </div>
           </div>
         </div>

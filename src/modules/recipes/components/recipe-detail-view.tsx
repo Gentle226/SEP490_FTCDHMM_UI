@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/base/components/ui/button';
@@ -77,6 +77,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
     comments,
     loading: commentsLoading,
     createComment,
+    updateComment,
     deleteComment,
     deleteCommentAsAuthor,
     deleteCommentAsAdmin,
@@ -170,6 +171,20 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
     }
   };
 
+  const handleUpdateComment = async (commentId: string, content: string) => {
+    try {
+      const token = getToken();
+      if (!token) {
+        toast.error('Vui lòng đăng nhập để sửa bình luận');
+        return;
+      }
+      await updateComment(commentId, { content }, token);
+    } catch (error) {
+      // Error already handled by toast in the hook
+      console.error('Update comment error:', error);
+    }
+  };
+
   const handleCreateComment = async (parentCommentId: string | undefined, content: string) => {
     try {
       const token = getToken();
@@ -202,6 +217,38 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
       throw error;
     }
   };
+
+  // Setup real-time listeners for rating updates via SignalR
+  useEffect(() => {
+    if (!signalRConnection) {
+      console.warn('[RecipeDetailView] No SignalR connection available');
+      return;
+    }
+
+    console.warn(
+      '[RecipeDetailView] Setting up rating listeners, connection state:',
+      signalRConnection.state,
+    );
+
+    // Handle rating update event - refresh average rating
+    signalRConnection.on('RatingUpdated', (data) => {
+      console.warn('[RecipeDetailView] Received RatingUpdated event:', data);
+      queryClient.invalidateQueries({ queryKey: ['averageRating', recipeId] });
+    });
+
+    // Handle rating delete event - refresh average rating
+    signalRConnection.on('RatingDeleted', (data) => {
+      console.warn('[RecipeDetailView] Received RatingDeleted event:', data);
+      queryClient.invalidateQueries({ queryKey: ['averageRating', recipeId] });
+    });
+
+    // Cleanup listeners on unmount
+    return () => {
+      console.warn('[RecipeDetailView] Cleaning up rating listeners');
+      signalRConnection.off('RatingUpdated');
+      signalRConnection.off('RatingDeleted');
+    };
+  }, [signalRConnection, recipeId, queryClient]);
 
   if (isLoading) {
     return <RecipeDetailSkeleton />;
@@ -264,7 +311,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
         </div>
 
         {/* Right: Title, Labels, Author, Description, Buttons */}
-        <div className="space-y-3 sm:space-y-4">
+        <div className="min-w-0 space-y-3 sm:space-y-4">
           {/* Title */}
           <h1 className="text-2xl font-bold text-[#99b94a] sm:text-3xl">{recipe.name}</h1>
 
@@ -349,7 +396,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
           {/* Description */}
           {recipe.description && (
             <div className="pt-1 sm:pt-2">
-              <p className="text-xs leading-relaxed whitespace-pre-wrap text-gray-700 sm:text-sm">
+              <p className="w-full text-xs leading-relaxed break-words whitespace-pre-wrap text-gray-700 sm:text-sm">
                 {recipe.description}
               </p>
             </div>
@@ -488,17 +535,29 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                             {step.instruction}
                           </p>
 
-                          {/* Step Image */}
-                          {step.imageUrl && (
-                            <div className="relative h-40 w-full overflow-hidden rounded-lg border sm:h-64 lg:w-96">
-                              <Image
-                                src={step.imageUrl}
-                                alt={`Bước ${step.stepOrder}`}
-                                fill
-                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 384px"
-                                className="object-cover"
-                                priority={false}
-                              />
+                          {/* Step Images */}
+                          {step.cookingStepImages && step.cookingStepImages.length > 0 && (
+                            <div className="space-y-2 sm:space-y-3">
+                              {step.cookingStepImages
+                                .filter(
+                                  (img): img is typeof img & { imageUrl: string } => !!img.imageUrl,
+                                )
+                                .sort((a, b) => (a.imageOrder || 0) - (b.imageOrder || 0)) // Sort by imageOrder
+                                .map((image) => (
+                                  <div
+                                    key={`step-image-${image.id}`}
+                                    className="relative h-40 w-full overflow-hidden rounded-lg border sm:h-64 lg:w-96"
+                                  >
+                                    <Image
+                                      src={image.imageUrl}
+                                      alt={`Bước ${step.stepOrder}`}
+                                      fill
+                                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 384px"
+                                      className="object-cover"
+                                      priority={false}
+                                    />
+                                  </div>
+                                ))}
                             </div>
                           )}
                         </div>
@@ -525,6 +584,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
           isRecipeAuthor={isAuthor}
           isAdmin={isAdmin}
           onDelete={handleDeleteComment}
+          onEdit={handleUpdateComment}
           onCreateComment={handleCreateComment}
           loading={commentsLoading}
         />

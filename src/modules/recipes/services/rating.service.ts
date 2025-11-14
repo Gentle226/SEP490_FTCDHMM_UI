@@ -32,11 +32,11 @@ class RatingService extends HttpClient {
 
   /**
    * Delete rating for a recipe
-   * DELETE /api/rating/{recipeId}
+   * DELETE /api/rating/{ratingId}
    * This endpoint requires authentication
    */
-  public async deleteRating(recipeId: string) {
-    return this.delete<void>(`api/rating/${recipeId}`, {
+  public async deleteRating(ratingId: string) {
+    return this.delete<void>(`api/rating/${ratingId}`, {
       isPrivateRoute: true,
     });
   }

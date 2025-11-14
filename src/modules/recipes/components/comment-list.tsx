@@ -17,6 +17,7 @@ interface CommentListProps {
   isRecipeAuthor?: boolean;
   isAdmin?: boolean;
   onDelete: (commentId: string) => Promise<void>;
+  onEdit?: (commentId: string, content: string) => Promise<void>;
   onCreateComment?: (parentCommentId: string | undefined, content: string) => Promise<void>;
   loading?: boolean;
   isDeleting?: boolean;
@@ -29,6 +30,7 @@ export const CommentList: React.FC<CommentListProps> = ({
   isRecipeAuthor,
   isAdmin,
   onDelete,
+  onEdit,
   onCreateComment,
   loading = false,
   isDeleting = false,
@@ -106,6 +108,7 @@ export const CommentList: React.FC<CommentListProps> = ({
               isRecipeAuthor={isRecipeAuthor}
               isAdmin={isAdmin}
               onDelete={onDelete}
+              onEdit={onEdit}
               onReplyClick={handleReplyClick}
               onCreateComment={onCreateComment}
               isDeleting={isDeleting}

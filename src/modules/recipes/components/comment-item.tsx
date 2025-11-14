@@ -16,6 +16,7 @@ interface CommentItemProps {
   isRecipeAuthor?: boolean;
   isAdmin?: boolean;
   onDelete: (commentId: string) => Promise<void>;
+  onEdit?: (commentId: string, content: string) => Promise<void>;
   onReplyClick?: (parentCommentId: string) => void;
   onCreateComment?: (parentCommentId: string | undefined, content: string) => Promise<void>;
   isDeleting?: boolean;
@@ -32,6 +33,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   isRecipeAuthor,
   isAdmin,
   onDelete,
+  onEdit,
   onReplyClick,
   onCreateComment,
   isDeleting = false,
@@ -42,7 +44,11 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 }) => {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(comment.content);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const canDelete = currentUserId === comment.userId || isRecipeAuthor || isAdmin;
+  const canEdit = currentUserId === comment.userId;
   const isLastChild = index === siblingsCount - 1;
 
   const handleDeleteClick = async (e: React.MouseEvent) => {
@@ -62,6 +68,41 @@ export const CommentItem: React.FC<CommentItemProps> = ({
       toast.error(errorMessage);
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsEditing(true);
+  };
+
+  const handleEditCancel = () => {
+    setEditContent(comment.content);
+    setIsEditing(false);
+  };
+
+  const handleEditSave = async () => {
+    if (!editContent.trim()) {
+      toast.error('Nội dung bình luận không được để trống');
+      return;
+    }
+
+    if (editContent === comment.content) {
+      setIsEditing(false);
+      return;
+    }
+
+    setIsSavingEdit(true);
+    try {
+      await onEdit?.(comment.id, editContent);
+      toast.success('Bình luận đã được cập nhật');
+      setIsEditing(false);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Lỗi khi cập nhật bình luận';
+      toast.error(errorMessage);
+    } finally {
+      setIsSavingEdit(false);
     }
   };
 
@@ -145,10 +186,40 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               {comment.firstName} {comment.lastName}
             </button>
 
-            {/* Content */}
-            <p className="mt-0.5 text-sm break-words whitespace-pre-wrap text-gray-800 sm:text-[15px]">
-              {comment.content}
-            </p>
+            {/* Content - Show edit form or display content */}
+            {isEditing ? (
+              <div className="mt-2 space-y-2">
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  maxLength={2048}
+                  rows={3}
+                  className="w-full rounded border border-gray-300 p-2 text-sm font-normal"
+                  placeholder="Chỉnh sửa bình luận..."
+                  disabled={isSavingEdit}
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleEditSave}
+                    disabled={isSavingEdit}
+                    className="text-xs font-semibold text-[#99b94a] hover:underline disabled:opacity-50"
+                  >
+                    {isSavingEdit ? 'Đang lưu...' : 'Lưu'}
+                  </button>
+                  <button
+                    onClick={handleEditCancel}
+                    disabled={isSavingEdit}
+                    className="text-xs font-semibold text-gray-600 hover:underline disabled:opacity-50"
+                  >
+                    Hủy
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-0.5 text-sm break-words whitespace-pre-wrap text-gray-800 sm:text-[15px]">
+                {comment.content}
+              </p>
+            )}
           </div>
 
           {/* Actions Row */}
@@ -168,6 +239,16 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 className="font-semibold transition-colors hover:text-[#99b94a] hover:underline"
               >
                 Trả lời
+              </button>
+            )}
+
+            {/* Edit Button */}
+            {canEdit && !isEditing && (
+              <button
+                onClick={handleEditClick}
+                className="font-semibold transition-colors hover:text-[#99b94a] hover:underline"
+              >
+                Sửa
               </button>
             )}
 
@@ -209,6 +290,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               isRecipeAuthor={isRecipeAuthor}
               isAdmin={isAdmin}
               onDelete={onDelete}
+              onEdit={onEdit}
               onReplyClick={onReplyClick}
               onCreateComment={onCreateComment}
               level={level + 1}

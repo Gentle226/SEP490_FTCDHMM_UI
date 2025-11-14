@@ -1,6 +1,7 @@
 import { HttpClient } from '@/base/lib';
 
 import { CreateRecipeRequest, MyRecipeResponse, Recipe, RecipeDetail } from '../types';
+import { RatingResponse } from '../types/rating.types';
 
 interface PaginationParams {
   pageNumber?: number;
@@ -267,6 +268,26 @@ class RecipeService extends HttpClient {
   public async unsaveRecipe(recipeId: string) {
     return this.delete<void>(`api/Recipe/${recipeId}/save`, {
       isPrivateRoute: true,
+    });
+  }
+
+  /**
+   * Get recipe ratings and feedback
+   */
+  public async getRecipeRatings(recipeId: string, params: PaginationParams = {}) {
+    const { pageNumber = 1, pageSize = 10 } = params;
+
+    return this.get<{
+      items: RatingResponse[];
+      totalCount: number;
+      pageNumber: number;
+      pageSize: number;
+    }>(`api/Recipe/${recipeId}/rating`, {
+      isPrivateRoute: false,
+      params: {
+        PageNumber: pageNumber,
+        PageSize: pageSize,
+      },
     });
   }
 }

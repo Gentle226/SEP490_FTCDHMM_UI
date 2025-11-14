@@ -88,9 +88,10 @@ class CommentService {
 
   async updateComment(
     recipeId: string,
+    commentId: string,
     request: UpdateCommentRequest,
     token: string,
-  ): Promise<void> {
+  ): Promise<Comment> {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
@@ -104,7 +105,7 @@ class CommentService {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/comment/${recipeId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/comment/${recipeId}/${commentId}`, {
         method: 'PUT',
         headers,
         credentials: 'include', // Gửi cookies/credentials
@@ -117,6 +118,9 @@ class CommentService {
       if (!response.ok) {
         throw new Error(`Failed to update comment: ${response.statusText}`);
       }
+
+      const data = await response.json();
+      return data;
     } catch (err) {
       console.error('[CommentService] updateComment error:', {
         message: err instanceof Error ? err.message : 'Unknown error',

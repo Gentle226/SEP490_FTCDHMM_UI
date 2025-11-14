@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { commentService } from '../services/comment.service';
-import { Comment, CommentDeletedData, CreateCommentRequest } from '../types/comment.types';
+import { Comment, CreateCommentRequest } from '../types/comment.types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const useCommentManager = (recipeId: string, connection: any | null) => {
@@ -135,26 +135,58 @@ export const useCommentManager = (recipeId: string, connection: any | null) => {
     [addCommentToTree],
   );
 
+  // Helper function to update a comment in the tree
+  const updateCommentInTree = useCallback(
+    (commentList: Comment[], updatedComment: Comment): Comment[] => {
+      return commentList.map((comment) => {
+        if (comment.id === updatedComment.id) {
+          console.warn('[CommentManager] Updating comment:', updatedComment.id);
+          return { ...comment, ...updatedComment };
+        }
+
+        // Recursively search in nested replies
+        if (comment.replies && comment.replies.length > 0) {
+          return {
+            ...comment,
+            replies: updateCommentInTree(comment.replies, updatedComment),
+          };
+        }
+
+        return comment;
+      });
+    },
+    [],
+  );
+
   // Setup real-time event listeners
   useEffect(() => {
     if (!connection) return;
 
-    // Handle new comment event
-    connection.on('ReceiveComment', (newComment: Comment) => {
+    // Handle new comment event - backend sends 'CommentAdded' with Comment object
+    connection.on('CommentAdded', (newComment: Comment) => {
+      console.warn('[CommentManager] Received CommentAdded event:', newComment.id);
       addNewComment(newComment);
     });
 
-    // Handle deleted comment event
-    connection.on('CommentDeleted', (data: CommentDeletedData) => {
-      setComments((prev) => removeDeletedComment(prev, data.commentId));
+    // Handle updated comment event - backend sends 'CommentUpdated' with Comment object
+    connection.on('CommentUpdated', (updatedComment: Comment) => {
+      console.warn('[CommentManager] Received CommentUpdated event:', updatedComment.id);
+      setComments((prev) => updateCommentInTree(prev, updatedComment));
+    });
+
+    // Handle deleted comment event - backend sends 'CommentDeleted' with commentId (guid)
+    connection.on('CommentDeleted', (commentId: string) => {
+      console.warn('[CommentManager] Received CommentDeleted event:', commentId);
+      setComments((prev) => removeDeletedComment(prev, commentId));
     });
 
     // Cleanup listeners on unmount
     return () => {
-      connection.off('ReceiveComment');
+      connection.off('CommentAdded');
+      connection.off('CommentUpdated');
       connection.off('CommentDeleted');
     };
-  }, [connection, addNewComment, removeDeletedComment]);
+  }, [connection, addNewComment, removeDeletedComment, updateCommentInTree]);
 
   // Create comment
   const createComment = useCallback(
@@ -218,11 +250,31 @@ export const useCommentManager = (recipeId: string, connection: any | null) => {
     [],
   );
 
+  // Update comment
+  const updateComment = useCallback(
+    async (
+      commentId: string,
+      request: { content: string; mentionedUserIds?: string[] },
+      token: string,
+    ): Promise<void> => {
+      try {
+        await commentService.updateComment(recipeId, commentId, request, token);
+        // SignalR will handle the update notification
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to update comment';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [recipeId],
+  );
+
   return {
     comments,
     loading,
     error,
     createComment,
+    updateComment,
     deleteComment,
     deleteCommentAsAuthor,
     deleteCommentAsAdmin,

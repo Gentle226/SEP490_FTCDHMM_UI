@@ -1,4 +1,14 @@
 /**
+ * User interaction response (for rating display)
+ */
+export interface UserInteractionResponse {
+  id: string;
+  avatarUrl?: string;
+  firstName: string;
+  lastName: string;
+}
+
+/**
  * Rating request to create or update a recipe rating
  */
 export interface CreateRatingRequest {
@@ -11,10 +21,11 @@ export interface CreateRatingRequest {
  */
 export interface RatingResponse {
   id: string;
-  userId: string;
-  recipeId: string;
+  userId?: string;
+  recipeId?: string;
   score: number;
-  feedback: string; // Required field
+  feedback?: string;
+  userInteractionResponse?: UserInteractionResponse;
   createdAtUtc: string;
 }
 
