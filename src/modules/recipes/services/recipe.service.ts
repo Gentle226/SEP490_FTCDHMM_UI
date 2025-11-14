@@ -94,9 +94,26 @@ class RecipeService extends HttpClient {
       data.cookingSteps.forEach((step, index) => {
         formData.append(`CookingSteps[${index}].StepOrder`, String(step.stepOrder));
         formData.append(`CookingSteps[${index}].Instruction`, step.instruction);
-        if (step.image && step.image instanceof File) {
-          formData.append(`CookingSteps[${index}].Image`, step.image);
+
+        // Handle multiple images per step
+        if (step.images && step.images.length > 0) {
+          step.images.forEach((img, imgIndex) => {
+            if (img.image instanceof File) {
+              formData.append(`CookingSteps[${index}].Images[${imgIndex}].Image`, img.image);
+              formData.append(
+                `CookingSteps[${index}].Images[${imgIndex}].ImageOrder`,
+                String(img.imageOrder),
+              );
+            }
+          });
         }
+      });
+    }
+
+    // Append tagged user IDs
+    if (data.taggedUserIds && data.taggedUserIds.length > 0) {
+      data.taggedUserIds.forEach((userId, index) => {
+        formData.append(`TaggedUserIds[${index}]`, userId);
       });
     }
 
@@ -148,9 +165,26 @@ class RecipeService extends HttpClient {
       data.cookingSteps.forEach((step, index) => {
         formData.append(`CookingSteps[${index}].StepOrder`, String(step.stepOrder));
         formData.append(`CookingSteps[${index}].Instruction`, step.instruction);
-        if (step.image && step.image instanceof File) {
-          formData.append(`CookingSteps[${index}].Image`, step.image);
+
+        // Handle multiple images per step
+        if (step.images && step.images.length > 0) {
+          step.images.forEach((img, imgIndex) => {
+            if (img.image instanceof File) {
+              formData.append(`CookingSteps[${index}].Images[${imgIndex}].Image`, img.image);
+              formData.append(
+                `CookingSteps[${index}].Images[${imgIndex}].ImageOrder`,
+                String(img.imageOrder),
+              );
+            }
+          });
         }
+      });
+    }
+
+    // Append tagged user IDs
+    if (data.taggedUserIds && data.taggedUserIds.length > 0) {
+      data.taggedUserIds.forEach((userId, index) => {
+        formData.append(`TaggedUserIds[${index}]`, userId);
       });
     }
 

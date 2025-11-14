@@ -22,6 +22,8 @@ export interface MyRecipe {
   imageUrl?: string;
   labels: Label[];
   ingredients: IngredientName[];
+  createdAtUtc?: string; // New field for creation timestamp
+  updatedAtUtc?: string; // New field for update timestamp
 }
 
 export interface MyRecipeResponse {

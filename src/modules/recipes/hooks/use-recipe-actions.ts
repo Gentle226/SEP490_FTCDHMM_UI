@@ -294,8 +294,15 @@ export function useRateRecipe() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ recipeId, score }: { recipeId: string; score: number }) =>
-      ratingService.rateRecipe(recipeId, { score }),
+    mutationFn: ({
+      recipeId,
+      score,
+      feedback,
+    }: {
+      recipeId: string;
+      score: number;
+      feedback?: string;
+    }) => ratingService.rateRecipe(recipeId, { score, feedback: feedback || '' }),
     onSuccess: (_, { recipeId }) => {
       // Invalidate average rating query
       queryClient.invalidateQueries({ queryKey: ['averageRating', recipeId] });

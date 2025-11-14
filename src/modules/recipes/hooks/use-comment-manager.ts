@@ -177,25 +177,22 @@ export const useCommentManager = (recipeId: string, connection: any | null) => {
   );
 
   // Delete comment (own comment)
-  const deleteComment = useCallback(
-    async (commentId: string, token: string): Promise<void> => {
-      try {
-        await commentService.deleteComment(recipeId, commentId, token);
-        // Don't manually remove - let SignalR handle it for real-time sync
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to delete comment';
-        setError(errorMessage);
-        throw err;
-      }
-    },
-    [recipeId],
-  );
+  const deleteComment = useCallback(async (commentId: string, token: string): Promise<void> => {
+    try {
+      await commentService.deleteComment(commentId, token);
+      // Don't manually remove - let SignalR handle it for real-time sync
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete comment';
+      setError(errorMessage);
+      throw err;
+    }
+  }, []);
 
   // Delete comment as recipe author
   const deleteCommentAsAuthor = useCallback(
     async (commentId: string, token: string): Promise<void> => {
       try {
-        await commentService.deleteCommentAsAuthor(recipeId, commentId, token);
+        await commentService.deleteCommentAsAuthor(commentId, token);
         // Don't manually remove - let SignalR handle it for real-time sync
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to delete comment';
@@ -203,14 +200,14 @@ export const useCommentManager = (recipeId: string, connection: any | null) => {
         throw err;
       }
     },
-    [recipeId],
+    [],
   );
 
   // Delete comment as admin/moderator
   const deleteCommentAsAdmin = useCallback(
     async (commentId: string, token: string): Promise<void> => {
       try {
-        await commentService.deleteCommentAsAdmin(recipeId, commentId, token);
+        await commentService.deleteCommentAsAdmin(commentId, token);
         // Don't manually remove - let SignalR handle it for real-time sync
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to delete comment';
@@ -218,7 +215,7 @@ export const useCommentManager = (recipeId: string, connection: any | null) => {
         throw err;
       }
     },
-    [recipeId],
+    [],
   );
 
   return {

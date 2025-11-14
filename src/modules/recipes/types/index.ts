@@ -1,7 +1,16 @@
+export interface CookingStepImage {
+  id?: string;
+  image: File | string;
+  imageOrder: number;
+  imageUrl?: string;
+}
+
 export interface CookingStep {
   id?: string;
   stepOrder: number;
   instruction: string;
+  images: CookingStepImage[];
+  // Deprecated: keeping for backward compatibility during migration
   image?: File | string;
   imagePreview?: string;
 }
@@ -21,6 +30,7 @@ export interface CreateRecipeRequest {
   labelIds: string[];
   ingredients: RecipeIngredient[];
   cookingSteps: CookingStep[];
+  taggedUserIds?: string[]; // New field for tagging users
 }
 
 export interface Recipe

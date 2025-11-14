@@ -3,6 +3,7 @@
  */
 export interface CreateRatingRequest {
   score: number;
+  feedback: string; // Required field (1-256 characters)
 }
 
 /**
@@ -13,6 +14,7 @@ export interface RatingResponse {
   userId: string;
   recipeId: string;
   score: number;
+  feedback: string; // Required field
   createdAtUtc: string;
 }
 

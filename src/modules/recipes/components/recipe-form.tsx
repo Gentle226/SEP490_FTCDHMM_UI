@@ -80,7 +80,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [cookingSteps, setCookingSteps] = useState<CookingStep[]>([
-    { id: crypto.randomUUID(), stepOrder: 1, instruction: '', image: undefined },
+    { id: crypto.randomUUID(), stepOrder: 1, instruction: '', images: [] },
   ]);
   const [draggedStepIndex, setDraggedStepIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -232,6 +232,13 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
               id: crypto.randomUUID(),
               stepOrder: step.stepOrder,
               instruction: step.instruction,
+              images:
+                step.cookingStepImages?.map((img) => ({
+                  id: img.id,
+                  image: img.imageUrl || '',
+                  imageOrder: img.imageOrder,
+                  imageUrl: img.imageUrl,
+                })) || [],
               image: undefined,
               imagePreview: step.imageUrl,
             })),
@@ -349,7 +356,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         id: crypto.randomUUID(),
         stepOrder: cookingSteps.length + 1,
         instruction: '',
-        image: undefined,
+        images: [],
       },
     ]);
   };

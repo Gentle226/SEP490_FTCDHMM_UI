@@ -26,6 +26,7 @@ export interface PaginatedResponse<T> {
 export interface LockUserRequest {
   userId: string;
   day: number;
+  reason: string; // Required field (3-512 characters)
 }
 
 export interface UnlockUserRequest {

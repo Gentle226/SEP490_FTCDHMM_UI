@@ -11,10 +11,18 @@ export interface RecipeLabel {
   colorCode: string;
 }
 
+export interface CookingStepImageDetail {
+  id: string;
+  imageUrl?: string;
+  imageOrder: number;
+}
+
 export interface CookingStepDetail {
   id: string;
   stepOrder: number;
   instruction: string;
+  cookingStepImages: CookingStepImageDetail[];
+  // Deprecated: keeping for backward compatibility
   imageUrl?: string;
 }
 
@@ -46,6 +54,8 @@ export interface RecipeDetail {
   };
   isFavorited?: boolean;
   isSaved?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAtUtc?: string; // New field for creation timestamp
+  updatedAtUtc?: string; // New field for update timestamp
+  createdAt?: string; // Keep for backward compatibility
+  updatedAt?: string; // Keep for backward compatibility
 }

@@ -8,23 +8,35 @@ class RatingService extends HttpClient {
   }
 
   /**
-   * Get average rating for a recipe
-   * GET /api/recipes/{recipeId}/ratings/average
+   * Get average rating (score) for a recipe
+   * GET /api/Recipe/{recipeId}/score
    * This endpoint is public (no authentication required)
+   * Note: Moved from RatingController to RecipeController
    */
   public async getAverageRating(recipeId: string) {
-    return this.get<AverageRatingResponse>(`api/recipes/${recipeId}/ratings/average`, {
+    return this.get<AverageRatingResponse>(`api/Recipe/${recipeId}/score`, {
       isPrivateRoute: false,
     });
   }
 
   /**
    * Add or update rating for a recipe
-   * POST /api/recipes/{recipeId}/ratings
+   * POST /api/rating/{recipeId}
    * This endpoint requires authentication
    */
   public async rateRecipe(recipeId: string, request: CreateRatingRequest) {
-    return this.post<RatingResponse>(`api/recipes/${recipeId}/ratings`, request, {
+    return this.post<RatingResponse>(`api/rating/${recipeId}`, request, {
+      isPrivateRoute: true,
+    });
+  }
+
+  /**
+   * Delete rating for a recipe
+   * DELETE /api/rating/{recipeId}
+   * This endpoint requires authentication
+   */
+  public async deleteRating(recipeId: string) {
+    return this.delete<void>(`api/rating/${recipeId}`, {
       isPrivateRoute: true,
     });
   }

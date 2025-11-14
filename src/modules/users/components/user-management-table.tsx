@@ -145,6 +145,7 @@ export function UserManagementTable({
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [lockDays, setLockDays] = useState(7);
+  const [lockReason, setLockReason] = useState('');
   const [newModeratorEmail, setNewModeratorEmail] = useState('');
 
   const queryClient = useQueryClient();
@@ -177,6 +178,7 @@ export function UserManagementTable({
       setLockDialogOpen(false);
       setSelectedUser(null);
       setLockDays(7);
+      setLockReason('');
       toast.success(
         `Tài khoản ${userType === 'customers' ? 'Khách hàng' : 'Moderator'} đã được khóa thành công.`,
       );
@@ -231,10 +233,11 @@ export function UserManagementTable({
   };
 
   const confirmLock = () => {
-    if (selectedUser && lockDays >= 1) {
+    if (selectedUser && lockDays >= 1 && lockReason.trim().length >= 3) {
       lockMutation.mutate({
         userId: selectedUser.id,
         day: lockDays,
+        reason: lockReason,
       });
     }
   };
@@ -543,6 +546,20 @@ export function UserManagementTable({
                 placeholder="Nhập số ngày khóa tài khoản"
               />
             </div>
+            <div>
+              <Label htmlFor="reason" className="mb-3">
+                Lý do khóa (tối thiểu 3 ký tự)
+              </Label>
+              <textarea
+                id="reason"
+                value={lockReason}
+                onChange={(e) => setLockReason(e.target.value)}
+                placeholder="Nhập lý do khóa tài khoản"
+                className="w-full rounded-md border border-gray-300 p-2 text-sm"
+                rows={3}
+              />
+              <div className="mt-1 text-xs text-gray-500">{lockReason.length} / 512 ký tự</div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setLockDialogOpen(false)}>
@@ -551,7 +568,7 @@ export function UserManagementTable({
             <Button
               variant="danger"
               onClick={confirmLock}
-              disabled={lockDays < 1 || lockMutation.isPending}
+              disabled={lockDays < 1 || lockReason.trim().length < 3 || lockMutation.isPending}
             >
               {lockMutation.isPending ? 'Đang khóa...' : 'Khóa Tài Khoản'}
             </Button>
