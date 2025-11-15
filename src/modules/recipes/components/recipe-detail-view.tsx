@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   Bookmark,
   BookmarkCheck,
+  Calendar,
   ChefHat,
   Clock,
   Edit,
@@ -34,6 +35,7 @@ import {
   useSaveRecipe,
   useUnsaveRecipe,
 } from '../hooks/use-recipe-actions';
+import { getFullDateTimeVN, getRelativeTime } from '../utils/time.utils';
 import { CommentList } from './comment-list';
 import { IngredientCardDetail } from './ingredient-card-detail';
 import styles from './recipe-detail-view.module.css';
@@ -42,6 +44,27 @@ import { RecipeRating } from './recipe-rating';
 interface RecipeDetailViewProps {
   recipeId: string;
 }
+
+// Helper function to get the timestamp to display
+const getTimestampToDisplay = (
+  createdAtUtc: string | undefined,
+  updatedAtUtc: string | undefined,
+): { timestamp: string; isUpdated: boolean } | null => {
+  // Check if updatedAtUtc is a valid timestamp (not the default 0001-01-01)
+  const isUpdatedAtDefault =
+    !updatedAtUtc ||
+    updatedAtUtc === '0001-01-01T00:00:00' ||
+    updatedAtUtc === '0001-01-01T00:00:00.0000000' ||
+    updatedAtUtc.startsWith('0001-01-01');
+
+  // If updatedAtUtc is the default value, use createdAtUtc
+  if (isUpdatedAtDefault) {
+    return createdAtUtc ? { timestamp: createdAtUtc, isUpdated: false } : null;
+  }
+
+  // Otherwise, updatedAtUtc has been set, so show it
+  return updatedAtUtc ? { timestamp: updatedAtUtc, isUpdated: true } : null;
+};
 
 export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   const router = useRouter();
@@ -336,7 +359,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
             </div>
           )}
 
-          {/* Meta Info: Difficulty, Time, Ration */}
+          {/* Meta Info: Difficulty, Time, Ration, Created Date */}
           <div className="flex flex-wrap gap-2 text-xs text-gray-600 sm:gap-4 sm:text-sm">
             <div className="flex items-center gap-1">
               <ChefHat className="h-4 w-4" />
@@ -352,6 +375,26 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
               <Users className="h-4 w-4" />
               <span>{recipe.ration} người</span>
             </div>
+            {(recipe.createdAtUtc || recipe.createdAt) &&
+              (() => {
+                const timestampInfo = getTimestampToDisplay(
+                  recipe.createdAtUtc || recipe.createdAt,
+                  recipe.updatedAtUtc || recipe.updatedAt,
+                );
+                if (!timestampInfo) return null;
+                return (
+                  <div
+                    className="flex items-center gap-1"
+                    title={getFullDateTimeVN(timestampInfo.timestamp)}
+                  >
+                    <Calendar className="h-4 w-4" />
+                    <span>
+                      {timestampInfo.isUpdated ? 'Cập nhật: ' : ''}
+                      {getRelativeTime(timestampInfo.timestamp)} trước
+                    </span>
+                  </div>
+                );
+              })()}
           </div>
 
           {/* Author Info */}

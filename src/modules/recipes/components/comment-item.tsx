@@ -225,12 +225,17 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 {comment.mentions && comment.mentions.length > 0 && (
                   <>
                     {comment.mentions.map((mention) => (
-                      <span
+                      <button
                         key={mention.mentionedUserId}
-                        className="bg-opacity-20 inline-flex rounded-full bg-[#99b94a] px-2 py-0.5 text-xs font-medium text-white"
+                        onClick={() => {
+                          if (mention.mentionedUserId) {
+                            router.push(`/profile/${mention.mentionedUserId}`);
+                          }
+                        }}
+                        className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-[#99b94a] px-2 py-0.5 text-xs font-medium text-white transition-opacity hover:opacity-80"
                       >
                         @{mention.lastName} {mention.firstName}
-                      </span>
+                      </button>
                     ))}
                   </>
                 )}
