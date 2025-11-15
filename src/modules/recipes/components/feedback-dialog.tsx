@@ -75,8 +75,10 @@ export function FeedbackDialog({ recipeId, isOpen, onOpenChange }: FeedbackDialo
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
     try {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat('vi-VN', {
+      // Ensure the date string is interpreted as UTC by appending 'Z' if not present
+      const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+      const date = new Date(utcDateString);
+      return new Intl.DateTimeFormat(undefined, {
         year: 'numeric',
         month: 'long',
         day: 'numeric',

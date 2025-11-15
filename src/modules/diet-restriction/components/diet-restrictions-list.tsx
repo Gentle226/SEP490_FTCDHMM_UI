@@ -101,7 +101,13 @@ export function DietRestrictionsList({
         return (aTypeValue || '').localeCompare(bTypeValue || '');
       }
       case 'recent':
-        return new Date(b.expiredAtUtc || 0).getTime() - new Date(a.expiredAtUtc || 0).getTime();
+        const aDate = a.expiredAtUtc
+          ? new Date(a.expiredAtUtc.endsWith('Z') ? a.expiredAtUtc : a.expiredAtUtc + 'Z').getTime()
+          : 0;
+        const bDate = b.expiredAtUtc
+          ? new Date(b.expiredAtUtc.endsWith('Z') ? b.expiredAtUtc : b.expiredAtUtc + 'Z').getTime()
+          : 0;
+        return bDate - aDate;
       default:
         return 0;
     }
@@ -413,7 +419,11 @@ export function DietRestrictionsList({
                 {restriction.expiredAtUtc && (
                   <p className="text-xs text-gray-400">
                     <Clock className="inline-block h-4 w-4" /> Hết hạn:{' '}
-                    {new Date(restriction.expiredAtUtc).toLocaleDateString('vi-VN', {
+                    {new Date(
+                      restriction.expiredAtUtc.endsWith('Z')
+                        ? restriction.expiredAtUtc
+                        : restriction.expiredAtUtc + 'Z',
+                    ).toLocaleDateString(undefined, {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric',

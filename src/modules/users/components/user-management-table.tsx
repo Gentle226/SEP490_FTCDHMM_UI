@@ -289,12 +289,14 @@ export function UserManagementTable({
     if (!dateString) return 'N/A';
 
     try {
-      const date = new Date(dateString);
+      // Ensure the date string is interpreted as UTC by appending 'Z' if not present
+      const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+      const date = new Date(utcDateString);
 
       // Check if date is valid
       if (isNaN(date.getTime())) return 'N/A';
 
-      return new Intl.DateTimeFormat('vi-VN', {
+      return new Intl.DateTimeFormat(undefined, {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',

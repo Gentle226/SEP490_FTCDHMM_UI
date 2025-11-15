@@ -200,14 +200,14 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
     if (!dateString) return 'N/A';
 
     try {
-      // Parse ISO 8601 format: "2025-10-02T06:31:14.042026"
-      // Create date by parsing the string - date-fns will handle it
-      const date = new Date(dateString);
+      // Ensure the date string is interpreted as UTC by appending 'Z' if not present
+      const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+      const date = new Date(utcDateString);
 
       // Check if date is valid
       if (isNaN(date.getTime())) return 'N/A';
 
-      return new Intl.DateTimeFormat('vi-VN', {
+      return new Intl.DateTimeFormat(undefined, {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',

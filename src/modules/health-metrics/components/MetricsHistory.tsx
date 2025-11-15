@@ -73,11 +73,23 @@ export function MetricsHistory({ metrics, onDelete, onEdit, loading }: Props) {
               <div>
                 <CardTitle className="flex items-center gap-2 text-base text-gray-900">
                   <Calendar className="h-4 w-4 text-[#99b94a]" />
-                  {format(new Date(metric.recordedAt), 'PPPP', { locale: vi })}
+                  {format(
+                    new Date(
+                      metric.recordedAt.endsWith('Z') ? metric.recordedAt : metric.recordedAt + 'Z',
+                    ),
+                    'PPPP',
+                    { locale: vi },
+                  )}
                 </CardTitle>
                 <p className="mt-1 flex items-center gap-2 text-xs text-gray-500">
                   <Clock className="h-3 w-3 text-[#99b94a]" />
-                  {format(new Date(metric.recordedAt), 'p', { locale: vi })}
+                  {format(
+                    new Date(
+                      metric.recordedAt.endsWith('Z') ? metric.recordedAt : metric.recordedAt + 'Z',
+                    ),
+                    'p',
+                    { locale: vi },
+                  )}
                 </p>
               </div>
               <div className="flex gap-2">

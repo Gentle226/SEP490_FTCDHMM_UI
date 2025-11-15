@@ -106,7 +106,8 @@ export function IngredientCardDetail({
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('vi-VN');
+    const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+    return new Date(utcDateString).toLocaleDateString();
   };
 
   // Get key nutrients for popover preview - prioritize macronutrients

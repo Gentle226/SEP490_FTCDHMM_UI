@@ -13,10 +13,12 @@ export class StringUtils {
   }
 
   static formatDate(str: string) {
-    return new Intl.DateTimeFormat('vi-VN', {
+    // Ensure the date string is interpreted as UTC by appending 'Z' if not present
+    const utcDateString = str.endsWith('Z') ? str : str + 'Z';
+    return new Intl.DateTimeFormat(undefined, {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
-    }).format(new Date(str));
+    }).format(new Date(utcDateString));
   }
 }
