@@ -148,6 +148,13 @@ export function UserManagementTable({
   const [lockReason, setLockReason] = useState('');
   const [newModeratorEmail, setNewModeratorEmail] = useState('');
 
+  const lockReasonTemplates = [
+    'Vi phạm điều khoản sử dụng',
+    'Hành vi spam hoặc lạm dụng',
+    'Nội dung không phù hợp',
+    'Gian lận hoặc hoạt động nghi ngờ',
+  ];
+
   const queryClient = useQueryClient();
   const queryKey = [userType, { page, search: debouncedSearchTerm, pageSize }];
 
@@ -271,14 +278,22 @@ export function UserManagementTable({
     setSearchTerm('');
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, user?: User) => {
     switch (status) {
       case 'Verified':
         return <Badge className="flex content-center bg-[#99b94a] text-white">Đã xác thực</Badge>;
       case 'Unverified':
         return <Badge variant="secondary">Chưa xác thực</Badge>;
       case 'Locked':
-        return <Badge variant="danger">Đã khóa</Badge>;
+        return (
+          <Badge
+            variant="danger"
+            title={user?.lockReason ? `Lý do: ${user.lockReason}` : 'Tài khoản đã khóa'}
+            className="cursor-pointer"
+          >
+            Đã khóa
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -400,7 +415,7 @@ export function UserManagementTable({
           <TableBody>
             {usersData?.items?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   {debouncedSearchTerm ? (
                     <div className="flex flex-col items-center justify-center space-y-2">
                       <Search className="size-8 text-gray-400" />
@@ -437,7 +452,7 @@ export function UserManagementTable({
                       {user.email}
                     </button>
                   </TableCell>
-                  <TableCell>{getStatusBadge(user.status)}</TableCell>
+                  <TableCell>{getStatusBadge(user.status, user)}</TableCell>
                   <TableCell>{formatDate(user.createdAtUTC)}</TableCell>
                   <TableCell className="">
                     <div className="flex items-center gap-2">
@@ -549,18 +564,59 @@ export function UserManagementTable({
               />
             </div>
             <div>
-              <Label htmlFor="reason" className="mb-3">
-                Lý do khóa (tối thiểu 3 ký tự)
-              </Label>
+              <div className="mb-3 flex items-center justify-between">
+                <Label htmlFor="reason" className="">
+                  Lý do khóa <span className="text-red-500">*</span>
+                </Label>
+                <span
+                  className={`text-xs font-medium ${
+                    lockReason.length < 3
+                      ? 'text-red-500'
+                      : lockReason.length < 50
+                        ? 'text-amber-500'
+                        : 'text-green-500'
+                  }`}
+                >
+                  {lockReason.length} / 512
+                </span>
+              </div>
               <textarea
                 id="reason"
                 value={lockReason}
-                onChange={(e) => setLockReason(e.target.value)}
-                placeholder="Nhập lý do khóa tài khoản"
-                className="w-full rounded-md border border-gray-300 p-2 text-sm"
+                onChange={(e) => setLockReason(e.target.value.slice(0, 512))}
+                placeholder="Mô tả chi tiết lý do khóa tài khoản (tối thiểu 3 ký tự)"
+                className={`w-full rounded-md border p-3 text-sm transition-colors ${
+                  lockReason.trim().length < 3
+                    ? 'border-red-300 bg-red-50 focus:border-red-500 focus:bg-white focus:outline-none'
+                    : 'border-gray-300 focus:border-[#99b94a] focus:outline-none'
+                }`}
                 rows={3}
               />
-              <div className="mt-1 text-xs text-gray-500">{lockReason.length} / 512 ký tự</div>
+              {lockReason.length < 3 && lockReason.length > 0 && (
+                <div className="mt-2 text-xs text-red-500">
+                  Cần thêm {3 - lockReason.length} ký tự nữa
+                </div>
+              )}
+
+              {/* Quick templates */}
+              <div className="mt-3">
+                <p className="mb-2 text-xs font-medium text-gray-600">Gợi ý lý do:</p>
+                <div className="flex flex-wrap gap-2">
+                  {lockReasonTemplates.map((template) => (
+                    <button
+                      key={template}
+                      onClick={() => setLockReason(template)}
+                      className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                        lockReason === template
+                          ? 'bg-[#99b94a] text-white'
+                          : 'border border-gray-300 bg-white text-gray-700 hover:border-[#99b94a] hover:text-[#99b94a]'
+                      }`}
+                    >
+                      {template}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -571,6 +627,13 @@ export function UserManagementTable({
               variant="danger"
               onClick={confirmLock}
               disabled={lockDays < 1 || lockReason.trim().length < 3 || lockMutation.isPending}
+              title={
+                lockDays < 1
+                  ? 'Số ngày phải từ 1 trở lên'
+                  : lockReason.trim().length < 3
+                    ? 'Lý do khóa phải từ 3 ký tự trở lên'
+                    : ''
+              }
             >
               {lockMutation.isPending ? 'Đang khóa...' : 'Khóa Tài Khoản'}
             </Button>
@@ -582,17 +645,47 @@ export function UserManagementTable({
       <Dialog open={unlockDialogOpen} onOpenChange={setUnlockDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Mở Khóa Tài Khoản Người Dùng</DialogTitle>
+            <DialogTitle className="text-[#99b94a]">Mở Khóa Tài Khoản Người Dùng</DialogTitle>
             <DialogDescription>
               Bạn có chắc chắn muốn mở khóa tài khoản của {selectedUser?.firstName}{' '}
               {selectedUser?.lastName} không?
             </DialogDescription>
           </DialogHeader>
+
+          {selectedUser?.status === 'Locked' && (
+            <div className="space-y-3 rounded-lg bg-red-50 p-4">
+              {selectedUser.lockReason && (
+                <div>
+                  <p className="text-sm font-semibold text-red-900">Lý do khóa:</p>
+                  <p className="mt-1 text-sm text-red-800">{selectedUser.lockReason}</p>
+                </div>
+              )}
+              {selectedUser.lockoutEnd && (
+                <div>
+                  <p className="text-sm font-semibold text-red-900">Mở khóa vào:</p>
+                  <p className="mt-1 text-sm text-red-800">
+                    {new Date(selectedUser.lockoutEnd).toLocaleDateString('vi-VN', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setUnlockDialogOpen(false)}>
               Hủy
             </Button>
-            <Button onClick={confirmUnlock} disabled={unlockMutation.isPending}>
+            <Button
+              className="bg-[#99b94a] text-white hover:bg-[#88a83a]"
+              onClick={confirmUnlock}
+              disabled={unlockMutation.isPending}
+            >
               {unlockMutation.isPending ? 'Đang mở khóa...' : 'Mở Khóa Tài Khoản'}
             </Button>
           </DialogFooter>

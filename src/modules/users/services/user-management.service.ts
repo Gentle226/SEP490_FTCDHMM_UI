@@ -8,6 +8,8 @@ export interface User {
   createdAtUTC: string;
   status: string;
   avatarUrl?: string;
+  lockReason?: string | null;
+  lockoutEnd?: string | null;
 }
 
 export interface PaginationParams {
