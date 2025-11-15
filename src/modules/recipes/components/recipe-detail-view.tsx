@@ -185,7 +185,11 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
     }
   };
 
-  const handleCreateComment = async (parentCommentId: string | undefined, content: string) => {
+  const handleCreateComment = async (
+    parentCommentId: string | undefined,
+    content: string,
+    mentionedUserIds?: string[],
+  ) => {
     try {
       const token = getToken();
       if (!token) {
@@ -196,6 +200,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
       console.warn('[RecipeDetailView] Creating comment:', {
         parentCommentId,
         contentLength: content.length,
+        mentionedUserIds,
         hasToken: !!token,
       });
 
@@ -203,6 +208,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
         {
           content,
           parentCommentId: parentCommentId || null,
+          mentionedUserIds,
         },
         token, // Pass the actual JWT token
       );

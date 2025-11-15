@@ -7,6 +7,7 @@ export interface User {
   email: string;
   createdAtUTC: string;
   status: string;
+  avatarUrl?: string;
 }
 
 export interface PaginationParams {

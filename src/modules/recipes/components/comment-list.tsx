@@ -18,7 +18,11 @@ interface CommentListProps {
   isAdmin?: boolean;
   onDelete: (commentId: string) => Promise<void>;
   onEdit?: (commentId: string, content: string) => Promise<void>;
-  onCreateComment?: (parentCommentId: string | undefined, content: string) => Promise<void>;
+  onCreateComment?: (
+    parentCommentId: string | undefined,
+    content: string,
+    mentionedUserIds?: string[],
+  ) => Promise<void>;
   loading?: boolean;
   isDeleting?: boolean;
 }

@@ -18,7 +18,11 @@ interface CommentItemProps {
   onDelete: (commentId: string) => Promise<void>;
   onEdit?: (commentId: string, content: string) => Promise<void>;
   onReplyClick?: (parentCommentId: string) => void;
-  onCreateComment?: (parentCommentId: string | undefined, content: string) => Promise<void>;
+  onCreateComment?: (
+    parentCommentId: string | undefined,
+    content: string,
+    mentionedUserIds?: string[],
+  ) => Promise<void>;
   isDeleting?: boolean;
   level?: number;
   index?: number;
@@ -186,7 +190,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               {comment.firstName} {comment.lastName}
             </button>
 
-            {/* Content - Show edit form or display content */}
+            {/* Content - Show edit form or display content with inline mentions */}
             {isEditing ? (
               <div className="mt-2 space-y-2">
                 <textarea
@@ -216,9 +220,25 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 </div>
               </div>
             ) : (
-              <p className="mt-0.5 text-sm break-words whitespace-pre-wrap text-gray-800 sm:text-[15px]">
-                {comment.content}
-              </p>
+              <div className="mt-0.5 flex flex-wrap items-baseline gap-1">
+                {/* Mentioned Users - Show as inline badges with content */}
+                {comment.mentions && comment.mentions.length > 0 && (
+                  <>
+                    {comment.mentions.map((mention) => (
+                      <span
+                        key={mention.mentionedUserId}
+                        className="bg-opacity-20 inline-flex rounded-full bg-[#99b94a] px-2 py-0.5 text-xs font-medium text-white"
+                      >
+                        @{mention.userName}
+                      </span>
+                    ))}
+                  </>
+                )}
+                {/* Content */}
+                <p className="text-sm break-words whitespace-pre-wrap text-gray-800 sm:text-[15px]">
+                  {comment.content}
+                </p>
+              </div>
             )}
           </div>
 
