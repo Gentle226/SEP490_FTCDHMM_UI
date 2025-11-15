@@ -114,7 +114,7 @@ class RecipeService extends HttpClient {
     // Append tagged user IDs
     if (data.taggedUserIds && data.taggedUserIds.length > 0) {
       data.taggedUserIds.forEach((userId, index) => {
-        formData.append(`TaggedUserIds[${index}]`, userId);
+        formData.append(`TaggedUserIds[${index}].UserId`, userId);
       });
     }
 

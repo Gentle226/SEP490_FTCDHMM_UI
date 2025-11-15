@@ -31,6 +31,7 @@ import {
   Label as LabelType,
   labelManagementService,
 } from '@/modules/labels/services/label-management.service';
+import { User, userManagementService } from '@/modules/users/services/user-management.service';
 
 import { recipeService } from '../services/recipe.service';
 import { CookingStep, RecipeDetail } from '../types';
@@ -52,6 +53,13 @@ interface SelectedLabel {
   id: string;
   name: string;
   colorCode: string;
+}
+
+interface SelectedUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  avatar?: string;
 }
 
 interface RecipeFormProps {
@@ -101,6 +109,14 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
   const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
   const debouncedIngredientSearch = useDebounce(ingredientSearch, 300);
 
+  // Tagged users state
+  const [selectedUsers, setSelectedUsers] = useState<SelectedUser[]>([]);
+  const [userSearch, setUserSearch] = useState('');
+  const [userSearchResults, setUserSearchResults] = useState<User[]>([]);
+  const [isUserPopoverOpen, setIsUserPopoverOpen] = useState(false);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const debouncedUserSearch = useDebounce(userSearch, 300);
+
   // Warn user about unsaved changes before leaving page
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -126,6 +142,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         mainImage ||
         selectedLabels.length > 0 ||
         selectedIngredients.length > 0 ||
+        selectedUsers.length > 0 ||
         cookingSteps.length > 1 ||
         cookingSteps.some((s) => s.instruction)
       ) {
@@ -143,6 +160,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     mainImage,
     selectedLabels,
     selectedIngredients,
+    selectedUsers,
     cookingSteps,
     mode,
   ]);
@@ -192,6 +210,29 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     searchIngredients();
   }, [debouncedIngredientSearch, isIngredientPopoverOpen]);
 
+  // Search users for tagging
+  useEffect(() => {
+    async function searchUsers() {
+      if (!isUserPopoverOpen) return;
+
+      setIsLoadingUsers(true);
+      try {
+        const response = await userManagementService.getCustomers({
+          search: debouncedUserSearch,
+          pageNumber: 1,
+          pageSize: 50,
+        });
+        setUserSearchResults(response.items);
+      } catch (error) {
+        console.error('Failed to search users:', error);
+      } finally {
+        setIsLoadingUsers(false);
+      }
+    }
+
+    searchUsers();
+  }, [debouncedUserSearch, isUserPopoverOpen]);
+
   // Initialize form with existing data in edit mode
   useEffect(() => {
     if (mode === 'edit' && initialData) {
@@ -219,6 +260,18 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
             id: ingredient.ingredientId || ingredient.id || '',
             name: ingredient.name,
             quantityGram: ingredient.quantityGram,
+          })),
+        );
+      }
+
+      // Set tagged users
+      if (initialData.taggedUsers && initialData.taggedUsers.length > 0) {
+        setSelectedUsers(
+          initialData.taggedUsers.map((user) => ({
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            avatar: user.avatar?.imageUrl,
           })),
         );
       }
@@ -430,6 +483,26 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     setSelectedLabels((prev) => prev.filter((l) => l.id !== labelId));
   };
 
+  const addUser = (user: User) => {
+    if (!selectedUsers.some((u) => u.id === user.id)) {
+      setSelectedUsers((prev) => [
+        ...prev,
+        {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          avatar: user.avatarUrl,
+        },
+      ]);
+    }
+    setIsUserPopoverOpen(false);
+    setUserSearch('');
+  };
+
+  const removeUser = (userId: string) => {
+    setSelectedUsers((prev) => prev.filter((u) => u.id !== userId));
+  };
+
   const addIngredient = (ingredient: Ingredient) => {
     if (!selectedIngredients.some((i) => i.id === ingredient.id)) {
       setSelectedIngredients((prev) => [
@@ -550,6 +623,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
           ingredientId: i.id,
           quantityGram: i.quantityGram,
         })),
+        taggedUserIds: selectedUsers.map((u) => u.id),
         cookingSteps,
       };
 
@@ -821,6 +895,105 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
                               suppressHydrationWarning
                             />
                             <span className="flex-1">{label.name}</span>
+                            {isSelected && <span className="text-xs text-gray-500">Đã chọn</span>}
+                          </div>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                )}
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {/* Tagged Users */}
+      <div className="space-y-2">
+        <Label>Đóng tag người dùng</Label>
+
+        {/* Selected Users */}
+        <div className="flex min-h-[60px] flex-wrap gap-2 rounded-lg border p-3">
+          {selectedUsers.length === 0 ? (
+            <span className="flex w-full justify-center pt-2 text-sm text-gray-400">
+              Chưa có người dùng nào được đóng tag
+            </span>
+          ) : (
+            selectedUsers.map((user) => (
+              <div
+                key={user.id}
+                className="flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-900"
+              >
+                {user.avatar && (
+                  <img
+                    src={user.avatar}
+                    alt={`${user.firstName} ${user.lastName}`}
+                    className="h-5 w-5 rounded-full object-cover"
+                  />
+                )}
+                <span>
+                  {user.firstName} {user.lastName}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeUser(user.id)}
+                  className="ml-1 rounded-full hover:bg-blue-200"
+                  aria-label={`Remove ${user.firstName} ${user.lastName}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Search and Add Users */}
+        <Popover open={isUserPopoverOpen} onOpenChange={setIsUserPopoverOpen}>
+          <PopoverTrigger asChild>
+            <Button type="button" variant="outline" className="w-full">
+              <Plus className="mr-2 h-4 w-4" />
+              Thêm người dùng
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[400px] p-0" align="start">
+            <Command shouldFilter={false}>
+              <CommandInput
+                placeholder="Tìm kiếm người dùng..."
+                value={userSearch}
+                onValueChange={setUserSearch}
+              />
+              <CommandList>
+                {isLoadingUsers ? (
+                  <div className="py-6 text-center text-sm text-gray-500">Đang tải...</div>
+                ) : userSearchResults.length === 0 ? (
+                  <CommandEmpty>Không tìm thấy người dùng nào.</CommandEmpty>
+                ) : (
+                  <CommandGroup>
+                    {userSearchResults.map((user) => {
+                      const isSelected = selectedUsers.some((u) => u.id === user.id);
+                      return (
+                        <CommandItem
+                          key={user.id}
+                          onSelect={() => addUser(user)}
+                          disabled={isSelected}
+                          className="cursor-pointer"
+                        >
+                          <div className="flex w-full items-center gap-2">
+                            {user.avatarUrl && (
+                              <img
+                                src={user.avatarUrl}
+                                alt={`${user.firstName} ${user.lastName}`}
+                                className="h-6 w-6 flex-shrink-0 rounded-full object-cover"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <div className="text-sm font-medium">
+                                {user.firstName} {user.lastName}
+                              </div>
+                              {user.email && (
+                                <div className="text-xs text-gray-500">{user.email}</div>
+                              )}
+                            </div>
                             {isSelected && <span className="text-xs text-gray-500">Đã chọn</span>}
                           </div>
                         </CommandItem>

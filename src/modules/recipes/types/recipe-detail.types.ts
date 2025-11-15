@@ -40,6 +40,15 @@ export interface RecipeDetail {
   labels: RecipeLabel[];
   ingredients: RecipeIngredient[];
   cookingSteps: CookingStepDetail[];
+  taggedUsers?: Array<{
+    id: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+    avatar?: {
+      imageUrl?: string;
+    };
+  }>;
   createdBy?: {
     id: string;
     userName: string;
