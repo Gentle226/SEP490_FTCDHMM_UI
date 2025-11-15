@@ -6,14 +6,14 @@ export interface ProfileDto {
   lastName: string;
   email: string;
   gender: string;
+  dateOfBirth?: string | Date;
   avatarUrl?: string | null;
   followersCount?: number;
   followingCount?: number;
   isFollowing?: boolean;
   activityLevel?: string;
-  dateOfBirth?: string;
   bio?: string;
-  location?: string;
+  address?: string;
 }
 
 // Update Profile Schema for form validation
@@ -58,6 +58,12 @@ export const updateProfileSchema = z.object({
       (file) => !file || file.size <= 5 * 1024 * 1024,
       'Kích thước ảnh không được vượt quá 5MB',
     ),
+  bio: z
+    .string()
+    .max(256, 'Giới thiệu bản thân không được vượt quá 256 ký tự')
+    .optional()
+    .nullable(),
+  address: z.string().max(256, 'Địa chỉ không được vượt quá 256 ký tự').optional().nullable(),
 });
 
 export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;
@@ -69,6 +75,8 @@ export interface UpdateProfileDto {
   gender: string;
   dateOfBirth: Date;
   avatarUrl?: File | null;
+  bio?: string | null;
+  address?: string | null;
 }
 
 // Extended Profile for UI with additional fields

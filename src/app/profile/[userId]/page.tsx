@@ -59,8 +59,8 @@ export default function UserProfilePage() {
         username: `${profileData.firstName} ${profileData.lastName}`.trim(),
         fullName: `${profileData.firstName} ${profileData.lastName}`.trim(),
         handle: `@${profileData.email.split('@')[0]}`,
-        location: 'Thanh Hóa', // TODO: Add location field to API
-        bio: 'Đam mê nấu ăn :)', // TODO: Add bio field to API
+        location: profileData.address || '',
+        bio: profileData.bio || '',
         avatarUrl:
           profileData.avatarUrl ||
           `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.firstName)}+${encodeURIComponent(profileData.lastName)}&background=random`,

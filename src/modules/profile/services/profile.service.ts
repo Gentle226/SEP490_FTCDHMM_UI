@@ -36,6 +36,12 @@ class ProfileService extends HttpClient {
     if (data.avatarUrl) {
       formData.append('Avatar', data.avatarUrl);
     }
+    if (data.bio) {
+      formData.append('bio', data.bio);
+    }
+    if (data.address) {
+      formData.append('address', data.address);
+    }
 
     return this.put<void>('api/User/profile', formData, {
       isPrivateRoute: true,

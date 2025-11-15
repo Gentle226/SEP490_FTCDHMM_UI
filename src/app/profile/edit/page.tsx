@@ -19,6 +19,7 @@ import {
 import { Input } from '@/base/components/ui/input';
 import { Label } from '@/base/components/ui/label';
 import { Skeleton } from '@/base/components/ui/skeleton';
+import { Textarea } from '@/base/components/ui/textarea';
 import { ChangePasswordDialog, useAuth } from '@/modules/auth';
 import { updateProfileSchema, useProfile, useUpdateProfile } from '@/modules/profile';
 import type { UpdateProfileSchema } from '@/modules/profile';
@@ -42,6 +43,8 @@ export default function EditProfilePage() {
       gender: '',
       dateOfBirth: undefined,
       avatarUrl: null,
+      bio: '',
+      address: '',
     },
   });
 
@@ -50,14 +53,21 @@ export default function EditProfilePage() {
     if (profile) {
       const dob = profile.dateOfBirth ? new Date(profile.dateOfBirth) : undefined;
       setSelectedDate(dob);
-      setSelectedGender((profile.gender as 'Male' | 'Female' | 'Other') || '');
+
+      // Convert gender from API format (MALE/FEMALE/OTHER) to form format (Male/Female/Other)
+      const normalizedGender = profile.gender
+        ? profile.gender.charAt(0).toUpperCase() + profile.gender.slice(1).toLowerCase()
+        : '';
+      setSelectedGender((normalizedGender as 'Male' | 'Female' | 'Other') || '');
 
       form.reset({
         firstName: profile.firstName,
         lastName: profile.lastName,
-        gender: profile.gender,
+        gender: normalizedGender,
         dateOfBirth: dob,
         avatarUrl: null,
+        bio: profile.bio || '',
+        address: profile.address || '',
       });
 
       // Set avatar preview if exists
@@ -75,6 +85,8 @@ export default function EditProfilePage() {
         gender: data.gender,
         dateOfBirth: data.dateOfBirth,
         avatarUrl: data.avatarUrl || null,
+        bio: data.bio || null,
+        address: data.address || null,
       });
 
       // After successful update, redirect to profile
@@ -238,7 +250,7 @@ export default function EditProfilePage() {
             </div>
 
             {/* Date of Birth and Gender on same line */}
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-6 sm:grid-cols-2">
               {/* Date of Birth with DatePickerWithInput */}
               <div className="space-y-2">
                 <Label className="text-[#99b94a]">
@@ -318,23 +330,60 @@ export default function EditProfilePage() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push(`/profile/${user.id}`)}
-                disabled={updateProfile.isPending}
-              >
-                Trở về
-              </Button>
-              <Button
-                className="bg-[#99b94a] hover:bg-[#88a43a]"
-                type="submit"
-                loading={updateProfile.isPending}
-              >
-                <Save className="size-4" />
-                Lưu thay đổi
-              </Button>
+            {/* Bio and Address */}
+            <div className="grid gap-6 lg:grid-cols-3">
+              {/* Bio - Left side (takes more space) */}
+              <div className="space-y-2 lg:col-span-2">
+                <Label className="text-[#99b94a]" htmlFor="bio">
+                  Giới thiệu bản thân
+                </Label>
+                <Textarea
+                  id="bio"
+                  placeholder="Viết một số thông tin về bạn..."
+                  className="min-h-32 resize-none"
+                  {...form.register('bio')}
+                />
+                {form.formState.errors.bio && (
+                  <p className="text-danger text-sm">{form.formState.errors.bio.message}</p>
+                )}
+              </div>
+
+              {/* Address + Buttons - Right side */}
+              <div className="space-y-2.5 lg:col-span-1">
+                <div className="space-y-2">
+                  <Label className="text-[#99b94a]" htmlFor="address">
+                    Địa chỉ
+                  </Label>
+                  <Input
+                    id="address"
+                    placeholder="Nhập địa chỉ của bạn"
+                    {...form.register('address')}
+                  />
+                  {form.formState.errors.address && (
+                    <p className="text-danger text-sm">{form.formState.errors.address.message}</p>
+                  )}
+                </div>
+
+                {/* Buttons */}
+                <div className="mb-2 flex flex-col gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push(`/profile/${user.id}`)}
+                    disabled={updateProfile.isPending}
+                  >
+                    Trở về
+                  </Button>
+                  <Button
+                    className="bg-[#99b94a] hover:bg-[#88a43a]"
+                    type="submit"
+                    loading={updateProfile.isPending}
+                  >
+                    <Save className="size-4" />
+                    Lưu thay đổi
+                  </Button>
+                </div>
+              </div>
             </div>
           </form>
         </div>
