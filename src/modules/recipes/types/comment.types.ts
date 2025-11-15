@@ -1,6 +1,7 @@
 export interface MentionedUser {
   mentionedUserId: string;
-  userName: string;
+  firstName: string;
+  lastName: string;
 }
 
 export interface Comment {

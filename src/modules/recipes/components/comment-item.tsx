@@ -229,7 +229,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                         key={mention.mentionedUserId}
                         className="bg-opacity-20 inline-flex rounded-full bg-[#99b94a] px-2 py-0.5 text-xs font-medium text-white"
                       >
-                        @{mention.userName}
+                        @{mention.lastName} {mention.firstName}
                       </span>
                     ))}
                   </>

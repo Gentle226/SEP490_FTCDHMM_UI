@@ -28,8 +28,7 @@ export function useUserSearch() {
 
       return response.items.map((user) => ({
         id: user.id,
-        userName: user.email, // Use email as userName since User interface doesn't have userName
-        firstName: user.firstName,
+        userName: `${user.lastName} ${user.firstName}`, // Use full name for mentions
         lastName: user.lastName,
         avatarUrl: user.avatarUrl, // Now properly typed on User interface
       }));

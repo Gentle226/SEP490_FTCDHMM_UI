@@ -125,16 +125,6 @@ export const CommentForm: React.FC<CommentFormProps> = ({
     }, 0);
   };
 
-  const removeMention = (userId: string) => {
-    setSelectedMentions(selectedMentions.filter((u) => u.id !== userId));
-    // Also remove the mention from the content
-    const mentionedUser = selectedMentions.find((u) => u.id === userId);
-    if (mentionedUser) {
-      const mentionText = `@${mentionedUser.userName} `;
-      setContent(content.replace(mentionText, ''));
-    }
-  };
-
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -229,7 +219,6 @@ export const CommentForm: React.FC<CommentFormProps> = ({
             value={content}
             onChange={handleContentChange}
             selectedMentions={selectedMentions}
-            onRemoveMention={removeMention}
             placeholder={
               parentCommentId
                 ? 'Viết trả lời... (gõ @ để đề cập ai đó)'
@@ -288,7 +277,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
           <button
             type="submit"
             disabled={submitting || !content.trim()}
-            className="absolute top-1/2 right-3 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-transparent pb-1.5 text-[#99b94a] transition-all hover:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-300 disabled:opacity-50"
+            className="absolute top-1/2 right-3 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-transparent text-[#99b94a] transition-colors hover:text-[#88a840] disabled:cursor-not-allowed disabled:text-gray-300 disabled:opacity-50"
             title="Gửi (Enter)"
           >
             <SendHorizontal className="h-4 w-4" />
