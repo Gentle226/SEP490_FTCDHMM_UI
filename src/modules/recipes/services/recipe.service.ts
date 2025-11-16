@@ -272,6 +272,21 @@ class RecipeService extends HttpClient {
   }
 
   /**
+   * Get recipe history (viewed recipes)
+   */
+  public async getHistory(params: PaginationParams & { keyword?: string } = {}) {
+    const { pageNumber = 1, pageSize = 10 } = params;
+
+    return this.get<MyRecipeResponse>('api/Recipe/history', {
+      isPrivateRoute: true,
+      params: {
+        'PaginationParams.PageNumber': pageNumber,
+        'PaginationParams.PageSize': pageSize,
+      },
+    });
+  }
+
+  /**
    * Get recipe ratings and feedback
    */
   public async getRecipeRatings(recipeId: string, params: PaginationParams = {}) {

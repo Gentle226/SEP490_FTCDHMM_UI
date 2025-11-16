@@ -37,9 +37,11 @@ import {
 import { Pagination as PaginationType } from '@/base/types';
 
 import {
+  ChangeRoleRequest,
   CreateModeratorRequest,
   LockUserRequest,
   PaginationParams,
+  RoleResponse,
   UnlockUserRequest,
   User,
   userManagementService,
@@ -143,10 +145,13 @@ export function UserManagementTable({
   const [lockDialogOpen, setLockDialogOpen] = useState(false);
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [changeRoleDialogOpen, setChangeRoleDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [lockDays, setLockDays] = useState(7);
   const [lockReason, setLockReason] = useState('');
   const [newModeratorEmail, setNewModeratorEmail] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
+  const [roleIdMap, setRoleIdMap] = useState<Map<string, string>>(new Map());
 
   const lockReasonTemplates = [
     'Vi phạm điều khoản sử dụng',
@@ -158,7 +163,20 @@ export function UserManagementTable({
   const queryClient = useQueryClient();
   const queryKey = [userType, { page, search: debouncedSearchTerm, pageSize }];
 
-  // Fetch users
+  // Fetch roles for role change feature
+  useQuery({
+    queryKey: ['roles'],
+    queryFn: async () => {
+      const response = await userManagementService.getRoles();
+      const map = new Map<string, string>();
+      response.items.forEach((role: RoleResponse) => {
+        map.set(role.name, role.id);
+      });
+      setRoleIdMap(map);
+      return response;
+    },
+    enabled: canCreate, // Only fetch if admin
+  });
   const { data: usersData, isLoading } = useQuery({
     queryKey,
     queryFn: () => {
@@ -215,6 +233,22 @@ export function UserManagementTable({
     },
   });
 
+  // Change role mutation (Admin only)
+  const changeRoleMutation = useMutation({
+    mutationFn: (request: { userId: string; roleId: string }) =>
+      userManagementService.changeRole(request.userId, { roleId: request.roleId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [userType] });
+      setChangeRoleDialogOpen(false);
+      setSelectedUser(null);
+      setSelectedRole('');
+      toast.success('Vai trò người dùng đã được thay đổi thành công.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Không thể thay đổi vai trò người dùng.');
+    },
+  });
+
   // Create moderator mutation
   const createModeratorMutation = useMutation({
     mutationFn: (request: CreateModeratorRequest) => userManagementService.createModerator(request),
@@ -254,6 +288,25 @@ export function UserManagementTable({
       unlockMutation.mutate({
         userId: selectedUser.id,
       });
+    }
+  };
+
+  const handleChangeRole = (user: User) => {
+    setSelectedUser(user);
+    setChangeRoleDialogOpen(true);
+  };
+
+  const confirmChangeRole = () => {
+    if (selectedUser && selectedRole) {
+      const roleId = roleIdMap.get(selectedRole);
+      if (roleId) {
+        changeRoleMutation.mutate({
+          userId: selectedUser.id,
+          roleId,
+        });
+      } else {
+        toast.error('Không tìm thấy ID của vai trò được chọn.');
+      }
     }
   };
 
@@ -409,7 +462,8 @@ export function UserManagementTable({
               <TableHead>Email</TableHead>
               <TableHead>Trạng Thái</TableHead>
               <TableHead>Ngày Tạo</TableHead>
-              <TableHead>Hành Động</TableHead>
+              <TableHead>Vai Trò</TableHead>
+              <TableHead>Khóa/Mở Khóa</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -454,26 +508,36 @@ export function UserManagementTable({
                   </TableCell>
                   <TableCell>{getStatusBadge(user.status, user)}</TableCell>
                   <TableCell>{formatDate(user.createdAtUTC)}</TableCell>
-                  <TableCell className="">
+                  <TableCell>
+                    {canCreate && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleChangeRole(user)}
+                        className="text-blue-600 hover:bg-blue-50"
+                      >
+                        Thay đổi
+                      </Button>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center gap-2">
                       {user.status === 'Locked' ? (
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleUnlock(user)}
-                          className="text-[#99b94a] hover:bg-green-50"
-                          title="Mở khóa tài khoản"
+                          className="text-green-600 hover:bg-green-50"
                         >
                           <Unlock className="mr-1 h-4 w-4" />
                           Mở Khóa
                         </Button>
                       ) : (
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleLock(user)}
                           className="text-red-600 hover:bg-red-50"
-                          title="Khóa tài khoản"
                         >
                           <Lock className="mr-1 h-4 w-4" />
                           Khóa
@@ -687,6 +751,90 @@ export function UserManagementTable({
               disabled={unlockMutation.isPending}
             >
               {unlockMutation.isPending ? 'Đang mở khóa...' : 'Mở Khóa Tài Khoản'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Role Dialog */}
+      <Dialog open={changeRoleDialogOpen} onOpenChange={setChangeRoleDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[#99b94a]">Thay Đổi Vai Trò Người Dùng</DialogTitle>
+            <DialogDescription>
+              Thay đổi vai trò của {selectedUser?.firstName} {selectedUser?.lastName}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="role" className="mb-3 text-[#99b94a]">
+                Chọn Vai Trò Mới
+              </Label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    <span>
+                      {selectedRole === 'Customer'
+                        ? 'Khách Hàng'
+                        : selectedRole === 'Moderator'
+                          ? 'Kiểm Duyệt Viên'
+                          : selectedRole === 'Admin'
+                            ? 'Quản Trị Viên'
+                            : 'Chọn vai trò'}
+                    </span>
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-[--radix-dropdown-menu-trigger-width]"
+                >
+                  <DropdownMenuItem
+                    onClick={() => setSelectedRole('Customer')}
+                    className={selectedRole === 'Customer' ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+                  >
+                    Khách Hàng
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setSelectedRole('Moderator')}
+                    className={selectedRole === 'Moderator' ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+                  >
+                    Kiểm Duyệt Viên
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setSelectedRole('Admin')}
+                    className={selectedRole === 'Admin' ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+                  >
+                    Quản Trị Viên
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {selectedRole && (
+              <div className="rounded-lg bg-blue-50 p-3">
+                <p className="text-sm text-blue-900">
+                  {selectedRole === 'Customer'
+                    ? 'Vai trò Khách Hàng có quyền truy cập các tính năng cơ bản như xem công thức, tạo công thức, quản lý yêu thích.'
+                    : selectedRole === 'Moderator'
+                      ? 'Vai trò Kiểm Duyệt Viên có quyền quản lý nội dung và người dùng.'
+                      : 'Vai trò Quản Trị Viên có toàn quyền hệ thống, bao gồm quản lý người dùng, quyền, và cấu hình.'}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setChangeRoleDialogOpen(false)}>
+              Hủy
+            </Button>
+            <Button
+              className="bg-[#99b94a] hover:bg-[#7a8f3a]"
+              onClick={confirmChangeRole}
+              disabled={!selectedRole || changeRoleMutation.isPending}
+            >
+              {changeRoleMutation.isPending ? 'Đang thay đổi...' : 'Thay Đổi Vai Trò'}
             </Button>
           </DialogFooter>
         </DialogContent>

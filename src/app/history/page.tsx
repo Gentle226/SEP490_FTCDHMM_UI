@@ -1,27 +1,24 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { Pagination } from '@/base/components/layout/pagination';
-import { Button } from '@/base/components/ui/button';
 import { Skeleton } from '@/base/components/ui/skeleton';
 import { MyRecipeCard } from '@/modules/recipes/components/my-recipe-card';
 import { recipeService } from '@/modules/recipes/services/recipe.service';
 
-function MyRecipeContent() {
+function HistoryContent() {
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get('page')) || 1;
   const pageSize = 10;
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['myRecipes', currentPage, pageSize],
+    queryKey: ['recipeHistory', currentPage, pageSize],
     queryFn: () =>
-      recipeService.getMyRecipes({
+      recipeService.getHistory({
         pageNumber: currentPage,
         pageSize: pageSize,
       }),
@@ -34,17 +31,17 @@ function MyRecipeContent() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-[#99b94a]">
-              Món Của Tôi
+              Công Thức Đã Xem
               {data && <span className="ml-2 text-[#99b94a]">({data.totalCount})</span>}
             </h1>
-            <p className="mt-1 text-gray-600">Quản lý tất cả công thức nấu ăn của bạn</p>
+            <p className="mt-1 text-gray-600">Lịch sử các công thức nấu ăn bạn đã xem</p>
           </div>
         </div>
 
         {/* Error State */}
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center">
-            <p className="text-red-600">Có lỗi xảy ra khi tải danh sách món ăn</p>
+            <p className="text-red-600">Có lỗi xảy ra khi tải lịch sử xem công thức</p>
           </div>
         )}
 
@@ -59,35 +56,6 @@ function MyRecipeContent() {
                 <Skeleton className="h-4 w-2/3" />
               </div>
             ))}
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!isLoading && data && data.items.length === 0 && (
-          <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
-            <div className="mb-4 rounded-full bg-gray-200 p-4">
-              <svg
-                className="h-12 w-12 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-            </div>
-            <h3 className="mb-2 text-xl font-semibold text-gray-900">Chưa có món ăn nào</h3>
-            <p className="mb-6 text-gray-600">Bắt đầu tạo công thức nấu ăn đầu tiên của bạn</p>
-            <Link href="/recipe/new">
-              <Button className="bg-[#99b94a] hover:bg-[#7a9a3d]">
-                <Plus className="mr-2 h-4 w-4" />
-                Tạo món mới
-              </Button>
-            </Link>
           </div>
         )}
 
@@ -122,7 +90,7 @@ function MyRecipeContent() {
   );
 }
 
-export default function MyRecipePage() {
+export default function HistoryPage() {
   return (
     <Suspense
       fallback={
@@ -143,7 +111,7 @@ export default function MyRecipePage() {
         </DashboardLayout>
       }
     >
-      <MyRecipeContent />
+      <HistoryContent />
     </Suspense>
   );
 }
