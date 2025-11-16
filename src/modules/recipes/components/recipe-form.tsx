@@ -910,13 +910,13 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
       {/* Tagged Users */}
       <div className="space-y-2">
-        <Label>Đóng tag người dùng</Label>
+        <Label>Tag người dùng</Label>
 
         {/* Selected Users */}
         <div className="flex min-h-[60px] flex-wrap gap-2 rounded-lg border p-3">
           {selectedUsers.length === 0 ? (
             <span className="flex w-full justify-center pt-2 text-sm text-gray-400">
-              Chưa có người dùng nào được đóng tag
+              Chưa có người dùng nào được tag
             </span>
           ) : (
             selectedUsers.map((user) => (

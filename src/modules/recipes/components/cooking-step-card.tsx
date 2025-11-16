@@ -101,7 +101,7 @@ export function CookingStepCard({
 
           {/* Main Content */}
           <div className="flex-1">
-            <div className="space-y-1">
+            <div className="min-w-0 space-y-1">
               <Textarea
                 placeholder="Ướp cá hồi với mật ong, dầu oliu và tiêu 15 phút."
                 value={step.instruction}
@@ -110,7 +110,7 @@ export function CookingStepCard({
                 onBlur={() => setFocusedStepIndex(null)}
                 maxLength={1000}
                 rows={3}
-                className="word-break"
+                className="w-full break-words"
               />
               <p
                 className={`text-right text-xs transition-opacity ${focusedStepIndex === index ? 'text-gray-500 opacity-100' : 'text-gray-300 opacity-0'}`}
