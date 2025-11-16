@@ -11,12 +11,16 @@ import { Input } from '@/base/components/ui/input';
 import { RecipeCard } from '@/base/components/ui/recipe-card';
 import { useAuth } from '@/modules/auth';
 import { IngredientDetailsResponse, ingredientPublicService } from '@/modules/ingredients';
+import { recipeService } from '@/modules/recipes/services/recipe.service';
+import { MyRecipeResponse } from '@/modules/recipes/types/my-recipe.types';
 
 export default function HomePage() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [ingredients, setIngredients] = useState<IngredientDetailsResponse[]>([]);
   const [isLoadingIngredients, setIsLoadingIngredients] = useState(true);
+  const [recentRecipes, setRecentRecipes] = useState<MyRecipeResponse['items']>([]);
+  const [isLoadingRecipes, setIsLoadingRecipes] = useState(false);
 
   // Fetch ingredients on mount
   useEffect(() => {
@@ -43,13 +47,28 @@ export default function HomePage() {
     fetchIngredients();
   }, []);
 
-  // Mock data for recent recipes (sẽ thay bằng API sau)
-  const recentRecipes = Array.from({ length: 6 }, (_, i) => ({
-    id: i + 1,
-    title: `Công thức món ăn ${i + 1}`,
-    author: `Tác giả ${i + 1}`,
-    image: undefined,
-  }));
+  // Fetch recipe history for logged-in users
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchRecipeHistory = async () => {
+      try {
+        setIsLoadingRecipes(true);
+        const response = await recipeService.getHistory({
+          pageNumber: 1,
+          pageSize: 6,
+        });
+        setRecentRecipes(response.items || []);
+      } catch (error) {
+        console.warn('Error fetching recipe history:', error);
+        setRecentRecipes([]);
+      } finally {
+        setIsLoadingRecipes(false);
+      }
+    };
+
+    fetchRecipeHistory();
+  }, [user]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,15 +150,22 @@ export default function HomePage() {
           <section className="mb-12">
             <h2 className="mb-6 text-2xl font-bold text-[#99b94a]">Món bạn mới xem gần đây</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-              {recentRecipes.map((recipe) => (
-                <RecipeCard
-                  key={recipe.id}
-                  title={recipe.title}
-                  author={recipe.author}
-                  image={recipe.image}
-                  isLoading={true} // Set to true to show skeleton
-                />
-              ))}
+              {isLoadingRecipes || recentRecipes.length === 0
+                ? Array.from({ length: 6 }, (_, i) => (
+                    <RecipeCard key={i} title="" author="" image={undefined} isLoading={true} />
+                  ))
+                : recentRecipes.map((recipe) => (
+                    <RecipeCard
+                      key={recipe.id}
+                      title={recipe.name}
+                      author={
+                        recipe.author ? `${recipe.author.firstName} ${recipe.author.lastName}` : ''
+                      }
+                      authorAvatar={recipe.author?.avatarUrl}
+                      image={recipe.imageUrl}
+                      isLoading={false}
+                    />
+                  ))}
             </div>
           </section>
         )}

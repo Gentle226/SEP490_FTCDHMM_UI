@@ -9,6 +9,13 @@ export interface Label {
   colorCode: string;
 }
 
+export interface Author {
+  id: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl?: string;
+}
+
 export interface MyRecipe {
   id: string;
   name: string;
@@ -24,6 +31,7 @@ export interface MyRecipe {
   ingredients: IngredientName[];
   createdAtUtc?: string; // New field for creation timestamp
   updatedAtUtc?: string; // New field for update timestamp
+  author?: Author; // Recipe author information
 }
 
 export interface MyRecipeResponse {

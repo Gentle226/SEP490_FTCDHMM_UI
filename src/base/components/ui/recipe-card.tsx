@@ -6,12 +6,20 @@ import { cn } from '@/base/lib';
 interface RecipeCardProps {
   title?: string;
   author?: string;
+  authorAvatar?: string;
   image?: string;
   className?: string;
   isLoading?: boolean;
 }
 
-export function RecipeCard({ title, author, image, className, isLoading = true }: RecipeCardProps) {
+export function RecipeCard({
+  title,
+  author,
+  authorAvatar,
+  image,
+  className,
+  isLoading = true,
+}: RecipeCardProps) {
   if (isLoading) {
     return (
       <div className={cn('group cursor-pointer', className)}>
@@ -45,11 +53,23 @@ export function RecipeCard({ title, author, image, className, isLoading = true }
           </div>
         )}
       </div>
-      <div className="mt-2">
-        <h3 className="truncate text-sm font-medium text-gray-900 group-hover:text-orange-600">
-          {title || 'Tên món ăn'}
-        </h3>
-        <p className="truncate text-xs text-gray-500">{author || 'Tác giả'}</p>
+      <div className="mt-2 flex items-center gap-2">
+        {authorAvatar && (
+          <Image
+            src={authorAvatar}
+            alt={author || 'Author'}
+            width={32}
+            height={32}
+            className="h-8 w-8 flex-shrink-0 rounded-full object-cover"
+            priority={false}
+          />
+        )}
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-sm font-medium text-gray-900 group-hover:text-orange-600">
+            {title || 'Tên món ăn'}
+          </h3>
+          <p className="truncate text-xs text-gray-500">{author || 'Tác giả'}</p>
+        </div>
       </div>
     </div>
   );
