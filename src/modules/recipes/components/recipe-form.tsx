@@ -925,9 +925,11 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
                 className="flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-900"
               >
                 {user.avatar && (
-                  <img
+                  <Image
                     src={user.avatar}
                     alt={`${user.firstName} ${user.lastName}`}
+                    width={20}
+                    height={20}
                     className="h-5 w-5 rounded-full object-cover"
                   />
                 )}
@@ -980,9 +982,11 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
                         >
                           <div className="flex w-full items-center gap-2">
                             {user.avatarUrl && (
-                              <img
+                              <Image
                                 src={user.avatarUrl}
                                 alt={`${user.firstName} ${user.lastName}`}
+                                width={24}
+                                height={24}
                                 className="h-6 w-6 flex-shrink-0 rounded-full object-cover"
                               />
                             )}

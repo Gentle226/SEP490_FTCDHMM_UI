@@ -8,6 +8,16 @@ interface PaginationParams {
   pageSize?: number;
 }
 
+interface RecipeSearchParams extends PaginationParams {
+  keyword?: string;
+  difficulty?: string;
+  sortBy?: string;
+  ration?: number;
+  maxCookTime?: number;
+  labelIds?: string[];
+  ingredientIds?: string[];
+}
+
 class RecipeService extends HttpClient {
   constructor() {
     super();
@@ -283,6 +293,62 @@ class RecipeService extends HttpClient {
         'PaginationParams.PageNumber': pageNumber,
         'PaginationParams.PageSize': pageSize,
       },
+    });
+  }
+
+  /**
+   * Search recipes by keyword with optional filters
+   */
+  public async searchRecipes(params: RecipeSearchParams = {}) {
+    const {
+      keyword = '',
+      pageNumber = 1,
+      pageSize = 10,
+      difficulty,
+      sortBy,
+      ration,
+      maxCookTime,
+      labelIds,
+      ingredientIds,
+    } = params;
+
+    const queryParams: Record<string, string | number> = {
+      Keyword: keyword,
+      'PaginationParams.PageNumber': pageNumber,
+      'PaginationParams.PageSize': pageSize,
+    };
+
+    if (difficulty) {
+      queryParams.Difficulty = difficulty;
+    }
+
+    if (sortBy) {
+      queryParams.SortBy = sortBy;
+    }
+
+    if (ration !== undefined) {
+      queryParams.Ration = ration;
+    }
+
+    if (maxCookTime !== undefined) {
+      queryParams.MaxCookTime = maxCookTime;
+    }
+
+    if (labelIds && labelIds.length > 0) {
+      labelIds.forEach((id, index) => {
+        queryParams[`LabelIds[${index}]`] = id;
+      });
+    }
+
+    if (ingredientIds && ingredientIds.length > 0) {
+      ingredientIds.forEach((id, index) => {
+        queryParams[`IngredientIds[${index}]`] = id;
+      });
+    }
+
+    return this.get<MyRecipeResponse>('api/Recipe', {
+      isPrivateRoute: false,
+      params: queryParams,
     });
   }
 

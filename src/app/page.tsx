@@ -2,6 +2,7 @@
 
 import { ChevronRightIcon, SearchIcon } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
@@ -15,6 +16,7 @@ import { recipeService } from '@/modules/recipes/services/recipe.service';
 import { MyRecipeResponse } from '@/modules/recipes/types/my-recipe.types';
 
 export default function HomePage() {
+  const router = useRouter();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [ingredients, setIngredients] = useState<IngredientDetailsResponse[]>([]);
@@ -72,8 +74,13 @@ export default function HomePage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement search functionality
-    console.warn('Searching for:', searchQuery);
+
+    if (!searchQuery.trim()) {
+      return;
+    }
+
+    // Navigate to search results page with query parameter
+    router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
   };
 
   // Common search and recipes section

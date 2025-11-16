@@ -37,7 +37,6 @@ import {
 import { Pagination as PaginationType } from '@/base/types';
 
 import {
-  ChangeRoleRequest,
   CreateModeratorRequest,
   LockUserRequest,
   PaginationParams,
