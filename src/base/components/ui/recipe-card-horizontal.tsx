@@ -3,6 +3,7 @@ import Image from 'next/image';
 
 import { Skeleton } from '@/base/components/ui/skeleton';
 import { cn } from '@/base/lib';
+import { getFullDateTimeVN, getRelativeTime } from '@/modules/recipes/utils/time.utils';
 
 const difficultyMap: Record<string, string> = {
   EASY: 'Dễ',
@@ -13,33 +14,6 @@ const difficultyMap: Record<string, string> = {
 function getLocalizedDifficulty(difficulty?: string): string | undefined {
   if (!difficulty) return undefined;
   return difficultyMap[difficulty.toUpperCase()] || difficulty;
-}
-
-// Get relative time in Vietnamese (e.g., "2 giờ trước")
-function getRelativeTimeVN(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-  if (seconds < 60) return 'Vừa xong';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} phút trước`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)} giờ trước`;
-  if (seconds < 604800) return `${Math.floor(seconds / 86400)} ngày trước`;
-  if (seconds < 2592000) return `${Math.floor(seconds / 604800)} tuần trước`;
-  return `${Math.floor(seconds / 2592000)} tháng trước`;
-}
-
-// Format date in Vietnamese style (e.g., "17 Tháng 11, 2025")
-function getFullDateTimeVN(dateString: string): string {
-  const date = new Date(dateString);
-  const options: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  };
-  return date.toLocaleDateString('vi-VN', options);
 }
 
 interface RecipeCardHorizontalProps {
@@ -161,7 +135,7 @@ export function RecipeCardHorizontal({
           {createdAtUtc && (
             <div className="flex items-center gap-1" title={getFullDateTimeVN(createdAtUtc)}>
               <Calendar className="h-3.5 w-3.5" />
-              <span className="text-gray-400">{getRelativeTimeVN(createdAtUtc)}</span>
+              <span className="text-gray-400">{getRelativeTime(createdAtUtc)} trước</span>
             </div>
           )}
         </div>

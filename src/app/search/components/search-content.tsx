@@ -57,7 +57,7 @@ export function SearchContent() {
   useEffect(() => {
     setPageNumber(1);
     fetchResults(searchQuery, filters, 1);
-  }, [filters, searchQuery]);
+  }, [filters, searchQuery, fetchResults]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
