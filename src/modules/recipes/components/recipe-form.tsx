@@ -233,6 +233,90 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     searchUsers();
   }, [debouncedUserSearch, isUserPopoverOpen]);
 
+  // Load draft recipe on component mount in create mode
+  useEffect(() => {
+    if (mode === 'create') {
+      const loadDraft = async () => {
+        try {
+          const draft = await recipeService.getDraft();
+          if (draft) {
+            // Set form fields from draft
+            setName(draft.name || '');
+            setDescription(draft.description || '');
+            setDifficulty(draft.difficulty as 'Easy' | 'Medium' | 'Hard');
+            setCookTime(draft.cookTime);
+            setRation(draft.ration || 1);
+
+            // Set labels
+            if (draft.labels && draft.labels.length > 0) {
+              setSelectedLabels(
+                draft.labels.map((label) => ({
+                  id: label.id,
+                  name: label.name,
+                  colorCode: label.colorCode,
+                })),
+              );
+            }
+
+            // Set ingredients
+            if (draft.ingredients && draft.ingredients.length > 0) {
+              setSelectedIngredients(
+                draft.ingredients.map((ingredient) => ({
+                  id: ingredient.ingredientId,
+                  name: ingredient.name,
+                  quantityGram: ingredient.quantityGram,
+                })),
+              );
+            }
+
+            // Set tagged users
+            if (draft.taggedUser && draft.taggedUser.length > 0) {
+              setSelectedUsers(
+                draft.taggedUser.map((user) => ({
+                  id: user.id,
+                  firstName: user.firstName,
+                  lastName: user.lastName,
+                })),
+              );
+            }
+
+            // Set cooking steps
+            if (draft.cookingSteps && draft.cookingSteps.length > 0) {
+              setCookingSteps(
+                draft.cookingSteps
+                  .sort((a, b) => a.stepOrder - b.stepOrder)
+                  .map((step) => ({
+                    id: crypto.randomUUID(),
+                    stepOrder: step.stepOrder,
+                    instruction: step.instruction || '',
+                    images:
+                      step.cookingStepImages?.map((img) => ({
+                        id: img.id,
+                        image: img.imageUrl || '',
+                        imageOrder: img.imageOrder,
+                        imageUrl: img.imageUrl,
+                      })) || [],
+                  })),
+              );
+            }
+
+            // Set main image preview
+            if (draft.imageUrl) {
+              setMainImagePreview(draft.imageUrl);
+            }
+
+            toast.success('Bản nháp công thức đã được tải');
+          }
+        } catch (error) {
+          console.error('Failed to load draft:', error);
+          // Silently fail - this is optional functionality
+        }
+      };
+
+      loadDraft();
+    }
+  }, [mode]);
+
   // Initialize form with existing data in edit mode
   useEffect(() => {
     if (mode === 'edit' && initialData) {
@@ -646,6 +730,58 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
       );
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const draftData = {
+        name,
+        description,
+        difficulty,
+        cookTime,
+        image: mainImage || undefined,
+        ration,
+        labelIds: selectedLabels.map((l) => l.id),
+        ingredients: selectedIngredients.map((i) => ({
+          ingredientId: i.id,
+          quantityGram: i.quantityGram,
+        })),
+        taggedUserIds: selectedUsers.map((u) => u.id),
+        cookingSteps,
+      };
+
+      await recipeService.saveDraft(draftData);
+      toast.success('Bản nháp đã được lưu');
+      setHasUnsavedChanges(false);
+      router.back();
+    } catch (error) {
+      console.error('Save draft error:', error);
+      toast.error('Có lỗi xảy ra khi lưu nháp công thức');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClearForm = () => {
+    if (!hasUnsavedChanges || confirm('Bạn có chắc chắn muốn xóa tất cả dữ liệu biểu mẫu?')) {
+      setName('');
+      setDescription('');
+      setDifficulty('Easy');
+      setCookTime(0);
+      setRation(1);
+      setMainImage(null);
+      setMainImagePreview(null);
+      setSelectedLabels([]);
+      setSelectedIngredients([]);
+      setSelectedUsers([]);
+      setCookingSteps([{ id: crypto.randomUUID(), stepOrder: 1, instruction: '', images: [] }]);
+      setHasUnsavedChanges(false);
+      toast.success('Biểu mẫu đã được xóa');
     }
   };
 
@@ -1125,12 +1261,10 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
       {/* Submit Buttons */}
       <div className="flex justify-end gap-3 border-t pt-6">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.back()}
-          disabled={isSubmitting}
-        >
+        <Button type="button" variant="outline" onClick={handleClearForm} disabled={isSubmitting}>
+          Xóa biểu mẫu
+        </Button>
+        <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={isSubmitting}>
           Lưu và Đóng
         </Button>
         <Button type="submit" disabled={isSubmitting} className="bg-[#99b94a] hover:bg-[#7a9a3d]">

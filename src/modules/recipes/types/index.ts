@@ -44,6 +44,7 @@ export interface Recipe
 }
 
 export * from './comment.types';
+export * from './draft.types';
 export * from './my-recipe.types';
 export * from './rating.types';
 export * from './recipe-detail.types';

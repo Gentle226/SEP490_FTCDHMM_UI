@@ -130,7 +130,7 @@ export function CookingStepCard({
 
                       return (
                         <div
-                          key={imgIndex}
+                          key={img.id}
                           draggable
                           onDragStart={(e) => {
                             setDraggedImageIndex(imgIndex);

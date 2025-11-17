@@ -1,6 +1,13 @@
 import { HttpClient } from '@/base/lib';
 
-import { CreateRecipeRequest, MyRecipeResponse, Recipe, RecipeDetail } from '../types';
+import {
+  CreateRecipeRequest,
+  DraftRecipeRequest,
+  DraftRecipeResponse,
+  MyRecipeResponse,
+  Recipe,
+  RecipeDetail,
+} from '../types';
 import { RatingResponse } from '../types/rating.types';
 
 interface PaginationParams {
@@ -369,6 +376,88 @@ class RecipeService extends HttpClient {
         PageNumber: pageNumber,
         PageSize: pageSize,
       },
+    });
+  }
+
+  /**
+   * Get user's draft recipe
+   */
+  public async getDraft() {
+    return this.get<DraftRecipeResponse>('api/Draft', {
+      isPrivateRoute: true,
+    });
+  }
+
+  /**
+   * Save or update draft recipe
+   */
+  public async saveDraft(data: DraftRecipeRequest) {
+    const formData = new FormData();
+
+    // Required fields
+    formData.append('Difficulty', data.difficulty);
+    formData.append('CookTime', String(data.cookTime));
+
+    // Optional fields
+    if (data.name) {
+      formData.append('Name', data.name);
+    }
+
+    if (data.description) {
+      formData.append('Description', data.description);
+    }
+
+    if (data.ration) {
+      formData.append('Ration', String(data.ration));
+    }
+
+    // Image - send as IFormFile
+    if (data.image) {
+      formData.append('Image', data.image);
+    }
+
+    // Append array fields (LabelIds and Ingredients)
+    if (data.labelIds && data.labelIds.length > 0) {
+      data.labelIds.forEach((id) => {
+        formData.append('LabelIds', id);
+      });
+    }
+
+    if (data.ingredients && data.ingredients.length > 0) {
+      data.ingredients.forEach((ingredient, index) => {
+        formData.append(`Ingredients[${index}].IngredientId`, ingredient.ingredientId);
+        formData.append(`Ingredients[${index}].QuantityGram`, String(ingredient.quantityGram));
+      });
+    }
+
+    // Append cooking steps with correct field names (StepOrder and Instruction)
+    if (data.cookingSteps && data.cookingSteps.length > 0) {
+      data.cookingSteps.forEach((step, index) => {
+        formData.append(`CookingSteps[${index}].StepOrder`, String(step.stepOrder));
+        formData.append(`CookingSteps[${index}].Instruction`, step.instruction);
+        if (step.images && step.images.length > 0) {
+          step.images.forEach((img, imgIndex) => {
+            if (img.image instanceof File) {
+              formData.append(`CookingSteps[${index}].Images[${imgIndex}].Image`, img.image);
+              formData.append(
+                `CookingSteps[${index}].Images[${imgIndex}].ImageOrder`,
+                String(img.imageOrder),
+              );
+            }
+          });
+        }
+      });
+    }
+
+    // Tagged user IDs
+    if (data.taggedUserIds && data.taggedUserIds.length > 0) {
+      data.taggedUserIds.forEach((id) => {
+        formData.append('TaggedUserIds', id);
+      });
+    }
+
+    return this.post<void>('api/Draft', formData, {
+      isPrivateRoute: true,
     });
   }
 }
