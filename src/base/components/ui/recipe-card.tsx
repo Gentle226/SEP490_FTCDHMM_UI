@@ -37,21 +37,15 @@ export function RecipeCard({
   return (
     <div className={cn('group cursor-pointer', className)}>
       <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-gray-100">
-        {image ? (
-          <Image
-            src={image}
-            alt={title || 'Recipe Image'}
-            width={400}
-            height={300}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-            priority={false}
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400">
-            <span className="text-sm">Không có ảnh</span>
-          </div>
-        )}
+        <Image
+          src={image || '/Outline Illustration Card.png'}
+          alt={title || 'Recipe Image'}
+          width={400}
+          height={300}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+          priority={false}
+        />
       </div>
       <div className="mt-2 flex items-center gap-2">
         {authorAvatar && (

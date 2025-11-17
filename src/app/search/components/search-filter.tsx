@@ -159,7 +159,7 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 pr-4">
+    <div className="sticky top-24 rounded-lg border border-gray-200 bg-white p-6 pr-4">
       <style>{themeStyles}</style>
       <h2 className="mb-4 text-lg font-bold text-[#99b94a]">Lọc Kết Quả</h2>
 
@@ -171,7 +171,7 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
         Đặt lại bộ lọc
       </Button>
 
-      <ScrollArea className="h-screen pr-4">
+      <ScrollArea className="h-[calc(100vh-280px)] pr-4">
         {/* Sort By */}
         {/* <div className="mb-6">
           <Label htmlFor="sort-select" className="mb-3 block text-sm font-semibold text-gray-900">

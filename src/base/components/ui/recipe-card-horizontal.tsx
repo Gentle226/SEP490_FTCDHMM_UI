@@ -75,20 +75,14 @@ export function RecipeCardHorizontal({
     >
       {/* Recipe Image */}
       <div className="relative h-60 w-60 flex-shrink-0 rounded-lg bg-gray-100">
-        {image ? (
-          <Image
-            src={image}
-            alt={title || 'Recipe'}
-            width={240}
-            height={240}
-            className="h-full w-full rounded-l-lg object-cover transition-transform duration-200 group-hover:scale-105"
-            priority={false}
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400">
-            <span className="text-xs">No image</span>
-          </div>
-        )}
+        <Image
+          src={image || '/Outline Illustration Card.png'}
+          alt={title || 'Recipe'}
+          width={240}
+          height={240}
+          className="h-full w-full rounded-l-lg object-cover transition-transform duration-200 group-hover:scale-105"
+          priority={false}
+        />
       </div>
 
       {/* Recipe Info */}
