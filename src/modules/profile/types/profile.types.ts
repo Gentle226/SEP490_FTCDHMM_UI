@@ -1,10 +1,22 @@
 import { z } from 'zod';
 
+// Helper function to calculate age
+function calculateAge(date: Date): number {
+  const today = new Date();
+  let age = today.getFullYear() - date.getFullYear();
+  const monthDiff = today.getMonth() - date.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 // Profile DTO from API
 export interface ProfileDto {
   firstName: string;
   lastName: string;
   email: string;
+  userName: string;
   gender: string;
   dateOfBirth?: string | Date;
   avatarUrl?: string | null;
@@ -45,7 +57,15 @@ export const updateProfileSchema = z.object({
       },
     ),
   gender: z.string().min(1, 'Vui lòng chọn giới tính'),
-  dateOfBirth: z.date(),
+  dateOfBirth: z.date().refine(
+    (date) => {
+      const age = calculateAge(date);
+      return age >= 1 && age <= 120;
+    },
+    {
+      message: 'Tuổi phải nằm trong khoảng 1 đến 120 tuổi',
+    },
+  ),
   avatarUrl: z
     .instanceof(File)
     .optional()

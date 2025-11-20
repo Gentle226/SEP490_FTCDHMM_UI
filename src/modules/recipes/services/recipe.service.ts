@@ -34,7 +34,7 @@ class RecipeService extends HttpClient {
    * Get my recipes (recipes created by the current user)
    */
   public async getMyRecipes(params: PaginationParams = {}) {
-    const { pageNumber = 1, pageSize = 10 } = params;
+    const { pageNumber = 1, pageSize = 12 } = params;
 
     return this.get<MyRecipeResponse>('api/Recipe/myRecipe', {
       isPrivateRoute: true,
@@ -46,13 +46,14 @@ class RecipeService extends HttpClient {
   }
 
   /**
-   * Get recipes by user ID (for viewing other users' recipes)
+   * Get recipes by user name (for viewing other users' recipes)
+   * Note: Changed from userId to userName to match API endpoint change
    */
-  public async getRecipesByUserId(userId: string, params: PaginationParams = {}) {
-    const { pageNumber = 1, pageSize = 10 } = params;
+  public async getRecipesByUserName(userName: string, params: PaginationParams = {}) {
+    const { pageNumber = 1, pageSize = 12 } = params;
 
-    return this.get<MyRecipeResponse>(`api/Recipe/user/${userId}`, {
-      isPrivateRoute: true,
+    return this.get<MyRecipeResponse>(`api/Recipe/user/${userName}`, {
+      isPrivateRoute: false,
       params: {
         PageNumber: pageNumber,
         PageSize: pageSize,

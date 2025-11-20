@@ -43,6 +43,11 @@ export function RecipeRating({
 
   const handleSubmitRating = () => {
     if (selectedScore > 0) {
+      // Feedback is required when score is 3 or lower
+      if (selectedScore < 4 && !feedback.trim()) {
+        return; // Show error will be displayed in UI
+      }
+
       submitRating(
         { recipeId, score: selectedScore, feedback },
         {
@@ -171,7 +176,7 @@ export function RecipeRating({
                     htmlFor="rating-feedback"
                     className="mb-1 block text-sm font-medium text-gray-700"
                   >
-                    Nhận xét của bạn (tùy chọn)
+                    {selectedScore < 4 ? 'Nhận xét của bạn *' : 'Nhận xét của bạn (tùy chọn)'}
                   </label>
                   <Textarea
                     id="rating-feedback"
@@ -186,12 +191,17 @@ export function RecipeRating({
                   <p className="mt-1 text-right text-xs text-gray-500">
                     {feedback.length}/256 ký tự
                   </p>
+                  {selectedScore < 4 && !feedback.trim() && (
+                    <p className="mt-1 text-xs text-red-500">
+                      Nhận xét là bắt buộc khi đánh giá từ 3 sao đổ xuống
+                    </p>
+                  )}
                 </div>
 
                 <button
                   type="button"
                   onClick={handleSubmitRating}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || (selectedScore < 4 && !feedback.trim())}
                   className="mt-2 rounded-lg bg-[#99b94a] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#88a43a] disabled:opacity-50"
                 >
                   {isSubmitting ? 'Đang gửi...' : 'Gửi đánh giá'}

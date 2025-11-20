@@ -16,7 +16,7 @@ import { recipeService } from '@/modules/recipes/services/recipe.service';
 function MyRecipeContent() {
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get('page')) || 1;
-  const pageSize = 10;
+  const pageSize = 12;
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['myRecipes', currentPage, pageSize],

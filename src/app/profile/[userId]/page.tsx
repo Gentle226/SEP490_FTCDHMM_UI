@@ -390,11 +390,16 @@ export default function UserProfilePage() {
           </TabsList>
 
           <TabsContent value="recipes" className="mt-4 sm:mt-6">
-            <UserRecipesList
-              userId={userId}
-              isOwnProfile={isOwnProfile}
-              onRecipeCountChange={setRecipeCount}
-            />
+            {(() => {
+              const userName = profileData?.userName || '';
+              return (
+                <UserRecipesList
+                  userName={userName}
+                  isOwnProfile={isOwnProfile}
+                  onRecipeCountChange={setRecipeCount}
+                />
+              );
+            })()}
           </TabsContent>
 
           <TabsContent value="cooksnaps" className="mt-4 sm:mt-6">
