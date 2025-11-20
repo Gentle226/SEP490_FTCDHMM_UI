@@ -484,21 +484,25 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     setImageToCrop(null);
   };
 
-  const handleStepImageChange = (index: number, file: File) => {
-    const error = validateImageFile(file);
-    if (error) {
-      toast.error(error);
-      return;
-    }
-
+  const handleStepImageChange = (index: number, files: File[]) => {
     const newSteps = [...cookingSteps];
     const currentImages = newSteps[index].images || [];
-    const imageOrder = currentImages.length + 1;
 
-    currentImages.push({
-      id: crypto.randomUUID(),
-      image: file,
-      imageOrder: imageOrder,
+    // Only add images up to the limit of 5 per step
+    const availableSlots = 5 - currentImages.length;
+    const filesToAdd = files.slice(0, availableSlots);
+
+    if (filesToAdd.length < files.length) {
+      toast.error(`Mỗi bước chỉ có thể chứa tối đa 5 ảnh. Chỉ thêm ${filesToAdd.length} ảnh.`);
+    }
+
+    filesToAdd.forEach((file) => {
+      const imageOrder = currentImages.length + 1;
+      currentImages.push({
+        id: crypto.randomUUID(),
+        image: file,
+        imageOrder: imageOrder,
+      });
     });
 
     newSteps[index].images = currentImages;
@@ -1282,7 +1286,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
               onDragLeave={handleCookStepDragLeave}
               onDrop={(e) => handleCookStepDrop(e, index)}
               onUpdateInstruction={(instruction) => updateStepDescription(index, instruction)}
-              onAddImage={(file) => handleStepImageChange(index, file)}
+              onAddImage={(files) => handleStepImageChange(index, files)}
               onRemoveImage={(imageIndex) => {
                 const newSteps = [...cookingSteps];
                 newSteps[index].images = (newSteps[index].images || []).filter(

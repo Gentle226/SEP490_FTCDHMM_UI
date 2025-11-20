@@ -25,7 +25,7 @@ interface CookingStepCardProps {
   onDragLeave: () => void;
   onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
   onUpdateInstruction: (instruction: string) => void;
-  onAddImage: (file: File) => void;
+  onAddImage: (files: File[]) => void;
   onRemoveImage: (imageIndex: number) => void;
   onReorderImages: (images: CookingStepImage[]) => void;
   onRemoveStep: () => void;
@@ -192,19 +192,26 @@ export function CookingStepCard({
                     <input
                       type="file"
                       accept="image/*"
+                      multiple
                       className="hidden"
                       onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const error = validateImageFile(file);
-                          if (error) {
-                            toast.error(error);
-                            return;
+                        const files = Array.from(e.target.files || []);
+                        if (files.length > 0) {
+                          const validFiles: File[] = [];
+                          for (const file of files) {
+                            const error = validateImageFile(file);
+                            if (error) {
+                              toast.error(error);
+                            } else {
+                              validFiles.push(file);
+                            }
                           }
-                          onAddImage(file);
+                          if (validFiles.length > 0) {
+                            onAddImage(validFiles);
+                          }
                         }
                       }}
-                      aria-label={`Upload image for step ${step.stepOrder}`}
+                      aria-label={`Upload images for step ${step.stepOrder}`}
                     />
                   </label>
                 )}

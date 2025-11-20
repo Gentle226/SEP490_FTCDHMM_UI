@@ -8,7 +8,6 @@ import {
   ChefHat,
   Clock,
   Edit,
-  Heart,
   Share2,
   Trash2,
   TriangleAlert,
@@ -28,13 +27,7 @@ import { checkIngredientRestriction, useGetUserDietRestrictions } from '@/module
 import { recipeService } from '@/modules/recipes/services/recipe.service';
 
 import { useCommentManager, useSignalRConnection } from '../hooks';
-import {
-  useAddToFavorite,
-  useRecipeDetail,
-  useRemoveFromFavorite,
-  useSaveRecipe,
-  useUnsaveRecipe,
-} from '../hooks/use-recipe-actions';
+import { useRecipeDetail, useSaveRecipe, useUnsaveRecipe } from '../hooks/use-recipe-actions';
 import { getFullDateTimeVN, getRelativeTime } from '../utils/time.utils';
 import { CommentList } from './comment-list';
 import { IngredientCardDetail } from './ingredient-card-detail';
@@ -82,8 +75,6 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   const signalRConnection = useSignalRConnection(recipeId);
 
   // React Query mutations
-  const addToFavorite = useAddToFavorite();
-  const removeFromFavorite = useRemoveFromFavorite();
   const saveRecipe = useSaveRecipe();
   const unsaveRecipe = useUnsaveRecipe();
 
@@ -91,8 +82,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   const isAuthor =
     user && recipe ? recipe.author?.id === user.id || recipe.createdBy?.id === user.id : false;
 
-  // Get favorite and saved state from recipe data
-  const isFavorited = recipe?.isFavorited ?? false;
+  // Get saved state from recipe data
   const isSaved = recipe?.isSaved ?? false;
 
   // Load comments with real-time updates (pass SignalR connection)
@@ -153,14 +143,6 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
       } catch (_error) {
         toast.error('Không thể sao chép link');
       }
-    }
-  };
-
-  const handleToggleFavorite = () => {
-    if (isFavorited) {
-      removeFromFavorite.mutate(recipeId);
-    } else {
-      addToFavorite.mutate(recipeId);
     }
   };
 
@@ -478,17 +460,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
               </>
             ) : (
               <>
-                {/* Non-author buttons: Favorite and Save */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={handleToggleFavorite}
-                  disabled={addToFavorite.isPending || removeFromFavorite.isPending}
-                >
-                  <Heart className={`h-4 w-4 ${isFavorited ? 'fill-red-500 text-red-500' : ''}`} />
-                  {isFavorited ? 'Đã yêu thích' : 'Yêu thích'}
-                </Button>
+                {/* Non-author buttons: Save */}
                 <Button
                   variant="outline"
                   size="sm"

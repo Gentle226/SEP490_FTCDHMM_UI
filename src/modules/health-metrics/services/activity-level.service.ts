@@ -51,7 +51,11 @@ export const ACTIVITY_LEVEL_MAP: Record<ActivityLevel, ActivityLevelInfo> = {
  * Backend stores: "MODERATE", "SEDENTARY", "LIGHT", "ACTIVE", "VERYACTIVE"
  * Frontend expects: "Moderate", "Sedentary", "Light", "Active", "VeryActive"
  */
-function normalizeActivityLevel(value: string): ActivityLevel {
+function normalizeActivityLevel(value: string | undefined | null): ActivityLevel {
+  if (!value) {
+    console.warn(`Activity level is undefined or null, defaulting to Sedentary`);
+    return 'Sedentary';
+  }
   const normalized = value.trim().toUpperCase();
   switch (normalized) {
     case 'SEDENTARY':
