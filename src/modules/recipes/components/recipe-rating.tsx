@@ -176,7 +176,9 @@ export function RecipeRating({
                     htmlFor="rating-feedback"
                     className="mb-1 block text-sm font-medium text-gray-700"
                   >
-                    {selectedScore < 4 ? 'Nhận xét của bạn *' : 'Nhận xét của bạn (tùy chọn)'}
+                    {selectedScore < 4
+                      ? 'Nhận xét của bạn (bắt buộc)'
+                      : 'Nhận xét của bạn (tùy chọn)'}
                   </label>
                   <Textarea
                     id="rating-feedback"
@@ -192,8 +194,8 @@ export function RecipeRating({
                     {feedback.length}/256 ký tự
                   </p>
                   {selectedScore < 4 && !feedback.trim() && (
-                    <p className="mt-1 text-xs text-red-500">
-                      Nhận xét là bắt buộc khi đánh giá từ 3 sao đổ xuống
+                    <p className="text-xs text-red-500">
+                      Bắt buộc phải nhận xét khi đánh giá dưới 4 sao
                     </p>
                   )}
                 </div>

@@ -36,7 +36,7 @@ export function IngredientCard({ name, image, isLoading, onClick }: IngredientCa
         />
       </div>
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-        <p className="line-clamp-1 text-sm font-medium text-white">{name || 'Unnamed'}</p>
+        <p className="line-clamp-1 text-left text-sm font-medium text-white">{name || 'Unnamed'}</p>
       </div>
     </div>
   );

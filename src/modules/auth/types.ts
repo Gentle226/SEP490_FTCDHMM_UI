@@ -78,7 +78,7 @@ export const registerSchema = z
         invalid_type_error: 'Ngày sinh không hợp lệ',
       })
       .max(new Date(), 'Ngày sinh không được là tương lai'),
-    gender: z.enum(['Male', 'Female', 'Other'], {
+    gender: z.enum(['Male', 'Female'], {
       errorMap: () => ({ message: 'Vui lòng chọn giới tính' }),
     }),
   })

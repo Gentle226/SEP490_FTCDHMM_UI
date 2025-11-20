@@ -1,6 +1,20 @@
 'use client';
 
-import { Plus, Upload, X } from 'lucide-react';
+import {
+  Beef,
+  ChefHat,
+  Clock,
+  Flame,
+  ImageIcon,
+  Plus,
+  Salad,
+  Search,
+  Soup,
+  Tag,
+  Users,
+  UtensilsCrossed,
+  X,
+} from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
@@ -791,7 +805,10 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
       <div className="grid grid-cols-1 gap-6 md:grid-cols-[300px_1fr]">
         {/* Image Section - Left */}
         <div className="space-y-2">
-          <Label>Hình ảnh món ăn</Label>
+          <Label>
+            <ImageIcon className="h-4 w-4 text-[#99b94a]" />
+            Hình ảnh món ăn
+          </Label>
           {mainImagePreview ? (
             <div className="relative h-75 w-full overflow-hidden rounded-lg border">
               <Image
@@ -824,7 +841,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <Upload
+              <Salad
                 className={`h-8 w-8 transition-colors ${
                   isDragOver ? 'text-[#99b94a]' : 'text-gray-400'
                 }`}
@@ -850,7 +867,10 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         <div className="min-w-0 space-y-4">
           {/* Recipe Name */}
           <div className="space-y-2">
-            <Label htmlFor="name">Tên món</Label>
+            <Label htmlFor="name">
+              <ChefHat className="h-4 w-4 text-[#99b94a]" />
+              Tên món
+            </Label>
             <Input
               id="name"
               placeholder="Tên món ăn của bạn"
@@ -870,7 +890,10 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Mô tả</Label>
+            <Label htmlFor="description">
+              <UtensilsCrossed className="h-4 w-4 text-[#99b94a]" />
+              Mô tả
+            </Label>
             <Textarea
               id="description"
               placeholder="Hãy chia sẻ với mọi người về món này của bạn nhé - ai đã truyền cảm hứng cho bạn, tại sao nó đặc biệt, bạn thích thưởng thức nó như thế nào..."
@@ -894,7 +917,10 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
           <div className="grid grid-cols-3 gap-3">
             {/* Difficulty */}
             <div className="space-y-2">
-              <Label htmlFor="difficulty">Độ khó</Label>
+              <Label htmlFor="difficulty" className="flex items-center gap-2">
+                <Flame className="h-4 w-4 text-[#99b94a]" />
+                Độ khó
+              </Label>
               <Select
                 options={[
                   { value: 'Easy', label: 'Dễ' },
@@ -910,7 +936,10 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
             {/* Cook Time */}
             <div className="space-y-2">
-              <Label htmlFor="cookTime">Thời gian nấu</Label>
+              <Label htmlFor="cookTime" className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-[#99b94a]" />
+                Thời gian nấu
+              </Label>
               <div className="relative">
                 <Input
                   id="cookTime"
@@ -934,7 +963,10 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
             {/* Ration */}
             <div className="space-y-2">
-              <Label htmlFor="ration">Khẩu phần</Label>
+              <Label htmlFor="ration" className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-[#99b94a]" />
+                Khẩu phần
+              </Label>
               <div className="relative">
                 <Input
                   id="ration"
@@ -955,203 +987,215 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         </div>
       </div>
 
-      {/* Labels */}
-      <div className="space-y-2">
-        <Label>Nhãn</Label>
+      {/* Labels and Tagged Users - Side by Side */}
+      <div className="grid grid-cols-3 gap-6">
+        {/* Left Column: Tagged Users (1/3 width) */}
+        <div className="col-span-1 space-y-2">
+          <Label className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-[#99b94a]" />
+            Tag người dùng
+          </Label>
 
-        {/* Selected Labels */}
-        <div className="flex min-h-[60px] flex-wrap gap-2 rounded-lg border p-3">
-          {selectedLabels.length === 0 ? (
-            <span className="flex w-full justify-center pt-2 text-sm text-gray-400">
-              Chưa có nhãn nào được chọn
-            </span>
-          ) : (
-            selectedLabels.map((label) => {
-              const labelStyle = { backgroundColor: label.colorCode } as React.CSSProperties;
-              return (
+          {/* Selected Users */}
+          <div className="flex min-h-[60px] flex-wrap gap-2 rounded-lg border p-3">
+            {selectedUsers.length === 0 ? (
+              <span className="flex w-full justify-center pt-2 text-center text-xs text-gray-400">
+                Chưa có người dùng nào được tag
+              </span>
+            ) : (
+              selectedUsers.map((user) => (
                 <div
-                  key={label.id}
-                  className="flex items-center gap-1 rounded-full px-3 py-1 text-sm text-white"
-                  style={labelStyle}
-                  suppressHydrationWarning
+                  key={user.id}
+                  className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-900"
                 >
-                  <span>{label.name}</span>
+                  {user.avatar && (
+                    <Image
+                      src={user.avatar}
+                      alt={`${user.firstName} ${user.lastName}`}
+                      width={16}
+                      height={16}
+                      className="h-4 w-4 rounded-full object-cover"
+                    />
+                  )}
+                  <span className="truncate">
+                    {user.firstName} {user.lastName}
+                  </span>
                   <button
                     type="button"
-                    onClick={() => removeLabel(label.id)}
-                    className="ml-1 rounded-full hover:bg-white/20"
-                    aria-label={`Remove ${label.name}`}
+                    onClick={() => removeUser(user.id)}
+                    className="ml-1 rounded-full hover:bg-blue-200"
+                    aria-label={`Remove ${user.firstName} ${user.lastName}`}
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-2.5 w-2.5" />
                   </button>
                 </div>
-              );
-            })
-          )}
-        </div>
+              ))
+            )}
+          </div>
 
-        {/* Search and Add Labels */}
-        <Popover open={isLabelPopoverOpen} onOpenChange={setIsLabelPopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button type="button" variant="outline" className="w-full">
-              <Plus className="mr-2 h-4 w-4" />
-              Thêm nhãn
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-0" align="start">
-            <Command shouldFilter={false}>
-              <CommandInput
-                placeholder="Tìm kiếm nhãn..."
-                value={labelSearch}
-                onValueChange={setLabelSearch}
-              />
-              <CommandList>
-                {isLoadingLabels ? (
-                  <div className="py-6 text-center text-sm text-gray-500">Đang tải...</div>
-                ) : labelSearchResults.length === 0 ? (
-                  <CommandEmpty>Không tìm thấy nhãn nào.</CommandEmpty>
-                ) : (
-                  <CommandGroup>
-                    {labelSearchResults.map((label) => {
-                      const isSelected = selectedLabels.some((l) => l.id === label.id);
-                      const colorStyle = {
-                        backgroundColor: label.colorCode,
-                      } as React.CSSProperties;
-                      return (
-                        <CommandItem
-                          key={label.id}
-                          onSelect={() => addLabel(label)}
-                          disabled={isSelected}
-                          className="cursor-pointer"
-                        >
-                          <div className="flex w-full items-center gap-2">
-                            <div
-                              className="h-4 w-4 flex-shrink-0 rounded-full"
-                              style={colorStyle}
-                              suppressHydrationWarning
-                            />
-                            <span className="flex-1">{label.name}</span>
-                            {isSelected && <span className="text-xs text-gray-500">Đã chọn</span>}
-                          </div>
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                )}
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      {/* Tagged Users */}
-      <div className="space-y-2">
-        <Label>Tag người dùng</Label>
-
-        {/* Selected Users */}
-        <div className="flex min-h-[60px] flex-wrap gap-2 rounded-lg border p-3">
-          {selectedUsers.length === 0 ? (
-            <span className="flex w-full justify-center pt-2 text-sm text-gray-400">
-              Chưa có người dùng nào được tag
-            </span>
-          ) : (
-            selectedUsers.map((user) => (
-              <div
-                key={user.id}
-                className="flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-900"
-              >
-                {user.avatar && (
-                  <Image
-                    src={user.avatar}
-                    alt={`${user.firstName} ${user.lastName}`}
-                    width={20}
-                    height={20}
-                    className="h-5 w-5 rounded-full object-cover"
-                  />
-                )}
-                <span>
-                  {user.firstName} {user.lastName}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => removeUser(user.id)}
-                  className="ml-1 rounded-full hover:bg-blue-200"
-                  aria-label={`Remove ${user.firstName} ${user.lastName}`}
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Search and Add Users */}
-        <Popover open={isUserPopoverOpen} onOpenChange={setIsUserPopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button type="button" variant="outline" className="w-full">
-              <Plus className="mr-2 h-4 w-4" />
-              Thêm người dùng
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-0" align="start">
-            <Command shouldFilter={false}>
-              <CommandInput
-                placeholder="Tìm kiếm người dùng..."
-                value={userSearch}
-                onValueChange={setUserSearch}
-              />
-              <CommandList>
-                {isLoadingUsers ? (
-                  <div className="py-6 text-center text-sm text-gray-500">Đang tải...</div>
-                ) : userSearchResults.length === 0 ? (
-                  <CommandEmpty>Không tìm thấy người dùng nào.</CommandEmpty>
-                ) : (
-                  <CommandGroup>
-                    {userSearchResults.map((user) => {
-                      const isSelected = selectedUsers.some((u) => u.id === user.id);
-                      return (
-                        <CommandItem
-                          key={user.id}
-                          onSelect={() => addUser(user)}
-                          disabled={isSelected}
-                          className="cursor-pointer"
-                        >
-                          <div className="flex w-full items-center gap-2">
-                            {user.avatarUrl && (
-                              <Image
-                                src={user.avatarUrl}
-                                alt={`${user.firstName} ${user.lastName}`}
-                                width={24}
-                                height={24}
-                                className="h-6 w-6 flex-shrink-0 rounded-full object-cover"
-                              />
-                            )}
-                            <div className="flex-1">
-                              <div className="text-sm font-medium">
-                                {user.firstName} {user.lastName}
-                              </div>
-                              {user.email && (
-                                <div className="text-xs text-gray-500">{user.email}</div>
+          {/* Search and Add Users */}
+          <Popover open={isUserPopoverOpen} onOpenChange={setIsUserPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button type="button" variant="outline" className="w-full">
+                <Search className="mr-2 h-4 w-4" />
+                Thêm người dùng
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[350px] p-0" align="start">
+              <Command shouldFilter={false}>
+                <CommandInput
+                  placeholder="Tìm kiếm người dùng..."
+                  value={userSearch}
+                  onValueChange={setUserSearch}
+                />
+                <CommandList>
+                  {isLoadingUsers ? (
+                    <div className="py-6 text-center text-sm text-gray-500">Đang tải...</div>
+                  ) : userSearchResults.length === 0 ? (
+                    <CommandEmpty>Không tìm thấy người dùng nào.</CommandEmpty>
+                  ) : (
+                    <CommandGroup>
+                      {userSearchResults.map((user) => {
+                        const isSelected = selectedUsers.some((u) => u.id === user.id);
+                        return (
+                          <CommandItem
+                            key={user.id}
+                            onSelect={() => addUser(user)}
+                            disabled={isSelected}
+                            className="cursor-pointer"
+                          >
+                            <div className="flex w-full items-center gap-2">
+                              {user.avatarUrl && (
+                                <Image
+                                  src={user.avatarUrl}
+                                  alt={`${user.firstName} ${user.lastName}`}
+                                  width={24}
+                                  height={24}
+                                  className="h-6 w-6 flex-shrink-0 rounded-full object-cover"
+                                />
                               )}
+                              <div className="flex-1">
+                                <div className="text-sm font-medium">
+                                  {user.firstName} {user.lastName}
+                                </div>
+                                {user.email && (
+                                  <div className="text-xs text-gray-500">{user.email}</div>
+                                )}
+                              </div>
+                              {isSelected && <span className="text-xs text-gray-500">Đã chọn</span>}
                             </div>
-                            {isSelected && <span className="text-xs text-gray-500">Đã chọn</span>}
-                          </div>
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                )}
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  )}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* Right Column: Labels (2/3 width) */}
+        <div className="col-span-2 space-y-2">
+          <Label className="flex items-center gap-2">
+            <Tag className="h-4 w-4 text-[#99b94a]" />
+            Nhãn
+          </Label>
+
+          {/* Selected Labels */}
+          <div className="flex min-h-[60px] flex-wrap gap-2 rounded-lg border p-3">
+            {selectedLabels.length === 0 ? (
+              <span className="flex w-full justify-center pt-2 text-xs text-gray-400">
+                Chưa có nhãn nào được chọn
+              </span>
+            ) : (
+              selectedLabels.map((label) => {
+                const labelStyle = { backgroundColor: label.colorCode } as React.CSSProperties;
+                return (
+                  <div
+                    key={label.id}
+                    className="flex items-center gap-1 rounded-full px-3 py-1 text-xs text-white"
+                    style={labelStyle}
+                    suppressHydrationWarning
+                  >
+                    <span>{label.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeLabel(label.id)}
+                      className="ml-1 rounded-full hover:bg-white/20"
+                      aria-label={`Remove ${label.name}`}
+                    >
+                      <X className="h-2.5 w-2.5" />
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Search and Add Labels */}
+          <Popover open={isLabelPopoverOpen} onOpenChange={setIsLabelPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button type="button" variant="outline" className="w-full">
+                <Plus className="mr-2 h-4 w-4" />
+                Thêm nhãn
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[400px] p-0" align="start">
+              <Command shouldFilter={false}>
+                <CommandInput
+                  placeholder="Tìm kiếm nhãn..."
+                  value={labelSearch}
+                  onValueChange={setLabelSearch}
+                />
+                <CommandList>
+                  {isLoadingLabels ? (
+                    <div className="py-6 text-center text-sm text-gray-500">Đang tải...</div>
+                  ) : labelSearchResults.length === 0 ? (
+                    <CommandEmpty>Không tìm thấy nhãn nào.</CommandEmpty>
+                  ) : (
+                    <CommandGroup>
+                      {labelSearchResults.map((label) => {
+                        const isSelected = selectedLabels.some((l) => l.id === label.id);
+                        const colorStyle = {
+                          backgroundColor: label.colorCode,
+                        } as React.CSSProperties;
+                        return (
+                          <CommandItem
+                            key={label.id}
+                            onSelect={() => addLabel(label)}
+                            disabled={isSelected}
+                            className="cursor-pointer"
+                          >
+                            <div className="flex w-full items-center gap-2">
+                              <div
+                                className="h-4 w-4 flex-shrink-0 rounded-full"
+                                style={colorStyle}
+                                suppressHydrationWarning
+                              />
+                              <span className="flex-1">{label.name}</span>
+                              {isSelected && <span className="text-xs text-gray-500">Đã chọn</span>}
+                            </div>
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  )}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       {/* Ingredients and Cooking Steps - Side by Side */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr]">
         {/* Left Column: Ingredients (1/3 width) */}
-        <div className="space-y-2">
-          <Label>Nguyên liệu</Label>
+        <div className="space-y-4">
+          <Label>
+            <Beef className="h-4 w-4 text-[#99b94a]" />
+            Nguyên liệu
+          </Label>
 
           {/* Selected Ingredients */}
           <div className="min-h-[150px] rounded-lg border p-3">
@@ -1221,7 +1265,10 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
         {/* Right Column: Cooking Steps (2/3 width) */}
         <div className="space-y-4">
-          <Label>Các bước nấu</Label>
+          <Label>
+            <Soup className="h-4 w-4 text-[#99b94a]" />
+            Các bước nấu
+          </Label>
 
           {cookingSteps.map((step, index) => (
             <CookingStepCard

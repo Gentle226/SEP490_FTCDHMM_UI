@@ -29,7 +29,7 @@ export default function EditProfilePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [selectedGender, setSelectedGender] = useState<'Male' | 'Female' | 'Other' | ''>('');
+  const [selectedGender, setSelectedGender] = useState<'Male' | 'Female' | ''>('');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
 
   const { data: profile, isLoading } = useProfile();
@@ -54,11 +54,11 @@ export default function EditProfilePage() {
       const dob = profile.dateOfBirth ? new Date(profile.dateOfBirth) : undefined;
       setSelectedDate(dob);
 
-      // Convert gender from API format (MALE/FEMALE/OTHER) to form format (Male/Female/Other)
+      // Convert gender from API format (MALE/FEMALE) to form format (Male/Female)
       const normalizedGender = profile.gender
         ? profile.gender.charAt(0).toUpperCase() + profile.gender.slice(1).toLowerCase()
         : '';
-      setSelectedGender((normalizedGender as 'Male' | 'Female' | 'Other') || '');
+      setSelectedGender((normalizedGender as 'Male' | 'Female') || '');
 
       form.reset({
         firstName: profile.firstName,
@@ -162,32 +162,33 @@ export default function EditProfilePage() {
 
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-2xl space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-[#99b94a]">Chỉnh sửa hồ sơ</h1>
-            <p className="text-muted-foreground">Cập nhật thông tin cá nhân của bạn</p>
-          </div>
-          <ChangePasswordDialog />
+      <div className="mx-auto max-w-6xl space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-[#99b94a]">Chỉnh sửa hồ sơ</h1>
+          <p className="text-muted-foreground">Cập nhật thông tin cá nhân của bạn</p>
         </div>
 
-        <div className="bg-card rounded-lg border p-6">
-          {/* Avatar Section */}
-          <div className="mb-6 flex items-center gap-6">
-            <Avatar className="border-primary/20 size-24 border-2">
-              <AvatarImage
-                src={
-                  avatarPreview ||
-                  profile?.avatarUrl ||
-                  `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=random`
-                }
-                alt={user.fullName || user.email}
-              />
-              <AvatarFallback className="text-2xl">
-                {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}
-              </AvatarFallback>
-            </Avatar>
-            <div>
+        {/* Two Column Layout */}
+        <div className="grid gap-6 lg:grid-cols-[30%_1fr]">
+          {/* Left Column - Avatar & Identity (30%) */}
+          <div className="bg-card rounded-lg border p-6">
+            <div className="flex flex-col items-center space-y-4">
+              {/* Avatar - Centered */}
+              <Avatar className="border-primary/20 size-32 border-2">
+                <AvatarImage
+                  src={
+                    avatarPreview ||
+                    profile?.avatarUrl ||
+                    `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=random`
+                  }
+                  alt={user.fullName || user.email}
+                />
+                <AvatarFallback className="text-4xl">
+                  {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}
+                </AvatarFallback>
+              </Avatar>
+
+              {/* Change Avatar Button */}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -206,134 +207,159 @@ export default function EditProfilePage() {
                 <Upload className="size-4" />
                 Thay đổi ảnh đại diện
               </Button>
-              <p className="text-muted-foreground mt-2 text-sm">
-                JPG, PNG hoặc GIF. Kích thước tối đa 2MB.
+
+              {/* File format info */}
+              <p className="text-muted-foreground text-center text-xs">
+                JPG, PNG hoặc GIF. Tối đa 2MB.
               </p>
+
+              {/* Avatar error */}
               {form.formState.errors.avatarUrl && (
-                <p className="text-danger mt-1 text-sm">
+                <p className="text-danger text-center text-sm">
                   {form.formState.errors.avatarUrl.message}
                 </p>
               )}
+
+              {/* Display Name/Email */}
+              <div className="w-full space-y-1 border-t pt-4 text-center">
+                <p className="text-foreground text-sm font-semibold">
+                  {user.firstName} {user.lastName}
+                </p>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground text-xs">Email của bạn</p>
+                  <p className="text-foreground text-xs break-all">{user.email}</p>
+                </div>
+              </div>
+
+              {/* Change Password Button - Bottom of left column */}
+              <div className="mt-4 w-full border-t pt-4">
+                <div className="flex justify-center">
+                  <ChangePasswordDialog />
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Profile Form */}
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid gap-6 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label className="text-[#99b94a]" htmlFor="firstName">
-                  Họ <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="firstName"
-                  placeholder="Nhập họ của bạn"
-                  {...form.register('firstName')}
-                />
-                {form.formState.errors.firstName && (
-                  <p className="text-danger text-sm">{form.formState.errors.firstName.message}</p>
-                )}
+          {/* Right Column - Form (70%) */}
+          <div className="bg-card rounded-lg border p-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Row 1: First Name & Last Name (50% - 50%) */}
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-[#99b94a]" htmlFor="firstName">
+                    Họ <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="firstName"
+                    placeholder="Nhập họ của bạn"
+                    {...form.register('firstName')}
+                  />
+                  {form.formState.errors.firstName && (
+                    <p className="text-danger text-sm">{form.formState.errors.firstName.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[#99b94a]" htmlFor="lastName">
+                    Tên <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="lastName"
+                    placeholder="Nhập tên của bạn"
+                    {...form.register('lastName')}
+                  />
+                  {form.formState.errors.lastName && (
+                    <p className="text-danger text-sm">{form.formState.errors.lastName.message}</p>
+                  )}
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-[#99b94a]" htmlFor="lastName">
-                  Tên <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="lastName"
-                  placeholder="Nhập tên của bạn"
-                  {...form.register('lastName')}
-                />
-                {form.formState.errors.lastName && (
-                  <p className="text-danger text-sm">{form.formState.errors.lastName.message}</p>
-                )}
-              </div>
-            </div>
+              {/* Row 2: Date of Birth & Gender (50% - 50%) */}
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-[#99b94a]">
+                    Ngày sinh <span className="text-red-500">*</span>
+                  </Label>
+                  <DatePickerWithInput
+                    date={selectedDate}
+                    onDateChange={(date) => {
+                      setSelectedDate(date);
+                      if (date) {
+                        form.setValue('dateOfBirth', date);
+                      }
+                    }}
+                    placeholder="dd/mm/yyyy"
+                  />
+                  {form.formState.errors.dateOfBirth && (
+                    <p className="text-sm text-red-500">
+                      {form.formState.errors.dateOfBirth.message}
+                    </p>
+                  )}
+                </div>
 
-            {/* Date of Birth and Gender on same line */}
-            <div className="grid gap-6 sm:grid-cols-2">
-              {/* Date of Birth with DatePickerWithInput */}
-              <div className="space-y-2">
-                <Label className="text-[#99b94a]">
-                  Ngày sinh <span className="text-red-500">*</span>
-                </Label>
-                <DatePickerWithInput
-                  date={selectedDate}
-                  onDateChange={(date) => {
-                    setSelectedDate(date);
-                    if (date) {
-                      form.setValue('dateOfBirth', date);
-                    }
-                  }}
-                  placeholder="dd/mm/yyyy"
-                />
-                {form.formState.errors.dateOfBirth && (
-                  <p className="text-sm text-red-500">
-                    {form.formState.errors.dateOfBirth.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Gender with Dropdown */}
-              <div className="space-y-2">
-                <Label className="text-[#99b94a]">
-                  Giới tính <span className="text-red-500">*</span>
-                </Label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button type="button" variant="outline" className="w-full justify-between">
-                      <span>
-                        {selectedGender === 'Male'
-                          ? 'Nam'
-                          : selectedGender === 'Female'
-                            ? 'Nữ'
-                            : selectedGender === 'Other'
-                              ? 'Khác'
+                <div className="space-y-2">
+                  <Label className="text-[#99b94a]">
+                    Giới tính <span className="text-red-500">*</span>
+                  </Label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button type="button" variant="outline" className="w-full justify-between">
+                        <span>
+                          {selectedGender === 'Male'
+                            ? 'Nam'
+                            : selectedGender === 'Female'
+                              ? 'Nữ'
                               : 'Chọn giới tính'}
-                      </span>
-                      <ChevronDownIcon className="size-4 opacity-50" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="w-[--radix-dropdown-menu-trigger-width]"
-                  >
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setSelectedGender('Male');
-                        form.setValue('gender', 'Male');
-                      }}
+                        </span>
+                        <ChevronDownIcon className="size-4 opacity-50" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-[--radix-dropdown-menu-trigger-width]"
                     >
-                      Nam
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setSelectedGender('Female');
-                        form.setValue('gender', 'Female');
-                      }}
-                    >
-                      Nữ
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setSelectedGender('Other');
-                        form.setValue('gender', 'Other');
-                      }}
-                    >
-                      Khác
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <input type="hidden" {...form.register('gender')} value={selectedGender} />
-                {form.formState.errors.gender && (
-                  <p className="text-sm text-red-500">{form.formState.errors.gender.message}</p>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setSelectedGender('Male');
+                          form.setValue('gender', 'Male');
+                        }}
+                      >
+                        Nam
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setSelectedGender('Female');
+                          form.setValue('gender', 'Female');
+                        }}
+                      >
+                        Nữ
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <input type="hidden" {...form.register('gender')} value={selectedGender} />
+                  {form.formState.errors.gender && (
+                    <p className="text-sm text-red-500">{form.formState.errors.gender.message}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Row 3: Address (100% - Full width) */}
+              <div className="space-y-2">
+                <Label className="text-[#99b94a]" htmlFor="address">
+                  Địa chỉ
+                </Label>
+                <Input
+                  id="address"
+                  placeholder="Nhập địa chỉ của bạn"
+                  {...form.register('address')}
+                />
+                {form.formState.errors.address && (
+                  <p className="text-danger text-sm">{form.formState.errors.address.message}</p>
                 )}
               </div>
-            </div>
 
-            {/* Bio and Address */}
-            <div className="grid gap-6 lg:grid-cols-3">
-              {/* Bio - Left side (takes more space) */}
-              <div className="space-y-2 lg:col-span-2">
+              {/* Row 4: Bio (100% - Full width) */}
+              <div className="space-y-2">
                 <Label className="text-[#99b94a]" htmlFor="bio">
                   Giới thiệu bản thân
                 </Label>
@@ -348,44 +374,27 @@ export default function EditProfilePage() {
                 )}
               </div>
 
-              {/* Address + Buttons - Right side */}
-              <div className="space-y-2.5 lg:col-span-1">
-                <div className="space-y-2">
-                  <Label className="text-[#99b94a]" htmlFor="address">
-                    Địa chỉ
-                  </Label>
-                  <Input
-                    id="address"
-                    placeholder="Nhập địa chỉ của bạn"
-                    {...form.register('address')}
-                  />
-                  {form.formState.errors.address && (
-                    <p className="text-danger text-sm">{form.formState.errors.address.message}</p>
-                  )}
-                </div>
-
-                {/* Buttons */}
-                <div className="mb-2 flex flex-col gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => router.push(`/profile/${user.id}`)}
-                    disabled={updateProfile.isPending}
-                  >
-                    Trở về
-                  </Button>
-                  <Button
-                    className="bg-[#99b94a] hover:bg-[#88a43a]"
-                    type="submit"
-                    loading={updateProfile.isPending}
-                  >
-                    <Save className="size-4" />
-                    Lưu thay đổi
-                  </Button>
-                </div>
+              {/* Row 5: Footer Buttons (Right aligned) */}
+              <div className="flex flex-col-reverse gap-3 border-t pt-6 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.push(`/profile/${user.id}`)}
+                  disabled={updateProfile.isPending}
+                >
+                  Trở về
+                </Button>
+                <Button
+                  className="bg-[#99b94a] hover:bg-[#88a43a]"
+                  type="submit"
+                  loading={updateProfile.isPending}
+                >
+                  <Save className="size-4" />
+                  Lưu thay đổi
+                </Button>
               </div>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
     </DashboardLayout>

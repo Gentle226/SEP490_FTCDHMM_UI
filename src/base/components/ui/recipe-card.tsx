@@ -59,10 +59,10 @@ export function RecipeCard({
           />
         )}
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-medium text-gray-900 group-hover:text-orange-600">
+          <h3 className="truncate text-left text-sm font-medium text-gray-900 group-hover:text-[#99b94a]">
             {title || 'Tên món ăn'}
           </h3>
-          <p className="truncate text-xs text-gray-500">{author || 'Tác giả'}</p>
+          <p className="truncate text-left text-xs text-gray-500">{author || 'Tác giả'}</p>
         </div>
       </div>
     </div>

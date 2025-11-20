@@ -27,7 +27,6 @@ export default function HomePage() {
   const [ingredients, setIngredients] = useState<IngredientDetailsResponse[]>([]);
   const [isLoadingIngredients, setIsLoadingIngredients] = useState(true);
   const [recentRecipes, setRecentRecipes] = useState<MyRecipeResponse['items']>([]);
-  const [isLoadingRecipes, setIsLoadingRecipes] = useState(false);
 
   // Handle search with debouncing
   const handleSearchInput = (value: string) => {
@@ -111,7 +110,6 @@ export default function HomePage() {
 
     const fetchRecipeHistory = async () => {
       try {
-        setIsLoadingRecipes(true);
         const response = await recipeService.getHistory({
           pageNumber: 1,
           pageSize: 6,
@@ -120,8 +118,6 @@ export default function HomePage() {
       } catch (error) {
         console.warn('Error fetching recipe history:', error);
         setRecentRecipes([]);
-      } finally {
-        setIsLoadingRecipes(false);
       }
     };
 
@@ -161,7 +157,7 @@ export default function HomePage() {
               <form onSubmit={handleSearch} className="relative">
                 <Input
                   type="text"
-                  placeholder="Tìm món ăn hoặc người dùng"
+                  placeholder="Tìm món ăn hoặc nguyên liệu"
                   value={searchQuery}
                   onChange={(e) => handleSearchInput(e.target.value)}
                   className="h-12 border-2 border-gray-200 pr-12 text-lg focus:border-[#99b94a]"
@@ -257,41 +253,43 @@ export default function HomePage() {
                   </div>
                 ))
               : ingredients.map((ingredient, index) => (
-                  <div key={ingredient.id} className={index === 8 ? 'md:hidden' : ''}>
-                    <IngredientCard
-                      name={ingredient.name}
-                      image={ingredient.imageUrl}
-                      onClick={() => {
-                        // TODO: Navigate to ingredient detail page
-                        console.warn('Navigate to ingredient:', ingredient.id);
-                      }}
-                    />
-                  </div>
+                  <button
+                    key={ingredient.id}
+                    className={`transition-transform hover:scale-105 active:scale-95 ${index === 8 ? 'md:hidden' : ''}`}
+                    onClick={() => {
+                      router.push(`/search?q=${encodeURIComponent(ingredient.name)}`);
+                    }}
+                    title={ingredient.name}
+                  >
+                    <IngredientCard name={ingredient.name} image={ingredient.imageUrl} />
+                  </button>
                 ))}
           </div>
         </section>
 
-        {/* Recent Recipes Section - Only show for logged in users */}
-        {user && (
+        {/* Recent Recipes Section - Only show for logged in users with history */}
+        {user && recentRecipes.length > 0 && (
           <section className="mb-12">
             <h2 className="mb-6 text-2xl font-bold text-[#99b94a]">Món bạn mới xem gần đây</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-              {isLoadingRecipes || recentRecipes.length === 0
-                ? Array.from({ length: 6 }, (_, i) => (
-                    <RecipeCard key={i} title="" author="" image={undefined} isLoading={true} />
-                  ))
-                : recentRecipes.map((recipe) => (
-                    <RecipeCard
-                      key={recipe.id}
-                      title={recipe.name}
-                      author={
-                        recipe.author ? `${recipe.author.firstName} ${recipe.author.lastName}` : ''
-                      }
-                      authorAvatar={recipe.author?.avatarUrl}
-                      image={recipe.imageUrl}
-                      isLoading={false}
-                    />
-                  ))}
+              {recentRecipes.map((recipe) => (
+                <button
+                  key={recipe.id}
+                  onClick={() => router.push(`/recipe/${recipe.id}`)}
+                  className="transition-transform hover:scale-105 active:scale-95"
+                  title={recipe.name}
+                >
+                  <RecipeCard
+                    title={recipe.name}
+                    author={
+                      recipe.author ? `${recipe.author.firstName} ${recipe.author.lastName}` : ''
+                    }
+                    authorAvatar={recipe.author?.avatarUrl}
+                    image={recipe.imageUrl}
+                    isLoading={false}
+                  />
+                </button>
+              ))}
             </div>
           </section>
         )}

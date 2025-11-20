@@ -91,7 +91,7 @@ export function SearchContent() {
               <div className="relative">
                 <Input
                   type="text"
-                  placeholder="Tìm món ăn hoặc người dùng"
+                  placeholder="Tìm món ăn hoặc nguyên liệu"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-10 border-gray-200 pr-10 focus:border-[#99b94a]"

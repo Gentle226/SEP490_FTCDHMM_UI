@@ -262,7 +262,9 @@ export default function UserProfilePage() {
                         <span className="text-base font-semibold sm:text-lg">
                           {profileUser.followingCount.toLocaleString()}
                         </span>
-                        <span className="text-muted-foreground text-xs sm:text-sm">Bạn Bếp</span>
+                        <span className="text-muted-foreground text-xs sm:text-sm">
+                          Đang theo dõi
+                        </span>
                       </button>
                       <button
                         onClick={() => setShowFollowersDialog(true)}
@@ -283,7 +285,9 @@ export default function UserProfilePage() {
                         <span className="text-base font-semibold sm:text-lg">
                           {profileUser.followingCount.toLocaleString()}
                         </span>
-                        <span className="text-muted-foreground text-xs sm:text-sm">Bạn Bếp</span>
+                        <span className="text-muted-foreground text-xs sm:text-sm">
+                          Đang theo dõi
+                        </span>
                       </div>
                       <div className="flex items-center gap-1.5 sm:gap-2">
                         <span className="text-base font-semibold sm:text-lg">

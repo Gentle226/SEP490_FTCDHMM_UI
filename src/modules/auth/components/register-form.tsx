@@ -153,7 +153,7 @@ type RegisterStep1Props = {
     password: string;
     rePassword: string;
     dateOfBirth: Date;
-    gender: 'Male' | 'Female' | 'Other';
+    gender: 'Male' | 'Female';
   }) => void;
   onSkipToEmailVerification?: (email: string) => void;
 };
@@ -176,7 +176,7 @@ function RegisterStep1({
 
   const [showEmailVerifyDialog, setShowEmailVerifyDialog] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string>('');
-  const [selectedGender, setSelectedGender] = useState<'Male' | 'Female' | 'Other' | ''>('');
+  const [selectedGender, setSelectedGender] = useState<'Male' | 'Female' | ''>('');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
 
   // Mutation to resend OTP
@@ -348,9 +348,7 @@ function RegisterStep1({
                       ? 'Nam'
                       : selectedGender === 'Female'
                         ? 'Nữ'
-                        : selectedGender === 'Other'
-                          ? 'Khác'
-                          : 'Chọn giới tính'}
+                        : 'Chọn giới tính'}
                   </span>
                   <ChevronDownIcon className="size-4 opacity-50" />
                 </Button>
@@ -371,14 +369,6 @@ function RegisterStep1({
                   }}
                 >
                   Nữ
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    setSelectedGender('Other');
-                    setValue('gender', 'Other');
-                  }}
-                >
-                  Khác
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
