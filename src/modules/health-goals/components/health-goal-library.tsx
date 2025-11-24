@@ -1,6 +1,7 @@
 'use client';
 
 import { Target } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/base/components/ui/button';
@@ -11,19 +12,45 @@ import {
   CardHeader,
   CardTitle,
 } from '@/base/components/ui/card';
+import { DatePickerWithInput } from '@/base/components/ui/date-picker-with-input';
+import { Label } from '@/base/components/ui/label';
 import { Skeleton } from '@/base/components/ui/skeleton';
 
 import { useCurrentHealthGoal, useHealthGoals, useSetHealthGoal } from '../hooks';
 
 export function HealthGoalLibrary() {
   const { data: healthGoals, isLoading } = useHealthGoals();
-  const { data: currentGoals = [] } = useCurrentHealthGoal();
+  const { data: currentGoal } = useCurrentHealthGoal();
   const setGoal = useSetHealthGoal();
+  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+  const [expirationDate, setExpirationDate] = useState<Date | undefined>(undefined);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const handleSelectGoal = async (id: string) => {
+  const handleSelectGoal = (id: string) => {
+    setSelectedGoalId(id);
+    setShowDatePicker(true);
+    // Set default expiration date to 30 days from now
+    const defaultDate = new Date();
+    defaultDate.setDate(defaultDate.getDate() + 30);
+    setExpirationDate(defaultDate);
+  };
+
+  const handleConfirmGoal = async () => {
+    if (!selectedGoalId || !expirationDate) {
+      toast.error('Vui lòng chọn ngày hết hạn');
+      return;
+    }
+
     try {
-      await setGoal.mutateAsync(id);
+      const expirationDateTime = expirationDate.toISOString();
+      await setGoal.mutateAsync({
+        goalId: selectedGoalId,
+        expiredAtUtc: expirationDateTime,
+      });
       toast.success('Đã chọn mục tiêu sức khỏe thành công');
+      setShowDatePicker(false);
+      setSelectedGoalId(null);
+      setExpirationDate(undefined);
     } catch (_error) {
       toast.error('Lỗi khi chọn mục tiêu sức khỏe');
     }
@@ -31,7 +58,15 @@ export function HealthGoalLibrary() {
 
   // Check if a goal is already selected as current
   const isGoalSelected = (goalId: string) => {
-    return currentGoals.some((currentGoal) => currentGoal.id === goalId);
+    return currentGoal?.healthGoalId === goalId;
+  };
+
+  // Only allow dates from today onwards for health goal expiration
+  const disableExpiredDates = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    date.setHours(0, 0, 0, 0);
+    return date < today;
   };
 
   if (isLoading) {
@@ -92,7 +127,7 @@ export function HealthGoalLibrary() {
 
                 <Button
                   className="w-full bg-[#99b94a] hover:bg-[#7a8f3a]"
-                  disabled={setGoal.isPending || isGoalSelected(goal.id)}
+                  disabled={setGoal.isPending || (isGoalSelected(goal.id) ?? false)}
                   onClick={() => handleSelectGoal(goal.id)}
                 >
                   {isGoalSelected(goal.id) ? 'Đã Chọn' : 'Chọn Mục Tiêu Này'}
@@ -102,6 +137,51 @@ export function HealthGoalLibrary() {
           </Card>
         ))}
       </div>
+
+      {/* Date Picker Modal */}
+      {showDatePicker && selectedGoalId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <Card className="w-full max-w-sm">
+            <CardHeader>
+              <CardTitle>Chọn Ngày Hết Hạn</CardTitle>
+              <CardDescription>Chọn khi nào mục tiêu sức khỏe này sẽ hết hạn</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="expiration-date">
+                  Ngày Hết Hạn <span className="text-red-500">*</span>
+                </Label>
+                <DatePickerWithInput
+                  date={expirationDate}
+                  onDateChange={setExpirationDate}
+                  placeholder="Chọn ngày"
+                  disabledDays={disableExpiredDates}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowDatePicker(false);
+                    setSelectedGoalId(null);
+                    setExpirationDate(undefined);
+                  }}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  className="flex-1 bg-[#99b94a] hover:bg-[#7a8f3a]"
+                  onClick={handleConfirmGoal}
+                  disabled={setGoal.isPending || !expirationDate}
+                >
+                  {setGoal.isPending ? 'Đang Lưu...' : 'Xác Nhận'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

@@ -22,7 +22,7 @@ export interface RecipeIngredient {
 
 export interface CreateRecipeRequest {
   name: string;
-  description?: string;
+  description: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   cookTime: number;
   image?: File;
@@ -41,6 +41,9 @@ export interface Recipe
   cookingSteps: CookingStep[];
   createdAt: string;
   updatedAt: string;
+  rating?: number;
+  averageRating?: number;
+  numberOfRatings?: number;
 }
 
 export * from './comment.types';

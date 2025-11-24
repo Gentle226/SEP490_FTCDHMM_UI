@@ -1,10 +1,9 @@
 'use client';
 
-import { CheckCircle2, Circle, MoreVertical, Pencil, Target, Trash2 } from 'lucide-react';
+import { MoreVertical, Pencil, Target, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { Badge } from '@/base/components/ui/badge';
 import { Button } from '@/base/components/ui/button';
 import {
   Card,
@@ -21,20 +20,13 @@ import {
 } from '@/base/components/ui/dropdown-menu';
 import { Skeleton } from '@/base/components/ui/skeleton';
 
-import {
-  useActivateCustomHealthGoal,
-  useDeactiveCustomHealthGoal,
-  useDeleteCustomHealthGoal,
-  useMyCustomHealthGoals,
-} from '../hooks';
+import { useDeleteCustomHealthGoal, useMyCustomHealthGoals } from '../hooks';
 import { CustomHealthGoalResponse } from '../types';
 import { CustomHealthGoalFormDialog } from './custom-health-goal-form-dialog';
 
 export function CustomHealthGoalList() {
   const { data: customGoals, isLoading } = useMyCustomHealthGoals();
   const deleteGoal = useDeleteCustomHealthGoal();
-  const activateGoal = useActivateCustomHealthGoal();
-  const deactiveGoal = useDeactiveCustomHealthGoal();
   const [editingGoal, setEditingGoal] = useState<CustomHealthGoalResponse | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
@@ -50,24 +42,6 @@ export function CustomHealthGoalList() {
   const handleEdit = (goal: CustomHealthGoalResponse) => {
     setEditingGoal(goal);
     setIsFormOpen(true);
-  };
-
-  const handleActivate = async (id: string) => {
-    try {
-      await activateGoal.mutateAsync(id);
-      toast.success('Mục tiêu đã được kích hoạt');
-    } catch (_err) {
-      toast.error('Lỗi khi kích hoạt mục tiêu');
-    }
-  };
-
-  const handleDeactive = async (id: string) => {
-    try {
-      await deactiveGoal.mutateAsync(id);
-      toast.success('Mục tiêu đã được vô hiệu hóa');
-    } catch (_err) {
-      toast.error('Lỗi khi vô hiệu hóa mục tiêu');
-    }
   };
 
   const handleCreateNew = () => {
@@ -120,21 +94,6 @@ export function CustomHealthGoalList() {
               <div className="flex items-start justify-between">
                 <div className="flex-1 space-y-2">
                   <CardTitle className="text-lg text-[#99b94a]">{goal.name}</CardTitle>
-                  <Badge
-                    variant="outline"
-                    className={
-                      goal.isActive
-                        ? 'border-green-200 bg-green-50 text-green-700'
-                        : 'border-gray-200 bg-gray-50 text-gray-700'
-                    }
-                  >
-                    {goal.isActive ? (
-                      <CheckCircle2 className="mr-1 h-3 w-3" />
-                    ) : (
-                      <Circle className="mr-1 h-3 w-3" />
-                    )}
-                    {goal.isActive ? 'Đang Hoạt Động' : 'Vô Hiệu'}
-                  </Badge>
                   <CardDescription className="line-clamp-2 pt-1">
                     {goal.description || 'Không có mô tả'}
                   </CardDescription>
@@ -146,17 +105,6 @@ export function CustomHealthGoalList() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {goal.isActive ? (
-                      <DropdownMenuItem onClick={() => handleDeactive(goal.id)}>
-                        <Circle className="mr-2 h-4 w-4" />
-                        Vô Hiệu Hóa
-                      </DropdownMenuItem>
-                    ) : (
-                      <DropdownMenuItem onClick={() => handleActivate(goal.id)}>
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Kích Hoạt
-                      </DropdownMenuItem>
-                    )}
                     <DropdownMenuItem onClick={() => handleEdit(goal)}>
                       <Pencil className="mr-2 h-4 w-4" />
                       Chỉnh Sửa

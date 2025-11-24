@@ -27,7 +27,6 @@ export interface HealthGoalResponse {
   id: string;
   name: string;
   description?: string;
-  isActive: boolean;
   targets: NutrientTarget[];
 }
 
@@ -55,4 +54,18 @@ export interface UpdateCustomHealthGoalRequest {
   name?: string;
   description?: string;
   targets?: NutrientTargetDto[];
+}
+
+// UserHealthGoal - now one-to-one relationship with User
+export interface UserHealthGoalResponse {
+  userId: string;
+  healthGoalId?: string;
+  customHealthGoalId?: string;
+  expiredAtUtc?: string;
+  healthGoal?: HealthGoalResponse;
+  customHealthGoal?: CustomHealthGoalResponse;
+}
+
+export interface SetUserHealthGoalRequest {
+  expiredAtUtc: string; // ISO 8601 date string
 }

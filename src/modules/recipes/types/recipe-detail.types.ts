@@ -29,7 +29,7 @@ export interface CookingStepDetail {
 export interface RecipeDetail {
   id: string;
   name: string;
-  description?: string;
+  description: string;
   difficulty: {
     name?: string;
     value: string | number;
@@ -63,6 +63,9 @@ export interface RecipeDetail {
   };
   isFavorited?: boolean;
   isSaved?: boolean;
+  rating?: number;
+  averageRating?: number;
+  numberOfRatings?: number;
   createdAtUtc?: string; // New field for creation timestamp
   updatedAtUtc?: string; // New field for update timestamp
   createdAt?: string; // Keep for backward compatibility

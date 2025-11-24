@@ -683,6 +683,11 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
       return;
     }
 
+    if (!description.trim()) {
+      toast.error('Vui lòng nhập mô tả cho món ăn');
+      return;
+    }
+
     if (description.length > 1500) {
       toast.error('Mô tả không được vượt quá 1500 ký tự');
       return;
@@ -921,9 +926,10 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">
+            <Label htmlFor="description" className="flex items-center gap-1">
               <UtensilsCrossed className="h-4 w-4 text-[#99b94a]" />
               Mô tả
+              <span className="text-red-500">*</span>
             </Label>
             <Textarea
               id="description"
@@ -935,6 +941,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
               onBlur={() => setIsDescriptionFocused(false)}
               onInvalid={handleInvalidTextarea}
               maxLength={2000}
+              required
               className="w-full break-words sm:min-h-24 md:min-h-28"
             />
             <p

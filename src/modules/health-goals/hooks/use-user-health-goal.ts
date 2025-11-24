@@ -13,13 +13,14 @@ export const useCurrentHealthGoal = () => {
 };
 
 /**
- * Hook to set a health goal as the user's current active goal
+ * Hook to set a health goal as the user's current active goal with expiration date
  */
 export const useSetHealthGoal = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (goalId: string) => userHealthGoalService.setGoal(goalId),
+    mutationFn: ({ goalId, expiredAtUtc }: { goalId: string; expiredAtUtc: string }) =>
+      userHealthGoalService.setGoal(goalId, expiredAtUtc),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['current-health-goal'] });
     },

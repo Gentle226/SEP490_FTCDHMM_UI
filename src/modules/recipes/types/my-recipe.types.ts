@@ -19,7 +19,7 @@ export interface Author {
 export interface MyRecipe {
   id: string;
   name: string;
-  description?: string;
+  description: string;
   difficulty: {
     name: string;
     value: number;
@@ -32,6 +32,9 @@ export interface MyRecipe {
   createdAtUtc?: string; // New field for creation timestamp
   updatedAtUtc?: string; // New field for update timestamp
   author?: Author; // Recipe author information
+  rating?: number;
+  averageRating?: number;
+  numberOfRatings?: number;
 }
 
 export interface MyRecipeResponse {
