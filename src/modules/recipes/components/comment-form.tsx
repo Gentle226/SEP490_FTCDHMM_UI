@@ -63,7 +63,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
         const searchQuery = mentionMatch[1];
 
         if (searchQuery.length >= 2 || searchQuery.length === 0) {
-          const results = await searchUsers(searchQuery);
+          const results = await searchUsers(searchQuery, user?.id);
           const unmentionedResults = results.filter(
             (r) => !selectedMentions.some((m) => m.id === r.id),
           );

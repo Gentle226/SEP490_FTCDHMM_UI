@@ -13,32 +13,37 @@ export interface UserSearchResult {
 export function useUserSearch() {
   const [isLoading, setIsLoading] = useState(false);
 
-  const searchUsers = useCallback(async (query: string): Promise<UserSearchResult[]> => {
-    if (!query.trim() || query.length < 2) {
-      return [];
-    }
+  const searchUsers = useCallback(
+    async (query: string, excludeUserId?: string): Promise<UserSearchResult[]> => {
+      if (!query.trim() || query.length < 2) {
+        return [];
+      }
 
-    setIsLoading(true);
-    try {
-      const response = await userManagementService.getCustomers({
-        pageNumber: 1,
-        pageSize: 10,
-        search: query.trim(),
-      });
+      setIsLoading(true);
+      try {
+        const response = await userManagementService.getCustomers({
+          pageNumber: 1,
+          pageSize: 10,
+          search: query.trim(),
+        });
 
-      return response.items.map((user) => ({
-        id: user.id,
-        userName: `${user.lastName} ${user.firstName}`, // Use full name for mentions
-        lastName: user.lastName,
-        avatarUrl: user.avatarUrl, // Now properly typed on User interface
-      }));
-    } catch (error) {
-      console.error('Error searching users:', error);
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+        return response.items
+          .filter((user) => user.id !== excludeUserId) // Filter out current user
+          .map((user) => ({
+            id: user.id,
+            userName: `${user.lastName} ${user.firstName}`, // Use full name for mentions
+            lastName: user.lastName,
+            avatarUrl: user.avatarUrl, // Now properly typed on User interface
+          }));
+      } catch (error) {
+        console.error('Error searching users:', error);
+        return [];
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
 
   return { searchUsers, isLoading };
 }

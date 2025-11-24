@@ -253,10 +253,14 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
   // Load draft recipe on component mount in create mode
   useEffect(() => {
+    let isMounted = true;
+
     if (mode === 'create') {
       const loadDraft = async () => {
         try {
           const draft = await recipeService.getDraft();
+          if (!isMounted) return;
+
           if (draft) {
             // Set form fields from draft
             setName(draft.name || '');
@@ -338,6 +342,10 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
       loadDraft();
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [mode]);
 
   // Initialize form with existing data in edit mode
