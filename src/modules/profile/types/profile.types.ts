@@ -13,6 +13,7 @@ function calculateAge(date: Date): number {
 
 // Profile DTO from API
 export interface ProfileDto {
+  id: string;
   firstName: string;
   lastName: string;
   email: string;

@@ -103,7 +103,7 @@ export function RecipeRating({
                 ))}
               </div>
               <span className="text-sm font-medium text-gray-700">
-                {isLoadingAverage ? 'Đang tải...' : `${(averageRating || 0).toFixed(1)}/5`}
+                {isLoadingAverage ? 'Đang tải...' : `${(Number(averageRating) || 0).toFixed(1)}/5`}
               </span>
             </div>
             <Button

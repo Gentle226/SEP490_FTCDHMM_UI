@@ -58,7 +58,9 @@ export default function UserProfilePage() {
         id: userId,
         username: `${profileData.firstName} ${profileData.lastName}`.trim(),
         fullName: `${profileData.firstName} ${profileData.lastName}`.trim(),
-        handle: `@${profileData.email.split('@')[0]}`,
+        handle: profileData.userName
+          ? `@${profileData.userName}`
+          : `@${profileData.email.split('@')[0]}`,
         location: profileData.address || '',
         bio: profileData.bio || '',
         avatarUrl:
