@@ -86,35 +86,65 @@ export function RecipeRating({
       <div className="space-y-4">
         {/* Average Rating Display */}
         {showAverageRating && (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="space-y-4">
+            {/* Row 1: Stars and Rating Score */}
+            <div className="flex items-center gap-8">
+              {/* Stars */}
               <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    size={20}
-                    style={
-                      star <= Math.round(averageRating || 0)
-                        ? { fill: '#99b94a', color: '#99b94a' }
-                        : undefined
-                    }
-                    className={star <= Math.round(averageRating || 0) ? '' : 'text-gray-300'}
-                  />
-                ))}
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const rating = Number(averageRating?.averageRating) || 0;
+                  const isFilled = star <= Math.floor(rating);
+                  const isHalf = star === Math.ceil(rating) && rating % 1 !== 0;
+
+                  return (
+                    <div key={star} className="relative h-6 w-6">
+                      {/* Background empty star */}
+                      <Star size={24} className="absolute text-gray-300" />
+                      {/* Filled or half-filled star overlay */}
+                      {(isFilled || isHalf) && (
+                        <div
+                          className="absolute top-0 left-0 overflow-hidden"
+                          style={{ width: isFilled ? '100%' : '50%', height: '100%' }}
+                        >
+                          <Star size={24} style={{ fill: '#99b94a', color: '#99b94a' }} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-              <span className="text-sm font-medium text-gray-700">
-                {isLoadingAverage ? 'Đang tải...' : `${(Number(averageRating) || 0).toFixed(1)}/5`}
-              </span>
+
+              {/* Rating Score (large) */}
+              <div className="flex items-baseline gap-1">
+                <div className="text-3xl font-bold text-gray-800">
+                  {isLoadingAverage
+                    ? '...'
+                    : (Number(averageRating?.averageRating) || 0).toFixed(1)}
+                </div>
+                <div className="text-sm text-gray-600">/5</div>
+              </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2"
-              onClick={() => setIsFeedbackDialogOpen(true)}
-            >
-              <MessageCircle className="h-4 w-4" />
-              <span className="text-xs sm:text-sm">Xem nhận xét</span>
-            </Button>
+
+            {/* Row 2: Number of Ratings and View Reviews Button */}
+            <div className="flex items-center gap-8">
+              {/* Number of Ratings */}
+              <div className="text-sm text-gray-600">
+                {isLoadingAverage
+                  ? 'Đang tải...'
+                  : `${averageRating?.numberOfRatings || 0} đánh giá`}
+              </div>
+
+              {/* View Reviews Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2"
+                onClick={() => setIsFeedbackDialogOpen(true)}
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span className="text-xs sm:text-sm">Xem nhận xét</span>
+              </Button>
+            </div>
           </div>
         )}
 

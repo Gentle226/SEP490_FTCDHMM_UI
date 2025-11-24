@@ -33,5 +33,6 @@ export interface RatingResponse {
  * Average rating response from the API
  */
 export interface AverageRatingResponse {
+  numberOfRatings: number;
   averageRating: number;
 }

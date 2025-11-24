@@ -281,7 +281,7 @@ export function useGetAverageRating(recipeId: string | null | undefined) {
     queryFn: async () => {
       if (!recipeId) return null;
       const response = await ratingService.getAverageRating(recipeId);
-      return response.averageRating;
+      return response;
     },
     enabled: !!recipeId,
   });
