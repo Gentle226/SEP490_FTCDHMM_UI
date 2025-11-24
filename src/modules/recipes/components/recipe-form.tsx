@@ -37,6 +37,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/base/components/ui/po
 import { Select } from '@/base/components/ui/select';
 import { Textarea } from '@/base/components/ui/textarea';
 import { useDebounce } from '@/base/hooks';
+import { useAuth } from '@/modules/auth';
 import {
   Ingredient,
   ingredientManagementService,
@@ -84,6 +85,7 @@ interface RecipeFormProps {
 
 export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFormProps) {
   const router = useRouter();
+  const { user: currentUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
@@ -236,7 +238,9 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
           pageNumber: 1,
           pageSize: 50,
         });
-        setUserSearchResults(response.items);
+        // Filter out current user from results
+        const filteredUsers = response.items.filter((user) => user.id !== currentUser?.id);
+        setUserSearchResults(filteredUsers);
       } catch (error) {
         console.error('Failed to search users:', error);
       } finally {
@@ -245,7 +249,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     }
 
     searchUsers();
-  }, [debouncedUserSearch, isUserPopoverOpen]);
+  }, [debouncedUserSearch, isUserPopoverOpen, currentUser?.id]);
 
   // Load draft recipe on component mount in create mode
   useEffect(() => {
@@ -257,7 +261,12 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
             // Set form fields from draft
             setName(draft.name || '');
             setDescription(draft.description || '');
-            setDifficulty(draft.difficulty as 'Easy' | 'Medium' | 'Hard');
+            // Normalize difficulty: convert MEDIUM/HARD/EASY to Capitalized format
+            const normalizedDifficulty = draft.difficulty
+              ? ((draft.difficulty.charAt(0).toUpperCase() +
+                  draft.difficulty.slice(1).toLowerCase()) as 'Easy' | 'Medium' | 'Hard')
+              : 'Easy';
+            setDifficulty(normalizedDifficulty);
             setCookTime(draft.cookTime);
             setRation(draft.ration || 1);
 
@@ -586,6 +595,12 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
   };
 
   const addUser = (user: User) => {
+    // Prevent user from tagging themselves
+    if (currentUser && user.id === currentUser.id) {
+      toast.error('Không thể tự tag chính mình');
+      return;
+    }
+
     if (!selectedUsers.some((u) => u.id === user.id)) {
       setSelectedUsers((prev) => [
         ...prev,
@@ -681,8 +696,12 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
       return;
     }
 
-    if (selectedIngredients.some((ingredient) => ingredient.quantityGram <= 0)) {
-      toast.error('Vui lòng nhập khối lượng cho tất cả các nguyên liệu');
+    if (
+      selectedIngredients.some(
+        (ingredient) => ingredient.quantityGram < 0.1 || ingredient.quantityGram > 10000,
+      )
+    ) {
+      toast.error('Số lượng nguyên liệu phải từ 0.1 đến 10000 gram');
       return;
     }
 
@@ -1316,7 +1335,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
           Xóa biểu mẫu
         </Button>
         <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={isSubmitting}>
-          Lưu và Đóng
+          Lưu bản nháp
         </Button>
         <Button type="submit" disabled={isSubmitting} className="bg-[#99b94a] hover:bg-[#7a9a3d]">
           {isSubmitting

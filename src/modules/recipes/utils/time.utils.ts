@@ -4,6 +4,11 @@
  * @returns Relative time string (e.g., "1 phút", "2 giờ", "3 ngày")
  */
 export function getRelativeTime(dateString: string): string {
+  // Guard against undefined or empty dateString
+  if (!dateString) {
+    return 'Thời gian không xác định';
+  }
+
   const now = new Date();
   // Ensure the date string is interpreted as UTC by appending 'Z' if not present
   const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
@@ -40,6 +45,11 @@ export function getRelativeTime(dateString: string): string {
  * @returns Formatted date string (e.g., "Thứ 5, 7 tháng 11, 2025 lúc 22:40")
  */
 export function getFullDateTimeVN(dateString: string): string {
+  // Guard against undefined or empty dateString
+  if (!dateString) {
+    return 'Thời gian không xác định';
+  }
+
   // Ensure the date string is interpreted as UTC by appending 'Z' if not present
   const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
   const date = new Date(utcDateString);

@@ -103,6 +103,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
     const textBeforeCursor = content.substring(0, cursorPos);
     const lastAtIndex = textBeforeCursor.lastIndexOf('@');
 
+    // Get text before @ and after cursor, removing the partial mention text
     const beforeMention = content.substring(0, lastAtIndex);
     const afterMention = content.substring(cursorPos);
 
@@ -167,12 +168,24 @@ export const CommentForm: React.FC<CommentFormProps> = ({
     try {
       const mentionedUserIds = selectedMentions.map((m) => m.id);
 
-      // Clean content by removing mention text (@email)
+      // Clean content by removing mentions from selectedMentions
       let cleanedContent = content.trim();
+
+      // First, remove selected mentions by username
       selectedMentions.forEach((mention) => {
-        const mentionText = `@${mention.userName} `;
-        cleanedContent = cleanedContent.replace(mentionText, '');
+        const escapedUsername = mention.userName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const pattern = new RegExp(`@${escapedUsername}\\s?`, 'g');
+        cleanedContent = cleanedContent.replace(pattern, '');
       });
+
+      cleanedContent = cleanedContent.trim();
+
+      // Validate cleaned content is not empty after removing mentions
+      if (!cleanedContent) {
+        toast.error('Vui lòng nhập nội dung bình luận, không chỉ mention!');
+        setSubmitting(false);
+        return;
+      }
 
       if (onCreateComment) {
         await onCreateComment(parentCommentId, cleanedContent, mentionedUserIds);

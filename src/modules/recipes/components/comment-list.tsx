@@ -10,6 +10,13 @@ import { flattenDeepNestedComments } from '../utils/comment.utils';
 import { CommentForm } from './comment-form';
 import { CommentItem } from './comment-item';
 
+// Helper function to count all comments including nested replies
+const countAllComments = (comments: Comment[]): number => {
+  return comments.reduce((total, comment) => {
+    return total + 1 + (comment.replies ? countAllComments(comment.replies) : 0);
+  }, 0);
+};
+
 interface CommentListProps {
   comments: Comment[];
   recipeId: string;
@@ -90,7 +97,7 @@ export const CommentList: React.FC<CommentListProps> = ({
       {/* Comment count header */}
       <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
         <MessageSquare className="h-5 w-5 text-gray-600" />
-        <span>Bình luận ({topLevelComments.length})</span>
+        <span>Bình luận ({countAllComments(comments)})</span>
       </div>
 
       {/* Comment Form - Only show for top-level comments (not replying) */}
@@ -103,9 +110,9 @@ export const CommentList: React.FC<CommentListProps> = ({
       {/* Comments List */}
       {topLevelComments.length > 0 ? (
         <div className="space-y-1">
-          {topLevelComments.map((comment) => (
+          {topLevelComments.map((comment, index) => (
             <CommentItem
-              key={comment.id}
+              key={comment.id || `comment-${index}`}
               comment={comment}
               recipeId={recipeId}
               currentUserId={currentUserId}

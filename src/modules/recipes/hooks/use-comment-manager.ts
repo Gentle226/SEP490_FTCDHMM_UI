@@ -130,6 +130,11 @@ export const useCommentManager = (recipeId: string, connection: any | null) => {
   // Handle real-time comment creation
   const addNewComment = useCallback(
     (newComment: Comment) => {
+      console.warn('[CommentManager] addNewComment called with:', {
+        id: newComment.id,
+        content: newComment.content?.substring(0, 30),
+        parentId: newComment.parentCommentId,
+      });
       setComments((prev) => addCommentToTree(prev, newComment));
     },
     [addCommentToTree],
@@ -190,13 +195,23 @@ export const useCommentManager = (recipeId: string, connection: any | null) => {
 
   // Create comment
   const createComment = useCallback(
-    async (request: CreateCommentRequest, token: string): Promise<Comment> => {
+    async (request: CreateCommentRequest, token: string): Promise<Comment | null> => {
       try {
         const newComment = await commentService.createComment(recipeId, request, token);
 
+        // If API returned null (empty body), skip optimistic update and wait for SignalR
+        if (!newComment) {
+          console.warn('[CommentManager] API returned null, waiting for SignalR');
+          return null;
+        }
+
         // Optimistic update: immediately add to UI (don't wait for SignalR)
-        console.warn('[CommentManager] Optimistic update - adding comment:', newComment.id);
-        setComments((prev) => addCommentToTree(prev, newComment));
+        console.warn('[CommentManager] Optimistic update - adding comment:', {
+          id: newComment.id,
+          content: newComment.content?.substring(0, 30),
+          parentId: newComment.parentCommentId,
+        });
+        setComments((prev) => addCommentToTree(prev, newComment, false));
 
         return newComment;
       } catch (err) {

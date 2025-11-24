@@ -47,7 +47,7 @@ class CommentService {
     recipeId: string,
     request: CreateCommentRequest,
     token: string,
-  ): Promise<Comment> {
+  ): Promise<Comment | null> {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
@@ -73,6 +73,13 @@ class CommentService {
 
       if (!response.ok) {
         throw new Error(`Failed to create comment: ${response.statusText}`);
+      }
+
+      // Handle empty response body (204 No Content or 201 with no body)
+      const contentLength = response.headers.get('content-length');
+      if (contentLength === '0' || !response.body) {
+        // Return null to indicate need to refresh - backend should return the created comment
+        return null;
       }
 
       const data = await response.json();
