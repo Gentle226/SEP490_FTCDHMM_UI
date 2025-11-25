@@ -35,7 +35,10 @@ export function CurrentHealthGoalCard() {
     return <Skeleton className="h-48 w-full sm:h-64" />;
   }
 
-  if (!currentGoal || (!currentGoal.healthGoal && !currentGoal.customHealthGoal)) {
+  // Check if we have a current goal (the API returns the goal data directly, not nested)
+  const hasGoal = currentGoal && currentGoal.name;
+
+  if (!hasGoal) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12">
@@ -50,9 +53,7 @@ export function CurrentHealthGoalCard() {
     );
   }
 
-  const goal = currentGoal.healthGoal || currentGoal.customHealthGoal;
-
-  if (!goal) return null;
+  if (!currentGoal) return null;
 
   return (
     <Card className="flex flex-col bg-white dark:bg-slate-950">
@@ -60,13 +61,13 @@ export function CurrentHealthGoalCard() {
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-              <CardTitle className="truncate text-base sm:text-lg">{goal.name}</CardTitle>
+              <CardTitle className="truncate text-base sm:text-lg">{currentGoal.name}</CardTitle>
               <Badge variant="default" className="flex-shrink-0 bg-[#99b94a] text-xs sm:text-sm">
                 Hiện Tại
               </Badge>
             </div>
             <CardDescription className="line-clamp-2 text-xs sm:text-sm">
-              {goal.description || 'Mục tiêu sức khỏe của bạn'}
+              {currentGoal.description || 'Mục tiêu sức khỏe của bạn'}
             </CardDescription>
           </div>
           <Button
@@ -84,8 +85,8 @@ export function CurrentHealthGoalCard() {
           <div>
             <p className="mb-2 text-xs font-medium sm:text-sm">Chỉ Số Dinh Dưỡng (Trên 100g):</p>
             <div className="space-y-1 sm:space-y-2">
-              {goal.targets && goal.targets.length > 0 ? (
-                goal.targets.map((target) => (
+              {currentGoal.targets && currentGoal.targets.length > 0 ? (
+                currentGoal.targets.map((target) => (
                   <div
                     key={target.nutrientId}
                     className="flex items-center justify-between rounded-lg border p-1.5 text-xs sm:p-2 sm:text-sm"
