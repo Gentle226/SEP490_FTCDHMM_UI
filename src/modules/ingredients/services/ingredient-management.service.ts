@@ -34,6 +34,7 @@ export interface Ingredient {
   name: string;
   description?: string;
   image?: string;
+  calories?: number;
   ingredientCategoryIds: string[];
   categoryNames?: string[];
   nutrients: Nutrient[];
@@ -45,6 +46,7 @@ export interface IngredientApiResponse {
   id: string;
   name: string;
   description?: string;
+  calories?: number;
   imageUrl?: string;
   lastUpdatedUtc: string;
   categories: IngredientCategory[];
@@ -60,6 +62,7 @@ export interface IngredientListItemResponse {
   id: string;
   name: string;
   description?: string;
+  calories?: number;
   lastUpdatedUtc: string;
   categoryNames: IngredientCategory[];
 }
@@ -171,6 +174,7 @@ class IngredientManagementService extends HttpClient {
         id: item.id,
         name: item.name,
         description: item.description,
+        calories: item.calories,
         image: undefined, // List response doesn't include images
         ingredientCategoryIds: item.categoryNames?.map((cat) => cat.id) || [],
         categoryNames: item.categoryNames?.map((cat) => cat.name) || [],

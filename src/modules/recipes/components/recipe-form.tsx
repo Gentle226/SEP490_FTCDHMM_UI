@@ -1346,12 +1346,26 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
       {/* Submit Buttons */}
       <div className="flex justify-end gap-3 border-t pt-6">
-        <Button type="button" variant="outline" onClick={handleClearForm} disabled={isSubmitting}>
-          Xóa biểu mẫu
-        </Button>
-        <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={isSubmitting}>
-          Lưu bản nháp
-        </Button>
+        {mode === 'create' && (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClearForm}
+              disabled={isSubmitting}
+            >
+              Xóa biểu mẫu
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSaveDraft}
+              disabled={isSubmitting}
+            >
+              Lưu bản nháp
+            </Button>
+          </>
+        )}
         <Button type="submit" disabled={isSubmitting} className="bg-[#99b94a] hover:bg-[#7a9a3d]">
           {isSubmitting
             ? mode === 'edit'

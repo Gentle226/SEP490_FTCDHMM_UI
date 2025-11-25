@@ -364,6 +364,8 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                   recipe.updatedAtUtc || recipe.updatedAt,
                 );
                 if (!timestampInfo) return null;
+                const relativeTime = getRelativeTime(timestampInfo.timestamp);
+                const isJustNow = relativeTime === 'Vừa xong';
                 return (
                   <div
                     className="flex items-center gap-1"
@@ -372,7 +374,8 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                     <Calendar className="h-4 w-4" />
                     <span>
                       {timestampInfo.isUpdated ? 'Cập nhật: ' : ''}
-                      {getRelativeTime(timestampInfo.timestamp)} trước
+                      {relativeTime}
+                      {!isJustNow && ' trước'}
                     </span>
                   </div>
                 );
