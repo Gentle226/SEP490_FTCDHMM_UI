@@ -58,12 +58,11 @@ export interface UpdateCustomHealthGoalRequest {
 
 // UserHealthGoal - now one-to-one relationship with User
 export interface UserHealthGoalResponse {
-  userId: string;
   healthGoalId?: string;
   customHealthGoalId?: string;
-  expiredAtUtc?: string;
-  healthGoal?: HealthGoalResponse;
-  customHealthGoal?: CustomHealthGoalResponse;
+  name: string;
+  description?: string;
+  targets: NutrientTarget[];
 }
 
 export interface SetUserHealthGoalRequest {
