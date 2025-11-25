@@ -16,7 +16,7 @@ import { recipeService } from '@/modules/recipes/services/recipe.service';
 function MyRecipeContent() {
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get('page')) || 1;
-  const pageSize = 10;
+  const pageSize = 12;
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['myRecipes', currentPage, pageSize],
@@ -29,7 +29,7 @@ function MyRecipeContent() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 px-4">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>

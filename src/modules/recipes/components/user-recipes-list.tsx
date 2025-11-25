@@ -11,26 +11,26 @@ import { MyRecipeCard } from '@/modules/recipes/components/my-recipe-card';
 import { useUserRecipes } from '@/modules/recipes/hooks';
 
 interface UserRecipesListProps {
-  userId: string;
+  userName: string;
   isOwnProfile?: boolean;
   onRecipeCountChange?: (count: number) => void;
 }
 
 export function UserRecipesList({
-  userId,
+  userName,
   isOwnProfile = false,
   onRecipeCountChange,
 }: UserRecipesListProps) {
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get('page')) || 1;
-  const pageSize = 10;
+  const pageSize = 12;
 
   const {
     data: recipesData,
     isLoading,
     error,
   } = useUserRecipes({
-    userId,
+    userName,
     pageNumber: currentPage,
     pageSize,
   });

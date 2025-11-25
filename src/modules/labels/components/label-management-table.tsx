@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { ChevronDown, Edit, Plus, Search, Trash, X } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -33,6 +34,12 @@ import {
   PaginationParams,
   labelManagementService,
 } from '../services/label-management.service';
+
+interface ApiErrorResponse {
+  code?: string;
+  statusCode?: number;
+  message?: string;
+}
 
 // Custom debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -83,15 +90,13 @@ export function LabelManagementTable() {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editColorOnlyDialogOpen, setEditColorOnlyDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editColorDialogOpen, setEditColorDialogOpen] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState<Label | null>(null);
+  const [editColorValue, setEditColorValue] = useState('#99b94a');
 
   const [newLabelName, setNewLabelName] = useState('');
   const [newLabelColor, setNewLabelColor] = useState('#99b94a');
-  const [editLabelName, setEditLabelName] = useState('');
-  const [editLabelColor, setEditLabelColor] = useState('#99b94a');
 
   const queryClient = useQueryClient();
   const queryKey = ['labels', { page, search: debouncedSearchTerm, pageSize }];
@@ -159,41 +164,15 @@ export function LabelManagementTable() {
       setNewLabelColor('#99b94a');
       toast.success('Nhãn đã được tạo thành công.');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Không thể tạo nhãn.');
-    },
-  });
-
-  // Update label mutation (name + color)
-  const updateLabelMutation = useMutation({
-    mutationFn: (request: { id: string; name: string; colorCode: string }) =>
-      labelManagementService.updateLabel(request.id, {
-        name: request.name,
-        colorCode: request.colorCode,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['labels'] });
-      setEditDialogOpen(false);
-      setSelectedLabel(null);
-      toast.success('Nhãn đã được cập nhật thành công.');
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Không thể cập nhật nhãn.');
-    },
-  });
-
-  // Update label color only mutation
-  const updateColorMutation = useMutation({
-    mutationFn: ({ id, colorCode }: { id: string; colorCode: string }) =>
-      labelManagementService.updateColorCode(id, { colorCode }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['labels'] });
-      setEditDialogOpen(false);
-      setSelectedLabel(null);
-      toast.success('Màu nhãn đã được cập nhật thành công.');
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Không thể cập nhật màu nhãn.');
+    onError: (error: AxiosError) => {
+      console.warn('Create error:', error);
+      // Check if error is due to duplicate name (EXISTS error code)
+      const responseData = error?.response?.data as ApiErrorResponse;
+      if (responseData?.code === 'EXISTS' || responseData?.statusCode === 415) {
+        toast.error(`Nhãn ${newLabelName} đã tồn tại`);
+      } else {
+        toast.error(error?.message || 'Không thể thêm nhãn mới.');
+      }
     },
   });
 
@@ -211,26 +190,51 @@ export function LabelManagementTable() {
     },
   });
 
+  // Update color mutation
+  const updateColorMutation = useMutation({
+    mutationFn: ({ id, colorCode }: { id: string; colorCode: string }) =>
+      labelManagementService.updateColorCode(id, { colorCode }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['labels'] });
+      setEditColorDialogOpen(false);
+      setSelectedLabel(null);
+      setEditColorValue('#99b94a');
+      toast.success('Màu nhãn đã được cập nhật thành công.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Không thể cập nhật màu nhãn.');
+    },
+  });
+
   const handleCreateLabel = () => {
-    if (newLabelName.trim()) {
-      createLabelMutation.mutate({
-        name: newLabelName.trim(),
-        colorCode: newLabelColor,
-      });
+    // Validate name
+    if (!newLabelName.trim()) {
+      toast.error('Tên nhãn không được để trống');
+      return;
     }
+
+    if (newLabelName.length > 255) {
+      toast.error('Tên nhãn không được vượt quá 255 ký tự');
+      return;
+    }
+
+    // Validate color code (hex format)
+    const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+    if (!hexColorRegex.test(newLabelColor)) {
+      toast.error('Mã màu phải là hex format hợp lệ (ví dụ: #ffffff hoặc #fff)');
+      return;
+    }
+
+    createLabelMutation.mutate({
+      name: newLabelName.trim(),
+      colorCode: newLabelColor,
+    });
   };
 
-  const handleEditLabel = (label: Label) => {
+  const handleEditColor = (label: Label) => {
     setSelectedLabel(label);
-    setEditLabelName(label.name);
-    setEditLabelColor(label.colorCode);
-    setEditDialogOpen(true);
-  };
-
-  const handleEditColorOnly = (label: Label) => {
-    setSelectedLabel(label);
-    setEditLabelColor(label.colorCode);
-    setEditColorOnlyDialogOpen(true);
+    setEditColorValue(label.colorCode);
+    setEditColorDialogOpen(true);
   };
 
   const handleDeleteLabel = (label: Label) => {
@@ -238,21 +242,11 @@ export function LabelManagementTable() {
     setDeleteDialogOpen(true);
   };
 
-  const confirmUpdateLabel = () => {
-    if (selectedLabel && editLabelName.trim()) {
-      updateLabelMutation.mutate({
-        id: selectedLabel.id,
-        name: editLabelName.trim(),
-        colorCode: editLabelColor,
-      });
-    }
-  };
-
   const confirmUpdateColor = () => {
     if (selectedLabel) {
       updateColorMutation.mutate({
         id: selectedLabel.id,
-        colorCode: editLabelColor,
+        colorCode: editColorValue,
       });
     }
   };
@@ -318,15 +312,19 @@ export function LabelManagementTable() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <UILabel htmlFor="name" className="mb-3 text-[#99b94a]">
-                  Tên Nhãn
-                </UILabel>
+                <div className="mb-3 flex h-6 items-center justify-between">
+                  <UILabel htmlFor="name" className="text-[#99b94a]">
+                    Tên Nhãn
+                  </UILabel>
+                  <span className="text-muted-foreground text-xs">{newLabelName.length}/255</span>
+                </div>
                 <Input
                   id="name"
                   type="text"
                   value={newLabelName}
-                  onChange={(e) => setNewLabelName(e.target.value)}
+                  onChange={(e) => setNewLabelName(e.target.value.slice(0, 255))}
                   placeholder="Nhập tên nhãn..."
+                  maxLength={255}
                 />
               </div>
               <div>
@@ -391,13 +389,12 @@ export function LabelManagementTable() {
                   <div className="flex flex-col gap-3">
                     <div className="text-base font-bold text-gray-900">{label.name}</div>
                     <div
-                      className="flex w-fit cursor-pointer items-center gap-2 rounded p-1 transition-colors hover:bg-gray-100"
-                      onClick={() => handleEditColorOnly(label)}
-                      title="Click để chỉnh sửa màu"
+                      className="flex w-fit cursor-pointer items-center gap-2 rounded p-1 transition-opacity hover:opacity-75"
+                      onClick={() => handleEditColor(label)}
                     >
                       <div
                         className="size-5 rounded border"
-                        style={{ backgroundColor: label.colorCode } as React.CSSProperties}
+                        style={{ backgroundColor: label.colorCode }}
                         aria-label={`Color: ${label.colorCode}`}
                       />
                       <span className="font-mono text-xs">{label.colorCode}</span>
@@ -408,9 +405,9 @@ export function LabelManagementTable() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleEditLabel(label)}
-                    title="Chỉnh sửa"
-                    className="h-8 w-8 p-0 text-[#99b94a] hover:bg-[#99b94a]/10"
+                    onClick={() => handleEditColor(label)}
+                    title="Sửa màu"
+                    className="h-8 w-8 p-0 text-[#99b94a] hover:bg-[#f0f5f2]"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -480,44 +477,32 @@ export function LabelManagementTable() {
         </div>
       )}
 
-      {/* Edit Label Dialog - Edit name + color */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+      {/* Edit Color Dialog */}
+      <Dialog open={editColorDialogOpen} onOpenChange={setEditColorDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Chỉnh Sửa Nhãn</DialogTitle>
+            <DialogTitle className="text-[#99b94a]">Sửa Màu Nhãn</DialogTitle>
             <DialogDescription>
-              Cập nhật tên và màu cho nhãn &ldquo;{selectedLabel?.name}&rdquo;
+              Chọn màu mới cho nhãn &ldquo;{selectedLabel?.name}&rdquo;.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <UILabel htmlFor="edit-name" className="mb-3">
-                Tên Nhãn
-              </UILabel>
-              <Input
-                id="edit-name"
-                type="text"
-                value={editLabelName}
-                onChange={(e) => setEditLabelName(e.target.value)}
-                placeholder="Nhập tên nhãn..."
-              />
-            </div>
-            <div>
-              <UILabel htmlFor="edit-color-label" className="mb-3">
+              <UILabel htmlFor="edit-color" className="mb-3 text-[#99b94a]">
                 Mã Màu
               </UILabel>
               <div className="flex gap-2">
                 <Input
-                  id="edit-color-label"
+                  id="edit-color"
                   type="color"
-                  value={editLabelColor}
-                  onChange={(e) => setEditLabelColor(e.target.value)}
+                  value={editColorValue}
+                  onChange={(e) => setEditColorValue(e.target.value)}
                   className="h-10 w-20 cursor-pointer"
                 />
                 <Input
                   type="text"
-                  value={editLabelColor}
-                  onChange={(e) => setEditLabelColor(e.target.value)}
+                  value={editColorValue}
+                  onChange={(e) => setEditColorValue(e.target.value)}
                   placeholder="#99b94a"
                   className="flex-1"
                 />
@@ -525,65 +510,15 @@ export function LabelManagementTable() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setEditColorDialogOpen(false)}>
               Hủy
             </Button>
             <Button
-              onClick={confirmUpdateLabel}
-              disabled={updateLabelMutation.isPending || !editLabelName.trim()}
               className="bg-[#99b94a] hover:bg-[#7a8f3a]"
-            >
-              {updateLabelMutation.isPending ? 'Đang cập nhật...' : 'Cập Nhật'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Color Only Dialog - Quick edit color via hover */}
-      <Dialog open={editColorOnlyDialogOpen} onOpenChange={setEditColorOnlyDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Chỉnh Sửa Màu Nhãn</DialogTitle>
-            <DialogDescription>
-              Cập nhật màu cho nhãn &ldquo;{selectedLabel?.name}&rdquo;
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <UILabel htmlFor="edit-color-only" className="mb-3">
-                Mã Màu
-              </UILabel>
-              <div className="flex gap-2">
-                <Input
-                  id="edit-color-only"
-                  type="color"
-                  value={editLabelColor}
-                  onChange={(e) => setEditLabelColor(e.target.value)}
-                  className="h-10 w-20 cursor-pointer"
-                />
-                <Input
-                  type="text"
-                  value={editLabelColor}
-                  onChange={(e) => setEditLabelColor(e.target.value)}
-                  placeholder="#99b94a"
-                  className="flex-1"
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditColorOnlyDialogOpen(false)}>
-              Hủy
-            </Button>
-            <Button
-              onClick={() => {
-                confirmUpdateColor();
-                setEditColorOnlyDialogOpen(false);
-              }}
+              onClick={confirmUpdateColor}
               disabled={updateColorMutation.isPending}
-              className="bg-[#99b94a] hover:bg-[#7a8f3a]"
             >
-              {updateColorMutation.isPending ? 'Đang cập nhật...' : 'Cập Nhật'}
+              {updateColorMutation.isPending ? 'Đang cập nhật...' : 'Cập Nhật Màu'}
             </Button>
           </DialogFooter>
         </DialogContent>

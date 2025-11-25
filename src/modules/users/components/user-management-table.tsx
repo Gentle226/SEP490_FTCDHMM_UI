@@ -40,6 +40,7 @@ import {
   CreateModeratorRequest,
   LockUserRequest,
   PaginationParams,
+  RoleResponse,
   UnlockUserRequest,
   User,
   userManagementService,
@@ -143,14 +144,38 @@ export function UserManagementTable({
   const [lockDialogOpen, setLockDialogOpen] = useState(false);
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [changeRoleDialogOpen, setChangeRoleDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [lockDays, setLockDays] = useState(7);
+  const [lockReason, setLockReason] = useState('');
   const [newModeratorEmail, setNewModeratorEmail] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
+  const [roleIdMap, setRoleIdMap] = useState<Map<string, string>>(new Map());
+
+  const lockReasonTemplates = [
+    'Vi phạm điều khoản sử dụng',
+    'Hành vi spam hoặc lạm dụng',
+    'Nội dung không phù hợp',
+    'Gian lận hoặc hoạt động nghi ngờ',
+  ];
 
   const queryClient = useQueryClient();
   const queryKey = [userType, { page, search: debouncedSearchTerm, pageSize }];
 
-  // Fetch users
+  // Fetch roles for role change feature
+  useQuery({
+    queryKey: ['roles'],
+    queryFn: async () => {
+      const response = await userManagementService.getRoles();
+      const map = new Map<string, string>();
+      response.items.forEach((role: RoleResponse) => {
+        map.set(role.name, role.id);
+      });
+      setRoleIdMap(map);
+      return response;
+    },
+    enabled: canCreate, // Only fetch if admin
+  });
   const { data: usersData, isLoading } = useQuery({
     queryKey,
     queryFn: () => {
@@ -177,6 +202,7 @@ export function UserManagementTable({
       setLockDialogOpen(false);
       setSelectedUser(null);
       setLockDays(7);
+      setLockReason('');
       toast.success(
         `Tài khoản ${userType === 'customers' ? 'Khách hàng' : 'Moderator'} đã được khóa thành công.`,
       );
@@ -206,6 +232,22 @@ export function UserManagementTable({
     },
   });
 
+  // Change role mutation (Admin only)
+  const changeRoleMutation = useMutation({
+    mutationFn: (request: { userId: string; roleId: string }) =>
+      userManagementService.changeRole(request.userId, { roleId: request.roleId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [userType] });
+      setChangeRoleDialogOpen(false);
+      setSelectedUser(null);
+      setSelectedRole('');
+      toast.success('Vai trò người dùng đã được thay đổi thành công.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Không thể thay đổi vai trò người dùng.');
+    },
+  });
+
   // Create moderator mutation
   const createModeratorMutation = useMutation({
     mutationFn: (request: CreateModeratorRequest) => userManagementService.createModerator(request),
@@ -231,10 +273,11 @@ export function UserManagementTable({
   };
 
   const confirmLock = () => {
-    if (selectedUser && lockDays >= 1) {
+    if (selectedUser && lockDays >= 1 && lockReason.trim().length >= 3) {
       lockMutation.mutate({
         userId: selectedUser.id,
         day: lockDays,
+        reason: lockReason,
       });
     }
   };
@@ -244,6 +287,25 @@ export function UserManagementTable({
       unlockMutation.mutate({
         userId: selectedUser.id,
       });
+    }
+  };
+
+  const handleChangeRole = (user: User) => {
+    setSelectedUser(user);
+    setChangeRoleDialogOpen(true);
+  };
+
+  const confirmChangeRole = () => {
+    if (selectedUser && selectedRole) {
+      const roleId = roleIdMap.get(selectedRole);
+      if (roleId) {
+        changeRoleMutation.mutate({
+          userId: selectedUser.id,
+          roleId,
+        });
+      } else {
+        toast.error('Không tìm thấy ID của vai trò được chọn.');
+      }
     }
   };
 
@@ -268,14 +330,22 @@ export function UserManagementTable({
     setSearchTerm('');
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, user?: User) => {
     switch (status) {
       case 'Verified':
         return <Badge className="flex content-center bg-[#99b94a] text-white">Đã xác thực</Badge>;
       case 'Unverified':
         return <Badge variant="secondary">Chưa xác thực</Badge>;
       case 'Locked':
-        return <Badge variant="danger">Đã khóa</Badge>;
+        return (
+          <Badge
+            variant="danger"
+            title={user?.lockReason ? `Lý do: ${user.lockReason}` : 'Tài khoản đã khóa'}
+            className="cursor-pointer"
+          >
+            Đã khóa
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -286,12 +356,14 @@ export function UserManagementTable({
     if (!dateString) return 'N/A';
 
     try {
-      const date = new Date(dateString);
+      // Ensure the date string is interpreted as UTC by appending 'Z' if not present
+      const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+      const date = new Date(utcDateString);
 
       // Check if date is valid
       if (isNaN(date.getTime())) return 'N/A';
 
-      return new Intl.DateTimeFormat('vi-VN', {
+      return new Intl.DateTimeFormat(undefined, {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -389,13 +461,14 @@ export function UserManagementTable({
               <TableHead>Email</TableHead>
               <TableHead>Trạng Thái</TableHead>
               <TableHead>Ngày Tạo</TableHead>
-              <TableHead>Hành Động</TableHead>
+              <TableHead>Vai Trò</TableHead>
+              <TableHead>Khóa/Mở Khóa</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {usersData?.items?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   {debouncedSearchTerm ? (
                     <div className="flex flex-col items-center justify-center space-y-2">
                       <Search className="size-8 text-gray-400" />
@@ -432,28 +505,38 @@ export function UserManagementTable({
                       {user.email}
                     </button>
                   </TableCell>
-                  <TableCell>{getStatusBadge(user.status)}</TableCell>
+                  <TableCell>{getStatusBadge(user.status, user)}</TableCell>
                   <TableCell>{formatDate(user.createdAtUTC)}</TableCell>
-                  <TableCell className="">
+                  <TableCell>
+                    {canCreate && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleChangeRole(user)}
+                        className="text-blue-600 hover:bg-blue-50"
+                      >
+                        Thay đổi
+                      </Button>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center gap-2">
                       {user.status === 'Locked' ? (
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleUnlock(user)}
-                          className="text-[#99b94a] hover:bg-green-50"
-                          title="Mở khóa tài khoản"
+                          className="text-green-600 hover:bg-green-50"
                         >
                           <Unlock className="mr-1 h-4 w-4" />
                           Mở Khóa
                         </Button>
                       ) : (
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleLock(user)}
                           className="text-red-600 hover:bg-red-50"
-                          title="Khóa tài khoản"
                         >
                           <Lock className="mr-1 h-4 w-4" />
                           Khóa
@@ -543,6 +626,61 @@ export function UserManagementTable({
                 placeholder="Nhập số ngày khóa tài khoản"
               />
             </div>
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <Label htmlFor="reason" className="">
+                  Lý do khóa <span className="text-red-500">*</span>
+                </Label>
+                <span
+                  className={`text-xs font-medium ${
+                    lockReason.length < 3
+                      ? 'text-red-500'
+                      : lockReason.length < 50
+                        ? 'text-amber-500'
+                        : 'text-green-500'
+                  }`}
+                >
+                  {lockReason.length} / 512
+                </span>
+              </div>
+              <textarea
+                id="reason"
+                value={lockReason}
+                onChange={(e) => setLockReason(e.target.value.slice(0, 512))}
+                placeholder="Mô tả chi tiết lý do khóa tài khoản (tối thiểu 3 ký tự)"
+                className={`w-full rounded-md border p-3 text-sm transition-colors ${
+                  lockReason.trim().length < 3
+                    ? 'border-red-300 bg-red-50 focus:border-red-500 focus:bg-white focus:outline-none'
+                    : 'border-gray-300 focus:border-[#99b94a] focus:outline-none'
+                }`}
+                rows={3}
+              />
+              {lockReason.length < 3 && lockReason.length > 0 && (
+                <div className="mt-2 text-xs text-red-500">
+                  Cần thêm {3 - lockReason.length} ký tự nữa
+                </div>
+              )}
+
+              {/* Quick templates */}
+              <div className="mt-3">
+                <p className="mb-2 text-xs font-medium text-gray-600">Gợi ý lý do:</p>
+                <div className="flex flex-wrap gap-2">
+                  {lockReasonTemplates.map((template) => (
+                    <button
+                      key={template}
+                      onClick={() => setLockReason(template)}
+                      className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                        lockReason === template
+                          ? 'bg-[#99b94a] text-white'
+                          : 'border border-gray-300 bg-white text-gray-700 hover:border-[#99b94a] hover:text-[#99b94a]'
+                      }`}
+                    >
+                      {template}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setLockDialogOpen(false)}>
@@ -551,7 +689,14 @@ export function UserManagementTable({
             <Button
               variant="danger"
               onClick={confirmLock}
-              disabled={lockDays < 1 || lockMutation.isPending}
+              disabled={lockDays < 1 || lockReason.trim().length < 3 || lockMutation.isPending}
+              title={
+                lockDays < 1
+                  ? 'Số ngày phải từ 1 trở lên'
+                  : lockReason.trim().length < 3
+                    ? 'Lý do khóa phải từ 3 ký tự trở lên'
+                    : ''
+              }
             >
               {lockMutation.isPending ? 'Đang khóa...' : 'Khóa Tài Khoản'}
             </Button>
@@ -563,18 +708,132 @@ export function UserManagementTable({
       <Dialog open={unlockDialogOpen} onOpenChange={setUnlockDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Mở Khóa Tài Khoản Người Dùng</DialogTitle>
+            <DialogTitle className="text-[#99b94a]">Mở Khóa Tài Khoản Người Dùng</DialogTitle>
             <DialogDescription>
               Bạn có chắc chắn muốn mở khóa tài khoản của {selectedUser?.firstName}{' '}
               {selectedUser?.lastName} không?
             </DialogDescription>
           </DialogHeader>
+
+          {selectedUser?.status === 'Locked' && (
+            <div className="space-y-3 rounded-lg bg-red-50 p-4">
+              {selectedUser.lockReason && (
+                <div>
+                  <p className="text-sm font-semibold text-red-900">Lý do khóa:</p>
+                  <p className="mt-1 text-sm text-red-800">{selectedUser.lockReason}</p>
+                </div>
+              )}
+              {selectedUser.lockoutEnd && (
+                <div>
+                  <p className="text-sm font-semibold text-red-900">Mở khóa vào:</p>
+                  <p className="mt-1 text-sm text-red-800">
+                    {new Date(selectedUser.lockoutEnd).toLocaleDateString('vi-VN', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setUnlockDialogOpen(false)}>
               Hủy
             </Button>
-            <Button onClick={confirmUnlock} disabled={unlockMutation.isPending}>
+            <Button
+              className="bg-[#99b94a] text-white hover:bg-[#88a83a]"
+              onClick={confirmUnlock}
+              disabled={unlockMutation.isPending}
+            >
               {unlockMutation.isPending ? 'Đang mở khóa...' : 'Mở Khóa Tài Khoản'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Role Dialog */}
+      <Dialog open={changeRoleDialogOpen} onOpenChange={setChangeRoleDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[#99b94a]">Thay Đổi Vai Trò Người Dùng</DialogTitle>
+            <DialogDescription>
+              Thay đổi vai trò của {selectedUser?.firstName} {selectedUser?.lastName}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="role" className="mb-3 text-[#99b94a]">
+                Chọn Vai Trò Mới
+              </Label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    <span>
+                      {selectedRole === 'Customer'
+                        ? 'Khách Hàng'
+                        : selectedRole === 'Moderator'
+                          ? 'Kiểm Duyệt Viên'
+                          : selectedRole === 'Admin'
+                            ? 'Quản Trị Viên'
+                            : 'Chọn vai trò'}
+                    </span>
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-[--radix-dropdown-menu-trigger-width]"
+                >
+                  <DropdownMenuItem
+                    onClick={() => setSelectedRole('Customer')}
+                    className={selectedRole === 'Customer' ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+                  >
+                    Khách Hàng
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setSelectedRole('Moderator')}
+                    className={selectedRole === 'Moderator' ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+                  >
+                    Kiểm Duyệt Viên
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setSelectedRole('Admin')}
+                    className={selectedRole === 'Admin' ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+                  >
+                    Quản Trị Viên
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {selectedRole && (
+              <div className="rounded-lg bg-blue-50 p-3">
+                <p className="text-sm text-blue-900">
+                  {selectedRole === 'Customer'
+                    ? 'Vai trò Khách Hàng có quyền truy cập các tính năng cơ bản như xem công thức, tạo công thức, quản lý yêu thích.'
+                    : selectedRole === 'Moderator'
+                      ? 'Vai trò Kiểm Duyệt Viên có quyền quản lý nội dung và người dùng.'
+                      : 'Vai trò Quản Trị Viên có toàn quyền hệ thống, bao gồm quản lý người dùng, quyền, và cấu hình.'}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setChangeRoleDialogOpen(false)}>
+              Hủy
+            </Button>
+            <Button
+              className="bg-[#99b94a] hover:bg-[#7a8f3a]"
+              onClick={confirmChangeRole}
+              disabled={!selectedRole || changeRoleMutation.isPending}
+            >
+              {changeRoleMutation.isPending ? 'Đang thay đổi...' : 'Thay Đổi Vai Trò'}
             </Button>
           </DialogFooter>
         </DialogContent>

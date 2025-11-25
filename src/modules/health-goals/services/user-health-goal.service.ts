@@ -1,6 +1,6 @@
 import { HttpClient } from '@/base/lib';
 
-import { HealthGoalResponse } from '../types';
+import { SetUserHealthGoalRequest, UserHealthGoalResponse } from '../types';
 
 class UserHealthGoalService extends HttpClient {
   constructor() {
@@ -8,23 +8,23 @@ class UserHealthGoalService extends HttpClient {
   }
 
   /**
-   * Set a health goal as the user's current active goal
+   * Set a health goal as the user's current active goal with expiration date
    */
-  public async setGoal(goalId: string) {
-    return this.post<void>(`api/UserHealthGoal/${goalId}`, undefined, {
+  public async setGoal(goalId: string, expiredAtUtc: string) {
+    const data: SetUserHealthGoalRequest = { expiredAtUtc };
+    return this.post<void>(`api/UserHealthGoal/${goalId}`, data, {
       isPrivateRoute: true,
     });
   }
 
   /**
-   * Get the user's current active health goals (can be multiple)
+   * Get the user's current active health goal (one-to-one relationship)
    */
   public async getCurrentGoal() {
-    const response = await this.get<HealthGoalResponse[]>('api/UserHealthGoal/current', {
+    const response = await this.get<UserHealthGoalResponse | null>('api/UserHealthGoal/current', {
       isPrivateRoute: true,
     });
-    // API returns an array of active goals
-    return response && response.length > 0 ? response : [];
+    return response || null;
   }
 
   /**

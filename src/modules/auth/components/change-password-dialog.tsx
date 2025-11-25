@@ -80,7 +80,7 @@ export function ChangePasswordDialog({ trigger }: ChangePasswordDialogProps) {
           {/* Current Password */}
           <div className="space-y-2">
             <Label className="text-[#99b94a]" htmlFor="currentPassword">
-              Mật khẩu hiện tại *
+              Mật khẩu hiện tại <span className="text-red-500">*</span>
             </Label>
             <div className="relative">
               <Input
@@ -112,7 +112,7 @@ export function ChangePasswordDialog({ trigger }: ChangePasswordDialogProps) {
           {/* New Password */}
           <div className="space-y-2">
             <Label className="text-[#99b94a]" htmlFor="newPassword">
-              Mật khẩu mới *
+              Mật khẩu mới <span className="text-red-500">*</span>
             </Label>
             <div className="relative">
               <Input
@@ -142,7 +142,7 @@ export function ChangePasswordDialog({ trigger }: ChangePasswordDialogProps) {
           {/* Confirm Password */}
           <div className="space-y-2">
             <Label className="text-[#99b94a]" htmlFor="rePassword">
-              Xác nhận mật khẩu mới *
+              Xác nhận mật khẩu mới <span className="text-red-500">*</span>
             </Label>
             <div className="relative">
               <Input
@@ -174,7 +174,7 @@ export function ChangePasswordDialog({ trigger }: ChangePasswordDialogProps) {
               Hủy
             </Button>
             <Button
-              className="bg-[#99b94a]"
+              className="bg-[#99b94a] hover:bg-[#88a43a]"
               type="submit"
               loading={changePasswordMutation.isPending}
             >

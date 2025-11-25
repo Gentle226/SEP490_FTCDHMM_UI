@@ -26,11 +26,21 @@ class ProfileService extends HttpClient {
     const formData = new FormData();
     formData.append('firstName', data.firstName);
     formData.append('lastName', data.lastName);
-    formData.append('phoneNumber', data.phoneNumber);
     formData.append('gender', data.gender);
 
+    if (data.dateOfBirth) {
+      // Format date as ISO string (yyyy-MM-dd)
+      const dateString = data.dateOfBirth.toISOString().split('T')[0];
+      formData.append('dateOfBirth', dateString);
+    }
     if (data.avatarUrl) {
       formData.append('Avatar', data.avatarUrl);
+    }
+    if (data.bio) {
+      formData.append('bio', data.bio);
+    }
+    if (data.address) {
+      formData.append('address', data.address);
     }
 
     return this.put<void>('api/User/profile', formData, {

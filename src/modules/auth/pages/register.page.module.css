@@ -1,0 +1,6 @@
+.backgroundContainer {
+  background-image: url(/register-bg.png);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}

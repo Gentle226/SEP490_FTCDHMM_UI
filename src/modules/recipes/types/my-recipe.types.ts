@@ -9,10 +9,17 @@ export interface Label {
   colorCode: string;
 }
 
+export interface Author {
+  id: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl?: string;
+}
+
 export interface MyRecipe {
   id: string;
   name: string;
-  description?: string;
+  description: string;
   difficulty: {
     name: string;
     value: number;
@@ -22,6 +29,12 @@ export interface MyRecipe {
   imageUrl?: string;
   labels: Label[];
   ingredients: IngredientName[];
+  createdAtUtc?: string; // New field for creation timestamp
+  updatedAtUtc?: string; // New field for update timestamp
+  author?: Author; // Recipe author information
+  rating?: number;
+  averageRating?: number;
+  numberOfRatings?: number;
 }
 
 export interface MyRecipeResponse {

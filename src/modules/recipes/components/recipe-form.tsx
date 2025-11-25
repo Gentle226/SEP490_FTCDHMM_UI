@@ -1,10 +1,26 @@
 'use client';
 
-import { Plus, Upload, X } from 'lucide-react';
+import {
+  Beef,
+  ChefHat,
+  Clock,
+  Flame,
+  ImageIcon,
+  Plus,
+  Salad,
+  Search,
+  Soup,
+  Tag,
+  Users,
+  UtensilsCrossed,
+  X,
+} from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+
+// 5MB
 
 import { Button } from '@/base/components/ui/button';
 import {
@@ -21,6 +37,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/base/components/ui/po
 import { Select } from '@/base/components/ui/select';
 import { Textarea } from '@/base/components/ui/textarea';
 import { useDebounce } from '@/base/hooks';
+import { useAuth } from '@/modules/auth';
 import {
   Ingredient,
   ingredientManagementService,
@@ -29,12 +46,17 @@ import {
   Label as LabelType,
   labelManagementService,
 } from '@/modules/labels/services/label-management.service';
+import { User, userManagementService } from '@/modules/users/services/user-management.service';
 
 import { recipeService } from '../services/recipe.service';
 import { CookingStep, RecipeDetail } from '../types';
 import { CookingStepCard } from './cooking-step-card';
 import { ImageCropDialog } from './image-crop-dialog';
 import { IngredientCardWithDetails } from './ingredient-card-with-details';
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 interface SelectedIngredient {
   id: string;
@@ -48,6 +70,13 @@ interface SelectedLabel {
   colorCode: string;
 }
 
+interface SelectedUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  avatar?: string;
+}
+
 interface RecipeFormProps {
   recipeId?: string;
   initialData?: RecipeDetail;
@@ -56,7 +85,9 @@ interface RecipeFormProps {
 
 export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFormProps) {
   const router = useRouter();
+  const { user: currentUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Form fields
   const [name, setName] = useState('');
@@ -73,7 +104,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [cookingSteps, setCookingSteps] = useState<CookingStep[]>([
-    { id: crypto.randomUUID(), stepOrder: 1, instruction: '', image: undefined },
+    { id: crypto.randomUUID(), stepOrder: 1, instruction: '', images: [] },
   ]);
   const [draggedStepIndex, setDraggedStepIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -93,6 +124,62 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
   const [isIngredientPopoverOpen, setIsIngredientPopoverOpen] = useState(false);
   const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
   const debouncedIngredientSearch = useDebounce(ingredientSearch, 300);
+
+  // Tagged users state
+  const [selectedUsers, setSelectedUsers] = useState<SelectedUser[]>([]);
+  const [userSearch, setUserSearch] = useState('');
+  const [userSearchResults, setUserSearchResults] = useState<User[]>([]);
+  const [isUserPopoverOpen, setIsUserPopoverOpen] = useState(false);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const debouncedUserSearch = useDebounce(userSearch, 300);
+
+  // Warn user about unsaved changes before leaving page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges && !isSubmitting) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges, isSubmitting]);
+
+  // Track unsaved changes when form fields change
+  useEffect(() => {
+    if (mode === 'create') {
+      if (
+        name ||
+        description ||
+        difficulty !== 'Easy' ||
+        cookTime > 0 ||
+        ration !== 1 ||
+        mainImage ||
+        selectedLabels.length > 0 ||
+        selectedIngredients.length > 0 ||
+        selectedUsers.length > 0 ||
+        cookingSteps.length > 1 ||
+        cookingSteps.some((s) => s.instruction)
+      ) {
+        setHasUnsavedChanges(true);
+      } else {
+        setHasUnsavedChanges(false);
+      }
+    }
+  }, [
+    name,
+    description,
+    difficulty,
+    cookTime,
+    ration,
+    mainImage,
+    selectedLabels,
+    selectedIngredients,
+    selectedUsers,
+    cookingSteps,
+    mode,
+  ]);
 
   // Search labels
   useEffect(() => {
@@ -139,6 +226,128 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     searchIngredients();
   }, [debouncedIngredientSearch, isIngredientPopoverOpen]);
 
+  // Search users for tagging
+  useEffect(() => {
+    async function searchUsers() {
+      if (!isUserPopoverOpen) return;
+
+      setIsLoadingUsers(true);
+      try {
+        const response = await userManagementService.getCustomers({
+          search: debouncedUserSearch,
+          pageNumber: 1,
+          pageSize: 50,
+        });
+        // Filter out current user from results
+        const filteredUsers = response.items.filter((user) => user.id !== currentUser?.id);
+        setUserSearchResults(filteredUsers);
+      } catch (error) {
+        console.error('Failed to search users:', error);
+      } finally {
+        setIsLoadingUsers(false);
+      }
+    }
+
+    searchUsers();
+  }, [debouncedUserSearch, isUserPopoverOpen, currentUser?.id]);
+
+  // Load draft recipe on component mount in create mode
+  useEffect(() => {
+    let isMounted = true;
+
+    if (mode === 'create') {
+      const loadDraft = async () => {
+        try {
+          const draft = await recipeService.getDraft();
+          if (!isMounted) return;
+
+          if (draft) {
+            // Set form fields from draft
+            setName(draft.name || '');
+            setDescription(draft.description || '');
+            // Normalize difficulty: convert MEDIUM/HARD/EASY to Capitalized format
+            const normalizedDifficulty = draft.difficulty
+              ? ((draft.difficulty.charAt(0).toUpperCase() +
+                  draft.difficulty.slice(1).toLowerCase()) as 'Easy' | 'Medium' | 'Hard')
+              : 'Easy';
+            setDifficulty(normalizedDifficulty);
+            setCookTime(draft.cookTime);
+            setRation(draft.ration || 1);
+
+            // Set labels
+            if (draft.labels && draft.labels.length > 0) {
+              setSelectedLabels(
+                draft.labels.map((label) => ({
+                  id: label.id,
+                  name: label.name,
+                  colorCode: label.colorCode,
+                })),
+              );
+            }
+
+            // Set ingredients
+            if (draft.ingredients && draft.ingredients.length > 0) {
+              setSelectedIngredients(
+                draft.ingredients.map((ingredient) => ({
+                  id: ingredient.ingredientId,
+                  name: ingredient.name,
+                  quantityGram: ingredient.quantityGram,
+                })),
+              );
+            }
+
+            // Set tagged users
+            if (draft.taggedUser && draft.taggedUser.length > 0) {
+              setSelectedUsers(
+                draft.taggedUser.map((user) => ({
+                  id: user.id,
+                  firstName: user.firstName,
+                  lastName: user.lastName,
+                })),
+              );
+            }
+
+            // Set cooking steps
+            if (draft.cookingSteps && draft.cookingSteps.length > 0) {
+              setCookingSteps(
+                draft.cookingSteps
+                  .sort((a, b) => a.stepOrder - b.stepOrder)
+                  .map((step) => ({
+                    id: crypto.randomUUID(),
+                    stepOrder: step.stepOrder,
+                    instruction: step.instruction || '',
+                    images:
+                      step.cookingStepImages?.map((img) => ({
+                        id: img.id,
+                        image: img.imageUrl || '',
+                        imageOrder: img.imageOrder,
+                        imageUrl: img.imageUrl,
+                      })) || [],
+                  })),
+              );
+            }
+
+            // Set main image preview
+            if (draft.imageUrl) {
+              setMainImagePreview(draft.imageUrl);
+            }
+
+            toast.success('Bản nháp công thức đã được tải');
+          }
+        } catch (error) {
+          console.error('Failed to load draft:', error);
+          // Silently fail - this is optional functionality
+        }
+      };
+
+      loadDraft();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [mode]);
+
   // Initialize form with existing data in edit mode
   useEffect(() => {
     if (mode === 'edit' && initialData) {
@@ -170,6 +379,18 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         );
       }
 
+      // Set tagged users
+      if (initialData.taggedUsers && initialData.taggedUsers.length > 0) {
+        setSelectedUsers(
+          initialData.taggedUsers.map((user) => ({
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            avatar: user.avatar?.imageUrl,
+          })),
+        );
+      }
+
       // Set cooking steps
       if (initialData.cookingSteps && initialData.cookingSteps.length > 0) {
         setCookingSteps(
@@ -179,6 +400,13 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
               id: crypto.randomUUID(),
               stepOrder: step.stepOrder,
               instruction: step.instruction,
+              images:
+                step.cookingStepImages?.map((img) => ({
+                  id: img.id,
+                  image: img.imageUrl || '',
+                  imageOrder: img.imageOrder,
+                  imageUrl: img.imageUrl,
+                })) || [],
               image: undefined,
               imagePreview: step.imageUrl,
             })),
@@ -192,9 +420,36 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     }
   }, [mode, initialData]);
 
+  const validateImageFile = (file: File): string | null => {
+    // Check file type
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      return `Chỉ hỗ trợ hình ảnh JPG, PNG và GIF. Bạn đã tải lên ${file.type}`;
+    }
+
+    // Check file extension
+    const fileName = file.name.toLowerCase();
+    const fileExtension = fileName.split('.').pop();
+    if (!fileExtension || !ALLOWED_IMAGE_EXTENSIONS.includes(fileExtension)) {
+      return `Định dạng tệp không hợp lệ. Vui lòng tải lên JPG, PNG hoặc GIF`;
+    }
+
+    // Check file size
+    if (file.size > MAX_IMAGE_SIZE) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      return `Kích thước hình ảnh không được vượt quá 5MB. Hình ảnh hiện tại là ${sizeMB}MB`;
+    }
+
+    return null;
+  };
+
   const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const error = validateImageFile(file);
+      if (error) {
+        toast.error(error);
+        return;
+      }
       processImageFile(file);
     }
   };
@@ -225,10 +480,13 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     e.stopPropagation();
     setIsDragOver(false);
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file) {
+      const error = validateImageFile(file);
+      if (error) {
+        toast.error(error);
+        return;
+      }
       processImageFile(file);
-    } else if (file) {
-      toast.error('Vui lòng chỉ tải lên tệp ảnh');
     }
   };
 
@@ -243,14 +501,29 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     setImageToCrop(null);
   };
 
-  const handleStepImageChange = (index: number, file: File) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const newSteps = [...cookingSteps];
-      newSteps[index].image = file;
-      setCookingSteps(newSteps);
-    };
-    reader.readAsDataURL(file);
+  const handleStepImageChange = (index: number, files: File[]) => {
+    const newSteps = [...cookingSteps];
+    const currentImages = newSteps[index].images || [];
+
+    // Only add images up to the limit of 5 per step
+    const availableSlots = 5 - currentImages.length;
+    const filesToAdd = files.slice(0, availableSlots);
+
+    if (filesToAdd.length < files.length) {
+      toast.error(`Mỗi bước chỉ có thể chứa tối đa 5 ảnh. Chỉ thêm ${filesToAdd.length} ảnh.`);
+    }
+
+    filesToAdd.forEach((file) => {
+      const imageOrder = currentImages.length + 1;
+      currentImages.push({
+        id: crypto.randomUUID(),
+        image: file,
+        imageOrder: imageOrder,
+      });
+    });
+
+    newSteps[index].images = currentImages;
+    setCookingSteps(newSteps);
   };
 
   const addCookingStep = () => {
@@ -260,7 +533,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         id: crypto.randomUUID(),
         stepOrder: cookingSteps.length + 1,
         instruction: '',
-        image: undefined,
+        images: [],
       },
     ]);
   };
@@ -329,6 +602,32 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     setSelectedLabels((prev) => prev.filter((l) => l.id !== labelId));
   };
 
+  const addUser = (user: User) => {
+    // Prevent user from tagging themselves
+    if (currentUser && user.id === currentUser.id) {
+      toast.error('Không thể tự tag chính mình');
+      return;
+    }
+
+    if (!selectedUsers.some((u) => u.id === user.id)) {
+      setSelectedUsers((prev) => [
+        ...prev,
+        {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          avatar: user.avatarUrl,
+        },
+      ]);
+    }
+    setIsUserPopoverOpen(false);
+    setUserSearch('');
+  };
+
+  const removeUser = (userId: string) => {
+    setSelectedUsers((prev) => prev.filter((u) => u.id !== userId));
+  };
+
   const addIngredient = (ingredient: Ingredient) => {
     if (!selectedIngredients.some((i) => i.id === ingredient.id)) {
       setSelectedIngredients((prev) => [
@@ -384,6 +683,11 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
       return;
     }
 
+    if (!description.trim()) {
+      toast.error('Vui lòng nhập mô tả cho món ăn');
+      return;
+    }
+
     if (description.length > 1500) {
       toast.error('Mô tả không được vượt quá 1500 ký tự');
       return;
@@ -405,8 +709,12 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
       return;
     }
 
-    if (selectedIngredients.some((ingredient) => ingredient.quantityGram <= 0)) {
-      toast.error('Vui lòng nhập khối lượng cho tất cả các nguyên liệu');
+    if (
+      selectedIngredients.some(
+        (ingredient) => ingredient.quantityGram < 0.1 || ingredient.quantityGram > 10000,
+      )
+    ) {
+      toast.error('Số lượng nguyên liệu phải từ 0.1 đến 10000 gram');
       return;
     }
 
@@ -449,6 +757,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
           ingredientId: i.id,
           quantityGram: i.quantityGram,
         })),
+        taggedUserIds: selectedUsers.map((u) => u.id),
         cookingSteps,
       };
 
@@ -460,6 +769,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         toast.success('Công thức đã được tạo thành công');
       }
 
+      setHasUnsavedChanges(false);
       router.push('/myrecipe');
     } catch (error) {
       console.error('Submit recipe error:', error);
@@ -473,13 +783,68 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     }
   };
 
+  const handleSaveDraft = async () => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const draftData = {
+        name,
+        description,
+        difficulty,
+        cookTime,
+        image: mainImage || undefined,
+        ration,
+        labelIds: selectedLabels.map((l) => l.id),
+        ingredients: selectedIngredients.map((i) => ({
+          ingredientId: i.id,
+          quantityGram: i.quantityGram,
+        })),
+        taggedUserIds: selectedUsers.map((u) => u.id),
+        cookingSteps,
+      };
+
+      await recipeService.saveDraft(draftData);
+      toast.success('Bản nháp đã được lưu');
+      setHasUnsavedChanges(false);
+      router.back();
+    } catch (error) {
+      console.error('Save draft error:', error);
+      toast.error('Có lỗi xảy ra khi lưu nháp công thức');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClearForm = () => {
+    if (!hasUnsavedChanges || confirm('Bạn có chắc chắn muốn xóa tất cả dữ liệu biểu mẫu?')) {
+      setName('');
+      setDescription('');
+      setDifficulty('Easy');
+      setCookTime(0);
+      setRation(1);
+      setMainImage(null);
+      setMainImagePreview(null);
+      setSelectedLabels([]);
+      setSelectedIngredients([]);
+      setSelectedUsers([]);
+      setCookingSteps([{ id: crypto.randomUUID(), stepOrder: 1, instruction: '', images: [] }]);
+      setHasUnsavedChanges(false);
+      toast.success('Biểu mẫu đã được xóa');
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="mx-auto w-full max-w-screen-2xl space-y-6 px-4">
       {/* Main Image and Basic Info */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-[300px_1fr]">
         {/* Image Section - Left */}
         <div className="space-y-2">
-          <Label>Hình ảnh món ăn</Label>
+          <Label>
+            <ImageIcon className="h-4 w-4 text-[#99b94a]" />
+            Hình ảnh món ăn
+          </Label>
           {mainImagePreview ? (
             <div className="relative h-75 w-full overflow-hidden rounded-lg border">
               <Image
@@ -512,7 +877,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <Upload
+              <Salad
                 className={`h-8 w-8 transition-colors ${
                   isDragOver ? 'text-[#99b94a]' : 'text-gray-400'
                 }`}
@@ -535,46 +900,54 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         </div>
 
         {/* Right Section - Title, Description, Difficulty, Cook Time, Ration */}
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           {/* Recipe Name */}
           <div className="space-y-2">
-            <Label htmlFor="name">Tên món</Label>
+            <Label htmlFor="name">
+              <ChefHat className="h-4 w-4 text-[#99b94a]" />
+              Tên món
+            </Label>
             <Input
               id="name"
               placeholder="Tên món ăn của bạn"
               value={name}
-              onChange={(e) => setName(e.target.value.slice(0, 100))}
+              onChange={(e) => setName(e.target.value.slice(0, 255))}
               onFocus={() => setIsNameFocused(true)}
               onBlur={() => setIsNameFocused(false)}
               onInvalid={handleInvalidField}
-              maxLength={100}
+              maxLength={255}
             />
             <p
               className={`text-right text-xs transition-opacity ${isNameFocused ? 'text-gray-500 opacity-100' : 'text-gray-300 opacity-0'}`}
             >
-              {name.length}/100
+              {name.length}/255
             </p>
           </div>
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Mô tả</Label>
+            <Label htmlFor="description" className="flex items-center gap-1">
+              <UtensilsCrossed className="h-4 w-4 text-[#99b94a]" />
+              Mô tả
+              <span className="text-red-500">*</span>
+            </Label>
             <Textarea
               id="description"
               placeholder="Hãy chia sẻ với mọi người về món này của bạn nhé - ai đã truyền cảm hứng cho bạn, tại sao nó đặc biệt, bạn thích thưởng thức nó như thế nào..."
               rows={2}
               value={description}
-              onChange={(e) => setDescription(e.target.value.slice(0, 1500))}
+              onChange={(e) => setDescription(e.target.value.slice(0, 2000))}
               onFocus={() => setIsDescriptionFocused(true)}
               onBlur={() => setIsDescriptionFocused(false)}
               onInvalid={handleInvalidTextarea}
-              maxLength={1500}
-              className="break-words sm:min-h-24 md:min-h-28"
+              maxLength={2000}
+              required
+              className="w-full break-words sm:min-h-24 md:min-h-28"
             />
             <p
               className={`text-right text-xs transition-opacity ${isDescriptionFocused ? 'text-gray-500 opacity-100' : 'text-gray-300 opacity-0'}`}
             >
-              {description.length}/1500
+              {description.length}/2000
             </p>
           </div>
 
@@ -582,7 +955,10 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
           <div className="grid grid-cols-3 gap-3">
             {/* Difficulty */}
             <div className="space-y-2">
-              <Label htmlFor="difficulty">Độ khó</Label>
+              <Label htmlFor="difficulty" className="flex items-center gap-2">
+                <Flame className="h-4 w-4 text-[#99b94a]" />
+                Độ khó
+              </Label>
               <Select
                 options={[
                   { value: 'Easy', label: 'Dễ' },
@@ -598,15 +974,22 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
             {/* Cook Time */}
             <div className="space-y-2">
-              <Label htmlFor="cookTime">Thời gian nấu</Label>
+              <Label htmlFor="cookTime" className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-[#99b94a]" />
+                Thời gian nấu
+              </Label>
               <div className="relative">
                 <Input
                   id="cookTime"
                   type="number"
                   placeholder="30"
                   value={cookTime}
-                  onChange={(e) => setCookTime(parseInt(e.target.value) || 0)}
-                  min="0"
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 0;
+                    setCookTime(Math.min(Math.max(val, 1), 1440));
+                  }}
+                  min="1"
+                  max="1440"
                   step="1"
                   className="pr-12 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
@@ -618,7 +1001,10 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
             {/* Ration */}
             <div className="space-y-2">
-              <Label htmlFor="ration">Khẩu phần</Label>
+              <Label htmlFor="ration" className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-[#99b94a]" />
+                Khẩu phần
+              </Label>
               <div className="relative">
                 <Input
                   id="ration"
@@ -639,98 +1025,215 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         </div>
       </div>
 
-      {/* Labels */}
-      <div className="space-y-2">
-        <Label>Nhãn</Label>
+      {/* Labels and Tagged Users - Side by Side */}
+      <div className="grid grid-cols-3 gap-6">
+        {/* Left Column: Tagged Users (1/3 width) */}
+        <div className="col-span-1 space-y-2">
+          <Label className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-[#99b94a]" />
+            Tag người dùng
+          </Label>
 
-        {/* Selected Labels */}
-        <div className="flex min-h-[60px] flex-wrap gap-2 rounded-lg border p-3">
-          {selectedLabels.length === 0 ? (
-            <span className="pt-2 text-sm text-gray-400 flex w-full justify-center">Chưa có nhãn nào được chọn</span>
-          ) : (
-            selectedLabels.map((label) => {
-              const labelStyle = { backgroundColor: label.colorCode } as React.CSSProperties;
-              return (
+          {/* Selected Users */}
+          <div className="flex min-h-[60px] flex-wrap gap-2 rounded-lg border p-3">
+            {selectedUsers.length === 0 ? (
+              <span className="flex w-full justify-center pt-2 text-center text-xs text-gray-400">
+                Chưa có người dùng nào được tag
+              </span>
+            ) : (
+              selectedUsers.map((user) => (
                 <div
-                  key={label.id}
-                  className="flex items-center gap-1 rounded-full px-3 py-1 text-sm text-white"
-                  style={labelStyle}
-                  suppressHydrationWarning
+                  key={user.id}
+                  className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-900"
                 >
-                  <span>{label.name}</span>
+                  {user.avatar && (
+                    <Image
+                      src={user.avatar}
+                      alt={`${user.firstName} ${user.lastName}`}
+                      width={16}
+                      height={16}
+                      className="h-4 w-4 rounded-full object-cover"
+                    />
+                  )}
+                  <span className="truncate">
+                    {user.firstName} {user.lastName}
+                  </span>
                   <button
                     type="button"
-                    onClick={() => removeLabel(label.id)}
-                    className="ml-1 rounded-full hover:bg-white/20"
-                    aria-label={`Remove ${label.name}`}
+                    onClick={() => removeUser(user.id)}
+                    className="ml-1 rounded-full hover:bg-blue-200"
+                    aria-label={`Remove ${user.firstName} ${user.lastName}`}
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-2.5 w-2.5" />
                   </button>
                 </div>
-              );
-            })
-          )}
+              ))
+            )}
+          </div>
+
+          {/* Search and Add Users */}
+          <Popover open={isUserPopoverOpen} onOpenChange={setIsUserPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button type="button" variant="outline" className="w-full">
+                <Search className="mr-2 h-4 w-4" />
+                Thêm người dùng
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[350px] p-0" align="start">
+              <Command shouldFilter={false}>
+                <CommandInput
+                  placeholder="Tìm kiếm người dùng..."
+                  value={userSearch}
+                  onValueChange={setUserSearch}
+                />
+                <CommandList>
+                  {isLoadingUsers ? (
+                    <div className="py-6 text-center text-sm text-gray-500">Đang tải...</div>
+                  ) : userSearchResults.length === 0 ? (
+                    <CommandEmpty>Không tìm thấy người dùng nào.</CommandEmpty>
+                  ) : (
+                    <CommandGroup>
+                      {userSearchResults.map((user) => {
+                        const isSelected = selectedUsers.some((u) => u.id === user.id);
+                        return (
+                          <CommandItem
+                            key={user.id}
+                            onSelect={() => addUser(user)}
+                            disabled={isSelected}
+                            className="cursor-pointer"
+                          >
+                            <div className="flex w-full items-center gap-2">
+                              {user.avatarUrl && (
+                                <Image
+                                  src={user.avatarUrl}
+                                  alt={`${user.firstName} ${user.lastName}`}
+                                  width={24}
+                                  height={24}
+                                  className="h-6 w-6 flex-shrink-0 rounded-full object-cover"
+                                />
+                              )}
+                              <div className="flex-1">
+                                <div className="text-sm font-medium">
+                                  {user.firstName} {user.lastName}
+                                </div>
+                                {user.email && (
+                                  <div className="text-xs text-gray-500">{user.email}</div>
+                                )}
+                              </div>
+                              {isSelected && <span className="text-xs text-gray-500">Đã chọn</span>}
+                            </div>
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  )}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
 
-        {/* Search and Add Labels */}
-        <Popover open={isLabelPopoverOpen} onOpenChange={setIsLabelPopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button type="button" variant="outline" className="w-full">
-              <Plus className="mr-2 h-4 w-4" />
-              Thêm nhãn
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-0" align="start">
-            <Command shouldFilter={false}>
-              <CommandInput
-                placeholder="Tìm kiếm nhãn..."
-                value={labelSearch}
-                onValueChange={setLabelSearch}
-              />
-              <CommandList>
-                {isLoadingLabels ? (
-                  <div className="py-6 text-center text-sm text-gray-500">Đang tải...</div>
-                ) : labelSearchResults.length === 0 ? (
-                  <CommandEmpty>Không tìm thấy nhãn nào.</CommandEmpty>
-                ) : (
-                  <CommandGroup>
-                    {labelSearchResults.map((label) => {
-                      const isSelected = selectedLabels.some((l) => l.id === label.id);
-                      const colorStyle = {
-                        backgroundColor: label.colorCode,
-                      } as React.CSSProperties;
-                      return (
-                        <CommandItem
-                          key={label.id}
-                          onSelect={() => addLabel(label)}
-                          disabled={isSelected}
-                          className="cursor-pointer"
-                        >
-                          <div className="flex w-full items-center gap-2">
-                            <div
-                              className="h-4 w-4 flex-shrink-0 rounded-full"
-                              style={colorStyle}
-                              suppressHydrationWarning
-                            />
-                            <span className="flex-1">{label.name}</span>
-                            {isSelected && <span className="text-xs text-gray-500">Đã chọn</span>}
-                          </div>
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                )}
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+        {/* Right Column: Labels (2/3 width) */}
+        <div className="col-span-2 space-y-2">
+          <Label className="flex items-center gap-2">
+            <Tag className="h-4 w-4 text-[#99b94a]" />
+            Nhãn
+          </Label>
+
+          {/* Selected Labels */}
+          <div className="flex min-h-[60px] flex-wrap gap-2 rounded-lg border p-3">
+            {selectedLabels.length === 0 ? (
+              <span className="flex w-full justify-center pt-2 text-xs text-gray-400">
+                Chưa có nhãn nào được chọn
+              </span>
+            ) : (
+              selectedLabels.map((label) => {
+                const labelStyle = { backgroundColor: label.colorCode } as React.CSSProperties;
+                return (
+                  <div
+                    key={label.id}
+                    className="flex items-center gap-1 rounded-full px-3 py-1 text-xs text-white"
+                    style={labelStyle}
+                    suppressHydrationWarning
+                  >
+                    <span>{label.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeLabel(label.id)}
+                      className="ml-1 rounded-full hover:bg-white/20"
+                      aria-label={`Remove ${label.name}`}
+                    >
+                      <X className="h-2.5 w-2.5" />
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Search and Add Labels */}
+          <Popover open={isLabelPopoverOpen} onOpenChange={setIsLabelPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button type="button" variant="outline" className="w-full">
+                <Plus className="mr-2 h-4 w-4" />
+                Thêm nhãn
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[400px] p-0" align="start">
+              <Command shouldFilter={false}>
+                <CommandInput
+                  placeholder="Tìm kiếm nhãn..."
+                  value={labelSearch}
+                  onValueChange={setLabelSearch}
+                />
+                <CommandList>
+                  {isLoadingLabels ? (
+                    <div className="py-6 text-center text-sm text-gray-500">Đang tải...</div>
+                  ) : labelSearchResults.length === 0 ? (
+                    <CommandEmpty>Không tìm thấy nhãn nào.</CommandEmpty>
+                  ) : (
+                    <CommandGroup>
+                      {labelSearchResults.map((label) => {
+                        const isSelected = selectedLabels.some((l) => l.id === label.id);
+                        const colorStyle = {
+                          backgroundColor: label.colorCode,
+                        } as React.CSSProperties;
+                        return (
+                          <CommandItem
+                            key={label.id}
+                            onSelect={() => addLabel(label)}
+                            disabled={isSelected}
+                            className="cursor-pointer"
+                          >
+                            <div className="flex w-full items-center gap-2">
+                              <div
+                                className="h-4 w-4 flex-shrink-0 rounded-full"
+                                style={colorStyle}
+                                suppressHydrationWarning
+                              />
+                              <span className="flex-1">{label.name}</span>
+                              {isSelected && <span className="text-xs text-gray-500">Đã chọn</span>}
+                            </div>
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  )}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       {/* Ingredients and Cooking Steps - Side by Side */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr]">
         {/* Left Column: Ingredients (1/3 width) */}
-        <div className="space-y-2">
-          <Label>Nguyên liệu</Label>
+        <div className="space-y-4">
+          <Label>
+            <Beef className="h-4 w-4 text-[#99b94a]" />
+            Nguyên liệu
+          </Label>
 
           {/* Selected Ingredients */}
           <div className="min-h-[150px] rounded-lg border p-3">
@@ -800,7 +1303,10 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
         {/* Right Column: Cooking Steps (2/3 width) */}
         <div className="space-y-4">
-          <Label>Các bước nấu</Label>
+          <Label>
+            <Soup className="h-4 w-4 text-[#99b94a]" />
+            Các bước nấu
+          </Label>
 
           {cookingSteps.map((step, index) => (
             <CookingStepCard
@@ -814,11 +1320,17 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
               onDragLeave={handleCookStepDragLeave}
               onDrop={(e) => handleCookStepDrop(e, index)}
               onUpdateInstruction={(instruction) => updateStepDescription(index, instruction)}
-              onAddImage={(file) => handleStepImageChange(index, file)}
-              onRemoveImage={() => {
+              onAddImage={(files) => handleStepImageChange(index, files)}
+              onRemoveImage={(imageIndex) => {
                 const newSteps = [...cookingSteps];
-                newSteps[index].image = undefined;
-                newSteps[index].imagePreview = undefined;
+                newSteps[index].images = (newSteps[index].images || []).filter(
+                  (_, idx) => idx !== imageIndex,
+                );
+                setCookingSteps(newSteps);
+              }}
+              onReorderImages={(reorderedImages) => {
+                const newSteps = [...cookingSteps];
+                newSteps[index].images = reorderedImages;
                 setCookingSteps(newSteps);
               }}
               onRemoveStep={() => removeCookingStep(index)}
@@ -834,19 +1346,17 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
       {/* Submit Buttons */}
       <div className="flex justify-end gap-3 border-t pt-6">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.back()}
-          disabled={isSubmitting}
-        >
-          Lưu và Đóng
+        <Button type="button" variant="outline" onClick={handleClearForm} disabled={isSubmitting}>
+          Xóa biểu mẫu
+        </Button>
+        <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={isSubmitting}>
+          Lưu bản nháp
         </Button>
         <Button type="submit" disabled={isSubmitting} className="bg-[#99b94a] hover:bg-[#7a9a3d]">
           {isSubmitting
             ? mode === 'edit'
               ? 'Đang cập nhật...'
-              : 'Đang lưu...'
+              : 'Đang tạo...'
             : mode === 'edit'
               ? 'Cập nhật'
               : 'Lên bài'}

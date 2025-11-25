@@ -1,0 +1,23 @@
+/* Ingredient Restriction Badge Styles */
+
+.ingredient-restriction-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.ingredient-restriction-badge--compact {
+  border-radius: 9999px;
+  padding: 0.25rem 0.5rem;
+}
+
+.ingredient-restriction-badge--full {
+  flex-direction: row;
+  border-width: 1px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}

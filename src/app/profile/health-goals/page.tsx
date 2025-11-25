@@ -1,37 +1,27 @@
 'use client';
 
-import { useState } from 'react';
-
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/base/components/ui/tabs';
 import { ProtectedRoute } from '@/modules/auth';
-import {
-  CurrentHealthGoalCard,
-  CustomHealthGoalList,
-  HealthGoalLibrary,
-} from '@/modules/health-goals';
+import { CurrentGoalHero, GoalSelector } from '@/modules/health-goals';
 
 export default function MyHealthGoalsPage() {
-  const [activeTab, setActiveTab] = useState('library');
-
   return (
     <ProtectedRoute>
       <DashboardLayout>
-        <div className="space-y-6">
-          <CurrentHealthGoalCard />
+        <div className="space-y-8">
+          {/* Header Section */}
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Mục Tiêu Sức Khỏe</h1>
+            <p className="mt-2 text-gray-600">
+              Quản lý mục tiêu sức khỏe của bạn và theo dõi các chỉ số dinh dưỡng
+            </p>
+          </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="library">Thư Viện Mục Tiêu</TabsTrigger>
-              <TabsTrigger value="custom">Mục Tiêu Tùy Chỉnh</TabsTrigger>
-            </TabsList>
-            <TabsContent value="library" className="mt-6">
-              <HealthGoalLibrary />
-            </TabsContent>
-            <TabsContent value="custom" className="mt-6">
-              <CustomHealthGoalList />
-            </TabsContent>
-          </Tabs>
+          {/* Current Goal Hero Card */}
+          <CurrentGoalHero />
+
+          {/* Goal Selection Section */}
+          <GoalSelector />
         </div>
       </DashboardLayout>
     </ProtectedRoute>

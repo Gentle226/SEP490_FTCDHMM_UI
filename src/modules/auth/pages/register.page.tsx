@@ -13,12 +13,15 @@ import {
 } from '@/base/components/ui/card';
 
 import { RegisterForm } from '../components/register-form';
+import styles from './register.page.module.css';
 
 export function RegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);
 
   return (
-    <div className="bg-muted flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
+    <div
+      className={`flex min-h-svh flex-col items-center justify-center p-6 md:p-10 ${styles.backgroundContainer}`}
+    >
       <div className="w-full max-w-md">
         <Card className="border-border/60 shadow-xl">
           <CardHeader className="space-y-1">

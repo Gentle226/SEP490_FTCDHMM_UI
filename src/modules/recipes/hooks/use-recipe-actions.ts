@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
+import { ratingService } from '../services/rating.service';
 import { recipeService } from '../services/recipe.service';
 import { RecipeDetail } from '../types';
 
@@ -266,6 +267,73 @@ export function useUnsaveRecipe() {
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         'Không thể bỏ lưu công thức';
+      toast.error(errorMessage);
+    },
+  });
+}
+
+/**
+ * Hook to get average rating for a recipe
+ */
+export function useGetAverageRating(recipeId: string | null | undefined) {
+  return useQuery({
+    queryKey: ['averageRating', recipeId],
+    queryFn: async () => {
+      if (!recipeId) return null;
+      const response = await ratingService.getAverageRating(recipeId);
+      return response;
+    },
+    enabled: !!recipeId,
+  });
+}
+
+/**
+ * Hook to rate a recipe
+ */
+export function useRateRecipe() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      recipeId,
+      score,
+      feedback,
+    }: {
+      recipeId: string;
+      score: number;
+      feedback?: string;
+    }) => ratingService.rateRecipe(recipeId, { score, feedback: feedback || '' }),
+    onSuccess: (_, { recipeId }) => {
+      // Invalidate average rating query
+      queryClient.invalidateQueries({ queryKey: ['averageRating', recipeId] });
+      toast.success('Đã đánh giá công thức');
+    },
+    onError: (error: unknown) => {
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        'Không thể đánh giá công thức';
+      toast.error(errorMessage);
+    },
+  });
+}
+
+/**
+ * Hook to delete a recipe rating
+ */
+export function useDeleteRating() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ ratingId }: { ratingId: string }) => ratingService.deleteRating(ratingId),
+    onSuccess: () => {
+      // Invalidate all rating queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['averageRating'] });
+      toast.success('Đã xóa đánh giá');
+    },
+    onError: (error: unknown) => {
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        'Không thể xóa đánh giá';
       toast.error(errorMessage);
     },
   });

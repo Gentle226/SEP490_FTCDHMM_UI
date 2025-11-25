@@ -4,7 +4,6 @@ import { useMutation } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { AlertCircleIcon, ArrowLeft, CheckCircle, Lock, Mail } from 'lucide-react';
 import { useState } from 'react';
-import { z } from 'zod';
 
 import { Alert, AlertDescription, AlertTitle } from '@/base/components/ui/alert';
 import { Button } from '@/base/components/ui/button';
@@ -13,44 +12,14 @@ import {
   ForgotPasswordSchema,
   ResendOtpSchema,
   ResetPasswordWithOtpSchema,
+  Step,
   VerifyEmailOtpSchema,
   forgotPasswordSchema,
+  otpOnlySchema,
+  passwordOnlySchema,
 } from '@/modules/auth/types';
 
 import { authService } from '../services/auth.service';
-
-// Simplified schemas for the form steps
-const otpOnlySchema = z.object({
-  code: z.string().trim().nonempty('Verification code is required'),
-});
-
-const passwordOnlySchema = z
-  .object({
-    newPassword: z
-      .string()
-      .trim()
-      .min(8, 'Mật khẩu phải có tối thiểu 8 ký tự')
-      .max(100, 'Mật khẩu không được quá 100 ký tự')
-      .refine((val) => /[a-z]/.test(val), {
-        message: 'Mật khẩu phải có ít nhất một chữ thường',
-      })
-      .refine((val) => /[A-Z]/.test(val), {
-        message: 'Mật khẩu phải có ít nhất một chữ hoa',
-      })
-      .refine((val) => /\d/.test(val), {
-        message: 'Mật khẩu phải có ít nhất một chữ số',
-      })
-      .refine((val) => /[@$!%*?&]/.test(val), {
-        message: 'Mật khẩu phải có ít nhất một ký tự đặc biệt (@$!%*?&)',
-      }),
-    rePassword: z.string().trim().min(8, 'Mật khẩu xác nhận phải có tối thiểu 8 ký tự'),
-  })
-  .refine((v) => v.newPassword === v.rePassword, {
-    message: 'Mật khẩu xác nhận không khớp',
-    path: ['rePassword'],
-  });
-
-type Step = 'email' | 'otp' | 'password' | 'success';
 
 interface ForgotPasswordFormProps {
   onBackToLogin?: () => void;
@@ -225,7 +194,10 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
             Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập bằng mật khẩu mới của
             mình.
           </p>
-          <Button onClick={onBackToLogin} className="w-full bg-[#99b94a] text-white">
+          <Button
+            onClick={onBackToLogin}
+            className="w-full bg-[#99b94a] text-white hover:bg-[#7a8f3a]"
+          >
             Về trang đăng nhập
           </Button>
         </div>
@@ -264,7 +236,9 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
               },
             ]}
             renderSubmitButton={(Button) => (
-              <Button className="bg-[#99b94a] text-white">Gửi mã xác minh</Button>
+              <Button className="bg-[#99b94a] text-white hover:bg-[#7a8f3a]">
+                Gửi mã xác minh
+              </Button>
             )}
             onSuccessSubmit={(data) => {
               setEmail(data.email);
@@ -314,7 +288,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
               },
             ]}
             renderSubmitButton={(Button) => (
-              <Button className="bg-[#99b94a] text-white">Xác minh mã</Button>
+              <Button className="bg-[#99b94a] text-white hover:bg-[#7a8f3a]">Xác minh mã</Button>
             )}
             onSuccessSubmit={(data) => {
               const payload = { ...data, email };
@@ -384,7 +358,9 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
               },
             ]}
             renderSubmitButton={(Button) => (
-              <Button className="bg-[#99b94a] text-white">Đặt lại mật khẩu</Button>
+              <Button className="bg-[#99b94a] text-white hover:bg-[#7a8f3a]">
+                Đặt lại mật khẩu
+              </Button>
             )}
             onSuccessSubmit={(data) => {
               const payload = { ...data, email, token: resetToken };

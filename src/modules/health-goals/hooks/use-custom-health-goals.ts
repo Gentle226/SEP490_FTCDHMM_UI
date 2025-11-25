@@ -66,31 +66,3 @@ export const useDeleteCustomHealthGoal = () => {
     },
   });
 };
-
-/**
- * Hook to activate a custom health goal
- */
-export const useActivateCustomHealthGoal = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => customHealthGoalService.activate(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['custom-health-goals'] });
-    },
-  });
-};
-
-/**
- * Hook to de-active a custom health goal
- */
-export const useDeactiveCustomHealthGoal = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => customHealthGoalService.deactive(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['custom-health-goals'] });
-    },
-  });
-};

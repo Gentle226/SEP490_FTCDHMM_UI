@@ -3,13 +3,28 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { AxiosError, HttpStatusCode } from 'axios';
-import { AlertCircleIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { AlertCircleIcon, ChevronDownIcon, Eye, EyeOff } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { Alert, AlertDescription, AlertTitle } from '@/base/components/ui/alert';
 import { Button } from '@/base/components/ui/button';
+import { DatePickerWithInput } from '@/base/components/ui/date-picker-with-input';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/base/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/base/components/ui/dropdown-menu';
 import { Form } from '@/base/components/ui/form';
 import { Input } from '@/base/components/ui/input';
 import { Label } from '@/base/components/ui/label';
@@ -21,6 +36,47 @@ import {
 } from '@/modules/auth/types';
 
 import { authService } from '../services/auth.service';
+import { GoogleSignInButton } from './google-signin-button';
+
+type PasswordInputProps = {
+  id: 'password' | 'rePassword';
+  label: string;
+  placeholder: string;
+  disabled?: boolean;
+  error?: string;
+  register: ReturnType<typeof useForm<RegisterSchema>>['register'];
+};
+
+function PasswordInput({ id, label, placeholder, disabled, error, register }: PasswordInputProps) {
+  const [showPassword, setShowPassword] = useState(false);
+
+  return (
+    <div className="flex-1 space-y-2">
+      <Label htmlFor={id}>
+        {label} <span className="text-red-500">*</span>
+      </Label>
+      <div className="relative">
+        <Input
+          id={id}
+          type={showPassword ? 'text' : 'password'}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="pr-10"
+          {...register(id)}
+        />
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+        >
+          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      </div>
+      {error && <p className="text-sm text-red-500">{error}</p>}
+    </div>
+  );
+}
 
 interface RegisterFormProps {
   onRegisterSuccess?: () => void;
@@ -29,6 +85,7 @@ interface RegisterFormProps {
 
 export function RegisterForm({ onRegisterSuccess, onStepChange }: RegisterFormProps) {
   const router = useRouter();
+  const _searchParams = useSearchParams();
   const [step, setStep] = useState(1);
   const [registeredEmail, setRegisteredEmail] = useState<string>('');
 
@@ -54,6 +111,11 @@ export function RegisterForm({ onRegisterSuccess, onStepChange }: RegisterFormPr
           error={step1Error}
           onStepComplete={(data) => {
             triggerRegister(data);
+          }}
+          onSkipToEmailVerification={(email) => {
+            setRegisteredEmail(email);
+            setStep(2);
+            onStepChange?.(2);
           }}
         />
       );
@@ -90,22 +152,53 @@ type RegisterStep1Props = {
     email: string;
     password: string;
     rePassword: string;
-    phoneNumber: string;
+    dateOfBirth: Date;
+    gender: 'Male' | 'Female';
   }) => void;
+  onSkipToEmailVerification?: (email: string) => void;
 };
 
-function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
+function RegisterStep1({
+  onStepComplete,
+  error,
+  loading,
+  onSkipToEmailVerification,
+}: RegisterStep1Props) {
   const {
     register,
     handleSubmit,
     formState: { errors },
+    getValues,
+    setValue,
   } = useForm<RegisterSchema>({
     resolver: zodResolver(registerSchema),
+  });
+
+  const [showEmailVerifyDialog, setShowEmailVerifyDialog] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string>('');
+  const [selectedGender, setSelectedGender] = useState<'Male' | 'Female' | ''>('');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+
+  // Mutation to resend OTP
+  const { mutate: sendOtp, isPending: isSendingOtp } = useMutation({
+    mutationFn: (email: string) => {
+      const payload: ResendOtpSchema = { email, purpose: 'VERIFYACCOUNTEMAIL' };
+      return authService.resendOtp(payload);
+    },
   });
 
   const onSubmit = (data: RegisterSchema) => {
     onStepComplete?.(data);
   };
+
+  // Handle email already registered error
+  useEffect(() => {
+    if (error instanceof AxiosError && error.response?.status === 415) {
+      const email = getValues('email');
+      setPendingEmail(email);
+      setShowEmailVerifyDialog(true);
+    }
+  }, [error, getValues]);
 
   return (
     <div className="space-y-4">
@@ -116,7 +209,7 @@ function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
           <AlertDescription>
             {(() => {
               if (error instanceof AxiosError) {
-                const status = error.status ?? error.response?.status;
+                const status = error.response?.status;
                 const responseData = error.response?.data as {
                   success?: boolean;
                   errors?: string[] | string | Record<string, string[]>;
@@ -125,7 +218,7 @@ function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
                 };
 
                 if (status === 415) {
-                  return 'Email đã được đăng ký. Vui lòng sử dụng email khác.';
+                  return 'Email đã được đăng ký. Vui lòng sử dụng email khác hoặc xác thực email của bạn.';
                 }
 
                 if (status === HttpStatusCode.BadRequest && responseData?.errors) {
@@ -172,7 +265,9 @@ function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
         {/* Họ và Tên trên cùng một hàng - sử dụng flex để không ảnh hưởng width của form */}
         <div className="flex gap-3">
           <div className="flex-1 space-y-2">
-            <Label htmlFor="firstName">Họ</Label>
+            <Label htmlFor="firstName">
+              Họ <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="firstName"
               type="text"
@@ -183,7 +278,9 @@ function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
             {errors.firstName && <p className="text-sm text-red-500">{errors.firstName.message}</p>}
           </div>
           <div className="flex-1 space-y-2">
-            <Label htmlFor="lastName">Tên</Label>
+            <Label htmlFor="lastName">
+              Tên <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="lastName"
               type="text"
@@ -197,7 +294,9 @@ function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
 
         {/* Email */}
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">
+            Email <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="email"
             type="text"
@@ -208,55 +307,163 @@ function RegisterStep1({ onStepComplete, error, loading }: RegisterStep1Props) {
           {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
         </div>
 
-        {/* Số điện thoại */}
-        <div className="space-y-2">
-          <Label htmlFor="phoneNumber">Số điện thoại</Label>
-          <Input
-            id="phoneNumber"
-            type="text"
-            placeholder="Nhập số điện thoại của bạn"
-            disabled={loading}
-            {...register('phoneNumber')}
-          />
-          {errors.phoneNumber && (
-            <p className="text-sm text-red-500">{errors.phoneNumber.message}</p>
-          )}
+        {/* Date of Birth and Gender on same line */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          {/* Date of Birth with DatePickerWithInput */}
+          <div className="space-y-2">
+            <Label>
+              Ngày sinh <span className="text-red-500">*</span>
+            </Label>
+            <DatePickerWithInput
+              date={selectedDate}
+              onDateChange={(date) => {
+                setSelectedDate(date);
+                if (date) {
+                  setValue('dateOfBirth', date);
+                }
+              }}
+              disabled={loading}
+              placeholder="dd/mm/yyyy"
+            />
+            {errors.dateOfBirth && (
+              <p className="text-sm text-red-500">{errors.dateOfBirth.message}</p>
+            )}
+          </div>
+
+          {/* Gender with Dropdown */}
+          <div className="space-y-2">
+            <Label>
+              Giới tính <span className="text-red-500">*</span>
+            </Label>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-between"
+                  disabled={loading}
+                >
+                  <span>
+                    {selectedGender === 'Male'
+                      ? 'Nam'
+                      : selectedGender === 'Female'
+                        ? 'Nữ'
+                        : 'Chọn giới tính'}
+                  </span>
+                  <ChevronDownIcon className="size-4 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[--radix-dropdown-menu-trigger-width]">
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSelectedGender('Male');
+                    setValue('gender', 'Male');
+                  }}
+                >
+                  Nam
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSelectedGender('Female');
+                    setValue('gender', 'Female');
+                  }}
+                >
+                  Nữ
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <input type="hidden" {...register('gender')} value={selectedGender} />
+            {errors.gender && <p className="text-sm text-red-500">{errors.gender.message}</p>}
+          </div>
         </div>
 
         {/* Mật khẩu */}
-        <div className="space-y-2">
-          <Label htmlFor="password">Mật khẩu</Label>
-          <Input
+        <div className="flex gap-3">
+          <PasswordInput
             id="password"
-            type="password"
-            placeholder="Tối thiểu 8 ký tự, có chữ hoa, số và ký tự đặc biệt"
+            label="Mật khẩu"
+            placeholder="Nhập mật khẩu"
             disabled={loading}
-            {...register('password')}
+            error={errors.password?.message}
+            register={register}
           />
-          {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
-        </div>
 
-        {/* Xác nhận mật khẩu */}
-        <div className="space-y-2">
-          <Label htmlFor="rePassword">Xác nhận mật khẩu</Label>
-          <Input
+          {/* Xác nhận mật khẩu */}
+          <PasswordInput
             id="rePassword"
-            type="password"
+            label="Xác nhận mật khẩu"
             placeholder="Nhập lại mật khẩu"
             disabled={loading}
-            {...register('rePassword')}
+            error={errors.rePassword?.message}
+            register={register}
           />
-          {errors.rePassword && <p className="text-sm text-red-500">{errors.rePassword.message}</p>}
         </div>
 
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full border-[#99b94a] bg-[#99b94a] hover:bg-[#7a8f3a]"
-        >
-          {loading ? 'Đang xử lý...' : 'Tiếp tục'}
-        </Button>
+        <div className="flex justify-center">
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-[80%] border-[#99b94a] bg-[#99b94a] hover:bg-[#7a8f3a]"
+          >
+            {loading ? 'Đang xử lý...' : 'Tiếp tục'}
+          </Button>
+        </div>
+
+        <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
+          <span className="bg-card text-muted-foreground relative z-10 px-2">
+            Hoặc tiếp tục với
+          </span>
+        </div>
+
+        <div className="flex w-full justify-center">
+          <div className="flex w-full max-w-[400px] items-center justify-center">
+            <GoogleSignInButton
+              theme="outline"
+              size="large"
+              text="signup_with"
+              disabled={loading}
+              onSuccess={() => {
+                window.location.replace('/');
+              }}
+              onError={(error) => {
+                console.error('Google register error:', error);
+              }}
+            />
+          </div>
+        </div>
       </form>
+
+      {/* Dialog để hỏi người dùng có muốn xác thực email không */}
+      <Dialog open={showEmailVerifyDialog} onOpenChange={setShowEmailVerifyDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[#99b94a]">Xác thực Email</DialogTitle>
+            <DialogDescription>
+              Email này đã được đăng ký nhưng chưa được xác thực. Bạn có muốn xác thực email này
+              không?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowEmailVerifyDialog(false)}>
+              Hủy
+            </Button>
+            <Button
+              className="bg-[#99b94a] hover:bg-[#7a8f3a]"
+              disabled={isSendingOtp}
+              onClick={() => {
+                sendOtp(pendingEmail, {
+                  onSuccess: () => {
+                    onSkipToEmailVerification?.(pendingEmail);
+                    setShowEmailVerifyDialog(false);
+                  },
+                });
+              }}
+            >
+              {isSendingOtp ? 'Đang gửi...' : 'Xác thực Email'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,7 +1,16 @@
+export interface CookingStepImage {
+  id?: string;
+  image: File | string;
+  imageOrder: number;
+  imageUrl?: string;
+}
+
 export interface CookingStep {
   id?: string;
   stepOrder: number;
   instruction: string;
+  images: CookingStepImage[];
+  // Deprecated: keeping for backward compatibility during migration
   image?: File | string;
   imagePreview?: string;
 }
@@ -13,7 +22,7 @@ export interface RecipeIngredient {
 
 export interface CreateRecipeRequest {
   name: string;
-  description?: string;
+  description: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   cookTime: number;
   image?: File;
@@ -21,6 +30,7 @@ export interface CreateRecipeRequest {
   labelIds: string[];
   ingredients: RecipeIngredient[];
   cookingSteps: CookingStep[];
+  taggedUserIds?: string[]; // New field for tagging users
 }
 
 export interface Recipe
@@ -31,7 +41,13 @@ export interface Recipe
   cookingSteps: CookingStep[];
   createdAt: string;
   updatedAt: string;
+  rating?: number;
+  averageRating?: number;
+  numberOfRatings?: number;
 }
 
+export * from './comment.types';
+export * from './draft.types';
 export * from './my-recipe.types';
+export * from './rating.types';
 export * from './recipe-detail.types';

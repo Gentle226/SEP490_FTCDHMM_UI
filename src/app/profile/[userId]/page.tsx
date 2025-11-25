@@ -58,9 +58,11 @@ export default function UserProfilePage() {
         id: userId,
         username: `${profileData.firstName} ${profileData.lastName}`.trim(),
         fullName: `${profileData.firstName} ${profileData.lastName}`.trim(),
-        handle: `@${profileData.email.split('@')[0]}`,
-        location: 'Thanh Hóa', // TODO: Add location field to API
-        bio: 'Đam mê nấu ăn :)', // TODO: Add bio field to API
+        handle: profileData.userName
+          ? `@${profileData.userName}`
+          : `@${profileData.email.split('@')[0]}`,
+        location: profileData.address || '',
+        bio: profileData.bio || '',
         avatarUrl:
           profileData.avatarUrl ||
           `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.firstName)}+${encodeURIComponent(profileData.lastName)}&background=random`,
@@ -138,8 +140,8 @@ export default function UserProfilePage() {
       await updateProfile.mutateAsync({
         firstName: profileData.firstName,
         lastName: profileData.lastName,
-        phoneNumber: profileData.phoneNumber,
         gender: profileData.gender,
+        dateOfBirth: profileData.dateOfBirth ? new Date(profileData.dateOfBirth) : new Date(),
         avatarUrl: file,
       });
     } catch (error) {
@@ -262,7 +264,9 @@ export default function UserProfilePage() {
                         <span className="text-base font-semibold sm:text-lg">
                           {profileUser.followingCount.toLocaleString()}
                         </span>
-                        <span className="text-muted-foreground text-xs sm:text-sm">Bạn Bếp</span>
+                        <span className="text-muted-foreground text-xs sm:text-sm">
+                          Đang theo dõi
+                        </span>
                       </button>
                       <button
                         onClick={() => setShowFollowersDialog(true)}
@@ -283,7 +287,9 @@ export default function UserProfilePage() {
                         <span className="text-base font-semibold sm:text-lg">
                           {profileUser.followingCount.toLocaleString()}
                         </span>
-                        <span className="text-muted-foreground text-xs sm:text-sm">Bạn Bếp</span>
+                        <span className="text-muted-foreground text-xs sm:text-sm">
+                          Đang theo dõi
+                        </span>
                       </div>
                       <div className="flex items-center gap-1.5 sm:gap-2">
                         <span className="text-base font-semibold sm:text-lg">
@@ -390,11 +396,16 @@ export default function UserProfilePage() {
           </TabsList>
 
           <TabsContent value="recipes" className="mt-4 sm:mt-6">
-            <UserRecipesList
-              userId={userId}
-              isOwnProfile={isOwnProfile}
-              onRecipeCountChange={setRecipeCount}
-            />
+            {(() => {
+              const userName = profileData?.userName || '';
+              return (
+                <UserRecipesList
+                  userName={userName}
+                  isOwnProfile={isOwnProfile}
+                  onRecipeCountChange={setRecipeCount}
+                />
+              );
+            })()}
           </TabsContent>
 
           <TabsContent value="cooksnaps" className="mt-4 sm:mt-6">

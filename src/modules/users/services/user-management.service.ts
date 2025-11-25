@@ -7,6 +7,9 @@ export interface User {
   email: string;
   createdAtUTC: string;
   status: string;
+  avatarUrl?: string;
+  lockReason?: string | null;
+  lockoutEnd?: string | null;
 }
 
 export interface PaginationParams {
@@ -26,6 +29,7 @@ export interface PaginatedResponse<T> {
 export interface LockUserRequest {
   userId: string;
   day: number;
+  reason: string; // Required field (3-512 characters)
 }
 
 export interface UnlockUserRequest {
@@ -34,6 +38,15 @@ export interface UnlockUserRequest {
 
 export interface CreateModeratorRequest {
   email: string;
+}
+
+export interface RoleResponse {
+  id: string;
+  name: string;
+}
+
+export interface ChangeRoleRequest {
+  roleId: string;
 }
 
 class UserManagementService extends HttpClient {
@@ -104,6 +117,18 @@ class UserManagementService extends HttpClient {
 
   public async createModerator(request: CreateModeratorRequest) {
     return this.post<void>('api/User/createModerator', request, {
+      isPrivateRoute: true,
+    });
+  }
+
+  public async getRoles() {
+    return this.get<{ items: RoleResponse[] }>('api/Role?PageNumber=1&PageSize=10', {
+      isPrivateRoute: true,
+    });
+  }
+
+  public async changeRole(userId: string, request: ChangeRoleRequest) {
+    return this.post<void>(`api/User/${userId}/roles`, request, {
       isPrivateRoute: true,
     });
   }
