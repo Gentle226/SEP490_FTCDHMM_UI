@@ -28,10 +28,11 @@ class UserHealthGoalService extends HttpClient {
   }
 
   /**
-   * Remove a health goal from the user's current goals
+   * Remove the user's current active health goal
+   * Note: No longer requires an ID parameter - removes the current goal
    */
-  public async removeFromCurrent(id: string) {
-    return this.delete<void>(`api/UserHealthGoal/${id}`, {
+  public async removeFromCurrent() {
+    return this.delete<void>('api/UserHealthGoal', {
       isPrivateRoute: true,
     });
   }
