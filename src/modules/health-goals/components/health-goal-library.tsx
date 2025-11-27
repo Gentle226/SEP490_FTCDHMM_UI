@@ -45,6 +45,7 @@ export function HealthGoalLibrary() {
       const expirationDateTime = expirationDate.toISOString();
       await setGoal.mutateAsync({
         goalId: selectedGoalId,
+        type: 'SYSTEM', // System health goal from admin library
         expiredAtUtc: expirationDateTime,
       });
       toast.success('Đã chọn mục tiêu sức khỏe thành công');

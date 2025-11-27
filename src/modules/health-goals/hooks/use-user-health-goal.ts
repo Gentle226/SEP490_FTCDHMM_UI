@@ -19,8 +19,15 @@ export const useSetHealthGoal = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ goalId, expiredAtUtc }: { goalId: string; expiredAtUtc: string }) =>
-      userHealthGoalService.setGoal(goalId, expiredAtUtc),
+    mutationFn: ({
+      goalId,
+      type,
+      expiredAtUtc,
+    }: {
+      goalId: string;
+      type: 'SYSTEM' | 'CUSTOM';
+      expiredAtUtc?: string;
+    }) => userHealthGoalService.setGoal(goalId, type, expiredAtUtc),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['current-health-goal'] });
     },
@@ -34,7 +41,7 @@ export const useRemoveHealthGoal = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => userHealthGoalService.removeFromCurrent(id),
+    mutationFn: () => userHealthGoalService.removeFromCurrent(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['current-health-goal'] });
     },

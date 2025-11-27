@@ -26,19 +26,25 @@ export function GoalSelector() {
   const [selectedGoal, setSelectedGoal] = useState<
     HealthGoalResponse | CustomHealthGoalResponse | null
   >(null);
+  const [selectedGoalType, setSelectedGoalType] = useState<'SYSTEM' | 'CUSTOM' | null>(null);
   const [isSelectionDialogOpen, setIsSelectionDialogOpen] = useState(false);
 
   const handleCreateClick = () => {
     setIsCreateDialogOpen(true);
   };
 
-  const handleSelectGoal = (goal: HealthGoalResponse | CustomHealthGoalResponse) => {
+  const handleSelectGoal = (
+    goal: HealthGoalResponse | CustomHealthGoalResponse,
+    type: 'SYSTEM' | 'CUSTOM',
+  ) => {
     setSelectedGoal(goal);
+    setSelectedGoalType(type);
     setIsSelectionDialogOpen(true);
   };
 
   const handleCloseSelectionDialog = () => {
     setSelectedGoal(null);
+    setSelectedGoalType(null);
     setIsSelectionDialogOpen(false);
   };
 
@@ -82,9 +88,7 @@ export function GoalSelector() {
               <Plus className="h-6 w-6 text-[#99b94a]" />
             </div>
             <h3 className="font-semibold text-gray-900">Tạo Mục Tiêu Tùy Chỉnh</h3>
-            <p className="mt-1 text-xs text-gray-600">
-              Thiết kế mục tiêu riêng của bạn
-            </p>
+            <p className="mt-1 text-xs text-gray-600">Thiết kế mục tiêu riêng của bạn</p>
           </CardContent>
         </Card>
 
@@ -97,7 +101,7 @@ export function GoalSelector() {
                 ? 'border-2 border-[#99b94a] bg-[#99b94a]/5'
                 : 'border border-gray-200 hover:border-[#99b94a]/50'
             }`}
-            onClick={() => handleSelectGoal(goal)}
+            onClick={() => handleSelectGoal(goal, 'CUSTOM')}
           >
             <CardHeader className="pb-2 sm:pb-3">
               <div className="flex items-start justify-between gap-2">
@@ -141,7 +145,7 @@ export function GoalSelector() {
                 ? 'border-2 border-[#99b94a] bg-[#99b94a]/5'
                 : 'border border-gray-200 hover:border-[#99b94a]/50'
             }`}
-            onClick={() => handleSelectGoal(goal)}
+            onClick={() => handleSelectGoal(goal, 'SYSTEM')}
           >
             <CardHeader className="pb-2 sm:pb-3">
               <div className="flex items-start justify-between gap-2">
@@ -183,9 +187,10 @@ export function GoalSelector() {
         onClose={() => setIsCreateDialogOpen(false)}
       />
 
-      {selectedGoal && (
+      {selectedGoal && selectedGoalType && (
         <GoalSelectionDialog
           goal={selectedGoal}
+          type={selectedGoalType}
           open={isSelectionDialogOpen}
           onOpenChange={handleCloseSelectionDialog}
         />

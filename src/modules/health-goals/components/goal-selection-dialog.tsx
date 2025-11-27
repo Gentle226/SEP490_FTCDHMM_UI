@@ -19,11 +19,12 @@ import { CustomHealthGoalResponse, HealthGoalResponse } from '../types';
 
 interface GoalSelectionDialogProps {
   goal: HealthGoalResponse | CustomHealthGoalResponse;
+  type: 'SYSTEM' | 'CUSTOM'; // Type of health goal
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function GoalSelectionDialog({ goal, open, onOpenChange }: GoalSelectionDialogProps) {
+export function GoalSelectionDialog({ goal, type, open, onOpenChange }: GoalSelectionDialogProps) {
   const [expirationDate, setExpirationDate] = useState<Date | undefined>(undefined);
   const setGoal = useSetHealthGoal();
 
@@ -50,6 +51,7 @@ export function GoalSelectionDialog({ goal, open, onOpenChange }: GoalSelectionD
       const expirationDateTime = expirationDate.toISOString();
       await setGoal.mutateAsync({
         goalId,
+        type,
         expiredAtUtc: expirationDateTime,
       });
       toast.success('Đã đặt mục tiêu sức khỏe thành công');

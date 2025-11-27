@@ -9,9 +9,12 @@ class UserHealthGoalService extends HttpClient {
 
   /**
    * Set a health goal as the user's current active goal with expiration date
+   * @param goalId - The ID of the health goal (System or Custom)
+   * @param type - The type of health goal: 'SYSTEM' for admin-created or 'CUSTOM' for user-created
+   * @param expiredAtUtc - Optional expiration date in ISO 8601 format
    */
-  public async setGoal(goalId: string, expiredAtUtc: string) {
-    const data: SetUserHealthGoalRequest = { expiredAtUtc };
+  public async setGoal(goalId: string, type: 'SYSTEM' | 'CUSTOM', expiredAtUtc?: string) {
+    const data: SetUserHealthGoalRequest = { type, expiredAtUtc };
     return this.post<void>(`api/UserHealthGoal/${goalId}`, data, {
       isPrivateRoute: true,
     });

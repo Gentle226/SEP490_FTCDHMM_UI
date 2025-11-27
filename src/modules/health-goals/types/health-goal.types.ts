@@ -66,5 +66,6 @@ export interface UserHealthGoalResponse {
 }
 
 export interface SetUserHealthGoalRequest {
-  expiredAtUtc: string; // ISO 8601 date string
+  type: 'SYSTEM' | 'CUSTOM'; // Health goal type (admin-created or custom)
+  expiredAtUtc?: string; // ISO 8601 date string, optional
 }
