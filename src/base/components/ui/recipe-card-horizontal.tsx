@@ -1,4 +1,4 @@
-import { Calendar, Clock, Users } from 'lucide-react';
+import { Calendar, Clock, Sparkles, Users } from 'lucide-react';
 import Image from 'next/image';
 
 import { Skeleton } from '@/base/components/ui/skeleton';
@@ -34,6 +34,7 @@ interface RecipeCardHorizontalProps {
   className?: string;
   isLoading?: boolean;
   onClick?: () => void;
+  score?: number;
 }
 
 export function RecipeCardHorizontal({
@@ -50,6 +51,7 @@ export function RecipeCardHorizontal({
   className,
   isLoading = false,
   onClick,
+  score,
 }: RecipeCardHorizontalProps) {
   if (isLoading) {
     return (
@@ -88,6 +90,16 @@ export function RecipeCardHorizontal({
 
       {/* Recipe Info */}
       <div className="flex flex-1 flex-col justify-between gap-3">
+        {/* Score Badge for Recommendations */}
+        {score !== undefined && score > 0 && (
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="h-4 w-4 text-amber-500" />
+            <span className="text-sm font-medium text-amber-600">
+              Điểm phù hợp: {Math.round(score * 100)}%
+            </span>
+          </div>
+        )}
+
         {/* Recipe Title */}
         <h3 className="line-clamp-2 text-lg font-semibold text-gray-900 group-hover:text-[#99b94a]">
           {title || 'Recipe name'}

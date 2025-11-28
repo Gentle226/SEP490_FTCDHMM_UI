@@ -1,6 +1,6 @@
 import { HttpClient } from '@/base/lib';
 
-import { PagedResultRecipeRank } from '../types/recommendation.types';
+import { PagedResultRecommendedRecipe } from '../types/recommendation.types';
 
 interface PaginationParams {
   pageNumber?: number;
@@ -19,26 +19,25 @@ class RecommendationService extends HttpClient {
    * - User's health metrics
    * - Ingredient nutrition values
    * - User behavior (views, clicks, likes, saves)
+   *
+   * @returns Paged result of recommended recipes with full details and score
    */
   public async getRecommendations(params: PaginationParams = {}) {
     const { pageNumber = 1, pageSize = 10 } = params;
 
-    return this.get<PagedResultRecipeRank>('api/Recommendation', {
+    const result = await this.get<PagedResultRecommendedRecipe>('api/Recommendation', {
       isPrivateRoute: true,
       params: {
         PageNumber: pageNumber,
         PageSize: pageSize,
       },
     });
-  }
 
-  /**
-   * Get a single ranked recipe recommendation
-   * @deprecated Use getRecommendations instead
-   */
-  public async getRecommendation(recipeId: string) {
-    const result = await this.getRecommendations({ pageNumber: 1, pageSize: 100 });
-    return result.items.find((item) => item.recipeId === recipeId) || null;
+    // Calculate totalPages for pagination
+    return {
+      ...result,
+      totalPages: Math.ceil(result.totalCount / result.pageSize),
+    };
   }
 }
 
