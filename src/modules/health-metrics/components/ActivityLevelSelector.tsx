@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Lightbulb } from 'lucide-react';
+import { Check, Dumbbell, Lightbulb } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/base/components/ui/button';
@@ -83,7 +83,10 @@ export function ActivityLevelSelector({ currentLevel, onSave }: Props) {
                     <span className="font-bold text-[#99b94a]">×{level.factor}</span>
                   </Label>
                   <p className="mt-1 text-sm text-gray-600">{level.description}</p>
-                  <p className="mt-1 text-xs text-gray-500">📌 {level.exerciseFrequency}</p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    <Dumbbell className="inline-block h-4 w-4 text-[#99b94a]" />{' '}
+                    {level.exerciseFrequency}
+                  </p>
                 </div>
               </div>
             ))}
