@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus } from 'lucide-react';
+import { Check, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 import {
@@ -14,6 +14,7 @@ import { Skeleton } from '@/base/components/ui/skeleton';
 
 import { useCurrentHealthGoal, useHealthGoals, useMyCustomHealthGoals } from '../hooks';
 import { CustomHealthGoalResponse, HealthGoalResponse } from '../types';
+import { formatNutrientTargetValue, getVietnameseNutrientName } from '../utils';
 import { CustomHealthGoalFormDialog } from './custom-health-goal-form-dialog';
 import { GoalSelectionDialog } from './goal-selection-dialog';
 
@@ -37,6 +38,10 @@ export function GoalSelector() {
     goal: HealthGoalResponse | CustomHealthGoalResponse,
     type: 'SYSTEM' | 'CUSTOM',
   ) => {
+    // Don't allow selecting if this goal is already active
+    if (isGoalActive(goal.id)) {
+      return;
+    }
     setSelectedGoal(goal);
     setSelectedGoalType(type);
     setIsSelectionDialogOpen(true);
@@ -96,10 +101,10 @@ export function GoalSelector() {
         {customGoals?.map((goal) => (
           <Card
             key={goal.id}
-            className={`cursor-pointer transition-all hover:shadow-lg ${
+            className={`transition-all ${
               isGoalActive(goal.id)
-                ? 'border-2 border-[#99b94a] bg-[#99b94a]/5'
-                : 'border border-gray-200 hover:border-[#99b94a]/50'
+                ? 'cursor-default border-2 border-[#99b94a] bg-[#99b94a]/5'
+                : 'cursor-pointer border border-gray-200 hover:border-[#99b94a]/50 hover:shadow-lg'
             }`}
             onClick={() => handleSelectGoal(goal, 'CUSTOM')}
           >
@@ -109,8 +114,9 @@ export function GoalSelector() {
                   {goal.name}
                 </CardTitle>
                 {isGoalActive(goal.id) && (
-                  <div className="flex-shrink-0 rounded-full bg-[#99b94a] px-2 py-1">
-                    <span className="text-xs font-bold text-white">✓</span>
+                  <div className="flex flex-shrink-0 items-center gap-1 rounded-full bg-[#99b94a] px-2 py-1">
+                    <Check className="h-3 w-3 text-white" />
+                    <span className="text-xs font-bold text-white">Đã chọn</span>
                   </div>
                 )}
               </div>
@@ -120,15 +126,22 @@ export function GoalSelector() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <p className="text-xs font-medium text-gray-600">
-                  {goal.targets?.length ?? 0} chỉ số
-                </p>
+                <p className="text-xs font-medium text-[#99b94a]">Bấm vào để xem chi tiết</p>
                 {goal.targets?.[0] && (
-                  <div className="rounded bg-[#99b94a]/10 px-2 py-1.5">
-                    <p className="text-xs text-gray-700">
-                      <span className="font-medium">{goal.targets[0].name}:</span>{' '}
-                      {goal.targets[0].minValue}-{goal.targets[0].maxValue}g
-                    </p>
+                  <div className="space-y-1">
+                    <div className="rounded bg-[#99b94a]/10 px-2 py-1.5">
+                      <p className="text-xs text-gray-700">
+                        <span className="font-medium">
+                          {getVietnameseNutrientName(goal.targets[0].name)}:
+                        </span>{' '}
+                        {formatNutrientTargetValue(goal.targets[0])}
+                      </p>
+                    </div>
+                    {goal.targets.length > 1 && (
+                      <p className="text-xs text-gray-500">
+                        +{goal.targets.length - 1} chỉ số dinh dưỡng khác
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -140,10 +153,10 @@ export function GoalSelector() {
         {healthGoals?.map((goal) => (
           <Card
             key={goal.id}
-            className={`cursor-pointer transition-all hover:shadow-lg ${
+            className={`transition-all ${
               isGoalActive(goal.id)
-                ? 'border-2 border-[#99b94a] bg-[#99b94a]/5'
-                : 'border border-gray-200 hover:border-[#99b94a]/50'
+                ? 'cursor-default border-2 border-[#99b94a] bg-[#99b94a]/5'
+                : 'cursor-pointer border border-gray-200 hover:border-[#99b94a]/50 hover:shadow-lg'
             }`}
             onClick={() => handleSelectGoal(goal, 'SYSTEM')}
           >
@@ -153,8 +166,9 @@ export function GoalSelector() {
                   {goal.name}
                 </CardTitle>
                 {isGoalActive(goal.id) && (
-                  <div className="flex-shrink-0 rounded-full bg-[#99b94a] px-2 py-1">
-                    <span className="text-xs font-bold text-white">✓</span>
+                  <div className="flex flex-shrink-0 items-center gap-1 rounded-full bg-[#99b94a] px-2 py-1">
+                    <Check className="h-3 w-3 text-white" />
+                    <span className="text-xs font-bold text-white">Đã chọn</span>
                   </div>
                 )}
               </div>
@@ -164,15 +178,22 @@ export function GoalSelector() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <p className="text-xs font-medium text-gray-600">
-                  {goal.targets?.length ?? 0} chỉ số
-                </p>
+                <p className="text-xs font-medium text-[#99b94a]">Bấm vào để xem chi tiết</p>
                 {goal.targets?.[0] && (
-                  <div className="rounded bg-[#99b94a]/10 px-2 py-1.5">
-                    <p className="text-xs text-gray-700">
-                      <span className="font-medium">{goal.targets[0].name}:</span>{' '}
-                      {goal.targets[0].minValue}-{goal.targets[0].maxValue}g
-                    </p>
+                  <div className="space-y-1">
+                    <div className="rounded bg-[#99b94a]/10 px-2 py-1.5">
+                      <p className="text-xs text-gray-700">
+                        <span className="font-medium">
+                          {getVietnameseNutrientName(goal.targets[0].name)}:
+                        </span>{' '}
+                        {formatNutrientTargetValue(goal.targets[0])}
+                      </p>
+                    </div>
+                    {goal.targets.length > 1 && (
+                      <p className="text-xs text-gray-500">
+                        +{goal.targets.length - 1} chỉ số dinh dưỡng khác
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

@@ -48,6 +48,7 @@ export interface CreateCustomHealthGoalRequest {
   name: string;
   description?: string;
   targets: NutrientTargetDto[];
+  expiredAtUtc?: string;
 }
 
 export interface UpdateCustomHealthGoalRequest {
@@ -63,6 +64,7 @@ export interface UserHealthGoalResponse {
   name: string;
   description?: string;
   targets: NutrientTarget[];
+  expiredAtUtc?: string; // ISO 8601 date string
 }
 
 export interface SetUserHealthGoalRequest {

@@ -14,8 +14,10 @@ import {
 } from '@/base/components/ui/dialog';
 import { Label } from '@/base/components/ui/label';
 
-import { useSetHealthGoal } from '../hooks';
+import { useCurrentHealthGoal, useSetHealthGoal } from '../hooks';
 import { CustomHealthGoalResponse, HealthGoalResponse } from '../types';
+import { formatNutrientTargetValue, getVietnameseNutrientName } from '../utils';
+import { ConfirmDialog } from './confirm-dialog';
 
 interface GoalSelectionDialogProps {
   goal: HealthGoalResponse | CustomHealthGoalResponse;
@@ -26,7 +28,11 @@ interface GoalSelectionDialogProps {
 
 export function GoalSelectionDialog({ goal, type, open, onOpenChange }: GoalSelectionDialogProps) {
   const [expirationDate, setExpirationDate] = useState<Date | undefined>(undefined);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const setGoal = useSetHealthGoal();
+  const { data: currentGoal } = useCurrentHealthGoal();
+
+  const hasCurrentGoal = currentGoal && currentGoal.name;
 
   const handleOpen = (isOpen: boolean) => {
     if (isOpen) {
@@ -38,6 +44,20 @@ export function GoalSelectionDialog({ goal, type, open, onOpenChange }: GoalSele
       setExpirationDate(undefined);
     }
     onOpenChange(isOpen);
+  };
+
+  const handleSubmit = () => {
+    if (!expirationDate) {
+      toast.error('Vui lòng chọn ngày hết hạn');
+      return;
+    }
+
+    // Show confirm dialog if there's an existing goal
+    if (hasCurrentGoal) {
+      setIsConfirmDialogOpen(true);
+    } else {
+      handleConfirm();
+    }
   };
 
   const handleConfirm = async () => {
@@ -55,6 +75,7 @@ export function GoalSelectionDialog({ goal, type, open, onOpenChange }: GoalSele
         expiredAtUtc: expirationDateTime,
       });
       toast.success('Đã đặt mục tiêu sức khỏe thành công');
+      setIsConfirmDialogOpen(false);
       handleOpen(false);
     } catch (_error) {
       toast.error('Lỗi khi đặt mục tiêu sức khỏe');
@@ -69,82 +90,94 @@ export function GoalSelectionDialog({ goal, type, open, onOpenChange }: GoalSele
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpen}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Đặt Mục Tiêu</DialogTitle>
-          <DialogDescription>
-            Đặt <span className="font-semibold text-gray-900">{goal.name}</span> làm mục tiêu hiện
-            tại của bạn
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={handleOpen}>
+        <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Đặt Mục Tiêu</DialogTitle>
+            <DialogDescription>
+              Đặt <span className="font-semibold text-gray-900">{goal.name}</span> làm mục tiêu hiện
+              tại của bạn
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* Goal Details */}
-          <div className="rounded-lg bg-[#99b94a]/10 p-4">
-            <h4 className="mb-3 font-semibold text-gray-900">{goal.name}</h4>
-            <p className="mb-3 text-sm text-gray-700">{goal.description || 'Mục tiêu sức khỏe'}</p>
-            <div className="space-y-2">
-              <p className="text-xs font-medium tracking-wide text-gray-600 uppercase">
-                Chỉ Số Dinh Dưỡng
+          <div className="space-y-6 py-4">
+            {/* Goal Details */}
+            <div className="rounded-lg bg-[#99b94a]/10 p-4">
+              <h4 className="mb-3 font-semibold text-gray-900">{goal.name}</h4>
+              <p className="mb-3 text-sm text-gray-700">
+                {goal.description || 'Mục tiêu sức khỏe'}
               </p>
-              {goal.targets && goal.targets.length > 0 ? (
-                <div className="space-y-1">
-                  {goal.targets.slice(0, 3).map((target) => (
-                    <div
-                      key={target.nutrientId}
-                      className="flex items-center justify-between text-xs"
-                    >
-                      <span className="font-medium text-gray-700">{target.name}</span>
-                      <span className="text-[#99b94a]">
-                        {target.minValue}-{target.maxValue}g
-                      </span>
-                    </div>
-                  ))}
-                  {goal.targets.length > 3 && (
-                    <p className="pt-1 text-xs text-gray-600">
-                      + {goal.targets.length - 3} chỉ số khác
-                    </p>
-                  )}
-                </div>
-              ) : null}
+              <div className="space-y-2">
+                <p className="text-xs font-medium tracking-wide text-gray-600 uppercase">
+                  Chỉ Số Dinh Dưỡng
+                </p>
+                {goal.targets && goal.targets.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {goal.targets.map((target) => (
+                      <div
+                        key={target.nutrientId}
+                        className="flex flex-col rounded border border-[#99b94a]/20 bg-white p-2"
+                      >
+                        <span className="text-xs font-medium text-gray-700">
+                          {getVietnameseNutrientName(target.name)}
+                        </span>
+                        <span className="text-xs font-bold text-[#99b94a]">
+                          {formatNutrientTargetValue(target)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            {/* Expiration Date Picker */}
+            <div className="space-y-2">
+              <Label htmlFor="expiration-date" className="font-semibold">
+                Ngày Hết Hạn <span className="text-red-500">*</span>
+              </Label>
+              <DatePickerWithInput
+                date={expirationDate}
+                onDateChange={setExpirationDate}
+                placeholder="Chọn ngày"
+                disabledDays={disableExpiredDates}
+              />
+              <p className="text-xs text-gray-600">Chọn khi nào mục tiêu này sẽ hết hạn</p>
             </div>
           </div>
 
-          {/* Expiration Date Picker */}
-          <div className="space-y-2">
-            <Label htmlFor="expiration-date" className="font-semibold">
-              Ngày Hết Hạn <span className="text-red-500">*</span>
-            </Label>
-            <DatePickerWithInput
-              date={expirationDate}
-              onDateChange={setExpirationDate}
-              placeholder="Chọn ngày"
-              disabledDays={disableExpiredDates}
-            />
-            <p className="text-xs text-gray-600">Chọn khi nào mục tiêu này sẽ hết hạn</p>
+          {/* Actions */}
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => handleOpen(false)}
+              disabled={setGoal.isPending}
+            >
+              Hủy
+            </Button>
+            <Button
+              className="flex-1 bg-[#99b94a] hover:bg-[#7a8f3a]"
+              onClick={handleSubmit}
+              disabled={setGoal.isPending || !expirationDate}
+            >
+              {setGoal.isPending ? 'Đang Lưu...' : 'Xác Nhận'}
+            </Button>
           </div>
-        </div>
+        </DialogContent>
+      </Dialog>
 
-        {/* Actions */}
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => handleOpen(false)}
-            disabled={setGoal.isPending}
-          >
-            Hủy
-          </Button>
-          <Button
-            className="flex-1 bg-[#99b94a] hover:bg-[#7a8f3a]"
-            onClick={handleConfirm}
-            disabled={setGoal.isPending || !expirationDate}
-          >
-            {setGoal.isPending ? 'Đang Lưu...' : 'Xác Nhận'}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      <ConfirmDialog
+        open={isConfirmDialogOpen}
+        onOpenChange={setIsConfirmDialogOpen}
+        title="Thay Thế Mục Tiêu Hiện Tại"
+        description={`Bạn đang có mục tiêu "${currentGoal?.name}" đang hoạt động. Nếu tiếp tục, mục tiêu mới "${goal.name}" sẽ thay thế mục tiêu hiện tại. Bạn có chắc chắn muốn tiếp tục?`}
+        confirmText="Thay Thế"
+        cancelText="Hủy"
+        onConfirm={handleConfirm}
+        isLoading={setGoal.isPending}
+      />
+    </>
   );
 }

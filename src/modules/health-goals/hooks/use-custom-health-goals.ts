@@ -32,8 +32,12 @@ export const useCreateCustomHealthGoal = () => {
 
   return useMutation({
     mutationFn: (data: CreateCustomHealthGoalRequest) => customHealthGoalService.create(data),
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['custom-health-goals'] });
+      // Also invalidate current goal since creating custom goal sets it as current
+      await queryClient.invalidateQueries({ queryKey: ['current-health-goal'] });
+      // Refetch current goal to update the UI immediately
+      queryClient.refetchQueries({ queryKey: ['current-health-goal'] });
     },
   });
 };

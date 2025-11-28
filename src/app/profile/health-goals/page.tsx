@@ -11,7 +11,7 @@ export default function MyHealthGoalsPage() {
         <div className="space-y-8">
           {/* Header Section */}
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Mục Tiêu Sức Khỏe</h1>
+            <h1 className="text-3xl font-bold text-[#99b94a]">Mục Tiêu Sức Khỏe</h1>
             <p className="mt-2 text-gray-600">
               Quản lý mục tiêu sức khỏe của bạn và theo dõi các chỉ số dinh dưỡng
             </p>

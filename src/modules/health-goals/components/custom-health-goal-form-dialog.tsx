@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '@/base/components/ui/button';
+import { DatePickerWithInput } from '@/base/components/ui/date-picker-with-input';
 import {
   Dialog,
   DialogContent,
@@ -23,8 +24,13 @@ import { Select, SelectOption } from '@/base/components/ui/select';
 import { Textarea } from '@/base/components/ui/textarea';
 import { NutrientInfo, nutrientService } from '@/modules/nutrients/services/nutrient.service';
 
-import { useCreateCustomHealthGoal, useUpdateCustomHealthGoal } from '../hooks';
+import {
+  useCreateCustomHealthGoal,
+  useCurrentHealthGoal,
+  useUpdateCustomHealthGoal,
+} from '../hooks';
 import { CustomHealthGoalResponse } from '../types';
+import { ConfirmDialog } from './confirm-dialog';
 
 const customHealthGoalSchema = z.object({
   name: z
@@ -67,8 +73,12 @@ export function CustomHealthGoalFormDialog({
   const [nutrients, setNutrients] = useState<NutrientInfo[]>([]);
   const [requiredNutrients, setRequiredNutrients] = useState<NutrientInfo[]>([]);
   const [isNameFocused, setIsNameFocused] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [expirationDate, setExpirationDate] = useState<Date | undefined>(undefined);
+  const [pendingFormData, setPendingFormData] = useState<CustomHealthGoalFormData | null>(null);
   const createGoal = useCreateCustomHealthGoal();
   const updateGoal = useUpdateCustomHealthGoal();
+  const { data: currentGoal } = useCurrentHealthGoal();
 
   const {
     register,
@@ -146,25 +156,64 @@ export function CustomHealthGoalFormDialog({
     }
   }, [goal, reset]);
 
-  const onSubmit = async (data: CustomHealthGoalFormData) => {
+  const processFormData = (data: CustomHealthGoalFormData) => {
+    return {
+      ...data,
+      targets: data.targets.map((target) => {
+        const isMacronutrient = requiredNutrients.some((n) => n.id === target.nutrientId);
+
+        // For micronutrients (non-required nutrients), auto set targetType to ABSOLUTE
+        if (!isMacronutrient) {
+          return {
+            nutrientId: target.nutrientId,
+            targetType: 'ABSOLUTE',
+            minValue: target.minValue,
+            maxValue: target.maxValue,
+            medianValue: target.medianValue || 0,
+            // Clear energy percentage values for ABSOLUTE type
+            minEnergyPct: 0,
+            maxEnergyPct: 0,
+            medianEnergyPct: 0,
+            weight: target.weight || 1,
+          };
+        }
+
+        // For macronutrients, process based on targetType
+        if (target.targetType === 'ENERGYPERCENT') {
+          return {
+            nutrientId: target.nutrientId,
+            targetType: 'ENERGYPERCENT',
+            // Clear absolute values for ENERGYPERCENT type
+            minValue: 0,
+            maxValue: 0,
+            medianValue: 0,
+            minEnergyPct: target.minEnergyPct || 0,
+            maxEnergyPct: target.maxEnergyPct || 0,
+            medianEnergyPct: target.medianEnergyPct || 0,
+            weight: target.weight || 1,
+          };
+        }
+
+        // Default to ABSOLUTE for macronutrients
+        return {
+          nutrientId: target.nutrientId,
+          targetType: target.targetType || 'ABSOLUTE',
+          minValue: target.minValue,
+          maxValue: target.maxValue,
+          medianValue: target.medianValue || 0,
+          // Clear energy percentage values for ABSOLUTE type
+          minEnergyPct: 0,
+          maxEnergyPct: 0,
+          medianEnergyPct: 0,
+          weight: target.weight || 1,
+        };
+      }),
+    };
+  };
+
+  const executeSubmit = async (data: CustomHealthGoalFormData) => {
     try {
-      // Auto set TargetType to ABSOLUTE for micronutrients
-      const processedData = {
-        ...data,
-        targets: data.targets.map((target) => {
-          const isMacronutrient = requiredNutrients.some((n) => n.id === target.nutrientId);
-
-          // For micronutrients (non-required nutrients), auto set targetType to ABSOLUTE
-          if (!isMacronutrient) {
-            return {
-              ...target,
-              targetType: 'ABSOLUTE',
-            };
-          }
-
-          return target;
-        }),
-      };
+      const processedData = processFormData(data);
 
       if (goal) {
         await updateGoal.mutateAsync({
@@ -173,15 +222,41 @@ export function CustomHealthGoalFormDialog({
         });
         toast.success('Mục tiêu sức khỏe tùy chỉnh đã được cập nhật thành công');
       } else {
-        await createGoal.mutateAsync(processedData);
-        toast.success('Mục tiêu sức khỏe tùy chỉnh đã được tạo thành công');
+        const expiredAtUtcString = expirationDate ? expirationDate.toISOString() : undefined;
+        await createGoal.mutateAsync({
+          ...processedData,
+          expiredAtUtc: expiredAtUtcString,
+        });
+        toast.success('Mục tiêu sức khỏe tùy chỉnh đã được tạo và đặt làm mục tiêu hiện tại');
       }
       onClose();
       reset();
+      setExpirationDate(undefined);
     } catch {
       toast.error(`Lỗi khi ${goal ? 'cập nhật' : 'tạo'} mục tiêu sức khỏe tùy chỉnh`);
     }
   };
+
+  const onSubmit = async (data: CustomHealthGoalFormData) => {
+    // If creating new goal (not editing) and user has current goal, show confirm dialog
+    const hasCurrentGoal = currentGoal && currentGoal.name;
+    if (!goal && hasCurrentGoal) {
+      setPendingFormData(data);
+      setIsConfirmDialogOpen(true);
+      return;
+    }
+
+    await executeSubmit(data);
+  };
+
+  const handleConfirmReplace = async () => {
+    if (pendingFormData) {
+      await executeSubmit(pendingFormData);
+      setPendingFormData(null);
+      setIsConfirmDialogOpen(false);
+    }
+  };
+
   const handleAddTarget = () => {
     append({
       nutrientId: '',
@@ -253,6 +328,26 @@ export function CustomHealthGoalFormDialog({
               <p className="text-sm text-red-600">{errors.description.message}</p>
             )}
           </div>
+
+          {!goal && (
+            <div className="space-y-2">
+              <Label htmlFor="expiredAtUtc" className="font-semibold">
+                Ngày Hết Hạn <span className="text-red-500">*</span>
+              </Label>
+              <DatePickerWithInput
+                date={expirationDate}
+                onDateChange={setExpirationDate}
+                placeholder="Chọn ngày"
+                disabledDays={(date: Date) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  date.setHours(0, 0, 0, 0);
+                  return date < today;
+                }}
+              />
+              <p className="text-xs text-gray-500">Để trống nếu muốn mục tiêu không có thời hạn</p>
+            </div>
+          )}
 
           <div className="space-y-4">
             <Label>Chỉ Số Dinh Dưỡng (Trên 100g)</Label>
@@ -466,6 +561,21 @@ export function CustomHealthGoalFormDialog({
           </DialogFooter>
         </form>
       </DialogContent>
+
+      {/* Confirm dialog for replacing existing goal */}
+      <ConfirmDialog
+        open={isConfirmDialogOpen}
+        onOpenChange={(open) => {
+          setIsConfirmDialogOpen(open);
+          if (!open) setPendingFormData(null);
+        }}
+        title="Thay Thế Mục Tiêu Hiện Tại"
+        description={`Bạn đang có mục tiêu "${currentGoal?.name}" đang hoạt động. Tạo mục tiêu tùy chỉnh mới sẽ thay thế mục tiêu hiện tại. Bạn có muốn tiếp tục?`}
+        confirmText="Thay Thế"
+        cancelText="Hủy"
+        onConfirm={handleConfirmReplace}
+        isLoading={createGoal.isPending}
+      />
     </Dialog>
   );
 }

@@ -144,7 +144,7 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
 
   const onSubmit = async (data: HealthGoalFormData) => {
     try {
-      // Auto set TargetType to ABSOLUTE for micronutrients
+      // Process targets based on targetType
       const processedData = {
         ...data,
         targets: data.targets.map((target) => {
@@ -153,12 +153,48 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
           // For micronutrients (non-required nutrients), auto set targetType to ABSOLUTE
           if (!isMacronutrient) {
             return {
-              ...target,
+              nutrientId: target.nutrientId,
               targetType: 'ABSOLUTE',
+              minValue: target.minValue,
+              maxValue: target.maxValue,
+              medianValue: target.medianValue || 0,
+              // Clear energy percentage values for ABSOLUTE type
+              minEnergyPct: 0,
+              maxEnergyPct: 0,
+              medianEnergyPct: 0,
+              weight: target.weight || 1,
             };
           }
 
-          return target;
+          // For macronutrients, process based on targetType
+          if (target.targetType === 'ENERGYPERCENT') {
+            return {
+              nutrientId: target.nutrientId,
+              targetType: 'ENERGYPERCENT',
+              // Clear absolute values for ENERGYPERCENT type
+              minValue: 0,
+              maxValue: 0,
+              medianValue: 0,
+              minEnergyPct: target.minEnergyPct || 0,
+              maxEnergyPct: target.maxEnergyPct || 0,
+              medianEnergyPct: target.medianEnergyPct || 0,
+              weight: target.weight || 1,
+            };
+          }
+
+          // Default to ABSOLUTE for macronutrients
+          return {
+            nutrientId: target.nutrientId,
+            targetType: target.targetType || 'ABSOLUTE',
+            minValue: target.minValue,
+            maxValue: target.maxValue,
+            medianValue: target.medianValue || 0,
+            // Clear energy percentage values for ABSOLUTE type
+            minEnergyPct: 0,
+            maxEnergyPct: 0,
+            medianEnergyPct: 0,
+            weight: target.weight || 1,
+          };
         }),
       };
 

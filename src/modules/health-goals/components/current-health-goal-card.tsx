@@ -22,9 +22,7 @@ export function CurrentHealthGoalCard() {
 
   const handleRemove = async () => {
     try {
-      const goalId = currentGoal?.healthGoalId || currentGoal?.customHealthGoalId;
-      if (!goalId) return;
-      await removeGoal.mutateAsync(goalId);
+      await removeGoal.mutateAsync();
       toast.success('Mục tiêu sức khỏe đã được xóa');
     } catch (_error) {
       toast.error('Không thể xóa mục tiêu sức khỏe');

@@ -22,6 +22,7 @@ import { Skeleton } from '@/base/components/ui/skeleton';
 
 import { useDeleteHealthGoal, useHealthGoals } from '../hooks';
 import { HealthGoalResponse } from '../types';
+import { formatNutrientTargetValue, getVietnameseNutrientName } from '../utils';
 import { HealthGoalFormDialog } from './health-goal-form-dialog';
 
 export function HealthGoalList() {
@@ -117,10 +118,10 @@ export function HealthGoalList() {
                 <div className="space-y-1">
                   {goal.targets.map((target) => (
                     <div key={target.nutrientId} className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{target.name}</span>
-                      <span className="font-medium">
-                        {target.minValue} - {target.maxValue} g
+                      <span className="text-muted-foreground">
+                        {getVietnameseNutrientName(target.name)}
                       </span>
+                      <span className="font-medium">{formatNutrientTargetValue(target)}</span>
                     </div>
                   ))}
                 </div>
