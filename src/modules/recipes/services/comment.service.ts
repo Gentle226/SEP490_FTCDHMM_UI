@@ -98,7 +98,7 @@ class CommentService {
     commentId: string,
     request: UpdateCommentRequest,
     token: string,
-  ): Promise<Comment> {
+  ): Promise<Comment | null> {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
@@ -124,6 +124,13 @@ class CommentService {
 
       if (!response.ok) {
         throw new Error(`Failed to update comment: ${response.statusText}`);
+      }
+
+      // Handle empty response body (204 No Content or 200 with no body)
+      const contentLength = response.headers.get('content-length');
+      if (contentLength === '0' || !response.body) {
+        // Return null to indicate need to refresh
+        return null;
       }
 
       const data = await response.json();

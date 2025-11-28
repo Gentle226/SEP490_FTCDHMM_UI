@@ -1026,9 +1026,9 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
       </div>
 
       {/* Labels and Tagged Users - Side by Side */}
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr]">
         {/* Left Column: Tagged Users (1/3 width) */}
-        <div className="col-span-1 space-y-2">
+        <div className="space-y-2">
           <Label className="flex items-center gap-2">
             <Users className="h-4 w-4 text-[#99b94a]" />
             Tag người dùng
@@ -1134,7 +1134,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         </div>
 
         {/* Right Column: Labels (2/3 width) */}
-        <div className="col-span-2 space-y-2">
+        <div className="space-y-2">
           <Label className="flex items-center gap-2">
             <Tag className="h-4 w-4 text-[#99b94a]" />
             Nhãn

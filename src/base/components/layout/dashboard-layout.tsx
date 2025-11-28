@@ -1,7 +1,7 @@
 'use client';
 
 import {
-  BookHeart,
+  ArrowLeft,
   BookMarked,
   ClipboardList,
   CookingPot,
@@ -26,7 +26,6 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -138,6 +137,16 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
     return [
       ...commonItems,
       {
+        title: 'Mục Tiêu Sức Khỏe',
+        url: '/profile/health-goals',
+        icon: Goal,
+      },
+      {
+        title: 'Hạn Chế Thành Phần',
+        url: '/diet-restrictions',
+        icon: WheatOff,
+      },
+      {
         title: 'Công Thức Của Tôi',
         url: '/myrecipe',
         icon: CookingPot,
@@ -148,24 +157,9 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
         icon: BookMarked,
       },
       {
-        title: 'Công Thức Ưa Thích',
-        url: '/favorite-recipes',
-        icon: BookHeart,
-      },
-      {
         title: 'Công Thức Đã Xem',
         url: '/history',
         icon: History,
-      },
-      {
-        title: 'Hạn Chế Thành Phần',
-        url: '/diet-restrictions',
-        icon: WheatOff,
-      },
-      {
-        title: 'Mục Tiêu Sức Khỏe',
-        url: '/profile/health-goals',
-        icon: Goal,
       },
     ];
   };
@@ -203,7 +197,6 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
 
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>Điều Hướng</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {navigationItems.map((item) => {
@@ -234,6 +227,21 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
         {showHeader && (
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger className="-ml-1" />
+            {/* Back button for recipe details page */}
+            {pathname.startsWith('/recipe/') &&
+              !pathname.endsWith('/edit') &&
+              !pathname.endsWith('/new') && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.back()}
+                  className="gap-2"
+                  title="Quay lại"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Quay Lại
+                </Button>
+              )}
             <div className="flex flex-1 items-center justify-end gap-4">
               {/* Ingredient Detection Button */}
               <Button
