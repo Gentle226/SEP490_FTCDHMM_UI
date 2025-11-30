@@ -79,15 +79,17 @@ interface SelectedUser {
 
 interface RecipeFormProps {
   recipeId?: string;
+  parentId?: string;
   initialData?: RecipeDetail;
   mode?: 'create' | 'edit';
 }
 
-export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFormProps) {
+export function RecipeForm({ recipeId, parentId, initialData, mode = 'create' }: RecipeFormProps) {
   const router = useRouter();
   const { user: currentUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [copyParentId, setCopyParentId] = useState<string | undefined>(parentId);
 
   // Form fields
   const [name, setName] = useState('');
@@ -100,6 +102,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
   const [mainImage, setMainImage] = useState<File | null>(null);
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
+  const [isCopiedRecipe, setIsCopiedRecipe] = useState(false);
   const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -156,6 +159,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
         cookTime > 0 ||
         ration !== 1 ||
         mainImage ||
+        mainImagePreview ||
         selectedLabels.length > 0 ||
         selectedIngredients.length > 0 ||
         selectedUsers.length > 0 ||
@@ -174,6 +178,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     cookTime,
     ration,
     mainImage,
+    mainImagePreview,
     selectedLabels,
     selectedIngredients,
     selectedUsers,
@@ -420,6 +425,101 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     }
   }, [mode, initialData]);
 
+  // Handle copy recipe data from sessionStorage
+  useEffect(() => {
+    if (mode === 'create') {
+      const copyDataStr = sessionStorage.getItem('recipesCopyData');
+      if (copyDataStr) {
+        try {
+          const copyData = JSON.parse(copyDataStr) as {
+            parentId: string;
+            sourceName: string;
+            sourceDescription: string;
+            sourceImageUrl?: string;
+            sourceIngredients: Array<{ ingredientId: string; name: string; quantityGram: number }>;
+            sourceCookingSteps: Array<{
+              stepOrder: number;
+              instruction: string;
+              cookingStepImages?: Array<{ id: string; imageUrl: string; imageOrder: number }>;
+            }>;
+            sourceDifficulty: string;
+            sourceCookTime: number;
+            sourceRation: number;
+            sourceLabels: Array<{ id: string; name: string; colorCode: string }>;
+          };
+
+          // Set the parentId for the copy operation
+          setCopyParentId(copyData.parentId);
+
+          // Pre-fill the form with copied recipe data
+          setName(`${copyData.sourceName} (Bản sao)`);
+          setDescription(copyData.sourceDescription || '');
+          setDifficulty((copyData.sourceDifficulty || 'Easy') as 'Easy' | 'Medium' | 'Hard');
+          setCookTime(copyData.sourceCookTime || 0);
+          setRation(copyData.sourceRation || 1);
+
+          // Set labels from source recipe
+          if (copyData.sourceLabels && copyData.sourceLabels.length > 0) {
+            setSelectedLabels(
+              copyData.sourceLabels.map((label) => ({
+                id: label.id,
+                name: label.name,
+                colorCode: label.colorCode,
+              })),
+            );
+          }
+
+          // Set ingredients from source recipe
+          if (copyData.sourceIngredients && copyData.sourceIngredients.length > 0) {
+            setSelectedIngredients(
+              copyData.sourceIngredients.map((ingredient) => ({
+                id: ingredient.ingredientId || '',
+                name: ingredient.name,
+                quantityGram: ingredient.quantityGram,
+              })),
+            );
+          }
+
+          // Set cooking steps from source recipe
+          if (copyData.sourceCookingSteps && copyData.sourceCookingSteps.length > 0) {
+            setCookingSteps(
+              copyData.sourceCookingSteps
+                .sort((a, b) => a.stepOrder - b.stepOrder)
+                .map((step) => ({
+                  id: crypto.randomUUID(),
+                  stepOrder: step.stepOrder,
+                  instruction: step.instruction,
+                  images:
+                    step.cookingStepImages?.map((img) => ({
+                      id: img.id,
+                      image: img.imageUrl || '',
+                      imageOrder: img.imageOrder,
+                      imageUrl: img.imageUrl,
+                    })) || [],
+                  image: undefined,
+                })),
+            );
+          }
+
+          // Set main image from source recipe if available
+          if (copyData.sourceImageUrl) {
+            setMainImagePreview(copyData.sourceImageUrl);
+            setIsCopiedRecipe(true);
+          }
+
+          // Clear the sessionStorage after loading
+          sessionStorage.removeItem('recipesCopyData');
+
+          // Set unsaved changes flag since we've pre-filled the form
+          setHasUnsavedChanges(true);
+        } catch (error) {
+          console.error('Failed to parse copy recipe data:', error);
+          sessionStorage.removeItem('recipesCopyData');
+        }
+      }
+    }
+  }, [mode]);
+
   const validateImageFile = (file: File): string | null => {
     // Check file type
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
@@ -492,6 +592,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
 
   const handleCropComplete = (croppedFile: File) => {
     setMainImage(croppedFile);
+    setIsCopiedRecipe(false);
     const reader = new FileReader();
     reader.onloadend = () => {
       setMainImagePreview(reader.result as string);
@@ -694,7 +795,8 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
     }
 
     // In edit mode, image is optional
-    if (!mainImage && mode === 'create') {
+    // In create mode with copy, image is optional if we have a preview from the source recipe
+    if (!mainImage && !isCopiedRecipe && mode === 'create') {
       toast.error('Vui lòng tải lên hình ảnh món ăn');
       return;
     }
@@ -764,6 +866,10 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
       if (mode === 'edit' && recipeId) {
         await recipeService.updateRecipe(recipeId, recipeData);
         toast.success('Công thức đã được cập nhật thành công');
+      } else if (copyParentId) {
+        // Copy recipe endpoint
+        await recipeService.copyRecipe(copyParentId, recipeData);
+        toast.success('Công thức đã được sao chép thành công');
       } else {
         await recipeService.createRecipe(recipeData);
         toast.success('Công thức đã được tạo thành công');
@@ -859,6 +965,7 @@ export function RecipeForm({ recipeId, initialData, mode = 'create' }: RecipeFor
                 onClick={() => {
                   setMainImage(null);
                   setMainImagePreview(null);
+                  setIsCopiedRecipe(false);
                 }}
                 className="absolute top-2 right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
                 aria-label="Remove image"

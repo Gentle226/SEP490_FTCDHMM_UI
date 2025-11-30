@@ -7,6 +7,7 @@ import {
   Calendar,
   ChefHat,
   Clock,
+  Copy,
   Edit,
   Share2,
   Trash2,
@@ -119,6 +120,29 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleCopy = () => {
+    if (!recipe) return;
+
+    // Store the current recipe data in session storage to pass to the copy form
+    const copyData = {
+      parentId: recipeId,
+      sourceName: recipe.name,
+      sourceDescription: recipe.description,
+      sourceImageUrl: recipe.imageUrl,
+      sourceIngredients: recipe.ingredients,
+      sourceCookingSteps: recipe.cookingSteps,
+      sourceDifficulty: recipe.difficulty?.value,
+      sourceCookTime: recipe.cookTime,
+      sourceRation: recipe.ration,
+      sourceLabels: recipe.labels,
+    };
+
+    sessionStorage.setItem('recipesCopyData', JSON.stringify(copyData));
+
+    // Navigate to the new recipe form (which will handle the copy)
+    router.push('/recipe/new?copy=true');
   };
 
   const handleShare = async () => {
@@ -463,7 +487,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
               </>
             ) : (
               <>
-                {/* Non-author buttons: Save */}
+                {/* Non-author buttons: Copy and Save */}
                 <Button
                   variant="outline"
                   size="sm"
@@ -477,6 +501,10 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                     <Bookmark className="h-4 w-4" />
                   )}
                   {isSaved ? 'Đã lưu' : 'Lưu'}
+                </Button>
+                <Button variant="outline" size="sm" className="gap-2" onClick={handleCopy}>
+                  <Copy className="h-4 w-4" />
+                  Tạo bản sao
                 </Button>
               </>
             )}
