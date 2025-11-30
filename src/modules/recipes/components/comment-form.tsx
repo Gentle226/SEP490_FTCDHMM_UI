@@ -1,6 +1,7 @@
 'use client';
 
 import { SendHorizontal } from 'lucide-react';
+import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -330,17 +331,43 @@ export const CommentForm: React.FC<CommentFormProps> = ({
                       onClick={() => handleMentionSelect(user)}
                       onMouseEnter={() => setHighlightedIndex(index)}
                       onMouseLeave={() => setHighlightedIndex(-1)}
-                      className={`w-full rounded-lg px-4 py-2 text-left transition-colors ${
-                        index === highlightedIndex
-                          ? 'bg-[#99b94a] text-white'
-                          : 'text-gray-900 hover:bg-gray-100'
+                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors ${
+                        index === highlightedIndex ? 'bg-[#99b94a]' : 'hover:bg-gray-50'
                       }`}
                     >
-                      <div className="font-medium">@{user.userName}</div>
-                      <div
-                        className={`text-sm ${index === highlightedIndex ? 'text-gray-100' : 'text-gray-500'}`}
-                      >
-                        {user.firstName} {user.lastName}
+                      {/* Avatar */}
+                      <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-full bg-gray-300">
+                        {user.avatarUrl ? (
+                          <Image
+                            src={user.avatarUrl}
+                            alt={user.userName}
+                            fill
+                            sizes="32px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-white">
+                            {(user.firstName?.charAt(0) || 'U').toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* User Info */}
+                      <div className="flex-1">
+                        <div
+                          className={`font-medium ${
+                            index === highlightedIndex ? 'text-white' : 'text-gray-900'
+                          }`}
+                        >
+                          @{user.userName}
+                        </div>
+                        <div
+                          className={`text-sm ${
+                            index === highlightedIndex ? 'text-gray-100' : 'text-gray-500'
+                          }`}
+                        >
+                          {user.firstName} {user.lastName}
+                        </div>
                       </div>
                     </button>
                   ))}
