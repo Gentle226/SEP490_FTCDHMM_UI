@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/base/components/ui/button';
+import { ReportTargetType, ReportTrigger } from '@/modules/report';
 
 import { Comment } from '../types/comment.types';
 import { getFullDateTimeVN, getRelativeTime } from '../utils/time.utils';
@@ -345,6 +346,19 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               >
                 {deleting ? 'Đang xóa...' : 'Xóa'}
               </button>
+            )}
+
+            {/* Report Button - Only show for non-owner comments */}
+            {currentUserId && currentUserId !== comment.userId && (
+              <ReportTrigger
+                targetId={comment.id}
+                targetType={ReportTargetType.COMMENT}
+                targetName={`Bình luận của ${comment.firstName} ${comment.lastName}`}
+                variant="ghost"
+                size="sm"
+                className="h-auto p-0 font-semibold text-gray-600 hover:bg-transparent hover:text-red-500"
+                showLabel
+              />
             )}
           </div>
         </div>

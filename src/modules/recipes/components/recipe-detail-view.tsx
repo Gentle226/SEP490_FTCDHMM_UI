@@ -26,6 +26,7 @@ import { getToken } from '@/base/lib/get-token.lib';
 import { useAuth } from '@/modules/auth/contexts/auth.context';
 import { checkIngredientRestriction, useGetUserDietRestrictions } from '@/modules/diet-restriction';
 import { recipeService } from '@/modules/recipes/services/recipe.service';
+import { ReportTargetType, ReportTrigger } from '@/modules/report';
 
 import { useCommentManager, useSignalRConnection } from '../hooks';
 import { useRecipeDetail, useSaveRecipe, useUnsaveRecipe } from '../hooks/use-recipe-actions';
@@ -527,6 +528,17 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
               <Share2 className="h-4 w-4" />
               Chia sẻ
             </Button>
+            {/* Report Button - Only show if not author */}
+            {!isAuthor && user && (
+              <ReportTrigger
+                targetId={recipeId}
+                targetType={ReportTargetType.RECIPE}
+                targetName={recipe.name}
+                variant="outline"
+                size="sm"
+                showLabel
+              />
+            )}
           </div>
         </div>
       </div>

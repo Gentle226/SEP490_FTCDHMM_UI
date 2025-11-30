@@ -25,6 +25,7 @@ import {
   useUserProfile,
 } from '@/modules/profile';
 import { UserRecipesList } from '@/modules/recipes/components';
+import { ReportTargetType, ReportTrigger } from '@/modules/report';
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -377,6 +378,15 @@ export default function UserProfilePage() {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  {/* Report User Button */}
+                  <ReportTrigger
+                    targetId={userId}
+                    targetType={ReportTargetType.USER}
+                    targetName={profileUser.fullName}
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-500 hover:text-red-500"
+                  />
                 </>
               )}
             </div>

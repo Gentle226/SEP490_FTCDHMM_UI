@@ -96,6 +96,8 @@ export function EditPermissionsDialog({
       View: 'Xem',
       Update: 'Cập nhật',
       Delete: 'Xóa',
+      Approve: 'Duyệt',
+      Reject: 'Từ chối',
     };
     return actionMap[actionName] || actionName;
   };
@@ -112,6 +114,7 @@ export function EditPermissionsDialog({
       HealthGoal: 'Quản lý Mục tiêu sức khỏe',
       Rating: 'Quản lý Đánh giá',
       Comment: 'Quản lý Bình luận',
+      Report: 'Quản lý Báo cáo',
     };
     return domainMap[domainName] || domainName;
   };

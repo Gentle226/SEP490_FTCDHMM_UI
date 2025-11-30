@@ -9,6 +9,7 @@ import {
   History,
   Home,
   KeyRound,
+  MessageSquareWarning,
   Salad,
   ScrollText,
   Tags,
@@ -98,6 +99,11 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
           title: 'Quản Lý Mục Tiêu Sức Khỏe',
           url: '/admin/health-goals',
           icon: Goal,
+        },
+        {
+          title: 'Quản Lý Báo Cáo',
+          url: '/admin/reports',
+          icon: MessageSquareWarning,
         },
       ];
     }
