@@ -365,6 +365,21 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
             </div>
           )}
 
+          {/* Parent Recipe Link */}
+          {recipe.parent && (
+            <div className="rounded-lg border border-[#99b94a] bg-gradient-to-br from-green-50 to-white p-3">
+              <p className="text-xs text-[#99b94a]">
+                Đây là bản sao từ công thức{' '}
+                <button
+                  onClick={() => router.push(`/recipe/${recipe.parent?.id}`)}
+                  className="font-semibold text-[#99b94a] underline hover:text-[#7a8a2f]"
+                >
+                  {recipe.parent?.name}
+                </button>
+              </p>
+            </div>
+          )}
+
           {/* Meta Info: Difficulty, Time, Ration, Created Date */}
           <div className="flex flex-wrap gap-2 text-xs text-gray-600 sm:gap-4 sm:text-sm">
             <div className="flex items-center gap-1">

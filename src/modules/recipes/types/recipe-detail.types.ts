@@ -27,6 +27,11 @@ export interface CookingStepDetail {
   imageUrl?: string;
 }
 
+export interface RecipeParent {
+  id: string;
+  name: string;
+}
+
 export interface RecipeDetail {
   id: string;
   name: string;
@@ -71,4 +76,5 @@ export interface RecipeDetail {
   updatedAtUtc?: string; // New field for update timestamp
   createdAt?: string; // Keep for backward compatibility
   updatedAt?: string; // Keep for backward compatibility
+  parent?: RecipeParent; // Parent recipe if this is a copy
 }
