@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/base/components/ui/button';
-import { DatePickerWithInput } from '@/base/components/ui/date-picker-with-input';
+import { DatePickerWithDaysDisplay } from '@/base/components/ui/date-picker-with-days-display';
 import {
   Dialog,
   DialogContent,
@@ -137,10 +137,11 @@ export function GoalSelectionDialog({ goal, type, open, onOpenChange }: GoalSele
               <Label htmlFor="expiration-date" className="font-semibold">
                 Ngày Hết Hạn <span className="text-red-500">*</span>
               </Label>
-              <DatePickerWithInput
+              <DatePickerWithDaysDisplay
                 date={expirationDate}
                 onDateChange={setExpirationDate}
                 placeholder="Chọn ngày"
+                themeColor="#99b94a"
                 disabledDays={disableExpiredDates}
               />
               <p className="text-xs text-gray-600">Chọn khi nào mục tiêu này sẽ hết hạn</p>

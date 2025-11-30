@@ -11,6 +11,7 @@ interface RangeSliderProps {
   onChange?: (value: [min: number, max: number]) => void;
   numberFormat?: (value: number) => string;
   unit?: string;
+  themeColor?: string;
 }
 
 export function RangeSlider({
@@ -21,6 +22,7 @@ export function RangeSlider({
   numberFormat = (value) => value.toString(),
   onChange,
   unit = '',
+  themeColor = '#8B5CF6',
 }: RangeSliderProps) {
   const minInputRef = useRef<HTMLInputElement>(null);
   const maxInputRef = useRef<HTMLInputElement>(null);
@@ -86,11 +88,17 @@ export function RangeSlider({
           className={cn('relative flex w-full touch-none items-center select-none')}
         >
           <SliderPrimitive.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-gray-200">
-            <SliderPrimitive.Range className="absolute h-full bg-gray-800" />
+            <SliderPrimitive.Range
+              className="absolute h-full"
+              style={{ backgroundColor: themeColor }}
+            />
           </SliderPrimitive.Track>
 
           {/* Min Thumb with Input */}
-          <SliderPrimitive.Thumb className="group relative block size-4 shrink-0 rounded-full border-2 border-gray-400 bg-white shadow-sm focus-visible:outline-none">
+          <SliderPrimitive.Thumb
+            className="group relative block size-4 shrink-0 rounded-full border-2 bg-white shadow-sm focus-visible:outline-none"
+            style={{ borderColor: themeColor }}
+          >
             {/* Wrapper không bắt sự kiện, để thumb vẫn kéo bình thường */}
             <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-3 flex -translate-x-1/2 flex-col items-center">
               {/* Input Box được bật sự kiện để có thể click/nhập */}
@@ -121,7 +129,10 @@ export function RangeSlider({
           </SliderPrimitive.Thumb>
 
           {/* Max Thumb with Input */}
-          <SliderPrimitive.Thumb className="group relative block size-4 shrink-0 rounded-full border-2 border-gray-400 bg-white shadow-sm focus-visible:outline-none">
+          <SliderPrimitive.Thumb
+            className="group relative block size-4 shrink-0 rounded-full border-2 bg-white shadow-sm focus-visible:outline-none"
+            style={{ borderColor: themeColor }}
+          >
             {/* Wrapper không bắt sự kiện, để thumb vẫn kéo bình thường */}
             <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-3 flex -translate-x-1/2 flex-col items-center">
               {/* Input Box được bật sự kiện để có thể click/nhập */}

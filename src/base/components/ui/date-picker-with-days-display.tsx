@@ -1,5 +1,6 @@
 'use client';
 
+import { differenceInDays } from 'date-fns';
 import { format } from 'date-fns';
 import { CalendarDaysIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -19,7 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/base/components/ui/po
 import { useIsMobile } from '@/base/hooks';
 import { cn } from '@/base/lib';
 
-interface DatePickerWithInputProps {
+interface DatePickerWithDaysDisplayProps {
   /** The controlled selected date. Must be used in conjunction with `onDateChange`. */
   date?: Date;
   /** Callback fired when the date is changed. */
@@ -34,13 +35,16 @@ interface DatePickerWithInputProps {
   inputClassName?: string;
   /** Function to determine which days should be disabled. */
   disabledDays?: (date: Date) => boolean;
+  /** Theme color for selected days - defaults to primary */
+  themeColor?: string;
 }
 
 /**
- * A date picker component that allows users to both type a date and select from a calendar.
+ * A date picker component for health goals that displays the day difference.
+ * Shows how many days until the selected date from today.
  * Users can input dates manually or click the calendar icon to pick from a visual calendar.
  */
-export function DatePickerWithInput(props: DatePickerWithInputProps) {
+export function DatePickerWithDaysDisplay(props: DatePickerWithDaysDisplayProps) {
   const t = useTranslations('base.components.DatePicker');
 
   const isMobile = useIsMobile();
@@ -72,6 +76,8 @@ export function DatePickerWithInput(props: DatePickerWithInputProps) {
   // Disable future dates by default, or use custom disabledDays function
   const disabledDaysFn = props.disabledDays || ((day: Date) => day > new Date());
 
+  const dayCount = date ? differenceInDays(date, new Date()) : undefined;
+
   const CalendarContent = (
     <Calendar
       mode="single"
@@ -80,6 +86,11 @@ export function DatePickerWithInput(props: DatePickerWithInputProps) {
       autoFocus
       captionLayout="dropdown"
       disabled={disabledDaysFn}
+      classNames={{
+        day_selected: props.themeColor
+          ? `bg-[${props.themeColor}] text-white font-bold`
+          : undefined,
+      }}
     />
   );
 
@@ -96,6 +107,11 @@ export function DatePickerWithInput(props: DatePickerWithInputProps) {
             props.inputClassName,
           )}
         />
+        {dayCount !== undefined && dayCount !== null && (
+          <div className="border-input bg-background flex items-center justify-center rounded-md border px-3 py-2">
+            <span className="text-foreground text-sm font-medium">{dayCount} ngày</span>
+          </div>
+        )}
         <Drawer open={isOpen} onOpenChange={setIsOpen}>
           <DrawerTrigger asChild onClick={props.readOnly ? (e) => e.preventDefault() : undefined}>
             <Button
@@ -130,6 +146,11 @@ export function DatePickerWithInput(props: DatePickerWithInputProps) {
         disabled={props.disabled || props.readOnly}
         className={cn('flex-1 [&::-webkit-calendar-picker-indicator]:hidden', props.inputClassName)}
       />
+      {dayCount !== undefined && dayCount !== null && (
+        <div className="border-input bg-background flex items-center justify-center rounded-md border px-3 py-2">
+          <span className="text-foreground text-sm font-medium">{dayCount} ngày</span>
+        </div>
+      )}
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild onClick={props.readOnly ? (e) => e.preventDefault() : undefined}>
           <Button
