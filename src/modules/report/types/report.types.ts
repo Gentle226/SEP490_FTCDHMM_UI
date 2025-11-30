@@ -49,6 +49,7 @@ export interface ReportResponse {
   reporterName: string;
   status: ReportStatus;
   createdAtUtc: string;
+  rejectReason?: string;
 }
 
 export interface ReportSummaryResponse {

@@ -8,14 +8,15 @@ import { Skeleton } from '@/base/components/ui/skeleton';
 import { useApproveReport, useReportSummary } from '../hooks';
 import { ReportFilterRequest } from '../types';
 import { RejectReasonModal } from './RejectReasonModal';
-import { ReportDetailModal } from './ReportDetailModal';
 import { type ReportFilters, ReportFiltersComponent } from './ReportFilters';
+import { ReportListModal } from './ReportListModal';
 import { ReportSummaryTable } from './ReportSummaryTable';
 
 export function ReportManagementList() {
   const [filters, setFilters] = useState<ReportFilters>({});
-  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
+  const [selectedTargetName, setSelectedTargetName] = useState<string | undefined>(undefined);
+  const [isListOpen, setIsListOpen] = useState(false);
   const [isRejectOpen, setIsRejectOpen] = useState(false);
   const [pendingRejectId, setPendingRejectId] = useState<string | null>(null);
 
@@ -37,14 +38,16 @@ export function ReportManagementList() {
     setFilters({});
   }, []);
 
-  const handleViewReport = useCallback((id: string) => {
-    setSelectedReportId(id);
-    setIsDetailOpen(true);
+  const handleViewReport = useCallback((targetId: string, targetName: string) => {
+    setSelectedTargetId(targetId);
+    setSelectedTargetName(targetName);
+    setIsListOpen(true);
   }, []);
 
-  const handleCloseDetail = useCallback(() => {
-    setIsDetailOpen(false);
-    setSelectedReportId(null);
+  const handleCloseList = useCallback(() => {
+    setIsListOpen(false);
+    setSelectedTargetId(null);
+    setSelectedTargetName(undefined);
   }, []);
 
   const handleApprove = useCallback(
@@ -52,19 +55,20 @@ export function ReportManagementList() {
       try {
         await approveReport.mutateAsync(id);
         toast.success('Đã duyệt báo cáo thành công');
-        handleCloseDetail();
+        handleCloseList();
         refetch();
-      } catch (_error) {
-        toast.error('Không thể duyệt báo cáo');
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Không thể duyệt báo cáo';
+        toast.error(errorMessage);
       }
     },
-    [approveReport, handleCloseDetail, refetch],
+    [approveReport, handleCloseList, refetch],
   );
 
   const handleRejectClick = useCallback((id: string) => {
     setPendingRejectId(id);
     setIsRejectOpen(true);
-    setIsDetailOpen(false);
+    setIsListOpen(false);
   }, []);
 
   const handleRejectSuccess = useCallback(() => {
@@ -73,6 +77,10 @@ export function ReportManagementList() {
     setPendingRejectId(null);
     refetch();
   }, [refetch]);
+
+  const handleRejectError = useCallback((error: Error) => {
+    toast.error(error.message || 'Không thể từ chối báo cáo');
+  }, []);
 
   if (isLoading) {
     return (
@@ -100,15 +108,14 @@ export function ReportManagementList() {
 
       <ReportSummaryTable
         data={reportSummary?.items ?? []}
-        onView={(targetId) => handleViewReport(targetId)}
+        onView={(targetId, _targetType, targetName) => handleViewReport(targetId, targetName)}
       />
 
-      <ReportDetailModal
-        open={isDetailOpen}
-        onOpenChange={setIsDetailOpen}
-        reportId={selectedReportId}
-        onApprove={handleApprove}
-        onReject={handleRejectClick}
+      <ReportListModal
+        open={isListOpen}
+        onOpenChange={setIsListOpen}
+        targetId={selectedTargetId}
+        targetName={selectedTargetName}
       />
 
       <RejectReasonModal
@@ -116,6 +123,7 @@ export function ReportManagementList() {
         onOpenChange={setIsRejectOpen}
         reportId={pendingRejectId}
         onSuccess={handleRejectSuccess}
+        onError={handleRejectError}
       />
     </div>
   );

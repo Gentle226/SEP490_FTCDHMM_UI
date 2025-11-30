@@ -3,6 +3,7 @@
 import { Loader2, X } from 'lucide-react';
 import * as React from 'react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/base/components/ui/button';
 import {
@@ -58,6 +59,7 @@ export function RejectReasonModal({
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Không thể từ chối báo cáo';
       setError(errorMessage);
+      toast.error(errorMessage);
       onError?.(err instanceof Error ? err : new Error(errorMessage));
     } finally {
       setIsSubmitting(false);

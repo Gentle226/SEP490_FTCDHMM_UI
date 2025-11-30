@@ -27,6 +27,17 @@ export const useReport = (id: string) => {
 };
 
 /**
+ * Hook to fetch reports by target ID
+ */
+export const useReportsByTargetId = (targetId: string) => {
+  return useQuery({
+    queryKey: ['reports', 'target', targetId],
+    queryFn: () => reportService.getReportsByTargetId(targetId),
+    enabled: !!targetId,
+  });
+};
+
+/**
  * Hook to create a new report
  */
 export const useCreateReport = () => {

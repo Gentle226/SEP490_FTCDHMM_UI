@@ -32,6 +32,15 @@ export async function getReportById(id: string): Promise<ReportResponse> {
 }
 
 /**
+ * Get reports by target ID (Admin only)
+ */
+export async function getReportsByTargetId(targetId: string): Promise<ReportResponse[]> {
+  return httpClient.get<ReportResponse[]>(`${REPORT_BASE_URL}/target/${targetId}`, {
+    isPrivateRoute: true,
+  });
+}
+
+/**
  * Get report summary with pagination and filters (Admin only)
  */
 export async function getReportSummary(
@@ -90,6 +99,7 @@ export async function rejectReport(id: string, reason: string): Promise<ReportMe
 export const reportService = {
   createReport,
   getReportById,
+  getReportsByTargetId,
   getReportSummary,
   approveReport,
   rejectReport,

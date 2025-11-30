@@ -26,7 +26,7 @@ import { type ReportSummaryResponse, ReportTargetType } from '../types';
 export interface ReportSummaryTableProps {
   data: ReportSummaryResponse[];
   isLoading?: boolean;
-  onView?: (targetId: string, targetType: ReportTargetType) => void;
+  onView?: (targetId: string, targetType: ReportTargetType, targetName: string) => void;
   onApprove?: (targetId: string, targetType: ReportTargetType) => void;
   onReject?: (targetId: string, targetType: ReportTargetType) => void;
 }
@@ -111,12 +111,21 @@ export function ReportSummaryTable({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => onView?.(item.targetId, item.targetType as ReportTargetType)}
+                        onClick={() =>
+                          onView?.(
+                            item.targetId,
+                            item.targetType as ReportTargetType,
+                            item.targetName,
+                          )
+                        }
                       >
                         <Eye className="size-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent className="bg-[#99b94a] text-white">
+                    <TooltipContent
+                      className="bg-[#99b94a] text-white"
+                      style={{ '--tooltip-fill': '#99b94a' } as React.CSSProperties}
+                    >
                       Xem chi tiết
                     </TooltipContent>
                   </Tooltip>
@@ -136,7 +145,10 @@ export function ReportSummaryTable({
                         <Check className="size-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent className="bg-[#99b94a] text-white">
+                    <TooltipContent
+                      className="bg-[#99b94a] text-white"
+                      style={{ '--tooltip-fill': '#99b94a' } as React.CSSProperties}
+                    >
                       Duyệt báo cáo
                     </TooltipContent>
                   </Tooltip>
@@ -156,7 +168,10 @@ export function ReportSummaryTable({
                         <X className="size-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent className="bg-[#99b94a] text-white">
+                    <TooltipContent
+                      className="bg-[#99b94a] text-white"
+                      style={{ '--tooltip-fill': '#99b94a' } as React.CSSProperties}
+                    >
                       Từ chối báo cáo
                     </TooltipContent>
                   </Tooltip>

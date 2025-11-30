@@ -3,6 +3,7 @@
 import { Flag, Loader2 } from 'lucide-react';
 import * as React from 'react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/base/components/ui/button';
 import {
@@ -66,10 +67,12 @@ export function ReportModal({
 
       setDescription('');
       onOpenChange(false);
+      toast.success('Báo cáo đã được gửi thành công');
       onSuccess?.();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Không thể gửi báo cáo';
       setError(errorMessage);
+      toast.error(errorMessage);
       onError?.(err instanceof Error ? err : new Error(errorMessage));
     } finally {
       setIsSubmitting(false);
