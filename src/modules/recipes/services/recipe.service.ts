@@ -227,7 +227,7 @@ class RecipeService extends HttpClient {
   public async getFavoriteRecipes(params: PaginationParams & { keyword?: string } = {}) {
     const { pageNumber = 1, pageSize = 10, keyword } = params;
 
-    return this.get<MyRecipeResponse>('api/Recipe/favoriteList', {
+    return this.get<MyRecipeResponse>('api/recipe/favorites', {
       isPrivateRoute: true,
       params: {
         'PaginationParams.PageNumber': pageNumber,
@@ -243,7 +243,7 @@ class RecipeService extends HttpClient {
   public async getSavedRecipes(params: PaginationParams & { keyword?: string } = {}) {
     const { pageNumber = 1, pageSize = 10, keyword } = params;
 
-    return this.get<MyRecipeResponse>('api/Recipe/saveList', {
+    return this.get<MyRecipeResponse>('api/recipe/saved', {
       isPrivateRoute: true,
       params: {
         'PaginationParams.PageNumber': pageNumber,

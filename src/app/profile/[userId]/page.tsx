@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from '@/base/components/ui/dropdown-menu';
 import { Skeleton } from '@/base/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/base/components/ui/tabs';
 import { useAuth } from '@/modules/auth';
 import {
   FollowersDialog,
@@ -384,39 +383,22 @@ export default function UserProfilePage() {
           </div>
         </div>
 
-        {/* Tabs for Recipes and Cooksnaps */}
-        <Tabs defaultValue="recipes" className="w-full">
-          <TabsList className="w-full">
-            <TabsTrigger value="recipes" className="flex-1 text-xs sm:text-sm">
-              Công thức ({profileUser.recipesCount})
-            </TabsTrigger>
-            <TabsTrigger value="cooksnaps" className="flex-1 text-xs sm:text-sm">
-              Mục gì đó khác
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="recipes" className="mt-4 sm:mt-6">
-            {(() => {
-              const userName = profileData?.userName || '';
-              return (
-                <UserRecipesList
-                  userName={userName}
-                  isOwnProfile={isOwnProfile}
-                  onRecipeCountChange={setRecipeCount}
-                />
-              );
-            })()}
-          </TabsContent>
-
-          <TabsContent value="cooksnaps" className="mt-4 sm:mt-6">
-            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-              {/* Cooksnap Cards - Using Skeleton as placeholder */}
-              {Array.from({ length: 6 }).map((_, index) => (
-                <RecipeCardSkeleton key={index} />
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
+        {/* Recipes Section */}
+        <div className="bg-card rounded-lg border p-4 sm:p-6">
+          <h2 className="mb-4 text-lg font-semibold sm:text-xl">
+            Công thức ({profileUser.recipesCount})
+          </h2>
+          {(() => {
+            const userName = profileData?.userName || '';
+            return (
+              <UserRecipesList
+                userName={userName}
+                isOwnProfile={isOwnProfile}
+                onRecipeCountChange={setRecipeCount}
+              />
+            );
+          })()}
+        </div>
       </div>
 
       {/* Followers/Following Dialogs */}
@@ -427,33 +409,5 @@ export default function UserProfilePage() {
         </>
       )}
     </DashboardLayout>
-  );
-}
-
-// Recipe Card Skeleton Component
-function RecipeCardSkeleton() {
-  return (
-    <div className="bg-card group overflow-hidden rounded-lg border transition-shadow hover:shadow-md">
-      <div className="aspect-video">
-        <Skeleton className="size-full rounded-none" />
-      </div>
-      <div className="space-y-2 p-3 sm:space-y-3 sm:p-4">
-        <div className="space-y-1.5 sm:space-y-2">
-          <Skeleton className="h-4 w-3/4 sm:h-5" />
-          <Skeleton className="h-3 w-full sm:h-4" />
-          <Skeleton className="h-3 w-2/3 sm:h-4" />
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <Skeleton className="size-5 rounded-full sm:size-6" />
-            <Skeleton className="h-3 w-16 sm:h-4 sm:w-20" />
-          </div>
-          <div className="flex gap-1.5 sm:gap-2">
-            <Skeleton className="h-3 w-10 sm:h-4 sm:w-12" />
-            <Skeleton className="h-3 w-10 sm:h-4 sm:w-12" />
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
