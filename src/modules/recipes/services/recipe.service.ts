@@ -189,7 +189,15 @@ class RecipeService extends HttpClient {
         if (step.images && step.images.length > 0) {
           step.images.forEach((img, imgIndex) => {
             if (img.image instanceof File) {
+              // New image upload
               formData.append(`CookingSteps[${index}].Images[${imgIndex}].Image`, img.image);
+              formData.append(
+                `CookingSteps[${index}].Images[${imgIndex}].ImageOrder`,
+                String(img.imageOrder),
+              );
+            } else if (img.id) {
+              // Existing image - send the image ID to keep it
+              formData.append(`CookingSteps[${index}].Images[${imgIndex}].ExistingImageId`, img.id);
               formData.append(
                 `CookingSteps[${index}].Images[${imgIndex}].ImageOrder`,
                 String(img.imageOrder),

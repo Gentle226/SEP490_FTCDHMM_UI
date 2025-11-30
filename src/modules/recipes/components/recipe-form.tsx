@@ -407,7 +407,7 @@ export function RecipeForm({ recipeId, parentId, initialData, mode = 'create' }:
               instruction: step.instruction,
               images:
                 step.cookingStepImages?.map((img) => ({
-                  id: img.id,
+                  id: img.imageId, // Use imageId (the actual Image table ID) for existing images
                   image: img.imageUrl || '',
                   imageOrder: img.imageOrder,
                   imageUrl: img.imageUrl,

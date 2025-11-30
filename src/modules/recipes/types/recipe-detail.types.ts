@@ -13,6 +13,7 @@ export interface RecipeLabel {
 
 export interface CookingStepImageDetail {
   id: string;
+  imageId: string;
   imageUrl?: string;
   imageOrder: number;
 }
