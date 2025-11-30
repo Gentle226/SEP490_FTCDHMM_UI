@@ -49,6 +49,13 @@ export interface ChangeRoleRequest {
   roleId: string;
 }
 
+export interface MentionableUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl?: string;
+}
+
 class UserManagementService extends HttpClient {
   constructor() {
     super();
@@ -129,6 +136,16 @@ class UserManagementService extends HttpClient {
 
   public async changeRole(userId: string, request: ChangeRoleRequest) {
     return this.post<void>(`api/User/${userId}/roles`, request, {
+      isPrivateRoute: true,
+    });
+  }
+
+  // Get taggable users (for mentions in recipes/comments)
+  public async getTaggableUsers(keyword?: string) {
+    const queryParams = new URLSearchParams();
+    if (keyword) queryParams.append('keyword', keyword);
+
+    return this.get<MentionableUser[]>(`api/User/taggable-users?${queryParams}`, {
       isPrivateRoute: true,
     });
   }

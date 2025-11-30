@@ -36,6 +36,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   const [mentionResults, setMentionResults] = useState<UserSearchResult[]>([]);
   const [showMentionDropdown, setShowMentionDropdown] = useState(false);
   const [cursorPosition, setCursorPosition] = useState({ top: 0, left: 0 });
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mentionDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -62,13 +63,15 @@ export const CommentForm: React.FC<CommentFormProps> = ({
       if (mentionMatch) {
         const searchQuery = mentionMatch[1];
 
-        if (searchQuery.length >= 2 || searchQuery.length === 0) {
+        // Show dropdown when @ is typed, show all users when empty query, filter by 2+ chars
+        if (searchQuery.length === 0 || searchQuery.length >= 2) {
           const results = await searchUsers(searchQuery, user?.id);
           const unmentionedResults = results.filter(
             (r) => !selectedMentions.some((m) => m.id === r.id),
           );
           setMentionResults(unmentionedResults);
           setShowMentionDropdown(true);
+          setHighlightedIndex(-1); // Reset highlight when results change
 
           // Calculate dropdown position
           calculateCursorPosition(textarea);
@@ -114,6 +117,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
     setSelectedMentions([...selectedMentions, user]);
     setShowMentionDropdown(false);
     setMentionResults([]);
+    setHighlightedIndex(-1);
 
     // Move cursor after mention
     setTimeout(() => {
@@ -124,6 +128,35 @@ export const CommentForm: React.FC<CommentFormProps> = ({
         textareaRef.current.focus();
       }
     }, 0);
+  };
+
+  // Handle keyboard navigation in mention dropdown
+  const handleKeyDownInDropdown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!showMentionDropdown || mentionResults.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev < mentionResults.length - 1 ? prev + 1 : prev));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (highlightedIndex >= 0 && highlightedIndex < mentionResults.length) {
+          handleMentionSelect(mentionResults[highlightedIndex]);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setShowMentionDropdown(false);
+        setHighlightedIndex(-1);
+        break;
+      default:
+        break;
+    }
   };
 
   // Close dropdown when clicking outside
@@ -142,6 +175,22 @@ export const CommentForm: React.FC<CommentFormProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Scroll highlighted item into view when using arrow keys
+  useEffect(() => {
+    if (highlightedIndex >= 0 && mentionDropdownRef.current) {
+      const buttons = mentionDropdownRef.current.querySelectorAll('button');
+      const highlightedButton = buttons[highlightedIndex] as HTMLElement;
+      if (highlightedButton) {
+        const scrollContainer = mentionDropdownRef.current.querySelector(
+          '.overflow-y-auto',
+        ) as HTMLElement;
+        if (scrollContainer) {
+          highlightedButton.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    }
+  }, [highlightedIndex]);
 
   if (!user) {
     return (
@@ -240,7 +289,11 @@ export const CommentForm: React.FC<CommentFormProps> = ({
             disabled={submitting}
             maxLength={2048}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
+              // Handle dropdown navigation first
+              handleKeyDownInDropdown(e);
+
+              // Then handle form submission if dropdown is not open or Enter wasn't consumed
+              if (e.key === 'Enter' && !e.shiftKey && !e.defaultPrevented && !showMentionDropdown) {
                 e.preventDefault();
                 if (content.trim()) {
                   handleSubmit(
@@ -258,31 +311,45 @@ export const CommentForm: React.FC<CommentFormProps> = ({
           />
 
           {/* Mention Dropdown - wider */}
-          {showMentionDropdown && mentionResults.length > 0 && (
+          {showMentionDropdown && (
             <div
               ref={mentionDropdownRef}
-              className="absolute z-50 mt-1 w-80 rounded-lg border border-gray-200 bg-white shadow-lg"
+              className="absolute z-50 w-80 rounded-lg border border-gray-200 bg-white shadow-lg"
               // Dynamic positioning requires inline styles for cursor-relative placement
               style={{
                 top: `calc(100% + ${cursorPosition.top + 8}px)`,
                 left: `${Math.max(0, cursorPosition.left)}px`,
               }}
             >
-              <div className="max-h-48 overflow-y-auto">
-                {mentionResults.map((user) => (
-                  <button
-                    key={user.id}
-                    type="button"
-                    onClick={() => handleMentionSelect(user)}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:outline-none"
-                  >
-                    <div className="font-medium text-gray-900">@{user.userName}</div>
-                    <div className="text-sm text-gray-500">
-                      {user.firstName} {user.lastName}
-                    </div>
-                  </button>
-                ))}
-              </div>
+              {mentionResults.length > 0 ? (
+                <div className="max-h-48 overflow-y-auto">
+                  {mentionResults.map((user, index) => (
+                    <button
+                      key={user.id}
+                      type="button"
+                      onClick={() => handleMentionSelect(user)}
+                      onMouseEnter={() => setHighlightedIndex(index)}
+                      onMouseLeave={() => setHighlightedIndex(-1)}
+                      className={`w-full rounded-lg px-4 py-2 text-left transition-colors ${
+                        index === highlightedIndex
+                          ? 'bg-[#99b94a] text-white'
+                          : 'text-gray-900 hover:bg-gray-100'
+                      }`}
+                    >
+                      <div className="font-medium">@{user.userName}</div>
+                      <div
+                        className={`text-sm ${index === highlightedIndex ? 'text-gray-100' : 'text-gray-500'}`}
+                      >
+                        {user.firstName} {user.lastName}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="px-4 py-3 text-center text-sm text-gray-500">
+                  Không tìm thấy người dùng
+                </div>
+              )}
             </div>
           )}
 

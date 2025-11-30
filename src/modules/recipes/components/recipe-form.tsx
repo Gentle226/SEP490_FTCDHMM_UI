@@ -238,13 +238,19 @@ export function RecipeForm({ recipeId, parentId, initialData, mode = 'create' }:
 
       setIsLoadingUsers(true);
       try {
-        const response = await userManagementService.getCustomers({
-          search: debouncedUserSearch,
-          pageNumber: 1,
-          pageSize: 50,
-        });
-        // Filter out current user from results
-        const filteredUsers = response.items.filter((user) => user.id !== currentUser?.id);
+        const users = await userManagementService.getTaggableUsers(debouncedUserSearch);
+        // Filter out current user and map to User type
+        const filteredUsers = users
+          .filter((user) => user.id !== currentUser?.id)
+          .map((user) => ({
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: '',
+            createdAtUTC: '',
+            status: 'Active',
+            avatarUrl: undefined,
+          }));
         setUserSearchResults(filteredUsers);
       } catch (error) {
         console.error('Failed to search users:', error);
