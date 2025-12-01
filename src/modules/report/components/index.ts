@@ -1,3 +1,4 @@
+export * from './ExpandableReportTable';
 export * from './RejectReasonModal';
 export * from './ReportButton';
 export * from './ReportDetailModal';

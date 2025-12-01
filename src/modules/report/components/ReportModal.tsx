@@ -111,15 +111,7 @@ export function ReportModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="report-type">Loại báo cáo</Label>
-            <Select
-              options={TARGET_TYPE_OPTIONS}
-              value={targetType}
-              disabled
-              placeholder="Chọn loại"
-            />
-          </div>
+          {/* Report Type is hidden and sent automatically from backend */}
 
           <div className="space-y-2">
             <Label htmlFor="report-description">

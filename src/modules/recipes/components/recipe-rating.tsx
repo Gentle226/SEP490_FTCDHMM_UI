@@ -92,7 +92,7 @@ export function RecipeRating({
               {/* Stars */}
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => {
-                  const rating = Number(averageRating?.averageRating) || 0;
+                  const rating = Number(averageRating?.avgRating) || 0;
                   const isFilled = star <= Math.floor(rating);
                   const isHalf = star === Math.ceil(rating) && rating % 1 !== 0;
 
@@ -117,9 +117,7 @@ export function RecipeRating({
               {/* Rating Score (large) */}
               <div className="flex items-baseline gap-1">
                 <div className="text-3xl font-bold text-gray-800">
-                  {isLoadingAverage
-                    ? '...'
-                    : (Number(averageRating?.averageRating) || 0).toFixed(1)}
+                  {isLoadingAverage ? '...' : (Number(averageRating?.avgRating) || 0).toFixed(1)}
                 </div>
                 <div className="text-sm text-gray-600">/5</div>
               </div>
@@ -129,9 +127,7 @@ export function RecipeRating({
             <div className="flex items-center gap-8">
               {/* Number of Ratings */}
               <div className="text-sm text-gray-600">
-                {isLoadingAverage
-                  ? 'Đang tải...'
-                  : `${averageRating?.numberOfRatings || 0} đánh giá`}
+                {isLoadingAverage ? 'Đang tải...' : `${averageRating?.ratingCount || 0} đánh giá`}
               </div>
 
               {/* View Reviews Button */}

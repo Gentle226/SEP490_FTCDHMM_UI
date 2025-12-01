@@ -7,7 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/base/components/ui/button';
-import { ReportTargetType, ReportTrigger } from '@/modules/report';
+import { ReportTargetType } from '@/modules/report';
+import { ReportModal } from '@/modules/report/components/ReportModal';
 
 import { Comment } from '../types/comment.types';
 import { getFullDateTimeVN, getRelativeTime } from '../utils/time.utils';
@@ -56,6 +57,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   const canDelete = currentUserId === comment.userId || isRecipeAuthor || isAdmin;
   const canEdit = currentUserId === comment.userId;
   const isLastChild = index === siblingsCount - 1;
@@ -350,15 +352,21 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
             {/* Report Button - Only show for non-owner comments */}
             {currentUserId && currentUserId !== comment.userId && (
-              <ReportTrigger
-                targetId={comment.id}
-                targetType={ReportTargetType.COMMENT}
-                targetName={`Bình luận của ${comment.firstName} ${comment.lastName}`}
-                variant="ghost"
-                size="sm"
-                className="h-auto p-0 font-semibold text-gray-600 hover:bg-transparent hover:text-red-500"
-                showLabel
-              />
+              <>
+                <button
+                  onClick={() => setReportModalOpen(true)}
+                  className="font-semibold text-red-600 transition-colors hover:text-red-700 hover:underline disabled:opacity-50"
+                >
+                  Báo cáo
+                </button>
+                <ReportModal
+                  open={reportModalOpen}
+                  onOpenChange={setReportModalOpen}
+                  targetId={comment.id}
+                  targetType={ReportTargetType.COMMENT}
+                  targetName={`Bình luận của ${comment.firstName} ${comment.lastName}`}
+                />
+              </>
             )}
           </div>
         </div>

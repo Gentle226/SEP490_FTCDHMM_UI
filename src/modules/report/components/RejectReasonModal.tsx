@@ -18,11 +18,17 @@ import { Label } from '@/base/components/ui/label';
 import { Textarea } from '@/base/components/ui/textarea';
 
 import { reportService } from '../services';
+import { ReportStatus, ReportTargetType } from '../types';
 
 export interface RejectReasonModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   reportId: string | null;
+  isBulk?: boolean;
+  bulkTarget?: {
+    targetId: string;
+    targetType: ReportTargetType;
+  } | null;
   onSuccess?: () => void;
   onError?: (error: Error) => void;
 }
@@ -31,6 +37,8 @@ export function RejectReasonModal({
   open,
   onOpenChange,
   reportId,
+  isBulk = false,
+  bulkTarget = null,
   onSuccess,
   onError,
 }: RejectReasonModalProps) {
@@ -41,7 +49,8 @@ export function RejectReasonModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!reportId) return;
+    if (!isBulk && !reportId) return;
+    if (isBulk && !bulkTarget) return;
 
     if (!reason.trim()) {
       setError('Vui lòng nhập lý do từ chối');
@@ -52,7 +61,27 @@ export function RejectReasonModal({
     setIsSubmitting(true);
 
     try {
-      await reportService.rejectReport(reportId, reason.trim());
+      if (isBulk && bulkTarget) {
+        // Fetch all reports for this target
+        const reports = await reportService.getReportsByTargetId(bulkTarget.targetId);
+        const pendingReports = reports.filter((r) => r.status === ReportStatus.PENDING);
+
+        if (pendingReports.length === 0) {
+          toast.warning('Không có báo cáo nào đang chờ xử lý');
+          onOpenChange(false);
+          return;
+        }
+
+        // Reject all pending reports with the same reason
+        await Promise.all(
+          pendingReports.map((report) => reportService.rejectReport(report.id, reason.trim())),
+        );
+
+        toast.success(`Đã từ chối ${pendingReports.length} báo cáo thành công`);
+      } else if (reportId) {
+        await reportService.rejectReport(reportId, reason.trim());
+      }
+
       setReason('');
       onOpenChange(false);
       onSuccess?.();
@@ -80,10 +109,12 @@ export function RejectReasonModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <X className="text-danger size-5" />
-            Từ chối báo cáo
+            {isBulk ? 'Từ chối tất cả báo cáo' : 'Từ chối báo cáo'}
           </DialogTitle>
           <DialogDescription>
-            Vui lòng cung cấp lý do từ chối báo cáo này. Thông tin sẽ được lưu lại để tham khảo.
+            {isBulk
+              ? 'Vui lòng cung cấp lý do từ chối tất cả các báo cáo đang chờ xử lý. Lý do này sẽ được áp dụng cho tất cả báo cáo.'
+              : 'Vui lòng cung cấp lý do từ chối báo cáo này. Thông tin sẽ được lưu lại để tham khảo.'}
           </DialogDescription>
         </DialogHeader>
 

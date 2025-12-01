@@ -4,12 +4,6 @@ import { Flag } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/base/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/base/components/ui/tooltip';
 import { cn } from '@/base/lib';
 
 import type { ReportTargetType } from '../types';
@@ -23,7 +17,6 @@ export interface ReportButtonProps {
   size?: 'default' | 'sm' | 'icon';
   showLabel?: boolean;
   disabled?: boolean;
-  tooltipText?: string;
 }
 
 export function ReportButton({
@@ -35,7 +28,6 @@ export function ReportButton({
   size = 'icon',
   showLabel = false,
   disabled = false,
-  tooltipText = 'Báo cáo',
 }: ReportButtonProps) {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -47,7 +39,7 @@ export function ReportButton({
     <Button
       variant={variant}
       size={size}
-      className={cn('text-muted-foreground hover:text-danger', className)}
+      className={cn('hover:text-danger', className)}
       onClick={handleClick}
       disabled={disabled}
       type="button"
@@ -56,19 +48,6 @@ export function ReportButton({
       {showLabel && <span className="ml-1">Báo cáo</span>}
     </Button>
   );
-
-  if (!showLabel) {
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>{buttonContent}</TooltipTrigger>
-          <TooltipContent>
-            <p>{tooltipText}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
 
   return buttonContent;
 }

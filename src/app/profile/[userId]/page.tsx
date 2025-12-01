@@ -365,7 +365,7 @@ export default function UserProfilePage() {
                   >
                     <Share2 className="size-4" />
                   </Button>
-                  <DropdownMenu>
+                  {/* <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="text-[#99b94a]" size="sm">
                         <MoreVertical className="size-4" />
@@ -377,15 +377,15 @@ export default function UserProfilePage() {
                         Chặn người dùng
                       </DropdownMenuItem>
                     </DropdownMenuContent>
-                  </DropdownMenu>
+                  </DropdownMenu> */}
                   {/* Report User Button */}
                   <ReportTrigger
                     targetId={userId}
                     targetType={ReportTargetType.USER}
                     targetName={profileUser.fullName}
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="text-gray-500 hover:text-red-500"
+                    className="text-[#99b94a]"
                   />
                 </>
               )}
