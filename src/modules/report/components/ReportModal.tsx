@@ -15,7 +15,6 @@ import {
   DialogTitle,
 } from '@/base/components/ui/dialog';
 import { Label } from '@/base/components/ui/label';
-import { Select, type SelectOption } from '@/base/components/ui/select';
 import { Textarea } from '@/base/components/ui/textarea';
 
 import { reportService } from '../services';
@@ -31,12 +30,12 @@ export interface ReportModalProps {
   onError?: (error: Error) => void;
 }
 
-const TARGET_TYPE_OPTIONS: SelectOption[] = [
-  { value: ReportTargetType.RECIPE, label: 'Công thức' },
-  { value: ReportTargetType.USER, label: 'Người dùng' },
-  { value: ReportTargetType.COMMENT, label: 'Bình luận' },
-  { value: ReportTargetType.RATING, label: 'Đánh giá' },
-];
+const TARGET_TYPE_LABELS: Record<ReportTargetType, string> = {
+  [ReportTargetType.RECIPE]: 'Công thức',
+  [ReportTargetType.USER]: 'Người dùng',
+  [ReportTargetType.COMMENT]: 'Bình luận',
+  [ReportTargetType.RATING]: 'Đánh giá',
+};
 
 export function ReportModal({
   open,
@@ -88,7 +87,7 @@ export function ReportModal({
   };
 
   const getTargetTypeLabel = (type: ReportTargetType) => {
-    return TARGET_TYPE_OPTIONS.find((opt) => opt.value === type)?.label || type;
+    return TARGET_TYPE_LABELS[type] || type;
   };
 
   return (
