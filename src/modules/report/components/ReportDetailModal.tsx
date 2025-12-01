@@ -55,6 +55,34 @@ function getTargetTypeBadgeVariant(type: ReportTargetType) {
   }
 }
 
+function getStatusLabel(status: ReportStatus) {
+  switch (status) {
+    case ReportStatus.PENDING:
+      return 'Chờ xử lý';
+    case ReportStatus.APPROVED:
+      return 'Đã duyệt';
+    case ReportStatus.REJECTED:
+      return 'Đã từ chối';
+    default:
+      return status;
+  }
+}
+
+function getTargetTypeLabel(type: ReportTargetType) {
+  switch (type) {
+    case ReportTargetType.RECIPE:
+      return 'Công thức';
+    case ReportTargetType.USER:
+      return 'Người dùng';
+    case ReportTargetType.COMMENT:
+      return 'Bình luận';
+    case ReportTargetType.RATING:
+      return 'Đánh giá';
+    default:
+      return type;
+  }
+}
+
 function formatDate(dateString: string) {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('vi-VN', {
@@ -131,10 +159,10 @@ export function ReportDetailModal({
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Badge variant={getStatusBadgeVariant(report.status as ReportStatus)}>
-                {report.status}
+                {getStatusLabel(report.status as ReportStatus)}
               </Badge>
               <Badge variant={getTargetTypeBadgeVariant(report.targetType as ReportTargetType)}>
-                {report.targetType}
+                {getTargetTypeLabel(report.targetType as ReportTargetType)}
               </Badge>
             </div>
 

@@ -71,6 +71,21 @@ function getStatusLabel(status: ReportStatus) {
   }
 }
 
+function getTargetTypeLabel(type: ReportTargetType) {
+  switch (type) {
+    case ReportTargetType.RECIPE:
+      return 'Công thức';
+    case ReportTargetType.USER:
+      return 'Người dùng';
+    case ReportTargetType.COMMENT:
+      return 'Bình luận';
+    case ReportTargetType.RATING:
+      return 'Đánh giá';
+    default:
+      return type;
+  }
+}
+
 function formatDate(dateString: string) {
   // Ensure the date string is interpreted as UTC by appending 'Z' if not present
   const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
@@ -362,7 +377,7 @@ export function ExpandableReportTable({
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Badge className="bg-gradient-to-r from-[#99b94a] to-[#8aab3b] text-white shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md">
-                        {item.targetType}
+                        {getTargetTypeLabel(item.targetType)}
                       </Badge>
                       <span className="text-sm font-semibold" title={item.targetName}>
                         {item.targetName}

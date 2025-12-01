@@ -1,18 +1,18 @@
 'use client';
 
-import { Ban, Edit, MapPin, MoreVertical, Share2, UserCheck, UserPlus } from 'lucide-react';
+import { Edit, MapPin, Share2, UserCheck, UserPlus } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { Avatar, AvatarFallback, AvatarImage } from '@/base/components/ui/avatar';
 import { Button } from '@/base/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/base/components/ui/dropdown-menu';
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuTrigger,
+// } from '@/base/components/ui/dropdown-menu';
 import { Skeleton } from '@/base/components/ui/skeleton';
 import { useAuth } from '@/modules/auth';
 import {
@@ -109,10 +109,10 @@ export default function UserProfilePage() {
     }
   };
 
-  const handleBlock = () => {
-    // TODO: API call to block user
-    alert('Chức năng chặn người dùng hiện tại chưa được hỗ trợ.');
-  };
+  // const handleBlock = () => {
+  //   // TODO: API call to block user
+  //   alert('Chức năng chặn người dùng hiện tại chưa được hỗ trợ.');
+  // };
 
   const handleEditProfile = () => {
     // TODO: Navigate to edit profile page

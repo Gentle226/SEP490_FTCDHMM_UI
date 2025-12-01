@@ -370,6 +370,7 @@ class RecipeService extends HttpClient {
 
   /**
    * Get recipe ratings and feedback
+   * Note: isPrivateRoute is true to send auth token so API can determine isOwner
    */
   public async getRecipeRatings(recipeId: string, params: PaginationParams = {}) {
     const { pageNumber = 1, pageSize = 10 } = params;
@@ -380,7 +381,7 @@ class RecipeService extends HttpClient {
       pageNumber: number;
       pageSize: number;
     }>(`api/Recipe/${recipeId}/rating`, {
-      isPrivateRoute: false,
+      isPrivateRoute: true,
       params: {
         PageNumber: pageNumber,
         PageSize: pageSize,

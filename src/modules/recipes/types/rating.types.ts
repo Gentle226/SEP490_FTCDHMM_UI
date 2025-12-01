@@ -27,6 +27,7 @@ export interface RatingResponse {
   feedback?: string;
   userInteractionResponse?: UserInteractionResponse;
   createdAtUtc: string;
+  isOwner: boolean;
 }
 
 /**

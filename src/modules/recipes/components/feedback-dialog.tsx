@@ -1,12 +1,15 @@
 'use client';
 
-import { Star, X } from 'lucide-react';
+import { Flag, Star, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@/base/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/base/components/ui/dialog';
 import { Skeleton } from '@/base/components/ui/skeleton';
+import { useDeleteRating } from '@/modules/recipes/hooks/use-recipe-actions';
+import { ReportModal } from '@/modules/report/components/ReportModal';
+import { ReportTargetType } from '@/modules/report/types';
 
 import { recipeService } from '../services/recipe.service';
 import { RatingResponse } from '../types/rating.types';
@@ -27,6 +30,9 @@ export function FeedbackDialog({ recipeId, isOpen, onOpenChange }: FeedbackDialo
   const [pageNumber, setPageNumber] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [pageSize] = useState(10);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [selectedRatingId, setSelectedRatingId] = useState<string | null>(null);
+  const deleteRating = useDeleteRating();
 
   const loadRatings = useCallback(async () => {
     if (!isOpen) return;
@@ -94,17 +100,7 @@ export function FeedbackDialog({ recipeId, isOpen, onOpenChange }: FeedbackDialo
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Nhận xét và Đánh giá</span>
-            <button
-              onClick={() => onOpenChange(false)}
-              className="rounded-lg p-1 hover:bg-gray-100"
-              title="Đóng"
-              aria-label="Đóng"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </DialogTitle>
+          <DialogTitle>Nhận xét và Đánh giá</DialogTitle>
         </DialogHeader>
 
         {/* Summary Stats */}
@@ -154,19 +150,50 @@ export function FeedbackDialog({ recipeId, isOpen, onOpenChange }: FeedbackDialo
                 </div>
 
                 {/* Rating Content */}
-                <div className="flex-1 space-y-1">
-                  {/* User Name and Date */}
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-sm font-semibold text-gray-900">
-                      {rating.userInteractionResponse
-                        ? `${rating.userInteractionResponse.firstName || ''} ${rating.userInteractionResponse.lastName || ''}`.trim()
-                        : 'Anonymous'}
-                    </h3>
-                    {rating.createdAtUtc && (
-                      <span className="text-xs text-gray-500">
-                        {formatDate(rating.createdAtUtc)}
-                      </span>
-                    )}
+                <div className="flex-1 space-y-2">
+                  {/* User Name | Date | Action */}
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate text-sm font-semibold text-gray-900">
+                        {rating.userInteractionResponse
+                          ? `${rating.userInteractionResponse.firstName || ''} ${rating.userInteractionResponse.lastName || ''}`.trim()
+                          : 'Anonymous'}
+                      </h3>
+                    </div>
+
+                    <div className="flex flex-shrink-0 items-center gap-2">
+                      {rating.createdAtUtc && (
+                        <span className="text-xs whitespace-nowrap text-gray-500">
+                          {formatDate(rating.createdAtUtc)}
+                        </span>
+                      )}
+
+                      {rating.isOwner ? (
+                        <button
+                          onClick={() => {
+                            if (confirm('Bạn có chắc chắn muốn xóa đánh giá này?')) {
+                              deleteRating.mutate({ ratingId: rating.id });
+                            }
+                          }}
+                          disabled={deleteRating.isPending}
+                          title="Xóa đánh giá"
+                          className="inline-flex items-center justify-center rounded border border-red-600 bg-white p-2 text-red-600 transition-all hover:bg-red-50 active:bg-red-100 disabled:opacity-50"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setSelectedRatingId(rating.id);
+                            setReportModalOpen(true);
+                          }}
+                          title="Báo cáo đánh giá"
+                          className="inline-flex items-center justify-center rounded border border-red-600 bg-white p-2 text-red-600 transition-all hover:bg-red-50 active:bg-red-100"
+                        >
+                          <Flag size={16} />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Star Rating */}
@@ -207,6 +234,17 @@ export function FeedbackDialog({ recipeId, isOpen, onOpenChange }: FeedbackDialo
           </div>
         )}
       </DialogContent>
+
+      {/* Report Modal */}
+      {selectedRatingId && (
+        <ReportModal
+          open={reportModalOpen}
+          onOpenChange={setReportModalOpen}
+          targetId={selectedRatingId}
+          targetType={ReportTargetType.RATING}
+          targetName="Đánh giá"
+        />
+      )}
     </Dialog>
   );
 }

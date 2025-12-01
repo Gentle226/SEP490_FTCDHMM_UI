@@ -42,6 +42,21 @@ function formatDate(dateString: string) {
   }).format(date);
 }
 
+function getTargetTypeLabel(type: ReportTargetType) {
+  switch (type) {
+    case ReportTargetType.RECIPE:
+      return 'Công thức';
+    case ReportTargetType.USER:
+      return 'Người dùng';
+    case ReportTargetType.COMMENT:
+      return 'Bình luận';
+    case ReportTargetType.RATING:
+      return 'Đánh giá';
+    default:
+      return type;
+  }
+}
+
 export function ReportSummaryTable({
   data,
   isLoading = false,
@@ -87,7 +102,7 @@ export function ReportSummaryTable({
           <TableRow key={`${item.targetType}-${item.targetId}`}>
             <TableCell>
               <Badge className="bg-[#99b94a] text-white hover:bg-[#8aab3b]">
-                {item.targetType}
+                {getTargetTypeLabel(item.targetType)}
               </Badge>
             </TableCell>
             <TableCell className="max-w-xs truncate font-medium" title={item.targetName}>
