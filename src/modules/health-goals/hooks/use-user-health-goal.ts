@@ -13,6 +13,16 @@ export const useCurrentHealthGoal = () => {
 };
 
 /**
+ * Hook to fetch the user's health goal history (past/expired goals)
+ */
+export const useHealthGoalHistory = () => {
+  return useQuery({
+    queryKey: ['health-goal-history'],
+    queryFn: () => userHealthGoalService.getHistory(),
+  });
+};
+
+/**
  * Hook to set a health goal as the user's current active goal with expiration date
  */
 export const useSetHealthGoal = () => {
@@ -30,6 +40,8 @@ export const useSetHealthGoal = () => {
     }) => userHealthGoalService.setGoal(goalId, type, expiredAtUtc),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['current-health-goal'] });
+      // Also invalidate history since setting a new goal archives the old one
+      queryClient.invalidateQueries({ queryKey: ['health-goal-history'] });
     },
   });
 };
@@ -44,6 +56,8 @@ export const useRemoveHealthGoal = () => {
     mutationFn: () => userHealthGoalService.removeFromCurrent(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['current-health-goal'] });
+      // Also invalidate history since removing a goal adds it to history
+      queryClient.invalidateQueries({ queryKey: ['health-goal-history'] });
     },
   });
 };

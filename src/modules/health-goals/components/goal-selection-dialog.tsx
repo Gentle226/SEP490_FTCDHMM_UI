@@ -15,12 +15,12 @@ import {
 import { Label } from '@/base/components/ui/label';
 
 import { useCurrentHealthGoal, useSetHealthGoal } from '../hooks';
-import { CustomHealthGoalResponse, HealthGoalResponse } from '../types';
+import { UserHealthGoalResponse } from '../types';
 import { formatNutrientTargetValue, getVietnameseNutrientName } from '../utils';
 import { ConfirmDialog } from './confirm-dialog';
 
 interface GoalSelectionDialogProps {
-  goal: HealthGoalResponse | CustomHealthGoalResponse;
+  goal: UserHealthGoalResponse;
   type: 'SYSTEM' | 'CUSTOM'; // Type of health goal
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -67,7 +67,11 @@ export function GoalSelectionDialog({ goal, type, open, onOpenChange }: GoalSele
     }
 
     try {
-      const goalId = goal.id;
+      const goalId = goal.healthGoalId || goal.customHealthGoalId;
+      if (!goalId) {
+        toast.error('ID mục tiêu không hợp lệ');
+        return;
+      }
       const expirationDateTime = expirationDate.toISOString();
       await setGoal.mutateAsync({
         goalId,

@@ -17,6 +17,7 @@ import { Skeleton } from '@/base/components/ui/skeleton';
 
 import { userHealthGoalService } from '../services';
 import { UserHealthGoalResponse } from '../types';
+import { formatNutrientTargetValue, getVietnameseNutrientName } from '../utils';
 
 function HealthGoalHistoryCard({ goal }: { goal: UserHealthGoalResponse }) {
   const startDate = goal.startedAtUtc ? new Date(goal.startedAtUtc) : null;
@@ -24,57 +25,42 @@ function HealthGoalHistoryCard({ goal }: { goal: UserHealthGoalResponse }) {
   const isActive = !endDate || endDate > new Date();
 
   return (
-    <Card className={isActive ? 'border-[#99b94a] bg-green-50/50 dark:bg-green-950/20' : ''}>
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <CardTitle className="truncate text-base sm:text-lg">{goal.name}</CardTitle>
-              {isActive && (
-                <Badge variant="success" className="flex-shrink-0 text-xs">
-                  Đang hoạt động
-                </Badge>
-              )}
-            </div>
-            <CardDescription className="line-clamp-2 text-xs sm:text-sm">
-              {goal.description || 'Mục tiêu sức khỏe'}
-            </CardDescription>
+    <Card
+      className={`transition-all ${
+        isActive ? 'border-2 border-[#99b94a] bg-[#99b94a]/5' : 'border border-gray-200'
+      }`}
+    >
+      <CardHeader className="pb-2 sm:pb-3">
+        <div className="space-y-2">
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle className="line-clamp-2 text-sm font-semibold text-gray-900">
+              {goal.name}
+            </CardTitle>
+            {isActive && (
+              <Badge variant="success" className="flex-shrink-0 text-xs">
+                Đang hoạt động
+              </Badge>
+            )}
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {/* Date Range */}
-        <div className="text-muted-foreground flex items-center gap-2 text-xs sm:text-sm">
-          <Calendar className="h-4 w-4 flex-shrink-0" />
-          <span>
+          <CardDescription className="line-clamp-2 text-xs">
             {startDate && format(startDate, 'dd MMM yyyy', { locale: vi })}
             {endDate && <> - {format(endDate, 'dd MMM yyyy', { locale: vi })}</>}
             {!endDate && startDate && <> - Hiện tại</>}
-          </span>
+          </CardDescription>
         </div>
-
+      </CardHeader>
+      <CardContent className="space-y-2">
         {/* Nutrient Targets */}
         {goal.targets && goal.targets.length > 0 && (
-          <div>
-            <p className="mb-2 text-xs font-medium sm:text-sm">Chỉ số dinh dưỡng:</p>
-            <div className="space-y-1 sm:space-y-2">
-              {goal.targets.slice(0, 3).map((target) => (
-                <div
-                  key={target.nutrientId}
-                  className="flex items-center justify-between rounded-lg border p-1.5 text-xs sm:p-2 sm:text-sm"
-                >
-                  <span className="truncate pr-2 font-medium">{target.name}</span>
-                  <span className="text-muted-foreground flex-shrink-0 whitespace-nowrap">
-                    {target.minValue} - {target.maxValue} g
-                  </span>
-                </div>
-              ))}
-              {goal.targets.length > 3 && (
-                <p className="text-muted-foreground text-xs">
-                  +{goal.targets.length - 3} chỉ số khác
+          <div className="space-y-1">
+            {goal.targets.map((target) => (
+              <div key={target.nutrientId} className="rounded bg-[#99b94a]/10 px-2 py-1.5">
+                <p className="text-xs text-gray-700">
+                  <span className="font-medium">{getVietnameseNutrientName(target.name)}:</span>{' '}
+                  {formatNutrientTargetValue(target)}
                 </p>
-              )}
-            </div>
+              </div>
+            ))}
           </div>
         )}
       </CardContent>
@@ -90,9 +76,10 @@ export function HealthGoalHistory() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-48 w-full" />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-48 w-full rounded-lg" />
+        ))}
       </div>
     );
   }
@@ -118,16 +105,10 @@ export function HealthGoalHistory() {
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <History className="h-5 w-5 text-[#99b94a]" />
-        <h3 className="text-lg font-semibold">Lịch sử mục tiêu</h3>
-      </div>
-      <div className="space-y-3">
-        {sortedGoals.map((goal) => (
-          <HealthGoalHistoryCard key={goal.healthGoalId || goal.customHealthGoalId} goal={goal} />
-        ))}
-      </div>
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {sortedGoals.map((goal, index) => (
+        <HealthGoalHistoryCard key={goal.id || `goal-${index}`} goal={goal} />
+      ))}
     </div>
   );
 }

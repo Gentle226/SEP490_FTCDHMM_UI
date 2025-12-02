@@ -48,7 +48,6 @@ export interface CreateCustomHealthGoalRequest {
   name: string;
   description?: string;
   targets: NutrientTargetDto[];
-  expiredAtUtc?: string;
 }
 
 export interface UpdateCustomHealthGoalRequest {
@@ -57,15 +56,16 @@ export interface UpdateCustomHealthGoalRequest {
   targets?: NutrientTargetDto[];
 }
 
-// UserHealthGoal - now one-to-one relationship with User
+// UserHealthGoal - supports history tracking with one-to-many relationship
 export interface UserHealthGoalResponse {
+  id: string; // Unique identifier for the user health goal record
   healthGoalId?: string;
   customHealthGoalId?: string;
   name: string;
   description?: string;
   targets: NutrientTarget[];
-  expiredAtUtc?: string; // ISO 8601 date string
-  startedAtUtc: string; // ISO 8601 date string
+  startedAtUtc?: string; // ISO 8601 date string - when the goal was set
+  expiredAtUtc?: string; // ISO 8601 date string - when the goal expired (null if active)
 }
 
 export interface SetUserHealthGoalRequest {

@@ -8,7 +8,6 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '@/base/components/ui/button';
-import { DatePickerWithDaysDisplay } from '@/base/components/ui/date-picker-with-days-display';
 import {
   Dialog,
   DialogContent,
@@ -75,7 +74,6 @@ export function CustomHealthGoalFormDialog({
   const [requiredNutrients, setRequiredNutrients] = useState<NutrientInfo[]>([]);
   const [isNameFocused, setIsNameFocused] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [expirationDate, setExpirationDate] = useState<Date | undefined>(undefined);
   const [pendingFormData, setPendingFormData] = useState<CustomHealthGoalFormData | null>(null);
   const [safetyWarningDialog, setSafetyWarningDialog] = useState<{
     open: boolean;
@@ -228,16 +226,11 @@ export function CustomHealthGoalFormDialog({
         });
         toast.success('Mục tiêu sức khỏe tùy chỉnh đã được cập nhật thành công');
       } else {
-        const expiredAtUtcString = expirationDate ? expirationDate.toISOString() : undefined;
-        await createGoal.mutateAsync({
-          ...processedData,
-          expiredAtUtc: expiredAtUtcString,
-        });
-        toast.success('Mục tiêu sức khỏe tùy chỉnh đã được tạo và đặt làm mục tiêu hiện tại');
+        await createGoal.mutateAsync(processedData);
+        toast.success('Mục tiêu sức khỏe tùy chỉnh đã được tạo thành công');
       }
       onClose();
       reset();
-      setExpirationDate(undefined);
     } catch {
       toast.error(`Lỗi khi ${goal ? 'cập nhật' : 'tạo'} mục tiêu sức khỏe tùy chỉnh`);
     }
@@ -401,27 +394,6 @@ export function CustomHealthGoalFormDialog({
               <p className="text-sm text-red-600">{errors.description.message}</p>
             )}
           </div>
-
-          {!goal && (
-            <div className="space-y-2">
-              <Label htmlFor="expiration-date" className="font-semibold">
-                Ngày Hết Hạn <span className="text-red-500">*</span>
-              </Label>
-              <DatePickerWithDaysDisplay
-                date={expirationDate}
-                onDateChange={setExpirationDate}
-                placeholder="Chọn ngày"
-                themeColor="#99b94a"
-                disabledDays={(date: Date) => {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  date.setHours(0, 0, 0, 0);
-                  return date < today;
-                }}
-              />
-              <p className="text-xs text-gray-500">Để trống nếu muốn mục tiêu không có thời hạn</p>
-            </div>
-          )}
 
           <div className="space-y-4">
             <Label>Chỉ Số Dinh Dưỡng (Trên 100g)</Label>

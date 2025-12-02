@@ -1,6 +1,11 @@
 import { HttpClient } from '@/base/lib';
 
-import { CreateHealthGoalRequest, HealthGoalResponse, UpdateHealthGoalRequest } from '../types';
+import {
+  CreateHealthGoalRequest,
+  HealthGoalResponse,
+  UpdateHealthGoalRequest,
+  UserHealthGoalResponse,
+} from '../types';
 
 class HealthGoalService extends HttpClient {
   constructor() {
@@ -48,6 +53,17 @@ class HealthGoalService extends HttpClient {
    */
   public async deleteGoal(id: string) {
     return this.delete<void>(`api/HealthGoal/${id}`, {
+      isPrivateRoute: true,
+    });
+  }
+
+  /**
+   * Get all health goals (system + custom) for the current user
+   * This combines system health goals and user's custom health goals
+   * Replaces the need to call GET /api/CustomHealthGoal separately
+   */
+  public async getListGoal() {
+    return this.get<UserHealthGoalResponse[]>('api/HealthGoal/listGoal', {
       isPrivateRoute: true,
     });
   }

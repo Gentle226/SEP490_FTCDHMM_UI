@@ -4,6 +4,17 @@ import { healthGoalService } from '../services';
 import { CreateHealthGoalRequest, UpdateHealthGoalRequest } from '../types';
 
 /**
+ * Hook to fetch all health goals (system + custom) for the current user
+ * This replaces the need to fetch custom health goals separately
+ */
+export const useListGoal = () => {
+  return useQuery({
+    queryKey: ['list-goal'],
+    queryFn: () => healthGoalService.getListGoal(),
+  });
+};
+
+/**
  * Hook to fetch all system health goals
  */
 export const useHealthGoals = () => {
