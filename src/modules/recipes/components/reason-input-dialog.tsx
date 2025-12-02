@@ -47,7 +47,7 @@ const actionConfig: Record<
     title: 'Khóa công thức',
     description: 'Vui lòng nhập lí do khóa công thức này.',
     confirmText: 'Khóa',
-    isDanger: false,
+    isDanger: true,
   },
   reject: {
     title: 'Từ chối công thức',

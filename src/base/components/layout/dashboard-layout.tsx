@@ -128,6 +128,11 @@ export function DashboardLayout({
           icon: List,
         },
         {
+          title: 'Quản Lý Báo Cáo',
+          url: '/moderator/reports',
+          icon: MessageSquareWarning,
+        },
+        {
           title: 'Quản Lý Nguyên Liệu',
           url: '/moderator/ingredient',
           icon: Salad,
