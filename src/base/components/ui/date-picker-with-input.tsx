@@ -1,6 +1,5 @@
 'use client';
 
-import { differenceInDays } from 'date-fns';
 import { format } from 'date-fns';
 import { CalendarDaysIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -85,7 +84,6 @@ export function DatePickerWithInput(props: DatePickerWithInputProps) {
   );
 
   if (isMobile) {
-    const dayCount = date ? differenceInDays(date, new Date()) : undefined;
     return (
       <div className="flex items-center gap-2">
         <Input
@@ -98,11 +96,6 @@ export function DatePickerWithInput(props: DatePickerWithInputProps) {
             props.inputClassName,
           )}
         />
-        {dayCount !== undefined && dayCount !== null && (
-          <div className="border-input bg-background flex items-center justify-center rounded-md border px-3 py-2">
-            <span className="text-foreground text-sm font-medium">{dayCount} ngày</span>
-          </div>
-        )}
         <Drawer open={isOpen} onOpenChange={setIsOpen}>
           <DrawerTrigger asChild onClick={props.readOnly ? (e) => e.preventDefault() : undefined}>
             <Button
@@ -128,8 +121,6 @@ export function DatePickerWithInput(props: DatePickerWithInputProps) {
     );
   }
 
-  const dayCount = date ? differenceInDays(date, new Date()) : undefined;
-
   return (
     <div className="flex items-center gap-2">
       <Input
@@ -139,11 +130,6 @@ export function DatePickerWithInput(props: DatePickerWithInputProps) {
         disabled={props.disabled || props.readOnly}
         className={cn('flex-1 [&::-webkit-calendar-picker-indicator]:hidden', props.inputClassName)}
       />
-      {dayCount !== undefined && dayCount !== null && (
-        <div className="border-input bg-background flex items-center justify-center rounded-md border px-3 py-2">
-          <span className="text-foreground text-sm font-medium">{dayCount} ngày</span>
-        </div>
-      )}
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild onClick={props.readOnly ? (e) => e.preventDefault() : undefined}>
           <Button

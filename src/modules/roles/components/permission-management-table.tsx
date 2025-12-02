@@ -203,12 +203,11 @@ export function PermissionManagementTable() {
           background-color: #99b94a;
         }
       `}</style>
-      <div className="space-y-4">
+      <div className="space-y-4 px-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold text-[#99b94a]">Quản Lý Phân Quyền</h2>
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#99b94a] hover:bg-[#88a838]">
+              <Button className="ml-auto bg-[#99b94a] hover:bg-[#88a838]">
                 <Plus className="mr-2 h-4 w-4" />
                 Tạo Vai Trò
               </Button>

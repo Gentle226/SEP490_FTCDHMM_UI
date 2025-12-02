@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/base/components/ui/card';
-import { DatePickerWithInput } from '@/base/components/ui/date-picker-with-input';
+import { DatePickerWithDaysDisplay } from '@/base/components/ui/date-picker-with-days-display';
 import { Label } from '@/base/components/ui/label';
 import { Skeleton } from '@/base/components/ui/skeleton';
 
@@ -45,6 +45,7 @@ export function HealthGoalLibrary() {
       const expirationDateTime = expirationDate.toISOString();
       await setGoal.mutateAsync({
         goalId: selectedGoalId,
+        type: 'SYSTEM', // System health goal from admin library
         expiredAtUtc: expirationDateTime,
       });
       toast.success('Đã chọn mục tiêu sức khỏe thành công');
@@ -151,10 +152,11 @@ export function HealthGoalLibrary() {
                 <Label htmlFor="expiration-date">
                   Ngày Hết Hạn <span className="text-red-500">*</span>
                 </Label>
-                <DatePickerWithInput
+                <DatePickerWithDaysDisplay
                   date={expirationDate}
                   onDateChange={setExpirationDate}
                   placeholder="Chọn ngày"
+                  themeColor="#99b94a"
                   disabledDays={disableExpiredDates}
                 />
               </div>

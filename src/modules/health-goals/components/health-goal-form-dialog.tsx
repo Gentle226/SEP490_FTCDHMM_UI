@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -23,8 +23,10 @@ import { Select, SelectOption } from '@/base/components/ui/select';
 import { Textarea } from '@/base/components/ui/textarea';
 import { NutrientInfo, nutrientService } from '@/modules/nutrients/services/nutrient.service';
 
+import { getNutrientLimit, validateNutrientValue } from '../constants/nutrient-limits';
 import { useCreateHealthGoal, useUpdateHealthGoal } from '../hooks';
 import { HealthGoalResponse } from '../types';
+import { ConfirmDialog } from './confirm-dialog';
 
 const healthGoalSchema = z.object({
   name: z
@@ -63,6 +65,11 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
   const [nutrients, setNutrients] = useState<NutrientInfo[]>([]);
   const [requiredNutrients, setRequiredNutrients] = useState<NutrientInfo[]>([]);
   const [isNameFocused, setIsNameFocused] = useState(false);
+  const [safetyWarningDialog, setSafetyWarningDialog] = useState<{
+    open: boolean;
+    message: string;
+    onConfirm: () => void;
+  }>({ open: false, message: '', onConfirm: () => {} });
   const createHealthGoal = useCreateHealthGoal();
   const updateHealthGoal = useUpdateHealthGoal();
 
@@ -142,9 +149,31 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
     }
   }, [goal, reset]);
 
-  const onSubmit = async (data: HealthGoalFormData) => {
+  // Check for safety limit violations and return warning messages
+  const checkSafetyLimitViolations = (data: HealthGoalFormData): string[] => {
+    const warnings: string[] = [];
+
+    for (const target of data.targets) {
+      const nutrient = nutrients.find((n) => n.id === target.nutrientId);
+      if (!nutrient) continue;
+
+      const isMacronutrient = requiredNutrients.some((n) => n.id === target.nutrientId);
+      const targetType = isMacronutrient ? target.targetType || 'ABSOLUTE' : 'ABSOLUTE';
+
+      if (targetType === 'ABSOLUTE') {
+        const maxValidation = validateNutrientValue(nutrient.vietnameseName, target.maxValue);
+        if (maxValidation.exceedsSafetyLimit) {
+          warnings.push(`${nutrient.vietnameseName}: ${maxValidation.safetyWarning}`);
+        }
+      }
+    }
+
+    return warnings;
+  };
+
+  const executeSubmit = async (data: HealthGoalFormData) => {
     try {
-      // Auto set TargetType to ABSOLUTE for micronutrients
+      // Process targets based on targetType
       const processedData = {
         ...data,
         targets: data.targets.map((target) => {
@@ -153,12 +182,48 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
           // For micronutrients (non-required nutrients), auto set targetType to ABSOLUTE
           if (!isMacronutrient) {
             return {
-              ...target,
+              nutrientId: target.nutrientId,
               targetType: 'ABSOLUTE',
+              minValue: target.minValue,
+              maxValue: target.maxValue,
+              medianValue: target.medianValue || 0,
+              // Clear energy percentage values for ABSOLUTE type
+              minEnergyPct: 0,
+              maxEnergyPct: 0,
+              medianEnergyPct: 0,
+              weight: target.weight || 1,
             };
           }
 
-          return target;
+          // For macronutrients, process based on targetType
+          if (target.targetType === 'ENERGYPERCENT') {
+            return {
+              nutrientId: target.nutrientId,
+              targetType: 'ENERGYPERCENT',
+              // Clear absolute values for ENERGYPERCENT type
+              minValue: 0,
+              maxValue: 0,
+              medianValue: 0,
+              minEnergyPct: target.minEnergyPct || 0,
+              maxEnergyPct: target.maxEnergyPct || 0,
+              medianEnergyPct: target.medianEnergyPct || 0,
+              weight: target.weight || 1,
+            };
+          }
+
+          // Default to ABSOLUTE for macronutrients
+          return {
+            nutrientId: target.nutrientId,
+            targetType: target.targetType || 'ABSOLUTE',
+            minValue: target.minValue,
+            maxValue: target.maxValue,
+            medianValue: target.medianValue || 0,
+            // Clear energy percentage values for ABSOLUTE type
+            minEnergyPct: 0,
+            maxEnergyPct: 0,
+            medianEnergyPct: 0,
+            weight: target.weight || 1,
+          };
         }),
       };
 
@@ -179,6 +244,26 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
     }
   };
 
+  const onSubmit = async (data: HealthGoalFormData) => {
+    // Check for safety limit violations
+    const warnings = checkSafetyLimitViolations(data);
+
+    if (warnings.length > 0) {
+      // Show confirmation dialog
+      setSafetyWarningDialog({
+        open: true,
+        message: `Các chỉ số sau vượt quá ngưỡng an toàn:\n\n${warnings.join('\n')}\n\nBạn có chắc chắn muốn tiếp tục?`,
+        onConfirm: async () => {
+          await executeSubmit(data);
+          setSafetyWarningDialog({ open: false, message: '', onConfirm: () => {} });
+        },
+      });
+      return;
+    }
+
+    await executeSubmit(data);
+  };
+
   const handleAddTarget = () => {
     append({
       nutrientId: '',
@@ -193,10 +278,32 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
     });
   };
 
-  const nutrientOptions: SelectOption[] = nutrients.map((nutrient) => ({
-    value: nutrient.id,
-    label: `${nutrient.vietnameseName} (${nutrient.unit})`,
-  }));
+  // Get all currently selected nutrient IDs
+  const selectedNutrientIds =
+    watch('targets')
+      ?.map((t) => t.nutrientId)
+      .filter(Boolean) || [];
+
+  // Filter out already selected nutrients for each target
+  const getAvailableNutrientOptions = (currentIndex: number): SelectOption[] => {
+    const currentNutrientId = watch(`targets.${currentIndex}.nutrientId`);
+    return nutrients
+      .filter((nutrient) => {
+        // Include if it's the currently selected nutrient for this target
+        if (nutrient.id === currentNutrientId) return true;
+        // Exclude if it's selected in another target
+        return !selectedNutrientIds.includes(nutrient.id);
+      })
+      .map((nutrient) => ({
+        value: nutrient.id,
+        label: `${nutrient.vietnameseName} (${nutrient.unit})`,
+      }));
+  };
+
+  // const nutrientOptions: SelectOption[] = nutrients.map((nutrient) => ({
+  //   value: nutrient.id,
+  //   label: `${nutrient.vietnameseName} (${nutrient.unit})`,
+  // }));
 
   const targetTypeOptions: SelectOption[] = [
     { value: 'ABSOLUTE', label: 'Absolute (Tuyệt Đối)' },
@@ -295,7 +402,7 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
                   <div className="space-y-2">
                     <Label>Chất Dinh Dưỡng</Label>
                     <Select
-                      options={nutrientOptions}
+                      options={getAvailableNutrientOptions(index)}
                       placeholder="Chọn chất dinh dưỡng"
                       value={currentNutrientId}
                       onChange={(value) => {
@@ -309,27 +416,80 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
                     )}
                   </div>
 
-                  {/* Micronutrients Section - Only for non-macro nutrients */}
+                  {/* Micronutrients Section - Only for non-macro nutrients - Use inputs for ABSOLUTE */}
                   {!isMacronutrient && (
                     <div className="space-y-3 rounded-lg bg-blue-50 p-3">
                       <p className="text-xs font-semibold text-blue-900">
                         Vi Chất (Micronutrients)
                       </p>
 
-                      <div className="space-y-3">
-                        <RangeSlider
-                          min={0}
-                          max={1000}
-                          step={0.01}
-                          value={[minValue || 0, maxValue || 0]}
-                          onChange={(newRange) => {
-                            setValue(`targets.${index}.minValue`, newRange[0]);
-                            setValue(`targets.${index}.maxValue`, newRange[1]);
-                          }}
-                          unit={currentNutrient?.unit || 'gam'}
-                          numberFormat={(value) => value.toFixed(2)}
-                        />
-                      </div>
+                      {(() => {
+                        const nutrientLimit = currentNutrient
+                          ? getNutrientLimit(currentNutrient.vietnameseName)
+                          : null;
+                        const minValidation = currentNutrient
+                          ? validateNutrientValue(currentNutrient.vietnameseName, minValue)
+                          : null;
+                        const maxValidation = currentNutrient
+                          ? validateNutrientValue(currentNutrient.vietnameseName, maxValue)
+                          : null;
+
+                        return (
+                          <div className="space-y-3">
+                            {nutrientLimit && (
+                              <p className="text-xs text-gray-600">
+                                RDA: {nutrientLimit.rda} {currentNutrient?.unit}
+                                {nutrientLimit.safetyLimit !== null &&
+                                  ` | Giới hạn an toàn: ${nutrientLimit.safetyLimit} ${currentNutrient?.unit}`}
+                              </p>
+                            )}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <Label htmlFor={`targets.${index}.minValue`} className="text-xs">
+                                  Giá Trị Tối Thiểu ({currentNutrient?.unit || 'g'})
+                                </Label>
+                                <Input
+                                  id={`targets.${index}.minValue`}
+                                  placeholder="0"
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  {...register(`targets.${index}.minValue`, {
+                                    valueAsNumber: true,
+                                  })}
+                                />
+                                {minValidation?.belowRda && (
+                                  <p className="flex items-center gap-1 text-xs text-amber-600">
+                                    <AlertTriangle className="h-3 w-3" />
+                                    {minValidation.rdaWarning}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="space-y-1">
+                                <Label htmlFor={`targets.${index}.maxValue`} className="text-xs">
+                                  Giá Trị Tối Đa ({currentNutrient?.unit || 'g'})
+                                </Label>
+                                <Input
+                                  id={`targets.${index}.maxValue`}
+                                  placeholder="100"
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  {...register(`targets.${index}.maxValue`, {
+                                    valueAsNumber: true,
+                                  })}
+                                />
+                                {maxValidation?.exceedsSafetyLimit && (
+                                  <p className="flex items-center gap-1 text-xs text-red-600">
+                                    <AlertTriangle className="h-3 w-3" />
+                                    {maxValidation.safetyWarning}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       <div className="space-y-2">
                         <Label htmlFor={`targets.${index}.weight`}>Ưu Tiên (1-5)</Label>
@@ -366,21 +526,82 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
                         />
                       </div>
 
-                      {/* Min, Max, Weight - only for ABSOLUTE */}
+                      {/* Min, Max, Weight - only for ABSOLUTE - Use inputs instead of slider */}
                       {currentTargetType === 'ABSOLUTE' && (
                         <div className="space-y-3">
-                          <RangeSlider
-                            min={0}
-                            max={500}
-                            step={0.01}
-                            value={[minValue || 0, maxValue || 0]}
-                            onChange={(newRange) => {
-                              setValue(`targets.${index}.minValue`, newRange[0]);
-                              setValue(`targets.${index}.maxValue`, newRange[1]);
-                            }}
-                            unit="gam"
-                            numberFormat={(value) => value.toFixed(2)}
-                          />
+                          {(() => {
+                            const nutrientLimit = currentNutrient
+                              ? getNutrientLimit(currentNutrient.vietnameseName)
+                              : null;
+                            const minValidation = currentNutrient
+                              ? validateNutrientValue(currentNutrient.vietnameseName, minValue)
+                              : null;
+                            const maxValidation = currentNutrient
+                              ? validateNutrientValue(currentNutrient.vietnameseName, maxValue)
+                              : null;
+
+                            return (
+                              <>
+                                {nutrientLimit && (
+                                  <p className="text-xs text-gray-600">
+                                    RDA: {nutrientLimit.rda} {currentNutrient?.unit}
+                                    {nutrientLimit.safetyLimit !== null &&
+                                      ` | Giới hạn an toàn: ${nutrientLimit.safetyLimit} ${currentNutrient?.unit}`}
+                                  </p>
+                                )}
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="space-y-1">
+                                    <Label
+                                      htmlFor={`targets.${index}.minValue-macro`}
+                                      className="text-xs"
+                                    >
+                                      Giá Trị Tối Thiểu ({currentNutrient?.unit || 'g'})
+                                    </Label>
+                                    <Input
+                                      id={`targets.${index}.minValue-macro`}
+                                      placeholder="0"
+                                      type="number"
+                                      step="0.01"
+                                      min="0"
+                                      {...register(`targets.${index}.minValue`, {
+                                        valueAsNumber: true,
+                                      })}
+                                    />
+                                    {minValidation?.belowRda && (
+                                      <p className="flex items-center gap-1 text-xs text-amber-600">
+                                        <AlertTriangle className="h-3 w-3" />
+                                        {minValidation.rdaWarning}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label
+                                      htmlFor={`targets.${index}.maxValue-macro`}
+                                      className="text-xs"
+                                    >
+                                      Giá Trị Tối Đa ({currentNutrient?.unit || 'g'})
+                                    </Label>
+                                    <Input
+                                      id={`targets.${index}.maxValue-macro`}
+                                      placeholder="100"
+                                      type="number"
+                                      step="0.01"
+                                      min="0"
+                                      {...register(`targets.${index}.maxValue`, {
+                                        valueAsNumber: true,
+                                      })}
+                                    />
+                                    {maxValidation?.exceedsSafetyLimit && (
+                                      <p className="flex items-center gap-1 text-xs text-red-600">
+                                        <AlertTriangle className="h-3 w-3" />
+                                        {maxValidation.safetyWarning}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          })()}
 
                           <div className="space-y-2">
                             <Label htmlFor={`targets.${index}.weight-macro`} className="text-xs">
@@ -469,6 +690,18 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
           </DialogFooter>
         </form>
       </DialogContent>
+
+      {/* Safety Warning Confirmation Dialog */}
+      <ConfirmDialog
+        open={safetyWarningDialog.open}
+        onOpenChange={(open) => setSafetyWarningDialog((prev) => ({ ...prev, open }))}
+        title="Cảnh Báo Vượt Ngưỡng An Toàn"
+        description={safetyWarningDialog.message}
+        confirmText="Tiếp Tục"
+        cancelText="Hủy"
+        onConfirm={safetyWarningDialog.onConfirm}
+        variant="destructive"
+      />
     </Dialog>
   );
 }

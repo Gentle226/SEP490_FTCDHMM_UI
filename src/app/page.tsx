@@ -1,18 +1,22 @@
 'use client';
 
-import { ChevronRightIcon, SearchIcon } from 'lucide-react';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { ChevronRightIcon, SearchIcon, SparklesIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { useInView } from 'react-intersection-observer';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { Button } from '@/base/components/ui/button';
 import { IngredientCard } from '@/base/components/ui/ingredient-card';
 import { Input } from '@/base/components/ui/input';
 import { RecipeCard } from '@/base/components/ui/recipe-card';
+import { RecipeCardHorizontal } from '@/base/components/ui/recipe-card-horizontal';
 import { useAuth } from '@/modules/auth';
 import { IngredientDetailsResponse, ingredientPublicService } from '@/modules/ingredients';
 import { recipeService } from '@/modules/recipes/services/recipe.service';
+import { recommendationService } from '@/modules/recipes/services/recommendation.service';
 import { MyRecipeResponse } from '@/modules/recipes/types/my-recipe.types';
 
 export default function HomePage() {
@@ -27,6 +31,82 @@ export default function HomePage() {
   const [ingredients, setIngredients] = useState<IngredientDetailsResponse[]>([]);
   const [isLoadingIngredients, setIsLoadingIngredients] = useState(true);
   const [recentRecipes, setRecentRecipes] = useState<MyRecipeResponse['items']>([]);
+
+  // Infinite query for all recipes (for non-logged-in users or when recommendations fail)
+  const {
+    data: recipesData,
+    fetchNextPage: fetchNextRecipesPage,
+    hasNextPage: hasNextRecipesPage,
+    isFetchingNextPage: isFetchingNextRecipesPage,
+    isLoading: isLoadingRecipes,
+  } = useInfiniteQuery({
+    queryKey: ['allRecipes'],
+    queryFn: async ({ pageParam }) => {
+      const response = await recipeService.searchRecipes({
+        pageNumber: pageParam,
+        pageSize: 20,
+      });
+      return response;
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pageNumber < lastPage.totalPages) {
+        return lastPage.pageNumber + 1;
+      }
+      return undefined;
+    },
+    enabled: !user, // Only fetch all recipes when not logged in
+  });
+
+  // Infinite query for recommended recipes (for logged-in users)
+  const {
+    data: recommendedData,
+    fetchNextPage: fetchNextRecommendedPage,
+    hasNextPage: hasNextRecommendedPage,
+    isFetchingNextPage: isFetchingNextRecommendedPage,
+    isLoading: isLoadingRecommended,
+    isError: isRecommendedError,
+  } = useInfiniteQuery({
+    queryKey: ['recommendedRecipes'],
+    queryFn: async ({ pageParam }) => {
+      const response = await recommendationService.getRecommendations({
+        pageNumber: pageParam,
+        pageSize: 20,
+      });
+      return response;
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pageNumber < (lastPage.totalPages || 1)) {
+        return lastPage.pageNumber + 1;
+      }
+      return undefined;
+    },
+    enabled: !!user, // Only fetch recommendations when logged in
+    retry: 1,
+  });
+
+  // Determine which data to use based on login state and error state
+  const isUsingRecommendations = !!user && !isRecommendedError;
+  const displayData = isUsingRecommendations ? recommendedData : recipesData;
+  const isLoadingDisplay = isUsingRecommendations ? isLoadingRecommended : isLoadingRecipes;
+  const hasNextPage = isUsingRecommendations ? hasNextRecommendedPage : hasNextRecipesPage;
+  const isFetchingNextPage = isUsingRecommendations
+    ? isFetchingNextRecommendedPage
+    : isFetchingNextRecipesPage;
+  const fetchNextPage = isUsingRecommendations ? fetchNextRecommendedPage : fetchNextRecipesPage;
+
+  // Intersection observer for infinite scroll
+  const { ref: loadMoreRef, inView } = useInView({
+    threshold: 0,
+  });
+
+  // Fetch next page when intersection observer triggers
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Handle search with debouncing
   const handleSearchInput = (value: string) => {
@@ -296,17 +376,93 @@ export default function HomePage() {
 
         {/* All Recipes Section */}
         <section>
-          <h2 className="mb-6 text-2xl font-bold text-[#99b94a]">Khám Phá Công Thức</h2>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {Array.from({ length: 20 }, (_, i) => (
-              <RecipeCard
-                key={i}
-                title={`Món ăn ${i + 1}`}
-                author={`Tác giả ${i + 1}`}
-                isLoading={true} // Set to true to show skeleton
-              />
-            ))}
+          <div className="mb-6 flex items-center gap-2">
+            {isUsingRecommendations && <SparklesIcon className="h-6 w-6 text-[#99b94a]" />}
+            <h2 className="text-2xl font-bold text-[#99b94a]">
+              {isUsingRecommendations ? 'Công Thức Gợi Ý Cho Bạn' : 'Khám Phá Công Thức'}
+            </h2>
           </div>
+          <div className="space-y-4">
+            {isLoadingDisplay ? (
+              // Show skeleton loaders while initial load
+              Array.from({ length: 5 }, (_, i) => <RecipeCardHorizontal key={i} isLoading={true} />)
+            ) : (
+              <>
+                {isUsingRecommendations
+                  ? recommendedData?.pages.map((page) =>
+                      page.items.map((recipe) => (
+                        <button
+                          key={recipe.id}
+                          onClick={() => router.push(`/recipe/${recipe.id}`)}
+                          className="w-full text-left transition-transform hover:scale-[1.02] active:scale-95"
+                          title={recipe.name}
+                        >
+                          <RecipeCardHorizontal
+                            id={recipe.id}
+                            title={recipe.name}
+                            author={recipe.author}
+                            image={recipe.imageUrl}
+                            cookTime={recipe.cookTime}
+                            ration={recipe.ration}
+                            difficulty={recipe.difficulty?.name}
+                            ingredients={recipe.ingredients}
+                            labels={recipe.labels}
+                            createdAtUtc={recipe.createdAtUtc}
+                            isLoading={false}
+                            score={recipe.score}
+                          />
+                        </button>
+                      )),
+                    )
+                  : recipesData?.pages.map((page) =>
+                      page.items.map((recipe) => (
+                        <button
+                          key={recipe.id}
+                          onClick={() => router.push(`/recipe/${recipe.id}`)}
+                          className="w-full text-left transition-transform hover:scale-[1.02] active:scale-95"
+                          title={recipe.name}
+                        >
+                          <RecipeCardHorizontal
+                            id={recipe.id}
+                            title={recipe.name}
+                            author={recipe.author}
+                            image={recipe.imageUrl}
+                            cookTime={recipe.cookTime}
+                            ration={recipe.ration}
+                            difficulty={recipe.difficulty?.name}
+                            ingredients={recipe.ingredients}
+                            labels={recipe.labels}
+                            createdAtUtc={recipe.createdAtUtc}
+                            isLoading={false}
+                          />
+                        </button>
+                      )),
+                    )}
+                {/* Loading more indicator */}
+                {isFetchingNextPage &&
+                  Array.from({ length: 3 }, (_, i) => (
+                    <RecipeCardHorizontal key={`loading-${i}`} isLoading={true} />
+                  ))}
+              </>
+            )}
+          </div>
+          {/* Infinite scroll trigger */}
+          {hasNextPage && (
+            <div ref={loadMoreRef} className="flex justify-center py-8">
+              {isFetchingNextPage && (
+                <div className="flex items-center gap-2 text-[#99b94a]">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#99b94a] border-t-transparent"></div>
+                  <span>Đang tải thêm...</span>
+                </div>
+              )}
+            </div>
+          )}
+          {/* No more data message */}
+          {!hasNextPage && displayData && displayData.pages[0].totalCount > 0 && (
+            <div className="py-8 text-center text-gray-500">
+              Đã hiển thị tất cả {displayData.pages[0].totalCount} công thức
+            </div>
+          )}
         </section>
       </div>
     </main>

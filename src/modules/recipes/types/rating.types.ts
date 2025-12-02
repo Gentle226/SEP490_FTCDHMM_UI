@@ -27,12 +27,13 @@ export interface RatingResponse {
   feedback?: string;
   userInteractionResponse?: UserInteractionResponse;
   createdAtUtc: string;
+  isOwner: boolean;
 }
 
 /**
  * Average rating response from the API
  */
 export interface AverageRatingResponse {
-  numberOfRatings: number;
-  averageRating: number;
+  ratingCount: number;
+  avgRating: number;
 }

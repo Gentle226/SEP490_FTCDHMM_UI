@@ -64,7 +64,7 @@ export const updateProfileSchema = z.object({
       return age >= 1 && age <= 120;
     },
     {
-      message: 'Tuổi phải nằm trong khoảng 1 đến 120 tuổi',
+      message: 'Tuổi bắt buộc: từ 1 - 120 tuổi',
     },
   ),
   avatarUrl: z

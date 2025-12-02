@@ -327,8 +327,18 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                           className="size-10 rounded object-cover"
                         />
                       )}
-                      <div>
-                        <div>{ingredient.name}</div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span>{ingredient.name}</span>
+                          {ingredient.isNew && (
+                            <Badge
+                              variant="outline"
+                              className="border-amber-500 bg-amber-50 text-xs text-amber-600"
+                            >
+                              Cần xác minh
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </TableCell>
@@ -347,7 +357,9 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
-                    <span className="text-sm font-medium">-</span>
+                    <span className="text-sm font-medium">
+                      {ingredient.calories ? `${ingredient.calories.toFixed(2)}` : '-'}
+                    </span>
                   </TableCell>
                   <TableCell className="text-center text-sm">
                     {formatDate(ingredient.lastUpdatedUtc)}

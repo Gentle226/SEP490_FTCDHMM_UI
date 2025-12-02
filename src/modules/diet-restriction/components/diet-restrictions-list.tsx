@@ -373,7 +373,7 @@ export function DietRestrictionsList({
 
       {/* Results Info */}
       {searchQuery || filterType ? (
-        <p className="text-sm text-gray-600">
+        <p className="ml-4 text-sm text-gray-600">
           Tìm thấy <span className="font-semibold text-[#99b94a]">{sortedRestrictions.length}</span>{' '}
           kết quả
         </p>

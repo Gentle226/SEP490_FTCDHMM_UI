@@ -1,4 +1,4 @@
-import { Calendar, Clock, Users } from 'lucide-react';
+import { Calendar, Clock, Sparkles, Users } from 'lucide-react';
 import Image from 'next/image';
 
 import { Skeleton } from '@/base/components/ui/skeleton';
@@ -34,9 +34,11 @@ interface RecipeCardHorizontalProps {
   className?: string;
   isLoading?: boolean;
   onClick?: () => void;
+  score?: number;
 }
 
 export function RecipeCardHorizontal({
+  id,
   title,
   author,
   image,
@@ -49,6 +51,7 @@ export function RecipeCardHorizontal({
   className,
   isLoading = false,
   onClick,
+  score,
 }: RecipeCardHorizontalProps) {
   if (isLoading) {
     return (
@@ -87,6 +90,16 @@ export function RecipeCardHorizontal({
 
       {/* Recipe Info */}
       <div className="flex flex-1 flex-col justify-between gap-3">
+        {/* Score Badge for Recommendations */}
+        {score !== undefined && score > 0 && (
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="h-4 w-4 text-amber-500" />
+            <span className="text-sm font-medium text-amber-600">
+              Điểm phù hợp: {Math.round(score * 100)}%
+            </span>
+          </div>
+        )}
+
         {/* Recipe Title */}
         <h3 className="line-clamp-2 text-lg font-semibold text-gray-900 group-hover:text-[#99b94a]">
           {title || 'Recipe name'}
@@ -95,9 +108,9 @@ export function RecipeCardHorizontal({
         {/* Ingredients List */}
         {ingredients && ingredients.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {ingredients.map((ingredient) => (
+            {ingredients.map((ingredient, index) => (
               <span
-                key={ingredient.id}
+                key={`${id}-ingredient-${ingredient.id}-${index}`}
                 className="inline-flex rounded-full border border-green-200 bg-green-50 px-2 py-1 text-xs text-gray-600"
                 title={ingredient.name}
               >
@@ -137,11 +150,11 @@ export function RecipeCardHorizontal({
         {/* Labels */}
         {labels && labels.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {labels.slice(0, 2).map((label) => {
+            {labels.slice(0, 2).map((label, index) => {
               const bgColor = label.colorCode || '#99b94a';
               return (
                 <span
-                  key={label.id}
+                  key={`${id}-label-${label.id}-${index}`}
                   className="inline-flex rounded-full px-2.5 py-1 text-xs font-medium text-white"
                   style={{
                     backgroundColor: bgColor,
@@ -157,15 +170,21 @@ export function RecipeCardHorizontal({
         {/* Author Info */}
         {author && (typeof author === 'object' ? author.firstName || author.lastName : author) && (
           <div className="flex items-center gap-2 border-t border-gray-100 pt-2">
-            {author && typeof author === 'object' && author.avatarUrl && (
-              <Image
-                src={author.avatarUrl}
-                alt={`${author.firstName || ''} ${author.lastName || ''}`}
-                width={28}
-                height={28}
-                className="rounded-full object-cover"
-              />
-            )}
+            {author && typeof author === 'object' ? (
+              author.avatarUrl ? (
+                <Image
+                  src={author.avatarUrl}
+                  alt={`${author.firstName || ''} ${author.lastName || ''}`}
+                  width={28}
+                  height={28}
+                  className="rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#99b94a] text-xs font-semibold text-white">
+                  {(author.firstName?.[0] || author.lastName?.[0] || '?').toUpperCase()}
+                </div>
+              )
+            ) : null}
             <span className="text-xs font-medium text-gray-700">
               {author && typeof author === 'object'
                 ? `${author.firstName || ''} ${author.lastName || ''}`.trim()

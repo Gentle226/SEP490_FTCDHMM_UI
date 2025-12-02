@@ -32,8 +32,14 @@ export const useCreateCustomHealthGoal = () => {
 
   return useMutation({
     mutationFn: (data: CreateCustomHealthGoalRequest) => customHealthGoalService.create(data),
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['custom-health-goals'] });
+      // Also invalidate list-goal since custom goals are included there
+      queryClient.invalidateQueries({ queryKey: ['list-goal'] });
+      // Also invalidate current goal since creating custom goal sets it as current
+      await queryClient.invalidateQueries({ queryKey: ['current-health-goal'] });
+      // Refetch current goal to update the UI immediately
+      queryClient.refetchQueries({ queryKey: ['current-health-goal'] });
     },
   });
 };
@@ -49,6 +55,10 @@ export const useUpdateCustomHealthGoal = () => {
       customHealthGoalService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['custom-health-goals'] });
+      // Also invalidate list-goal since custom goals are included there
+      queryClient.invalidateQueries({ queryKey: ['list-goal'] });
+      // Invalidate current goal in case the updated goal is the current one
+      queryClient.invalidateQueries({ queryKey: ['current-health-goal'] });
     },
   });
 };
@@ -63,6 +73,10 @@ export const useDeleteCustomHealthGoal = () => {
     mutationFn: (id: string) => customHealthGoalService.deleteGoal(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['custom-health-goals'] });
+      // Also invalidate list-goal since custom goals are included there
+      queryClient.invalidateQueries({ queryKey: ['list-goal'] });
+      // Invalidate current goal in case the deleted goal was the current one
+      queryClient.invalidateQueries({ queryKey: ['current-health-goal'] });
     },
   });
 };

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, Lock, Plus, Search, Unlock, X } from 'lucide-react';
+import { ChevronDown, Lock, Search, Unlock, X } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ReactNode, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -16,7 +16,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/base/components/ui/dialog';
 import {
   DropdownMenu,
@@ -37,7 +36,6 @@ import {
 import { Pagination as PaginationType } from '@/base/types';
 
 import {
-  CreateModeratorRequest,
   LockUserRequest,
   PaginationParams,
   RoleResponse,
@@ -69,11 +67,7 @@ interface UserManagementTableProps {
   canCreate?: boolean;
 }
 
-export function UserManagementTable({
-  userType,
-  title,
-  canCreate = false,
-}: UserManagementTableProps) {
+export function UserManagementTable({ userType, canCreate = false }: UserManagementTableProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -143,12 +137,10 @@ export function UserManagementTable({
   });
   const [lockDialogOpen, setLockDialogOpen] = useState(false);
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [changeRoleDialogOpen, setChangeRoleDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [lockDays, setLockDays] = useState(7);
   const [lockReason, setLockReason] = useState('');
-  const [newModeratorEmail, setNewModeratorEmail] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
   const [roleIdMap, setRoleIdMap] = useState<Map<string, string>>(new Map());
 
@@ -248,20 +240,6 @@ export function UserManagementTable({
     },
   });
 
-  // Create moderator mutation
-  const createModeratorMutation = useMutation({
-    mutationFn: (request: CreateModeratorRequest) => userManagementService.createModerator(request),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [userType] });
-      setCreateDialogOpen(false);
-      setNewModeratorEmail('');
-      toast.success('Tài khoản Moderator đã được tạo thành công.');
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Không thể tạo tài khoản moderator.');
-    },
-  });
-
   const handleLock = (user: User) => {
     setSelectedUser(user);
     setLockDialogOpen(true);
@@ -312,14 +290,6 @@ export function UserManagementTable({
   const handleUserDetail = (user: User) => {
     setSelectedUser(user);
     router.push(`/profile/${user.id}`);
-  };
-
-  const handleCreateModerator = () => {
-    if (newModeratorEmail.trim()) {
-      createModeratorMutation.mutate({
-        email: newModeratorEmail.trim(),
-      });
-    }
   };
 
   const handleSearchChange = (value: string) => {
@@ -379,57 +349,8 @@ export function UserManagementTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">{title}</h2>
-        {canCreate && (
-          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-[#99b94a] hover:bg-[#7a8f3a]">
-                <Plus className="mr-2 h-4 w-4" />
-                Tạo Moderator
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="text-[#99b94a]">Tạo Tài Khoản Moderator Mới</DialogTitle>
-                <DialogDescription>
-                  Nhập địa chỉ email cho tài khoản moderator mới. Mật khẩu tạm thời sẽ được gửi đến
-                  email này.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="email" className="mb-3 text-[#99b94a]">
-                    Địa Chỉ Email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={newModeratorEmail}
-                    onChange={(e) => setNewModeratorEmail(e.target.value)}
-                    placeholder="moderator@example.com"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                  Hủy
-                </Button>
-                <Button
-                  className="bg-[#99b94a] hover:bg-[#7a8f3a]"
-                  onClick={handleCreateModerator}
-                  disabled={!newModeratorEmail.trim() || createModeratorMutation.isPending}
-                >
-                  {createModeratorMutation.isPending ? 'Đang tạo...' : 'Tạo Tài Khoản'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
-      </div>
-
       {/* Search Bar */}
-      <div className="flex w-full justify-end">
+      <div className="mb-6 flex w-full justify-end">
         <div className="flex w-1/4 items-center space-x-2">
           <div className="relative flex-1">
             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />

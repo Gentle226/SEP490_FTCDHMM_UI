@@ -1,5 +1,6 @@
 'use client';
 
+import { BookOpen } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -46,8 +47,8 @@ export default function EditRecipePage() {
 
   if (isLoading) {
     return (
-      <DashboardLayout showHeader={false}>
-        <div className="mx-auto max-w-5xl space-y-6 p-6">
+      <DashboardLayout showHeader={true} hideCreateButton={true}>
+        <div className="mx-auto w-[80%] space-y-6 py-8">
           <Skeleton className="h-12 w-64" />
           <div className="space-y-4">
             <Skeleton className="h-64 w-full" />
@@ -61,7 +62,7 @@ export default function EditRecipePage() {
 
   if (error || !recipe) {
     return (
-      <DashboardLayout showHeader={false}>
+      <DashboardLayout showHeader={true} hideCreateButton={true}>
         <div className="flex min-h-[400px] items-center justify-center">
           <div className="text-center">
             <p className="text-lg text-red-500">{error || 'Không tìm thấy công thức'}</p>
@@ -78,11 +79,18 @@ export default function EditRecipePage() {
   }
 
   return (
-    <DashboardLayout showHeader={false}>
-      <div className="mx-auto max-w-5xl space-y-6 p-6">
-        <div>
-          <h1 className="text-3xl font-bold text-[#99b94a]">Chỉnh sửa công thức</h1>
-          <p className="mt-2 text-gray-600">Cập nhật thông tin công thức của bạn</p>
+    <DashboardLayout showHeader={true} hideCreateButton={true}>
+      <div className="mx-auto w-[80%] py-8">
+        <div className="mb-6 flex items-start gap-4">
+          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-[#99b94a]/10">
+            <BookOpen className="h-7 w-7 text-[#99b94a]" />
+          </div>
+          <div className="flex-1 pt-0.5">
+            <h1 className="text-2xl font-bold tracking-tight text-[#99b94a]">
+              Chỉnh sửa công thức
+            </h1>
+            <p className="text-muted-foreground text-sm">Cập nhật thông tin công thức của bạn</p>
+          </div>
         </div>
 
         <RecipeForm recipeId={recipeId} initialData={recipe} mode="edit" />

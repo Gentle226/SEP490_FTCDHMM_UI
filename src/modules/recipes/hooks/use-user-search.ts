@@ -15,25 +15,24 @@ export function useUserSearch() {
 
   const searchUsers = useCallback(
     async (query: string, excludeUserId?: string): Promise<UserSearchResult[]> => {
-      if (!query.trim() || query.length < 2) {
-        return [];
-      }
-
       setIsLoading(true);
       try {
-        const response = await userManagementService.getCustomers({
-          pageNumber: 1,
-          pageSize: 10,
-          search: query.trim(),
-        });
+        // Allow searching with empty query (shows all users) or queries with 2+ characters
+        const searchQuery = query.trim();
+        if (searchQuery.length > 0 && searchQuery.length < 2) {
+          return [];
+        }
 
-        return response.items
+        const users = await userManagementService.getTaggableUsers(searchQuery || undefined);
+
+        return users
           .filter((user) => user.id !== excludeUserId) // Filter out current user
           .map((user) => ({
             id: user.id,
             userName: `${user.lastName} ${user.firstName}`, // Use full name for mentions
             lastName: user.lastName,
-            avatarUrl: user.avatarUrl, // Now properly typed on User interface
+            firstName: user.firstName,
+            avatarUrl: user.avatarUrl,
           }));
       } catch (error) {
         console.error('Error searching users:', error);

@@ -13,7 +13,7 @@ function NewRecipePageContent() {
 
 export default function NewRecipePage() {
   return (
-    <DashboardLayout showHeader={false}>
+    <DashboardLayout showHeader={true} hideCreateButton={true}>
       <NewRecipePageContent />
     </DashboardLayout>
   );

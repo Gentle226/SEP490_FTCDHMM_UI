@@ -13,6 +13,7 @@ export interface RecipeLabel {
 
 export interface CookingStepImageDetail {
   id: string;
+  imageId: string;
   imageUrl?: string;
   imageOrder: number;
 }
@@ -24,6 +25,11 @@ export interface CookingStepDetail {
   cookingStepImages: CookingStepImageDetail[];
   // Deprecated: keeping for backward compatibility
   imageUrl?: string;
+}
+
+export interface RecipeParent {
+  id: string;
+  name: string;
 }
 
 export interface RecipeDetail {
@@ -49,6 +55,11 @@ export interface RecipeDetail {
       imageUrl?: string;
     };
   }>;
+  taggedUser?: Array<{
+    id: string;
+    firstName: string;
+    lastName: string;
+  }>;
   createdBy?: {
     id: string;
     userName: string;
@@ -70,4 +81,5 @@ export interface RecipeDetail {
   updatedAtUtc?: string; // New field for update timestamp
   createdAt?: string; // Keep for backward compatibility
   updatedAt?: string; // Keep for backward compatibility
+  parent?: RecipeParent; // Parent recipe if this is a copy
 }

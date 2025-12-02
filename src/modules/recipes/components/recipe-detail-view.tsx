@@ -7,10 +7,12 @@ import {
   Calendar,
   ChefHat,
   Clock,
+  Copy,
   Edit,
   Share2,
   Trash2,
   TriangleAlert,
+  UserPlus,
   Users,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -25,6 +27,7 @@ import { getToken } from '@/base/lib/get-token.lib';
 import { useAuth } from '@/modules/auth/contexts/auth.context';
 import { checkIngredientRestriction, useGetUserDietRestrictions } from '@/modules/diet-restriction';
 import { recipeService } from '@/modules/recipes/services/recipe.service';
+import { ReportTargetType, ReportTrigger } from '@/modules/report';
 
 import { useCommentManager, useSignalRConnection } from '../hooks';
 import { useRecipeDetail, useSaveRecipe, useUnsaveRecipe } from '../hooks/use-recipe-actions';
@@ -119,6 +122,29 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleCopy = () => {
+    if (!recipe) return;
+
+    // Store the current recipe data in session storage to pass to the copy form
+    const copyData = {
+      parentId: recipeId,
+      sourceName: recipe.name,
+      sourceDescription: recipe.description,
+      sourceImageUrl: recipe.imageUrl,
+      sourceIngredients: recipe.ingredients,
+      sourceCookingSteps: recipe.cookingSteps,
+      sourceDifficulty: recipe.difficulty?.value,
+      sourceCookTime: recipe.cookTime,
+      sourceRation: recipe.ration,
+      sourceLabels: recipe.labels,
+    };
+
+    sessionStorage.setItem('recipesCopyData', JSON.stringify(copyData));
+
+    // Navigate to the new recipe form (which will handle the copy)
+    router.push('/recipe/new?copy=true');
   };
 
   const handleShare = async () => {
@@ -341,6 +367,21 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
             </div>
           )}
 
+          {/* Parent Recipe Link */}
+          {recipe.parent && (
+            <div className="rounded-lg border border-[#99b94a] bg-gradient-to-br from-green-50 to-white p-3">
+              <p className="text-xs text-[#99b94a]">
+                Đây là bản sao từ công thức{' '}
+                <button
+                  onClick={() => router.push(`/recipe/${recipe.parent?.id}`)}
+                  className="font-semibold text-[#99b94a] underline hover:text-[#7a8a2f]"
+                >
+                  {recipe.parent?.name}
+                </button>
+              </p>
+            </div>
+          )}
+
           {/* Meta Info: Difficulty, Time, Ration, Created Date */}
           <div className="flex flex-wrap gap-2 text-xs text-gray-600 sm:gap-4 sm:text-sm">
             <div className="flex items-center gap-1">
@@ -364,6 +405,8 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                   recipe.updatedAtUtc || recipe.updatedAt,
                 );
                 if (!timestampInfo) return null;
+                const relativeTime = getRelativeTime(timestampInfo.timestamp);
+                const isJustNow = relativeTime === 'Vừa xong';
                 return (
                   <div
                     className="flex items-center gap-1"
@@ -372,11 +415,31 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                     <Calendar className="h-4 w-4" />
                     <span>
                       {timestampInfo.isUpdated ? 'Cập nhật: ' : ''}
-                      {getRelativeTime(timestampInfo.timestamp)} trước
+                      {relativeTime}
+                      {!isJustNow && ' trước'}
                     </span>
                   </div>
                 );
               })()}
+            {recipe.taggedUser && recipe.taggedUser.length > 0 && (
+              <div className="flex items-center gap-1">
+                <UserPlus className="h-4 w-4" />
+                <span>
+                  Nấu với{' '}
+                  {recipe.taggedUser.map((user, index) => (
+                    <span key={user.id}>
+                      <button
+                        onClick={() => router.push(`/profile/${user.id}`)}
+                        className="font-medium text-[#99b94a] hover:underline"
+                      >
+                        {`${user.firstName} ${user.lastName}`}
+                      </button>
+                      {index < recipe.taggedUser!.length - 1 && ', '}
+                    </span>
+                  ))}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Author Info */}
@@ -460,7 +523,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
               </>
             ) : (
               <>
-                {/* Non-author buttons: Save */}
+                {/* Non-author buttons: Copy and Save */}
                 <Button
                   variant="outline"
                   size="sm"
@@ -475,12 +538,27 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                   )}
                   {isSaved ? 'Đã lưu' : 'Lưu'}
                 </Button>
+                <Button variant="outline" size="sm" className="gap-2" onClick={handleCopy}>
+                  <Copy className="h-4 w-4" />
+                  Tạo bản sao
+                </Button>
               </>
             )}
             <Button variant="outline" size="sm" className="gap-2" onClick={handleShare}>
               <Share2 className="h-4 w-4" />
               Chia sẻ
             </Button>
+            {/* Report Button - Only show if not author */}
+            {!isAuthor && user && (
+              <ReportTrigger
+                targetId={recipeId}
+                targetType={ReportTargetType.RECIPE}
+                targetName={recipe.name}
+                variant="outline"
+                size="sm"
+                showLabel
+              />
+            )}
           </div>
         </div>
       </div>

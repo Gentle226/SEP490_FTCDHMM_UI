@@ -1,9 +1,14 @@
 'use client';
 
+import { Check, X } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+
+import { Button } from '@/base/components/ui/button';
+import { ReportTargetType } from '@/modules/report';
+import { ReportModal } from '@/modules/report/components/ReportModal';
 
 import { Comment } from '../types/comment.types';
 import { getFullDateTimeVN, getRelativeTime } from '../utils/time.utils';
@@ -47,13 +52,58 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   replyingTo = null,
 }) => {
   const router = useRouter();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [deleting, setDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   const canDelete = currentUserId === comment.userId || isRecipeAuthor || isAdmin;
   const canEdit = currentUserId === comment.userId;
   const isLastChild = index === siblingsCount - 1;
+
+  // Auto-focus textarea when entering edit mode
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus();
+      // Move cursor to end
+      textareaRef.current.setSelectionRange(
+        textareaRef.current.value.length,
+        textareaRef.current.value.length,
+      );
+      // Auto-expand textarea to fit content
+      autoResizeTextarea();
+    }
+  }, [isEditing]);
+
+  const autoResizeTextarea = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height =
+        Math.min(
+          textareaRef.current.scrollHeight,
+          400, // max-height
+        ) + 'px';
+    }
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setEditContent(e.target.value);
+    autoResizeTextarea();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Ctrl+Enter or Cmd+Enter to save
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      handleEditSave();
+    }
+    // Escape to cancel
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      handleEditCancel();
+    }
+  };
 
   const handleDeleteClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -179,47 +229,59 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
         {/* Comment Content Container */}
         <div className="flex-1 space-y-1">
-          {/* Comment Bubble */}
-          <div className="inline-block max-w-full rounded-2xl bg-gray-100 px-3 py-2 sm:px-4">
-            {/* User Name */}
-            <button
-              onClick={handleProfileClick}
-              disabled={!comment.userId}
-              className="text-left text-xs font-semibold text-gray-900 transition-colors hover:text-[#99b94a] disabled:cursor-default disabled:hover:text-gray-900 sm:text-sm"
-            >
-              {comment.firstName} {comment.lastName}
-            </button>
-
-            {/* Content - Show edit form or display content with inline mentions */}
-            {isEditing ? (
-              <div className="mt-2 space-y-2">
-                <textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  maxLength={2048}
-                  rows={3}
-                  className="w-full rounded border border-gray-300 p-2 text-sm font-normal"
-                  placeholder="Chỉnh sửa bình luận..."
-                  disabled={isSavingEdit}
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleEditSave}
-                    disabled={isSavingEdit}
-                    className="text-xs font-semibold text-[#99b94a] hover:underline disabled:opacity-50"
-                  >
-                    {isSavingEdit ? 'Đang lưu...' : 'Lưu'}
-                  </button>
-                  <button
-                    onClick={handleEditCancel}
-                    disabled={isSavingEdit}
-                    className="text-xs font-semibold text-gray-600 hover:underline disabled:opacity-50"
-                  >
-                    Hủy
-                  </button>
-                </div>
+          {/* Comment Bubble or Edit Form */}
+          {isEditing ? (
+            <div className="w-full space-y-2 rounded-lg bg-gray-100 p-4">
+              <textarea
+                ref={textareaRef}
+                value={editContent}
+                onChange={handleTextareaChange}
+                onKeyDown={handleKeyDown}
+                maxLength={2048}
+                rows={1}
+                className="scrollbar-hide w-full resize-none rounded-lg border border-[#99b94a] bg-white p-3 text-sm font-normal text-gray-900 placeholder-gray-500 transition-colors focus:border-[#99b94a] focus:ring-1 focus:ring-[#99b94a] focus:outline-none"
+                placeholder="Chỉnh sửa bình luận..."
+                disabled={isSavingEdit}
+              />
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs text-gray-500">{editContent.length}/2048</span>
+                <span className="text-xs text-gray-400">Ctrl+Enter để lưu, Esc để hủy</span>
               </div>
-            ) : (
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  onClick={handleEditCancel}
+                  disabled={isSavingEdit}
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5"
+                >
+                  <X className="h-4 w-4" />
+                  Hủy
+                </Button>
+                <Button
+                  onClick={handleEditSave}
+                  disabled={isSavingEdit || !editContent.trim()}
+                  size="sm"
+                  variant="default"
+                  className="gap-1.5 bg-[#99b94a] hover:bg-[#7a8f3a]"
+                >
+                  <Check className="h-4 w-4" />
+                  {isSavingEdit ? 'Đang lưu...' : 'Lưu'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="inline-block max-w-full rounded-2xl bg-gray-100 px-3 py-2 sm:px-4">
+              {/* User Name */}
+              <button
+                onClick={handleProfileClick}
+                disabled={!comment.userId}
+                className="text-left text-xs font-semibold text-gray-900 transition-colors hover:text-[#99b94a] disabled:cursor-default disabled:hover:text-gray-900 sm:text-sm"
+              >
+                {comment.firstName} {comment.lastName}
+              </button>
+
+              {/* Content - Display with mentions */}
               <div className="mt-0.5 flex flex-wrap items-baseline gap-1">
                 {/* Mentioned Users - Show as inline badges with content */}
                 {comment.mentions && comment.mentions.length > 0 && (
@@ -244,14 +306,14 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                   {comment.content}
                 </p>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Actions Row */}
-          <div className="flex items-center gap-3 px-3 text-xs text-gray-600">
+          <div className="flex flex-wrap items-center gap-3 px-3 pt-2 text-xs text-gray-600">
             {/* Timestamp with hover tooltip */}
             <span
-              className="cursor-default font-medium"
+              className="cursor-default font-medium hover:text-gray-800"
               title={getFullDateTimeVN(comment.createdAtUtc)}
             >
               {getRelativeTime(comment.createdAtUtc)}
@@ -286,6 +348,25 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               >
                 {deleting ? 'Đang xóa...' : 'Xóa'}
               </button>
+            )}
+
+            {/* Report Button - Only show for non-owner comments */}
+            {currentUserId && currentUserId !== comment.userId && (
+              <>
+                <button
+                  onClick={() => setReportModalOpen(true)}
+                  className="font-semibold text-red-600 transition-colors hover:text-red-700 hover:underline disabled:opacity-50"
+                >
+                  Báo cáo
+                </button>
+                <ReportModal
+                  open={reportModalOpen}
+                  onOpenChange={setReportModalOpen}
+                  targetId={comment.id}
+                  targetType={ReportTargetType.COMMENT}
+                  targetName={`Bình luận của ${comment.firstName} ${comment.lastName}`}
+                />
+              </>
             )}
           </div>
         </div>

@@ -227,7 +227,9 @@ export default function EditProfilePage() {
                 </p>
                 <div className="space-y-1">
                   <p className="text-muted-foreground text-xs">Email của bạn</p>
-                  <p className="text-foreground text-xs break-all">{user.email}</p>
+                  <p className="text-foreground text-xs break-all">
+                    {profile?.email || user.email}
+                  </p>
                 </div>
               </div>
 

@@ -1,16 +1,18 @@
 'use client';
 
 import {
-  BookHeart,
+  ArrowLeft,
   BookMarked,
   ClipboardList,
   CookingPot,
+  FileEdit,
   Goal,
   History,
   Home,
   KeyRound,
+  List,
+  MessageSquareWarning,
   Salad,
-  ScrollText,
   Tags,
   Users,
   WheatOff,
@@ -26,7 +28,6 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -45,9 +46,14 @@ import { UserActions } from './user-actions';
 interface DashboardLayoutProps {
   children: React.ReactNode;
   showHeader?: boolean;
+  hideCreateButton?: boolean;
 }
 
-export function DashboardLayout({ children, showHeader = true }: DashboardLayoutProps) {
+export function DashboardLayout({
+  children,
+  showHeader = true,
+  hideCreateButton = false,
+}: DashboardLayoutProps) {
   const { user, setUser } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -100,6 +106,11 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
           url: '/admin/health-goals',
           icon: Goal,
         },
+        {
+          title: 'Quản Lý Báo Cáo',
+          url: '/admin/reports',
+          icon: MessageSquareWarning,
+        },
       ];
     }
 
@@ -110,6 +121,16 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
           title: 'Quản Lý Khách Hàng',
           url: '/moderator/dashboard',
           icon: Users,
+        },
+        {
+          title: 'Quản Lý Công Thức',
+          url: '/moderator/recipe',
+          icon: List,
+        },
+        {
+          title: 'Quản Lý Báo Cáo',
+          url: '/moderator/reports',
+          icon: MessageSquareWarning,
         },
         {
           title: 'Quản Lý Nguyên Liệu',
@@ -126,11 +147,6 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
           url: '/moderator/label',
           icon: Tags,
         },
-        {
-          title: 'Nguyên Tắc Đăng Bài',
-          url: '/moderator/rule',
-          icon: ScrollText,
-        },
       ];
     }
 
@@ -138,24 +154,9 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
     return [
       ...commonItems,
       {
-        title: 'Công Thức Của Tôi',
-        url: '/myrecipe',
-        icon: CookingPot,
-      },
-      {
-        title: 'Công Thức Đã Lưu',
-        url: '/saved-recipes',
-        icon: BookMarked,
-      },
-      {
-        title: 'Công Thức Ưa Thích',
-        url: '/favorite-recipes',
-        icon: BookHeart,
-      },
-      {
-        title: 'Công Thức Đã Xem',
-        url: '/history',
-        icon: History,
+        title: 'Mục Tiêu Sức Khỏe',
+        url: '/profile/health-goals',
+        icon: Goal,
       },
       {
         title: 'Hạn Chế Thành Phần',
@@ -163,9 +164,24 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
         icon: WheatOff,
       },
       {
-        title: 'Mục Tiêu Sức Khỏe',
-        url: '/profile/health-goals',
-        icon: Goal,
+        title: 'Công Thức Của Tôi',
+        url: '/myrecipe',
+        icon: CookingPot,
+      },
+      {
+        title: 'Bản Nháp Của Tôi',
+        url: '/drafts',
+        icon: FileEdit,
+      },
+      {
+        title: 'Công Thức Đã Lưu',
+        url: '/saved-recipes',
+        icon: BookMarked,
+      },
+      {
+        title: 'Công Thức Đã Xem',
+        url: '/history',
+        icon: History,
       },
     ];
   };
@@ -203,7 +219,6 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
 
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>Điều Hướng</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {navigationItems.map((item) => {
@@ -234,6 +249,35 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
         {showHeader && (
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger className="-ml-1" />
+            {/* Back button for recipe details page */}
+            {pathname.startsWith('/recipe/') &&
+              !pathname.endsWith('/edit') &&
+              !pathname.endsWith('/new') && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.back()}
+                  className="gap-2"
+                  title="Quay lại"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Quay Lại
+                </Button>
+              )}
+            {/* Back button for recipe and draft edit pages */}
+            {(pathname.includes('/recipe/') || pathname.includes('/drafts/')) &&
+              pathname.endsWith('/edit') && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.back()}
+                  className="gap-2"
+                  title="Quay lại"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Quay Lại
+                </Button>
+              )}
             <div className="flex flex-1 items-center justify-end gap-4">
               {/* Ingredient Detection Button */}
               <Button
@@ -246,11 +290,13 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
                 Quét Nguyên Liệu
               </Button>
 
-              <Link href="/recipe/new">
-                <Button size="sm" className="bg-[#99b94a] whitespace-nowrap hover:bg-[#7a8f3a]">
-                  + Viết món mới
-                </Button>
-              </Link>
+              {!hideCreateButton && (
+                <Link href="/recipe/new">
+                  <Button size="sm" className="bg-[#99b94a] whitespace-nowrap hover:bg-[#7a8f3a]">
+                    + Viết món mới
+                  </Button>
+                </Link>
+              )}
               {user && <UserActions user={user} onLogout={handleLogout} />}
             </div>
           </header>

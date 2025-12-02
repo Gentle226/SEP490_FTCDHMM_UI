@@ -274,4 +274,9 @@ export const PermissionPolicies = {
   CUSTOMER_UPDATE: 'CustomerManagement:Update',
   CUSTOMER_DELETE: 'CustomerManagement:Delete',
   CUSTOMER_CREATE: 'CustomerManagement:Create',
+  // Recipe Management Permissions
+  RECIPE_MANAGEMENT_VIEW: 'Recipe:ManagementView',
+  RECIPE_DELETE: 'Recipe:Delete',
+  RECIPE_LOCK: 'Recipe:Lock',
+  RECIPE_APPROVE: 'Recipe:Approve',
 } as const;
