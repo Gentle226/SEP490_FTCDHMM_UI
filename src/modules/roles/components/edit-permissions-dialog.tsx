@@ -98,6 +98,8 @@ export function EditPermissionsDialog({
       Delete: 'Xóa',
       Approve: 'Duyệt',
       Reject: 'Từ chối',
+      Lock: 'Khóa',
+      ManagementView: 'Xem',
     };
     return actionMap[actionName] || actionName;
   };

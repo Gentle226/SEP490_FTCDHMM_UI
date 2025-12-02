@@ -10,6 +10,7 @@ import {
   History,
   Home,
   KeyRound,
+  List,
   MessageSquareWarning,
   Salad,
   Tags,
@@ -120,6 +121,11 @@ export function DashboardLayout({
           title: 'Quản Lý Khách Hàng',
           url: '/moderator/dashboard',
           icon: Users,
+        },
+        {
+          title: 'Quản Lý Công Thức',
+          url: '/moderator/recipe',
+          icon: List,
         },
         {
           title: 'Quản Lý Nguyên Liệu',

@@ -799,6 +799,74 @@ class RecipeService extends HttpClient {
       isPrivateRoute: true,
     });
   }
+
+  // ========================================
+  // Recipe Management Methods (Admin/Moderator)
+  // ========================================
+
+  /**
+   * Get pending recipes list for management
+   */
+  public async getPendingRecipes(params: PaginationParams = {}) {
+    const { pageNumber = 1, pageSize = 10 } = params;
+
+    return this.get<import('../types').RecipeManagementListResponse>('api/Recipe/pending', {
+      isPrivateRoute: true,
+      params: {
+        PageNumber: pageNumber,
+        PageSize: pageSize,
+      },
+    });
+  }
+
+  /**
+   * Lock a recipe (Admin/Moderator action)
+   */
+  public async lockRecipe(recipeId: string, reason: string) {
+    return this.post<void>(
+      `api/RecipeManagement/${recipeId}/lock`,
+      { reason },
+      {
+        isPrivateRoute: true,
+      },
+    );
+  }
+
+  /**
+   * Approve a recipe (Admin/Moderator action)
+   */
+  public async approveRecipe(recipeId: string) {
+    return this.post<void>(
+      `api/RecipeManagement/${recipeId}/approve`,
+      {},
+      {
+        isPrivateRoute: true,
+      },
+    );
+  }
+
+  /**
+   * Reject a recipe (Admin/Moderator action)
+   */
+  public async rejectRecipe(recipeId: string, reason: string) {
+    return this.post<void>(
+      `api/RecipeManagement/${recipeId}/reject`,
+      { reason },
+      {
+        isPrivateRoute: true,
+      },
+    );
+  }
+
+  /**
+   * Delete a recipe by admin (Admin/Moderator action)
+   */
+  public async deleteRecipeByAdmin(recipeId: string, reason: string) {
+    return this.delete<void>(`api/RecipeManagement/${recipeId}`, {
+      isPrivateRoute: true,
+      data: { reason },
+    });
+  }
 }
 
 export const recipeService = new RecipeService();

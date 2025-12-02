@@ -4,6 +4,7 @@ export * from './use-image-upload';
 export * from './use-ingredient-search';
 export * from './use-label-search';
 export * from './use-recipe-actions';
+export * from './use-recipe-management';
 export * from './use-signalr-connection';
 export * from './use-user-recipes';
 export * from './use-user-tagging';

@@ -51,4 +51,5 @@ export * from './draft.types';
 export * from './my-recipe.types';
 export * from './rating.types';
 export * from './recipe-detail.types';
+export * from './recipe-management.types';
 export * from './recommendation.types';
