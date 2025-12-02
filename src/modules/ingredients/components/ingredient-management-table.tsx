@@ -327,8 +327,18 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                           className="size-10 rounded object-cover"
                         />
                       )}
-                      <div>
-                        <div>{ingredient.name}</div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span>{ingredient.name}</span>
+                          {ingredient.isNew && (
+                            <Badge
+                              variant="outline"
+                              className="border-amber-500 bg-amber-50 text-xs text-amber-600"
+                            >
+                              Cần xác minh
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </TableCell>

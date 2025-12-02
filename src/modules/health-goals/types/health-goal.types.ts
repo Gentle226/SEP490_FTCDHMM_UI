@@ -65,6 +65,7 @@ export interface UserHealthGoalResponse {
   description?: string;
   targets: NutrientTarget[];
   expiredAtUtc?: string; // ISO 8601 date string
+  startedAtUtc: string; // ISO 8601 date string
 }
 
 export interface SetUserHealthGoalRequest {

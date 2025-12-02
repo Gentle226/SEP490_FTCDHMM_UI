@@ -5,6 +5,7 @@ import {
   ChefHat,
   Clock,
   Flame,
+  Globe,
   ImageIcon,
   Plus,
   Salad,
@@ -40,6 +41,8 @@ import { useDebounce } from '@/base/hooks';
 import { useAuth } from '@/modules/auth';
 import {
   Ingredient,
+  IngredientNameResponse,
+  capitalizeFirstLetter,
   ingredientManagementService,
 } from '@/modules/ingredients/services/ingredient-management.service';
 import {
@@ -133,8 +136,10 @@ export function RecipeForm({
   const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>([]);
   const [ingredientSearch, setIngredientSearch] = useState('');
   const [ingredientSearchResults, setIngredientSearchResults] = useState<Ingredient[]>([]);
+  const [usdaSearchResults, setUsdaSearchResults] = useState<IngredientNameResponse[]>([]);
   const [isIngredientPopoverOpen, setIsIngredientPopoverOpen] = useState(false);
   const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
+  const [isLoadingUsdaSearch, setIsLoadingUsdaSearch] = useState(false);
   const debouncedIngredientSearch = useDebounce(ingredientSearch, 300);
 
   // Tagged users state
@@ -217,12 +222,13 @@ export function RecipeForm({
     searchLabels();
   }, [debouncedLabelSearch, isLabelPopoverOpen]);
 
-  // Search ingredients
+  // Search ingredients from local database
   useEffect(() => {
     async function searchIngredients() {
       if (!isIngredientPopoverOpen) return;
 
       setIsLoadingIngredients(true);
+      setUsdaSearchResults([]); // Clear USDA results when starting new search
       try {
         const response = await ingredientManagementService.getIngredients({
           search: debouncedIngredientSearch,
@@ -239,6 +245,24 @@ export function RecipeForm({
 
     searchIngredients();
   }, [debouncedIngredientSearch, isIngredientPopoverOpen]);
+
+  // Manual USDA search function (triggered by button click)
+  const handleSearchFromUsda = async () => {
+    if (debouncedIngredientSearch.trim().length < 2) {
+      return;
+    }
+
+    setIsLoadingUsdaSearch(true);
+    try {
+      const results = await ingredientManagementService.searchForRecipe(debouncedIngredientSearch);
+      setUsdaSearchResults(results);
+    } catch (error) {
+      console.error('Failed to search from USDA:', error);
+      setUsdaSearchResults([]);
+    } finally {
+      setIsLoadingUsdaSearch(false);
+    }
+  };
 
   // Search users for tagging
   useEffect(() => {
@@ -345,102 +369,9 @@ export function RecipeForm({
     }
   }, [mode, initialDraft]);
 
-  // Load draft recipe on component mount in create mode
-  useEffect(() => {
-    let isMounted = true;
-
-    if (mode === 'create') {
-      const loadDraft = async () => {
-        try {
-          const draft = await recipeService.getDraft();
-          if (!isMounted) return;
-
-          if (draft) {
-            // Set form fields from draft
-            setName(draft.name || '');
-            setDescription(draft.description || '');
-            // Normalize difficulty: convert MEDIUM/HARD/EASY to Capitalized format
-            const normalizedDifficulty = draft.difficulty
-              ? ((draft.difficulty.charAt(0).toUpperCase() +
-                  draft.difficulty.slice(1).toLowerCase()) as 'Easy' | 'Medium' | 'Hard')
-              : 'Easy';
-            setDifficulty(normalizedDifficulty);
-            setCookTime(draft.cookTime || 0);
-            setRation(draft.ration || 1);
-
-            // Set labels
-            if (draft.labels && draft.labels.length > 0) {
-              setSelectedLabels(
-                draft.labels.map((label) => ({
-                  id: label.id,
-                  name: label.name,
-                  colorCode: label.colorCode,
-                })),
-              );
-            }
-
-            // Set ingredients
-            if (draft.ingredients && draft.ingredients.length > 0) {
-              setSelectedIngredients(
-                draft.ingredients.map((ingredient) => ({
-                  id: ingredient.ingredientId,
-                  name: ingredient.name,
-                  quantityGram: ingredient.quantityGram,
-                })),
-              );
-            }
-
-            // Set tagged users
-            if (draft.taggedUser && draft.taggedUser.length > 0) {
-              setSelectedUsers(
-                draft.taggedUser.map((user) => ({
-                  id: user.id,
-                  firstName: user.firstName,
-                  lastName: user.lastName,
-                })),
-              );
-            }
-
-            // Set cooking steps
-            if (draft.cookingSteps && draft.cookingSteps.length > 0) {
-              setCookingSteps(
-                draft.cookingSteps
-                  .sort((a, b) => a.stepOrder - b.stepOrder)
-                  .map((step) => ({
-                    id: crypto.randomUUID(),
-                    stepOrder: step.stepOrder,
-                    instruction: step.instruction || '',
-                    images:
-                      step.cookingStepImages?.map((img) => ({
-                        id: img.id,
-                        image: img.imageUrl || '',
-                        imageOrder: img.imageOrder,
-                        imageUrl: img.imageUrl,
-                      })) || [],
-                  })),
-              );
-            }
-
-            // Set main image preview
-            if (draft.imageUrl) {
-              setMainImagePreview(draft.imageUrl);
-            }
-
-            toast.success('Bản nháp công thức đã được tải');
-          }
-        } catch (error) {
-          console.error('Failed to load draft:', error);
-          // Silently fail - this is optional functionality
-        }
-      };
-
-      loadDraft();
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [mode]);
+  // Note: In create mode, we no longer auto-load a draft since users can now have multiple drafts
+  // Users should explicitly select a draft from the drafts list if they want to continue from one
+  // The draft-edit mode handles loading specific drafts via initialDraft prop
 
   // Initialize form with existing data in edit mode
   useEffect(() => {
@@ -823,15 +754,19 @@ export function RecipeForm({
     setSelectedUsers((prev) => prev.filter((u) => u.id !== userId));
   };
 
-  const addIngredient = (ingredient: Ingredient) => {
+  // Add ingredient from local database or USDA search
+  const addIngredient = (ingredient: Ingredient | IngredientNameResponse) => {
     if (!selectedIngredients.some((i) => i.id === ingredient.id)) {
+      // Capitalize the first letter of ingredient name for consistency
+      const normalizedName = capitalizeFirstLetter(ingredient.name);
       setSelectedIngredients((prev) => [
         ...prev,
-        { id: ingredient.id, name: ingredient.name, quantityGram: 0 },
+        { id: ingredient.id, name: normalizedName, quantityGram: 0 },
       ]);
     }
     setIsIngredientPopoverOpen(false);
     setIngredientSearch('');
+    setUsdaSearchResults([]);
   };
 
   const removeIngredient = (ingredientId: string) => {
@@ -1594,27 +1529,103 @@ export function RecipeForm({
                 <CommandList>
                   {isLoadingIngredients ? (
                     <div className="py-6 text-center text-sm text-gray-500">Đang tải...</div>
-                  ) : ingredientSearchResults.length === 0 ? (
-                    <CommandEmpty>Không tìm thấy nguyên liệu nào.</CommandEmpty>
                   ) : (
-                    <CommandGroup>
-                      {ingredientSearchResults.map((ingredient) => {
-                        const isSelected = selectedIngredients.some((i) => i.id === ingredient.id);
-                        return (
-                          <CommandItem
-                            key={ingredient.id}
-                            onSelect={() => addIngredient(ingredient)}
-                            disabled={isSelected}
-                            className="cursor-pointer"
+                    <>
+                      {/* Local ingredients results */}
+                      {ingredientSearchResults.length > 0 && (
+                        <CommandGroup heading="Nguyên liệu có sẵn">
+                          {ingredientSearchResults.map((ingredient) => {
+                            const isSelected = selectedIngredients.some(
+                              (i) => i.id === ingredient.id,
+                            );
+                            return (
+                              <CommandItem
+                                key={ingredient.id}
+                                onSelect={() => addIngredient(ingredient)}
+                                disabled={isSelected}
+                                className="cursor-pointer"
+                              >
+                                <div className="flex w-full items-center gap-2">
+                                  <span className="flex-1">{ingredient.name}</span>
+                                  {isSelected && (
+                                    <span className="text-xs text-gray-500">Đã chọn</span>
+                                  )}
+                                </div>
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      )}
+
+                      {/* USDA search results */}
+                      {usdaSearchResults.length > 0 && (
+                        <CommandGroup heading="Tìm thấy từ USDA">
+                          {usdaSearchResults.map((ingredient) => {
+                            const isSelected = selectedIngredients.some(
+                              (i) => i.id === ingredient.id,
+                            );
+                            return (
+                              <CommandItem
+                                key={ingredient.id}
+                                onSelect={() => addIngredient(ingredient)}
+                                disabled={isSelected}
+                                className="cursor-pointer"
+                              >
+                                <div className="flex w-full items-center gap-2">
+                                  <span className="flex-1">
+                                    {capitalizeFirstLetter(ingredient.name)}
+                                  </span>
+                                  <span className="text-xs text-amber-600">USDA</span>
+                                  {isSelected && (
+                                    <span className="text-xs text-gray-500">Đã chọn</span>
+                                  )}
+                                </div>
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      )}
+
+                      {/* Empty state */}
+                      {ingredientSearchResults.length === 0 &&
+                        usdaSearchResults.length === 0 &&
+                        !isLoadingUsdaSearch &&
+                        (debouncedIngredientSearch.trim().length >= 2 ? (
+                          <div className="py-4 text-center text-sm text-gray-500">
+                            Không tìm thấy nguyên liệu trong hệ thống.
+                          </div>
+                        ) : (
+                          <div className="py-6 text-center text-sm text-gray-500">
+                            Nhập ít nhất 2 ký tự để tìm kiếm
+                          </div>
+                        ))}
+
+                      {/* USDA Search Button */}
+                      {debouncedIngredientSearch.trim().length >= 2 && (
+                        <div className="border-t p-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full gap-2"
+                            disabled={isLoadingUsdaSearch}
+                            onClick={handleSearchFromUsda}
                           >
-                            <div className="flex w-full items-center gap-2">
-                              <span className="flex-1">{ingredient.name}</span>
-                              {isSelected && <span className="text-xs text-gray-500">Đã chọn</span>}
-                            </div>
-                          </CommandItem>
-                        );
-                      })}
-                    </CommandGroup>
+                            {isLoadingUsdaSearch ? (
+                              <>
+                                <Search className="h-4 w-4 animate-pulse" />
+                                Đang tìm từ USDA...
+                              </>
+                            ) : (
+                              <>
+                                <Globe className="h-4 w-4" />
+                                Tìm từ USDA
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </CommandList>
               </Command>

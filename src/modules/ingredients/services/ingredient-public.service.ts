@@ -7,6 +7,7 @@ export interface IngredientListItem {
   imageUrl?: string;
   categoryNames: Array<{ id: string; name: string }>;
   lastUpdatedUtc: string;
+  isNew: boolean;
 }
 
 export interface IngredientsPublicResponse {
@@ -23,6 +24,7 @@ export interface IngredientDetailsResponse {
   description?: string;
   imageUrl: string;
   lastUpdatedUtc: string;
+  isNew: boolean;
   categories: Array<{ id: string; name: string }>;
   nutrients: Array<{
     name: string;

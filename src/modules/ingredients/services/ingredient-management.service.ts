@@ -40,6 +40,7 @@ export interface Ingredient {
   nutrients: Nutrient[];
   lastUpdatedUtc: string;
   createdAtUtc?: string;
+  isNew?: boolean; // Indicates USDA-fetched ingredients needing moderator review
 }
 
 export interface IngredientApiResponse {
@@ -51,11 +52,29 @@ export interface IngredientApiResponse {
   lastUpdatedUtc: string;
   categories: IngredientCategory[];
   nutrients: NutrientResponse[];
+  isNew?: boolean;
 }
 
 export interface IngredientDetectionResult {
   ingredient: string;
   confidence: number;
+}
+
+/**
+ * Simple ingredient name response from USDA search
+ */
+export interface IngredientNameResponse {
+  id: string;
+  name: string;
+}
+
+/**
+ * Capitalize the first letter of a string (for ingredient naming convention)
+ * @example "quả táo" -> "Quả táo"
+ */
+export function capitalizeFirstLetter(text: string): string {
+  if (!text || text.length === 0) return text;
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 export interface IngredientListItemResponse {
@@ -65,6 +84,7 @@ export interface IngredientListItemResponse {
   calories?: number;
   lastUpdatedUtc: string;
   categoryNames: IngredientCategory[];
+  isNew?: boolean; // Indicates USDA-fetched ingredients needing moderator review
 }
 
 export interface PaginationParams {
@@ -180,6 +200,7 @@ class IngredientManagementService extends HttpClient {
         categoryNames: item.categoryNames?.map((cat) => cat.name) || [],
         nutrients: [],
         lastUpdatedUtc: item.lastUpdatedUtc,
+        isNew: item.isNew, // USDA-fetched ingredients needing moderator review
       })),
     };
   }
@@ -340,6 +361,28 @@ class IngredientManagementService extends HttpClient {
     return this.post<IngredientDetectionResult[]>(`api/Ingredient/detect-gemini`, formData, {
       isPrivateRoute: true,
     });
+  }
+
+  /**
+   * Search ingredients for recipe creation (includes USDA fetching if not found locally)
+   * This endpoint will search local database first, and if not found,
+   * it will fetch from USDA, translate to Vietnamese, and create the ingredient
+   * @param keyword - Search keyword (will be capitalized on the frontend)
+   */
+  async searchForRecipe(keyword: string): Promise<IngredientNameResponse[]> {
+    if (!keyword || keyword.trim().length < 2) {
+      return [];
+    }
+
+    // Capitalize the first letter to match naming convention
+    const normalizedKeyword = capitalizeFirstLetter(keyword.trim());
+
+    return this.get<IngredientNameResponse[]>(
+      `api/Ingredient/getForRecipe?keyword=${encodeURIComponent(normalizedKeyword)}`,
+      {
+        isPrivateRoute: true,
+      },
+    );
   }
 }
 

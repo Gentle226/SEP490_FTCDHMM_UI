@@ -1,6 +1,8 @@
 'use client';
 
-import { Target, X } from 'lucide-react';
+import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
+import { Calendar, Target, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/base/components/ui/badge';
@@ -80,6 +82,16 @@ export function CurrentHealthGoalCard() {
       </CardHeader>
       <CardContent className="flex-1">
         <div className="space-y-3 sm:space-y-4">
+          {/* Start Date */}
+          {currentGoal.startedAtUtc && (
+            <div className="text-muted-foreground flex items-center gap-2 text-xs sm:text-sm">
+              <Calendar className="h-4 w-4 flex-shrink-0" />
+              <span>
+                Bắt đầu: {format(new Date(currentGoal.startedAtUtc), 'dd MMM yyyy', { locale: vi })}
+              </span>
+            </div>
+          )}
+
           <div>
             <p className="mb-2 text-xs font-medium sm:text-sm">Chỉ Số Dinh Dưỡng (Trên 100g):</p>
             <div className="space-y-1 sm:space-y-2">

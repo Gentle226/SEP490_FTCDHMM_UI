@@ -31,6 +31,15 @@ class UserHealthGoalService extends HttpClient {
   }
 
   /**
+   * Get the user's health goal history (past/expired goals)
+   */
+  public async getHistory() {
+    return this.get<UserHealthGoalResponse[]>('api/UserHealthGoal/history', {
+      isPrivateRoute: true,
+    });
+  }
+
+  /**
    * Remove the user's current active health goal
    * Note: No longer requires an ID parameter - removes the current goal
    */

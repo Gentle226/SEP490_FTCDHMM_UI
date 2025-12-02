@@ -6,5 +6,6 @@ export * from './custom-health-goal-list';
 export * from './goal-selection-dialog';
 export * from './goal-selector';
 export * from './health-goal-form-dialog';
+export * from './health-goal-history';
 export * from './health-goal-library';
 export * from './health-goal-list';
