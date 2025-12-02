@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { History } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 
@@ -28,13 +29,24 @@ function HistoryContent() {
     <DashboardLayout>
       <div className="space-y-6 px-4">
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-[#99b94a]">
-              Công Thức Đã Xem
-              {data && <span className="ml-2 text-[#99b94a]">({data.totalCount})</span>}
-            </h1>
-            <p className="mt-1 text-gray-600">Lịch sử các công thức nấu ăn bạn đã xem</p>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-[#99b94a]/10">
+              <History className="h-7 w-7 text-[#99b94a]" />
+            </div>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold tracking-tight text-[#99b94a]">
+                Công Thức Đã Xem
+                {data && (
+                  <span className="text-muted-foreground ml-2 text-lg font-normal">
+                    ({data.totalCount})
+                  </span>
+                )}
+              </h1>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Lịch sử các công thức nấu ăn bạn đã xem
+              </p>
+            </div>
           </div>
         </div>
 

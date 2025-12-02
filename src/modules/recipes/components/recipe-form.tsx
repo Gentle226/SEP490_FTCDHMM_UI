@@ -49,7 +49,7 @@ import {
 import { User, userManagementService } from '@/modules/users/services/user-management.service';
 
 import { recipeService } from '../services/recipe.service';
-import { CookingStep, RecipeDetail } from '../types';
+import { CookingStep, DraftDetailsResponse, RecipeDetail } from '../types';
 import { CookingStepCard } from './cooking-step-card';
 import { ImageCropDialog } from './image-crop-dialog';
 import { IngredientCardWithDetails } from './ingredient-card-with-details';
@@ -80,11 +80,20 @@ interface SelectedUser {
 interface RecipeFormProps {
   recipeId?: string;
   parentId?: string;
+  draftId?: string;
   initialData?: RecipeDetail;
-  mode?: 'create' | 'edit';
+  initialDraft?: DraftDetailsResponse;
+  mode?: 'create' | 'edit' | 'draft-edit';
 }
 
-export function RecipeForm({ recipeId, parentId, initialData, mode = 'create' }: RecipeFormProps) {
+export function RecipeForm({
+  recipeId,
+  parentId,
+  draftId,
+  initialData,
+  initialDraft,
+  mode = 'create',
+}: RecipeFormProps) {
   const router = useRouter();
   const { user: currentUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -262,6 +271,80 @@ export function RecipeForm({ recipeId, parentId, initialData, mode = 'create' }:
     searchUsers();
   }, [debouncedUserSearch, isUserPopoverOpen, currentUser?.id]);
 
+  // Initialize form with draft data in draft-edit mode
+  useEffect(() => {
+    if (mode === 'draft-edit' && initialDraft) {
+      setName(initialDraft.name || '');
+      setDescription(initialDraft.description || '');
+      // Normalize difficulty: convert MEDIUM/HARD/EASY to Capitalized format
+      const normalizedDifficulty = initialDraft.difficulty
+        ? ((initialDraft.difficulty.charAt(0).toUpperCase() +
+            initialDraft.difficulty.slice(1).toLowerCase()) as 'Easy' | 'Medium' | 'Hard')
+        : 'Easy';
+      setDifficulty(normalizedDifficulty);
+      setCookTime(initialDraft.cookTime || 0);
+      setRation(initialDraft.ration || 1);
+
+      // Set labels
+      if (initialDraft.labels && initialDraft.labels.length > 0) {
+        setSelectedLabels(
+          initialDraft.labels.map((label) => ({
+            id: label.id,
+            name: label.name,
+            colorCode: label.colorCode,
+          })),
+        );
+      }
+
+      // Set ingredients
+      if (initialDraft.ingredients && initialDraft.ingredients.length > 0) {
+        setSelectedIngredients(
+          initialDraft.ingredients.map((ingredient) => ({
+            id: ingredient.ingredientId,
+            name: ingredient.name,
+            quantityGram: ingredient.quantityGram,
+          })),
+        );
+      }
+
+      // Set tagged users
+      if (initialDraft.taggedUser && initialDraft.taggedUser.length > 0) {
+        setSelectedUsers(
+          initialDraft.taggedUser.map((user) => ({
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+          })),
+        );
+      }
+
+      // Set cooking steps
+      if (initialDraft.cookingSteps && initialDraft.cookingSteps.length > 0) {
+        setCookingSteps(
+          initialDraft.cookingSteps
+            .sort((a, b) => a.stepOrder - b.stepOrder)
+            .map((step) => ({
+              id: crypto.randomUUID(),
+              stepOrder: step.stepOrder,
+              instruction: step.instruction || '',
+              images:
+                step.cookingStepImages?.map((img) => ({
+                  id: img.id,
+                  image: img.imageUrl || '',
+                  imageOrder: img.imageOrder,
+                  imageUrl: img.imageUrl,
+                })) || [],
+            })),
+        );
+      }
+
+      // Set main image preview
+      if (initialDraft.imageUrl) {
+        setMainImagePreview(initialDraft.imageUrl);
+      }
+    }
+  }, [mode, initialDraft]);
+
   // Load draft recipe on component mount in create mode
   useEffect(() => {
     let isMounted = true;
@@ -282,7 +365,7 @@ export function RecipeForm({ recipeId, parentId, initialData, mode = 'create' }:
                   draft.difficulty.slice(1).toLowerCase()) as 'Easy' | 'Medium' | 'Hard')
               : 'Easy';
             setDifficulty(normalizedDifficulty);
-            setCookTime(draft.cookTime);
+            setCookTime(draft.cookTime || 0);
             setRation(draft.ration || 1);
 
             // Set labels
@@ -362,11 +445,11 @@ export function RecipeForm({ recipeId, parentId, initialData, mode = 'create' }:
   // Initialize form with existing data in edit mode
   useEffect(() => {
     if (mode === 'edit' && initialData) {
-      setName(initialData.name);
+      setName(initialData.name || '');
       setDescription(initialData.description || '');
       setDifficulty(initialData.difficulty.value as 'Easy' | 'Medium' | 'Hard');
-      setCookTime(initialData.cookTime);
-      setRation(initialData.ration);
+      setCookTime(initialData.cookTime || 0);
+      setRation(initialData.ration || 1);
 
       // Set labels
       if (initialData.labels && initialData.labels.length > 0) {
@@ -903,10 +986,126 @@ export function RecipeForm({ recipeId, parentId, initialData, mode = 'create' }:
   const handleSaveDraft = async () => {
     if (isSubmitting) return;
 
+    // Validate required name field
+    if (!name || name.trim().length < 3 || name.trim().length > 100) {
+      toast.error('Tên công thức phải từ 3 đến 100 ký tự');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const draftData = {
+        name: name.trim(),
+        description,
+        difficulty,
+        cookTime,
+        image: mainImage || undefined,
+        ration,
+        labelIds: selectedLabels.map((l) => l.id),
+        ingredients: selectedIngredients.map((i) => ({
+          ingredientId: i.id,
+          quantityGram: i.quantityGram,
+        })),
+        taggedUserIds: selectedUsers.map((u) => u.id),
+        cookingSteps,
+      };
+
+      // If in draft-edit mode, update existing draft; otherwise create new
+      if (mode === 'draft-edit' && draftId) {
+        await recipeService.updateDraft(draftId, draftData);
+        toast.success('Bản nháp đã được cập nhật');
+      } else {
+        await recipeService.createDraft(draftData);
+        toast.success('Bản nháp đã được lưu');
+      }
+
+      setHasUnsavedChanges(false);
+      router.push('/drafts');
+    } catch (error) {
+      console.error('Save draft error:', error);
+      toast.error('Có lỗi xảy ra khi lưu nháp công thức');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePublishDraft = async () => {
+    if (isSubmitting) return;
+
+    // Full validation before publishing
+    if (!name.trim()) {
+      toast.error('Vui lòng nhập tên món ăn');
+      return;
+    }
+
+    if (name.length > 100) {
+      toast.error('Tên món không được vượt quá 100 ký tự');
+      return;
+    }
+
+    if (!description.trim()) {
+      toast.error('Vui lòng nhập mô tả cho món ăn');
+      return;
+    }
+
+    if (description.length > 1500) {
+      toast.error('Mô tả không được vượt quá 1500 ký tự');
+      return;
+    }
+
+    if (!mainImage && !mainImagePreview) {
+      toast.error('Vui lòng tải lên hình ảnh món ăn');
+      return;
+    }
+
+    if (selectedLabels.length === 0) {
+      toast.error('Vui lòng chọn ít nhất một nhãn');
+      return;
+    }
+
+    if (selectedIngredients.length === 0) {
+      toast.error('Vui lòng chọn ít nhất một nguyên liệu');
+      return;
+    }
+
+    if (
+      selectedIngredients.some(
+        (ingredient) => ingredient.quantityGram < 0.1 || ingredient.quantityGram > 10000,
+      )
+    ) {
+      toast.error('Số lượng nguyên liệu phải từ 0.1 đến 10000 gram');
+      return;
+    }
+
+    if (cookingSteps.some((step) => !step.instruction.trim())) {
+      toast.error('Vui lòng nhập mô tả cho tất cả các bước');
+      return;
+    }
+
+    if (cookTime <= 0) {
+      toast.error('Thời gian nấu phải lớn hơn 0');
+      return;
+    }
+
+    if (ration < 1) {
+      toast.error('Khẩu phần phải ít nhất là 1');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Validate ingredient IDs before submission
+      const invalidIngredients = selectedIngredients.filter((i) => !i.id);
+      if (invalidIngredients.length > 0) {
+        console.error('Invalid ingredients found:', invalidIngredients);
+        toast.error('Có lỗi với dữ liệu nguyên liệu. Vui lòng thử lại.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const recipeData = {
         name,
         description,
         difficulty,
@@ -922,13 +1121,17 @@ export function RecipeForm({ recipeId, parentId, initialData, mode = 'create' }:
         cookingSteps,
       };
 
-      await recipeService.saveDraft(draftData);
-      toast.success('Bản nháp đã được lưu');
+      // Publish draft as a recipe
+      if (mode === 'draft-edit' && draftId) {
+        await recipeService.publishDraft(draftId, recipeData, mainImagePreview || undefined);
+        toast.success('Công thức đã được xuất bản thành công');
+      }
+
       setHasUnsavedChanges(false);
-      router.back();
+      router.push('/myrecipe');
     } catch (error) {
-      console.error('Save draft error:', error);
-      toast.error('Có lỗi xảy ra khi lưu nháp công thức');
+      console.error('Publish draft error:', error);
+      toast.error('Có lỗi xảy ra khi xuất bản công thức');
     } finally {
       setIsSubmitting(false);
     }
@@ -1028,7 +1231,7 @@ export function RecipeForm({ recipeId, parentId, initialData, mode = 'create' }:
             <Input
               id="name"
               placeholder="Tên món ăn của bạn"
-              value={name}
+              value={name ?? ''}
               onChange={(e) => setName(e.target.value.slice(0, 255))}
               onFocus={() => setIsNameFocused(true)}
               onBlur={() => setIsNameFocused(false)}
@@ -1053,7 +1256,7 @@ export function RecipeForm({ recipeId, parentId, initialData, mode = 'create' }:
               id="description"
               placeholder="Hãy chia sẻ với mọi người về món này của bạn nhé - ai đã truyền cảm hứng cho bạn, tại sao nó đặc biệt, bạn thích thưởng thức nó như thế nào..."
               rows={2}
-              value={description}
+              value={description ?? ''}
               onChange={(e) => setDescription(e.target.value.slice(0, 2000))}
               onFocus={() => setIsDescriptionFocused(true)}
               onBlur={() => setIsDescriptionFocused(false)}
@@ -1484,15 +1687,37 @@ export function RecipeForm({ recipeId, parentId, initialData, mode = 'create' }:
             </Button>
           </>
         )}
-        <Button type="submit" disabled={isSubmitting} className="bg-[#99b94a] hover:bg-[#7a9a3d]">
-          {isSubmitting
-            ? mode === 'edit'
-              ? 'Đang cập nhật...'
-              : 'Đang tạo...'
-            : mode === 'edit'
-              ? 'Cập nhật'
-              : 'Lên bài'}
-        </Button>
+        {mode === 'draft-edit' && (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSaveDraft}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Đang lưu...' : 'Cập nhật bản nháp'}
+            </Button>
+            <Button
+              type="button"
+              onClick={handlePublishDraft}
+              disabled={isSubmitting}
+              className="bg-[#99b94a] hover:bg-[#7a9a3d]"
+            >
+              {isSubmitting ? 'Đang xuất bản...' : 'Xuất bản'}
+            </Button>
+          </>
+        )}
+        {mode !== 'draft-edit' && (
+          <Button type="submit" disabled={isSubmitting} className="bg-[#99b94a] hover:bg-[#7a9a3d]">
+            {isSubmitting
+              ? mode === 'edit'
+                ? 'Đang cập nhật...'
+                : 'Đang tạo...'
+              : mode === 'edit'
+                ? 'Cập nhật'
+                : 'Lên bài'}
+          </Button>
+        )}
       </div>
 
       {/* Image Crop Dialog */}

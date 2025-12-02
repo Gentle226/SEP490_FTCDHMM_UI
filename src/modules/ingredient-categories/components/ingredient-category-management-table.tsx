@@ -205,8 +205,6 @@ export function IngredientCategoryManagementTable() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-3xl font-bold text-[#99b94a]">Quản Lý Nhóm Nguyên Liệu</h2>
-
       {/* Search Bar + Create Button: flex row, cả hai bên phải */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         <div className="relative ml-0 sm:ml-4 sm:w-1/4">

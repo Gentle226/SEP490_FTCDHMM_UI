@@ -99,7 +99,7 @@ export function ReportFiltersComponent({ filters, onFiltersChange, onReset }: Re
           />
         </div>
         <Button type="submit" size="sm" className="bg-[#99b94a] text-white hover:bg-[#8aab3b]">
-          Tìm
+          Tìm kiếm
         </Button>
         {hasActiveFilters && (
           <Button variant="ghost" size="sm" onClick={handleReset} type="button">

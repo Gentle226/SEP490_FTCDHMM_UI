@@ -31,8 +31,20 @@ export interface DraftTaggedUser {
   lastName: string;
 }
 
+// Draft list item response (simplified)
 export interface DraftRecipeResponse {
+  id: string;
   name?: string;
+  description?: string;
+  difficulty: string;
+  cookTime: number;
+  imageUrl?: string;
+  ration?: number;
+}
+
+// Draft detail response (full data)
+export interface DraftDetailsResponse {
+  name: string;
   description?: string;
   difficulty: string;
   cookTime: number;
@@ -45,7 +57,7 @@ export interface DraftRecipeResponse {
 }
 
 export interface DraftRecipeRequest {
-  name?: string;
+  name: string;
   description?: string;
   difficulty: string;
   cookTime: number;

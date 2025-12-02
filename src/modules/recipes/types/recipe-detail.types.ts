@@ -55,6 +55,11 @@ export interface RecipeDetail {
       imageUrl?: string;
     };
   }>;
+  taggedUser?: Array<{
+    id: string;
+    firstName: string;
+    lastName: string;
+  }>;
   createdBy?: {
     id: string;
     userName: string;

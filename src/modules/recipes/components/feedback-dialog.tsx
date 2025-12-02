@@ -172,7 +172,15 @@ export function FeedbackDialog({ recipeId, isOpen, onOpenChange }: FeedbackDialo
                         <button
                           onClick={() => {
                             if (confirm('Bạn có chắc chắn muốn xóa đánh giá này?')) {
-                              deleteRating.mutate({ ratingId: rating.id });
+                              deleteRating.mutate(
+                                { ratingId: rating.id },
+                                {
+                                  onSuccess: () => {
+                                    // Close the feedback dialog after successful deletion
+                                    onOpenChange(false);
+                                  },
+                                },
+                              );
                             }
                           }}
                           disabled={deleteRating.isPending}

@@ -270,11 +270,7 @@ export function LabelManagementTable() {
   }
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-3xl font-bold text-[#99b94a]">Quản Lý Nhãn Món Ăn</h2>
-      </div>
-
+    <div className="space-y-4 px-3">
       <div className="flex items-center justify-between gap-4">
         <div className="flex flex-1" />
         <div className="flex w-1/4 items-center gap-2">

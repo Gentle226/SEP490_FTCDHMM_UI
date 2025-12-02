@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { CookingPot } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
@@ -31,13 +31,34 @@ function MyRecipeContent() {
     <DashboardLayout>
       <div className="space-y-6 px-4">
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-[#99b94a]">
-              Món Của Tôi
-              {data && <span className="ml-2 text-[#99b94a]">({data.totalCount})</span>}
-            </h1>
-            <p className="mt-1 text-gray-600">Quản lý tất cả công thức nấu ăn của bạn</p>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-start gap-4 sm:items-center sm:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-[#99b94a]/10">
+                <CookingPot className="h-7 w-7 text-[#99b94a]" />
+              </div>
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold tracking-tight text-[#99b94a]">
+                  Món Của Tôi
+                  {data && (
+                    <span className="text-muted-foreground ml-2 text-lg font-normal">
+                      ({data.totalCount})
+                    </span>
+                  )}
+                </h1>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Quản lý tất cả công thức nấu ăn của bạn
+                </p>
+              </div>
+            </div>
+            <Link href="/drafts">
+              <Button
+                variant="outline"
+                className="flex-shrink-0 border-[#99b94a] text-[#99b94a] hover:bg-[#99b94a]/10"
+              >
+                Xem danh sách bản nháp
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -82,12 +103,6 @@ function MyRecipeContent() {
             </div>
             <h3 className="mb-2 text-xl font-semibold text-gray-900">Chưa có món ăn nào</h3>
             <p className="mb-6 text-gray-600">Bắt đầu tạo công thức nấu ăn đầu tiên của bạn</p>
-            <Link href="/recipe/new">
-              <Button className="bg-[#99b94a] hover:bg-[#7a9a3d]">
-                <Plus className="mr-2 h-4 w-4" />
-                Tạo món mới
-              </Button>
-            </Link>
           </div>
         )}
 

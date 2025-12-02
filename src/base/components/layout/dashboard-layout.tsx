@@ -5,13 +5,13 @@ import {
   BookMarked,
   ClipboardList,
   CookingPot,
+  FileEdit,
   Goal,
   History,
   Home,
   KeyRound,
   MessageSquareWarning,
   Salad,
-  ScrollText,
   Tags,
   Users,
   WheatOff,
@@ -45,9 +45,14 @@ import { UserActions } from './user-actions';
 interface DashboardLayoutProps {
   children: React.ReactNode;
   showHeader?: boolean;
+  hideCreateButton?: boolean;
 }
 
-export function DashboardLayout({ children, showHeader = true }: DashboardLayoutProps) {
+export function DashboardLayout({
+  children,
+  showHeader = true,
+  hideCreateButton = false,
+}: DashboardLayoutProps) {
   const { user, setUser } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -131,11 +136,6 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
           url: '/moderator/label',
           icon: Tags,
         },
-        {
-          title: 'Nguyên Tắc Đăng Bài',
-          url: '/moderator/rule',
-          icon: ScrollText,
-        },
       ];
     }
 
@@ -156,6 +156,11 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
         title: 'Công Thức Của Tôi',
         url: '/myrecipe',
         icon: CookingPot,
+      },
+      {
+        title: 'Bản Nháp Của Tôi',
+        url: '/drafts',
+        icon: FileEdit,
       },
       {
         title: 'Công Thức Đã Lưu',
@@ -248,6 +253,20 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
                   Quay Lại
                 </Button>
               )}
+            {/* Back button for recipe and draft edit pages */}
+            {(pathname.includes('/recipe/') || pathname.includes('/drafts/')) &&
+              pathname.endsWith('/edit') && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.back()}
+                  className="gap-2"
+                  title="Quay lại"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Quay Lại
+                </Button>
+              )}
             <div className="flex flex-1 items-center justify-end gap-4">
               {/* Ingredient Detection Button */}
               <Button
@@ -260,11 +279,13 @@ export function DashboardLayout({ children, showHeader = true }: DashboardLayout
                 Quét Nguyên Liệu
               </Button>
 
-              <Link href="/recipe/new">
-                <Button size="sm" className="bg-[#99b94a] whitespace-nowrap hover:bg-[#7a8f3a]">
-                  + Viết món mới
-                </Button>
-              </Link>
+              {!hideCreateButton && (
+                <Link href="/recipe/new">
+                  <Button size="sm" className="bg-[#99b94a] whitespace-nowrap hover:bg-[#7a8f3a]">
+                    + Viết món mới
+                  </Button>
+                </Link>
+              )}
               {user && <UserActions user={user} onLogout={handleLogout} />}
             </div>
           </header>

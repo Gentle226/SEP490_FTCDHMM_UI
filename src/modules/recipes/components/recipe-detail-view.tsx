@@ -12,6 +12,7 @@ import {
   Share2,
   Trash2,
   TriangleAlert,
+  UserPlus,
   Users,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -420,6 +421,25 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                   </div>
                 );
               })()}
+            {recipe.taggedUser && recipe.taggedUser.length > 0 && (
+              <div className="flex items-center gap-1">
+                <UserPlus className="h-4 w-4" />
+                <span>
+                  Nấu với{' '}
+                  {recipe.taggedUser.map((user, index) => (
+                    <span key={user.id}>
+                      <button
+                        onClick={() => router.push(`/profile/${user.id}`)}
+                        className="font-medium text-[#99b94a] hover:underline"
+                      >
+                        {`${user.firstName} ${user.lastName}`}
+                      </button>
+                      {index < recipe.taggedUser!.length - 1 && ', '}
+                    </span>
+                  ))}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Author Info */}

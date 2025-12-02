@@ -120,7 +120,7 @@ export function ReportManagementList() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-3">
       <div className="animate-in fade-in slide-in-from-top-4 flex flex-col gap-2 duration-500">
         <div className="flex items-center gap-3">
           <div className="animate-in zoom-in flex size-12 items-center justify-center rounded-lg bg-gradient-to-br from-[#99b94a] to-[#8aab3b] shadow-lg delay-100 duration-300">
