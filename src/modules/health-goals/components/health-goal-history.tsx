@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Calendar, History } from 'lucide-react';
+import { History } from 'lucide-react';
 
 import { Badge } from '@/base/components/ui/badge';
 import {

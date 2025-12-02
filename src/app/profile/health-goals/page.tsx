@@ -1,6 +1,6 @@
 'use client';
 
-import { Goal, History, Library, Sparkles, Target } from 'lucide-react';
+import { Goal, History, Library, Target } from 'lucide-react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { ProtectedRoute } from '@/modules/auth';
