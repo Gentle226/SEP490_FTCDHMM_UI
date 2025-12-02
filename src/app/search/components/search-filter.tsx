@@ -1,5 +1,6 @@
 'use-client';
 
+import { ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/base/components/ui/button';
@@ -158,22 +159,62 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
     setIngredientIds([]);
   };
 
+  // Track if filter is expanded on mobile
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Count active filters
+  const activeFiltersCount = [
+    difficulty,
+    ration,
+    maxCookTime < 240,
+    labelIds.length > 0,
+    ingredientIds.length > 0,
+  ].filter(Boolean).length;
+
   return (
-    <div className="sticky top-24 rounded-lg border border-gray-200 bg-white p-6 pr-4">
+    <div className="rounded-lg border border-gray-200 bg-white p-3 sm:sticky sm:top-24 sm:p-6 sm:pr-4">
       <style>{themeStyles}</style>
-      <h2 className="mb-4 text-lg font-bold text-[#99b94a]">Lọc Kết Quả</h2>
 
-      {/* Reset Button */}
-      <Button
-        onClick={handleReset}
-        className="mb-6 w-full bg-[#99b94a] text-white hover:bg-[#8aa83f] active:bg-[#7a9835]"
+      {/* Mobile Toggle Header */}
+      <button
+        type="button"
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex w-full items-center justify-between sm:hidden"
       >
-        Đặt lại bộ lọc
-      </Button>
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal className="h-4 w-4 text-[#99b94a]" />
+          <h2 className="text-base font-bold text-[#99b94a]">Bộ lọc</h2>
+          {activeFiltersCount > 0 && (
+            <span className="rounded-full bg-[#99b94a] px-2 py-0.5 text-xs text-white">
+              {activeFiltersCount}
+            </span>
+          )}
+        </div>
+        {isExpanded ? (
+          <ChevronUp className="h-5 w-5 text-gray-500" />
+        ) : (
+          <ChevronDown className="h-5 w-5 text-gray-500" />
+        )}
+      </button>
 
-      <ScrollArea className="h-[calc(100vh-280px)] pr-4">
-        {/* Sort By */}
-        {/* <div className="mb-6">
+      {/* Desktop Header */}
+      <h2 className="mb-4 hidden text-lg font-bold text-[#99b94a] sm:block">Lọc Kết Quả</h2>
+
+      {/* Filter Content - Collapsible on mobile, push content down instead of overlay */}
+      <div
+        className={`transition-all duration-300 ease-in-out ${isExpanded ? 'mt-4 max-h-[70vh] opacity-100' : 'max-h-0 overflow-hidden opacity-0'} sm:max-h-none sm:opacity-100`}
+      >
+        {/* Reset Button */}
+        <Button
+          onClick={handleReset}
+          className="mb-4 w-full bg-[#99b94a] text-white hover:bg-[#8aa83f] active:bg-[#7a9835] sm:mb-6"
+        >
+          Đặt lại bộ lọc
+        </Button>
+
+        <ScrollArea className="h-auto max-h-[calc(70vh-80px)] pr-2 sm:h-[calc(100vh-280px)] sm:max-h-none sm:pr-4">
+          {/* Sort By */}
+          {/* <div className="mb-6">
           <Label htmlFor="sort-select" className="mb-3 block text-sm font-semibold text-gray-900">
             Sắp xếp
           </Label>
@@ -193,205 +234,216 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
           </select>
         </div> */}
 
-        <Separator className="mb-6" />
+          <Separator className="mb-4 sm:mb-6" />
 
-        {/* Difficulty */}
-        <div className="mb-6">
-          <Label className="mb-3 block text-sm font-semibold text-gray-900">Độ khó</Label>
-          <div className="flex flex-wrap gap-2">
-            {DIFFICULTIES.map((diff) => (
-              <button
-                key={diff.value}
-                onClick={() => setDifficulty(difficulty === diff.value ? undefined : diff.value)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
-                  difficulty === diff.value
-                    ? 'bg-[#99b94a] text-white shadow-md'
-                    : 'border border-gray-300 bg-white text-gray-700 hover:border-[#99b94a]'
-                }`}
-              >
-                {diff.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <Separator className="mb-6" />
-
-        {/* Ration */}
-        <div className="mb-6">
-          <Label className="mb-3 block text-sm font-semibold text-gray-900">Khẩu phần</Label>
-          <div className="space-y-3 px-2">
-            <Slider
-              value={[ration || 1]}
-              onValueChange={(value) => setRation(value[0])}
-              min={1}
-              max={8}
-              step={1}
-              className="w-full"
-            />
-            <div className="text-sm text-gray-600">{ration ? `${ration} phần` : '1 phần'}</div>
-          </div>
-        </div>
-
-        <Separator className="mb-6" />
-
-        {/* Cook Time */}
-        <div className="mb-6">
-          <Label className="mb-3 block text-sm font-semibold text-gray-900">
-            Thời gian nấu tối đa
-          </Label>
-          <div className="space-y-3 px-2">
-            <Slider
-              value={[maxCookTime]}
-              onValueChange={(value) => setMaxCookTime(value[0])}
-              min={5}
-              max={240}
-              step={5}
-              className="w-full"
-            />
-            <div className="text-sm text-gray-600">
-              {maxCookTime === 240 ? 'Không giới hạn' : `${maxCookTime} phút`}
+          {/* Difficulty */}
+          <div className="mb-4 sm:mb-6">
+            <Label className="mb-2 block text-sm font-semibold text-gray-900 sm:mb-3">Độ khó</Label>
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+              {DIFFICULTIES.map((diff) => (
+                <button
+                  key={diff.value}
+                  onClick={() => setDifficulty(difficulty === diff.value ? undefined : diff.value)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all sm:px-4 sm:py-2 sm:text-sm ${
+                    difficulty === diff.value
+                      ? 'bg-[#99b94a] text-white shadow-md'
+                      : 'border border-gray-300 bg-white text-gray-700 hover:border-[#99b94a]'
+                  }`}
+                >
+                  {diff.label}
+                </button>
+              ))}
             </div>
           </div>
-        </div>
 
-        <Separator className="mb-6" />
+          <Separator className="mb-4 sm:mb-6" />
 
-        {/* Labels */}
-        <div className="mb-6 px-2">
-          <Label className="mb-3 block text-sm font-semibold text-gray-900">Nhãn dán</Label>
-
-          {/* Selected Labels Tags */}
-          {labelIds.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-2">
-              {labelIds.map((id) => {
-                const label = labels.find((l) => l.id === id);
-                return label ? (
-                  <div
-                    key={id}
-                    className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium text-white"
-                    style={{ backgroundColor: label.colorCode }}
-                  >
-                    {label.name}
-                    <button
-                      onClick={() => setLabelIds(labelIds.filter((lid) => lid !== id))}
-                      className="ml-1 text-white hover:opacity-80"
-                      aria-label={`Remove ${label.name}`}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : null;
-              })}
-            </div>
-          )}
-
-          {labelsLoading ? (
-            <div className="text-xs text-gray-500">Đang tải...</div>
-          ) : labels.length > 0 ? (
-            <>
-              <Input
-                type="text"
-                placeholder="Tìm nhãn..."
-                value={labelSearchTerm}
-                onChange={(e) => setLabelSearchTerm(e.target.value)}
-                className="mb-3 h-9 border-gray-300 focus:border-[#99b94a] focus:ring-[#99b94a]"
+          {/* Ration */}
+          <div className="mb-4 sm:mb-6">
+            <Label className="mb-2 block text-sm font-semibold text-gray-900 sm:mb-3">
+              Khẩu phần
+            </Label>
+            <div className="space-y-2 px-1 sm:space-y-3 sm:px-2">
+              <Slider
+                value={[ration || 1]}
+                onValueChange={(value) => setRation(value[0])}
+                min={1}
+                max={8}
+                step={1}
+                className="w-full"
               />
-              <div className="max-h-48 space-y-2 overflow-y-auto">
-                {labels
-                  .filter(
-                    (label) =>
-                      label.name.toLowerCase().includes(labelSearchTerm.toLowerCase()) &&
-                      !labelIds.includes(label.id),
-                  )
-                  .map((label) => (
-                    <button
-                      key={label.id}
-                      onClick={() => setLabelIds([...labelIds, label.id])}
-                      className="flex w-full items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-left text-sm transition-all hover:border-[#99b94a] hover:bg-green-50"
-                    >
-                      <span
-                        className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: label.colorCode }}
-                      />
-                      <span className="flex-1 text-gray-700">{label.name}</span>
-                      <span className="text-gray-400">+</span>
-                    </button>
-                  ))}
+              <div className="text-xs text-gray-600 sm:text-sm">
+                {ration ? `${ration} phần` : '1 phần'}
               </div>
-            </>
-          ) : (
-            <div className="text-xs text-gray-500">Không có nhãn</div>
-          )}
-        </div>
-
-        <Separator className="mb-6" />
-
-        {/* Ingredients */}
-        <div className="mb-6 px-2">
-          <Label className="mb-3 block text-sm font-semibold text-gray-900">Nguyên liệu</Label>
-
-          {/* Selected Ingredients Tags */}
-          {ingredientIds.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-2">
-              {ingredientIds.map((id) => {
-                const ingredient = ingredients.find((i) => i.id === id);
-                return ingredient ? (
-                  <div
-                    key={id}
-                    className="inline-flex items-center gap-2 rounded-full bg-[#99b94a] px-3 py-1 text-sm font-medium text-white"
-                  >
-                    {ingredient.name}
-                    <button
-                      onClick={() => setIngredientIds(ingredientIds.filter((iid) => iid !== id))}
-                      className="ml-1 text-white hover:opacity-80"
-                      aria-label={`Remove ${ingredient.name}`}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : null;
-              })}
             </div>
-          )}
+          </div>
 
-          {ingredientsLoading ? (
-            <div className="text-xs text-gray-500">Đang tải...</div>
-          ) : ingredients.length > 0 ? (
-            <>
-              <Input
-                type="text"
-                placeholder="Tìm nguyên liệu..."
-                value={ingredientSearchTerm}
-                onChange={(e) => setIngredientSearchTerm(e.target.value)}
-                className="mb-3 h-9 border-gray-300 focus:border-[#99b94a] focus:ring-[#99b94a]"
+          <Separator className="mb-4 sm:mb-6" />
+
+          {/* Cook Time */}
+          <div className="mb-4 sm:mb-6">
+            <Label className="mb-2 block text-sm font-semibold text-gray-900 sm:mb-3">
+              Thời gian nấu tối đa
+            </Label>
+            <div className="space-y-2 px-1 sm:space-y-3 sm:px-2">
+              <Slider
+                value={[maxCookTime]}
+                onValueChange={(value) => setMaxCookTime(value[0])}
+                min={5}
+                max={240}
+                step={5}
+                className="w-full"
               />
-              <div className="max-h-48 space-y-2 overflow-y-auto">
-                {ingredients
-                  .filter(
-                    (ingredient) =>
-                      ingredient.name.toLowerCase().includes(ingredientSearchTerm.toLowerCase()) &&
-                      !ingredientIds.includes(ingredient.id),
-                  )
-                  .map((ingredient) => (
-                    <button
-                      key={ingredient.id}
-                      onClick={() => setIngredientIds([...ingredientIds, ingredient.id])}
-                      className="flex w-full items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-left text-sm transition-all hover:border-[#99b94a] hover:bg-green-50"
-                    >
-                      <span className="flex-1 text-gray-700">{ingredient.name}</span>
-                      <span className="text-gray-400">+</span>
-                    </button>
-                  ))}
+              <div className="text-xs text-gray-600 sm:text-sm">
+                {maxCookTime === 240 ? 'Không giới hạn' : `${maxCookTime} phút`}
               </div>
-            </>
-          ) : (
-            <div className="text-xs text-gray-500">Không có nguyên liệu</div>
-          )}
-        </div>
+            </div>
+          </div>
 
-        <Separator className="mb-6" />
-      </ScrollArea>
+          <Separator className="mb-4 sm:mb-6" />
+
+          {/* Labels */}
+          <div className="mb-4 px-1 sm:mb-6 sm:px-2">
+            <Label className="mb-2 block text-sm font-semibold text-gray-900 sm:mb-3">
+              Nhãn dán
+            </Label>
+
+            {/* Selected Labels Tags */}
+            {labelIds.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-1.5 sm:mb-3 sm:gap-2">
+                {labelIds.map((id) => {
+                  const label = labels.find((l) => l.id === id);
+                  return label ? (
+                    <div
+                      key={id}
+                      className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium text-white"
+                      style={{ backgroundColor: label.colorCode }}
+                    >
+                      {label.name}
+                      <button
+                        onClick={() => setLabelIds(labelIds.filter((lid) => lid !== id))}
+                        className="ml-1 text-white hover:opacity-80"
+                        aria-label={`Remove ${label.name}`}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : null;
+                })}
+              </div>
+            )}
+
+            {labelsLoading ? (
+              <div className="text-xs text-gray-500">Đang tải...</div>
+            ) : labels.length > 0 ? (
+              <>
+                <Input
+                  type="text"
+                  placeholder="Tìm nhãn..."
+                  value={labelSearchTerm}
+                  onChange={(e) => setLabelSearchTerm(e.target.value)}
+                  className="mb-3 h-9 border-gray-300 focus:border-[#99b94a] focus:ring-[#99b94a]"
+                />
+                <div className="max-h-48 space-y-2 overflow-y-auto">
+                  {labels
+                    .filter(
+                      (label) =>
+                        label.name.toLowerCase().includes(labelSearchTerm.toLowerCase()) &&
+                        !labelIds.includes(label.id),
+                    )
+                    .map((label) => (
+                      <button
+                        key={label.id}
+                        onClick={() => setLabelIds([...labelIds, label.id])}
+                        className="flex w-full items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-left text-sm transition-all hover:border-[#99b94a] hover:bg-green-50"
+                      >
+                        <span
+                          className="h-3 w-3 rounded-full"
+                          style={{ backgroundColor: label.colorCode }}
+                        />
+                        <span className="flex-1 text-gray-700">{label.name}</span>
+                        <span className="text-gray-400">+</span>
+                      </button>
+                    ))}
+                </div>
+              </>
+            ) : (
+              <div className="text-xs text-gray-500">Không có nhãn</div>
+            )}
+          </div>
+
+          <Separator className="mb-4 sm:mb-6" />
+
+          {/* Ingredients */}
+          <div className="mb-4 px-1 sm:mb-6 sm:px-2">
+            <Label className="mb-2 block text-sm font-semibold text-gray-900 sm:mb-3">
+              Nguyên liệu
+            </Label>
+
+            {/* Selected Ingredients Tags */}
+            {ingredientIds.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {ingredientIds.map((id) => {
+                  const ingredient = ingredients.find((i) => i.id === id);
+                  return ingredient ? (
+                    <div
+                      key={id}
+                      className="inline-flex items-center gap-2 rounded-full bg-[#99b94a] px-3 py-1 text-sm font-medium text-white"
+                    >
+                      {ingredient.name}
+                      <button
+                        onClick={() => setIngredientIds(ingredientIds.filter((iid) => iid !== id))}
+                        className="ml-1 text-white hover:opacity-80"
+                        aria-label={`Remove ${ingredient.name}`}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : null;
+                })}
+              </div>
+            )}
+
+            {ingredientsLoading ? (
+              <div className="text-xs text-gray-500">Đang tải...</div>
+            ) : ingredients.length > 0 ? (
+              <>
+                <Input
+                  type="text"
+                  placeholder="Tìm nguyên liệu..."
+                  value={ingredientSearchTerm}
+                  onChange={(e) => setIngredientSearchTerm(e.target.value)}
+                  className="mb-3 h-9 border-gray-300 focus:border-[#99b94a] focus:ring-[#99b94a]"
+                />
+                <div className="max-h-48 space-y-2 overflow-y-auto">
+                  {ingredients
+                    .filter(
+                      (ingredient) =>
+                        ingredient.name
+                          .toLowerCase()
+                          .includes(ingredientSearchTerm.toLowerCase()) &&
+                        !ingredientIds.includes(ingredient.id),
+                    )
+                    .map((ingredient) => (
+                      <button
+                        key={ingredient.id}
+                        onClick={() => setIngredientIds([...ingredientIds, ingredient.id])}
+                        className="flex w-full items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-left text-sm transition-all hover:border-[#99b94a] hover:bg-green-50"
+                      >
+                        <span className="flex-1 text-gray-700">{ingredient.name}</span>
+                        <span className="text-gray-400">+</span>
+                      </button>
+                    ))}
+                </div>
+              </>
+            ) : (
+              <div className="text-xs text-gray-500">Không có nguyên liệu</div>
+            )}
+          </div>
+
+          <Separator className="mb-6" />
+        </ScrollArea>
+      </div>
     </div>
   );
 }

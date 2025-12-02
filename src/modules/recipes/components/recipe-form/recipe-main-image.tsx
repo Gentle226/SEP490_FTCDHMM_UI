@@ -31,7 +31,7 @@ export function RecipeMainImage({
         Hình ảnh món ăn
       </Label>
       {mainImagePreview ? (
-        <div className="relative h-75 w-full overflow-hidden rounded-lg border">
+        <div className="relative h-48 w-full overflow-hidden rounded-lg border sm:h-60 md:h-75">
           <Image
             src={mainImagePreview}
             alt="Recipe preview"
@@ -42,7 +42,7 @@ export function RecipeMainImage({
           <button
             type="button"
             onClick={onRemoveImage}
-            className="absolute top-2 right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+            className="absolute top-2 right-2 rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600 sm:p-1"
             aria-label="Remove image"
           >
             <X className="h-4 w-4" />
@@ -50,7 +50,7 @@ export function RecipeMainImage({
         </div>
       ) : (
         <label
-          className={`flex h-75 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-all ${
+          className={`flex h-48 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-all sm:h-60 md:h-75 ${
             isDragOver
               ? 'border-[#99b94a] bg-green-50 ring-2 ring-[#b2df3f]'
               : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'

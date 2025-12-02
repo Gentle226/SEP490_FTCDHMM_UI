@@ -98,23 +98,23 @@ export default function DraftsPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 px-3">
+      <div className="space-y-4 px-3 sm:space-y-6">
         {/* Header */}
-        <div className="flex flex-col gap-1">
-          <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-[#99b94a]/10">
-              <FileEdit className="h-7 w-7 text-[#99b94a]" />
+        <div className="flex flex-col gap-3">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-[#99b94a]/10 sm:h-14 sm:w-14">
+              <FileEdit className="h-6 w-6 text-[#99b94a] sm:h-7 sm:w-7" />
             </div>
             <div className="flex-1 pt-0.5">
-              <h1 className="text-2xl font-bold tracking-tight text-[#99b94a]">
+              <h1 className="text-xl font-bold tracking-tight text-[#99b94a] sm:text-2xl">
                 Bản nháp công thức
                 {drafts.length > 0 && (
-                  <span className="text-muted-foreground ml-2 text-lg font-normal">
+                  <span className="text-muted-foreground ml-2 text-base font-normal sm:text-lg">
                     ({drafts.length})
                   </span>
                 )}
               </h1>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground text-xs sm:text-sm">
                 Quản lý các công thức đang soạn thảo của bạn
               </p>
             </div>
@@ -124,18 +124,18 @@ export default function DraftsPage() {
         {/* Content */}
         {drafts.length === 0 ? (
           <Card className="border-2 border-dashed border-[#99b94a]/30 bg-[#99b94a]/5">
-            <CardHeader className="flex flex-col items-center justify-center py-10 text-center">
-              <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#99b94a]/10">
-                <FileEdit className="h-10 w-10 text-[#99b94a]" />
+            <CardHeader className="flex flex-col items-center justify-center py-8 text-center sm:py-10">
+              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-[#99b94a]/10 sm:mb-4 sm:h-20 sm:w-20">
+                <FileEdit className="h-8 w-8 text-[#99b94a] sm:h-10 sm:w-10" />
               </div>
-              <CardTitle className="text-xl">Chưa có bản nháp nào</CardTitle>
-              <CardDescription className="text-muted-foreground max-w-sm text-center">
+              <CardTitle className="text-lg sm:text-xl">Chưa có bản nháp nào</CardTitle>
+              <CardDescription className="text-muted-foreground max-w-sm text-center text-sm">
                 Bắt đầu tạo công thức mới và lưu bản nháp để tiếp tục chỉnh sửa sau
               </CardDescription>
             </CardHeader>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
             {drafts.map((draft) => (
               <Card
                 key={draft.id}
@@ -143,7 +143,7 @@ export default function DraftsPage() {
                 onClick={() => router.push(`/drafts/${draft.id}/edit`)}
               >
                 {/* Image */}
-                <div className="relative h-44 overflow-hidden">
+                <div className="relative h-36 overflow-hidden sm:h-44">
                   {draft.imageUrl ? (
                     <Image
                       src={draft.imageUrl}

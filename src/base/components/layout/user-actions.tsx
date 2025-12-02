@@ -77,9 +77,9 @@ export function UserActions({ user, onLogout }: UserActionsProps) {
                   <Link href="/admin/dashboard">Bảng điều khiển</Link>
                 </DropdownMenuItem>
               )} */}
-              <DropdownMenuItem asChild>
+              {/* <DropdownMenuItem asChild>
                 <Link href="/setting">Cài đặt</Link>
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="danger" onClick={onLogout}>

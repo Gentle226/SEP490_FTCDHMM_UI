@@ -101,12 +101,14 @@ export function HealthMetricsPage() {
 
   return (
     <div className="min-h-screenbg-gradient-to-b from-white to-[#f0f5f2]">
-      <div className="container mx-auto max-w-7xl px-4 pt-2">
+      <div className="container mx-auto max-w-7xl px-2 pt-2 sm:px-4">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="mb-2 text-4xl font-bold text-[#99b94a]">Số Liệu Sức Khỏe</h1>
-          <p className="text-gray-600">
-            Theo dõi và quản lý dữ liệu sức khỏe của bạn để đạt được mục tiêu sức khỏe
+        <div className="mb-4 sm:mb-6">
+          <h1 className="mb-1 text-2xl font-bold text-[#99b94a] sm:mb-2 sm:text-4xl">
+            Số Liệu Sức Khỏe
+          </h1>
+          <p className="text-sm text-gray-600 sm:text-base">
+            Theo dõi và quản lý dữ liệu sức khỏe của bạn
           </p>
         </div>
 
@@ -124,9 +126,9 @@ export function HealthMetricsPage() {
         )}
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
           {/* Left Column: Forms */}
-          <div className="space-y-6 lg:col-span-2">
+          <div className="order-2 space-y-4 sm:space-y-6 lg:order-1 lg:col-span-2">
             {/* Health Metric Form */}
             <HealthMetricForm
               onSubmit={editingMetric ? handleUpdateMetric : handleCreateMetric}
@@ -137,7 +139,9 @@ export function HealthMetricsPage() {
 
             {/* Metrics History */}
             <div>
-              <h2 className="mb-4 text-2xl font-bold text-gray-900">Lịch Sử Của Bạn</h2>
+              <h2 className="mb-3 text-xl font-bold text-gray-900 sm:mb-4 sm:text-2xl">
+                Lịch Sử Của Bạn
+              </h2>
               <MetricsHistory
                 metrics={metrics}
                 onDelete={handleDeleteMetric}
@@ -148,7 +152,7 @@ export function HealthMetricsPage() {
           </div>
 
           {/* Right Column: Activity Level & Summary */}
-          <div className="space-y-6">
+          <div className="order-1 space-y-4 sm:space-y-6 lg:order-2">
             <ActivityLevelSelector
               currentLevel={currentActivityLevel}
               onSave={handleSaveActivityLevel}

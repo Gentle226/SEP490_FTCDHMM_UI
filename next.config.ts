@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
         hostname: 'fitfood-tracker-images-storage.s3.ap-southeast-1.amazonaws.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'fitfood-images-300103.s3.ap-southeast-1.amazonaws.com',
+        pathname: '/**',
+      },
     ],
   },
   webpack: (config, _options) => {

@@ -90,7 +90,10 @@ export function RecipeIngredientsSection({
             Nguyên liệu
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[354px] p-0" align="start">
+        <PopoverContent
+          className="w-[calc(100vw-2rem)] max-w-[354px] p-0 sm:w-[354px]"
+          align="start"
+        >
           <Command shouldFilter={false}>
             <CommandInput
               placeholder="Tìm kiếm nguyên liệu..."

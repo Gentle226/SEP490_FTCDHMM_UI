@@ -13,6 +13,7 @@ import {
   List,
   MessageSquareWarning,
   Salad,
+  ScanSearch,
   Tags,
   Users,
   WheatOff,
@@ -278,7 +279,7 @@ export function DashboardLayout({
                   Quay Lại
                 </Button>
               )}
-            <div className="flex flex-1 items-center justify-end gap-4">
+            <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4">
               {/* Ingredient Detection Button */}
               <Button
                 size="sm"
@@ -287,13 +288,15 @@ export function DashboardLayout({
                 className="border-[#99b94a] whitespace-nowrap text-[#99b94a] hover:bg-[#99b94a]/10"
                 title="Quét nguyên liệu từ ảnh"
               >
-                Quét Nguyên Liệu
+                <span className="hidden sm:inline">Quét Nguyên Liệu</span>
+                <ScanSearch className="h-4 w-4 sm:hidden" />
               </Button>
 
               {!hideCreateButton && (
                 <Link href="/recipe/new">
                   <Button size="sm" className="bg-[#99b94a] whitespace-nowrap hover:bg-[#7a8f3a]">
-                    + Viết món mới
+                    <span className="hidden sm:inline">+ Viết món mới</span>
+                    <span className="sm:hidden">+ Món mới</span>
                   </Button>
                 </Link>
               )}

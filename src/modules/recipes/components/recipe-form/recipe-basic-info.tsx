@@ -115,11 +115,14 @@ export function RecipeBasicInfo({
       </div>
 
       {/* Difficulty, Cook Time, Ration - Grid */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {/* Difficulty */}
         <div className="space-y-2">
-          <Label htmlFor="difficulty" className="flex items-center gap-2">
-            <Flame className="h-4 w-4 text-[#99b94a]" />
+          <Label
+            htmlFor="difficulty"
+            className="flex items-center gap-1 text-xs sm:gap-2 sm:text-sm"
+          >
+            <Flame className="h-3.5 w-3.5 text-[#99b94a] sm:h-4 sm:w-4" />
             Độ khó
           </Label>
           <Select
@@ -137,9 +140,10 @@ export function RecipeBasicInfo({
 
         {/* Cook Time */}
         <div className="space-y-2">
-          <Label htmlFor="cookTime" className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-[#99b94a]" />
-            Thời gian nấu
+          <Label htmlFor="cookTime" className="flex items-center gap-1 text-xs sm:gap-2 sm:text-sm">
+            <Clock className="h-3.5 w-3.5 text-[#99b94a] sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Thời gian nấu</span>
+            <span className="sm:hidden">T.gian</span>
           </Label>
           <div className="relative">
             <Input
@@ -164,8 +168,8 @@ export function RecipeBasicInfo({
 
         {/* Ration */}
         <div className="space-y-2">
-          <Label htmlFor="ration" className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-[#99b94a]" />
+          <Label htmlFor="ration" className="flex items-center gap-1 text-xs sm:gap-2 sm:text-sm">
+            <Users className="h-3.5 w-3.5 text-[#99b94a] sm:h-4 sm:w-4" />
             Khẩu phần
           </Label>
           <div className="relative">

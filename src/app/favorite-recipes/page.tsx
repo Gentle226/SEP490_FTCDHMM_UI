@@ -39,21 +39,21 @@ function FavoriteRecipesContent() {
     <DashboardLayout>
       <div className="space-y-6 px-4">
         {/* Header */}
-        <div className="flex flex-col gap-1">
-          <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-[#99b94a]/10">
-              <Heart className="h-7 w-7 text-[#99b94a]" />
+        <div className="flex flex-col gap-3">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-[#99b94a]/10 sm:h-14 sm:w-14">
+              <Heart className="h-6 w-6 text-[#99b94a] sm:h-7 sm:w-7" />
             </div>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold tracking-tight">
+              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
                 Món Yêu Thích
                 {data && (
-                  <span className="text-muted-foreground ml-2 text-lg font-normal">
+                  <span className="text-muted-foreground ml-2 text-base font-normal sm:text-lg">
                     ({data.totalCount})
                   </span>
                 )}
               </h1>
-              <p className="text-muted-foreground mt-1 text-sm">
+              <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
                 Các công thức nấu ăn bạn đã yêu thích
               </p>
             </div>

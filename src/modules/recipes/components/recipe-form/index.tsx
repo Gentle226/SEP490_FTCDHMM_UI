@@ -545,9 +545,12 @@ export function RecipeForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto w-full max-w-screen-2xl space-y-6 px-4">
+    <form
+      onSubmit={handleSubmit}
+      className="mx-auto w-full max-w-screen-2xl space-y-4 px-2 sm:space-y-6 sm:px-4"
+    >
       {/* Main Image and Basic Info */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-[300px_1fr]">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-[300px_1fr]">
         <RecipeMainImage
           mainImagePreview={imageUpload.mainImagePreview}
           isDragOver={imageUpload.isDragOver}
@@ -577,7 +580,7 @@ export function RecipeForm({
       </div>
 
       {/* Labels and Tagged Users - Side by Side */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr]">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-[1fr_2fr]">
         <RecipeUsersSection
           selectedUsers={userTagging.selectedUsers}
           userSearch={userTagging.userSearch}
@@ -604,7 +607,7 @@ export function RecipeForm({
       </div>
 
       {/* Ingredients and Cooking Steps - Side by Side */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr]">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-[1fr_2fr]">
         <RecipeIngredientsSection
           selectedIngredients={ingredientSearch.selectedIngredients}
           ingredientSearch={ingredientSearch.ingredientSearch}

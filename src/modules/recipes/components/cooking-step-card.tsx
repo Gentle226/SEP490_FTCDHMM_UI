@@ -87,20 +87,20 @@ export function CookingStepCard({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
-      <CardContent className="pt-4 pb-4">
-        <div className="flex gap-3">
+      <CardContent className="p-3 sm:pt-4 sm:pb-4">
+        <div className="flex gap-2 sm:gap-3">
           {/* Left Column: Step Number and Drag Handle */}
-          <div className="flex flex-col items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#99b94a] text-2xl font-semibold text-white">
+          <div className="flex flex-col items-center gap-1 sm:gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#99b94a] text-base font-semibold text-white sm:h-8 sm:w-8 sm:text-2xl">
               {step.stepOrder}
             </div>
             <div className="cursor-grab text-gray-400 active:cursor-grabbing">
-              <GripVertical className="h-5 w-5" />
+              <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
           </div>
 
           {/* Main Content */}
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <div className="min-w-0 space-y-1">
               <Textarea
                 placeholder="Ướp cá hồi với mật ong, dầu oliu và tiêu 15 phút."
@@ -109,8 +109,8 @@ export function CookingStepCard({
                 onFocus={() => setFocusedStepIndex(index)}
                 onBlur={() => setFocusedStepIndex(null)}
                 maxLength={1000}
-                rows={3}
-                className="w-full break-words"
+                rows={2}
+                className="w-full text-sm break-words sm:text-base"
               />
               <p
                 className={`text-right text-xs transition-opacity ${focusedStepIndex === index ? 'text-gray-500 opacity-100' : 'text-gray-300 opacity-0'}`}

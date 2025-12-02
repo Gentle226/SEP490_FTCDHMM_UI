@@ -31,30 +31,30 @@ function MyRecipeContent() {
     <DashboardLayout>
       <div className="space-y-6 px-4">
         {/* Header */}
-        <div className="flex flex-col gap-1">
-          <div className="flex items-start gap-4 sm:items-center sm:justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-[#99b94a]/10">
-                <CookingPot className="h-7 w-7 text-[#99b94a]" />
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-[#99b94a]/10 sm:h-14 sm:w-14">
+                <CookingPot className="h-6 w-6 text-[#99b94a] sm:h-7 sm:w-7" />
               </div>
               <div className="flex-1">
-                <h1 className="text-2xl font-bold tracking-tight text-[#99b94a]">
+                <h1 className="text-xl font-bold tracking-tight text-[#99b94a] sm:text-2xl">
                   Món Của Tôi
                   {data && (
-                    <span className="text-muted-foreground ml-2 text-lg font-normal">
+                    <span className="text-muted-foreground ml-2 text-base font-normal sm:text-lg">
                       ({data.totalCount})
                     </span>
                   )}
                 </h1>
-                <p className="text-muted-foreground mt-1 text-sm">
+                <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
                   Quản lý tất cả công thức nấu ăn của bạn
                 </p>
               </div>
             </div>
-            <Link href="/drafts">
+            <Link href="/drafts" className="w-full sm:w-auto">
               <Button
                 variant="outline"
-                className="flex-shrink-0 border-[#99b94a] text-[#99b94a] hover:bg-[#99b94a]/10"
+                className="w-full flex-shrink-0 border-[#99b94a] text-[#99b94a] hover:bg-[#99b94a]/10 sm:w-auto"
               >
                 Xem danh sách bản nháp
               </Button>

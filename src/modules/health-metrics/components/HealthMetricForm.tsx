@@ -104,23 +104,26 @@ export function HealthMetricForm({ onSubmit, onCancel, initialData, isEdit = fal
 
   return (
     <Card className="rounded-tl-lg border-0 pt-0 pb-6 shadow-md">
-      <CardHeader className="rounded-tl-lg border-b-2 border-[#99b94a] bg-gradient-to-r from-[#f0f5f2] to-white px-4 py-3">
-        <CardTitle className="flex items-center gap-2 pt-1 text-xl text-[#5a6f2a]">
+      <CardHeader className="rounded-tl-lg border-b-2 border-[#99b94a] bg-gradient-to-r from-[#f0f5f2] to-white px-3 py-2 sm:px-4 sm:py-3">
+        <CardTitle className="flex items-center gap-2 pt-1 text-lg text-[#5a6f2a] sm:text-xl">
           {isEdit ? 'Chỉnh Sửa' : 'Ghi Lại'} Số Liệu Sức Khỏe
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-12 pt-4">
-        <form onSubmit={handleSubmit} className="space-y-5">
+      <CardContent className="px-3 pt-4 sm:px-6 md:px-12">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
           {/* Weight and Height - Same Row */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {/* Weight */}
             <div>
               <Label
                 htmlFor="weightKg"
-                className="flex items-center gap-2 font-medium text-gray-900"
+                className="flex items-center gap-1 text-sm font-medium text-gray-900 sm:gap-2"
               >
-                <Scale className="h-4 w-4 text-[#99b94a]" />
-                Cân Nặng (kg) <span className="text-red-500">*</span>
+                <Scale className="h-3.5 w-3.5 text-[#99b94a] sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Cân Nặng</span>
+                <span className="sm:hidden">Cân Nặng</span>
+                <span className="text-xs text-gray-500">(kg)</span>
+                <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="weightKg"
@@ -138,10 +141,13 @@ export function HealthMetricForm({ onSubmit, onCancel, initialData, isEdit = fal
             <div>
               <Label
                 htmlFor="heightCm"
-                className="flex items-center gap-2 font-medium text-gray-900"
+                className="flex items-center gap-1 text-sm font-medium text-gray-900 sm:gap-2"
               >
-                <Ruler className="h-4 w-4 text-[#99b94a]" />
-                Chiều Cao (cm) <span className="text-red-500">*</span>
+                <Ruler className="h-3.5 w-3.5 text-[#99b94a] sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Chiều Cao</span>
+                <span className="sm:hidden">Chiều Cao</span>
+                <span className="text-xs text-gray-500">(cm)</span>
+                <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="heightCm"
@@ -158,12 +164,12 @@ export function HealthMetricForm({ onSubmit, onCancel, initialData, isEdit = fal
 
           {/* BMI Preview */}
           {bmi > 0 && (
-            <div className="rounded-lg border-2 border-[#99b94a] bg-gradient-to-r from-[#f0f5f2] to-white p-4">
-              <p className="text-xs font-semibold tracking-wide text-[#5a6f2a] uppercase">
+            <div className="rounded-lg border-2 border-[#99b94a] bg-gradient-to-r from-[#f0f5f2] to-white p-3 sm:p-4">
+              <p className="text-[10px] font-semibold tracking-wide text-[#5a6f2a] uppercase sm:text-xs">
                 Xem Trước BMI
               </p>
               <p
-                className="mt-2 text-3xl font-bold"
+                className="mt-1 text-2xl font-bold sm:mt-2 sm:text-3xl"
                 data-bmi-value={bmi}
                 data-bmi-status={getBMIStatus(bmi)}
               >
@@ -172,7 +178,7 @@ export function HealthMetricForm({ onSubmit, onCancel, initialData, isEdit = fal
                 >
                   {bmi.toFixed(1)}
                 </span>
-                <span className="ml-2 text-lg text-gray-600">
+                <span className="ml-2 text-sm text-gray-600 sm:text-lg">
                   {getBMIStatusVietnamese(getBMIStatus(bmi))}
                 </span>
               </p>
@@ -180,15 +186,17 @@ export function HealthMetricForm({ onSubmit, onCancel, initialData, isEdit = fal
           )}
 
           {/* Body Fat and Muscle Mass - Same Row */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {/* Body Fat */}
             <div>
               <Label
                 htmlFor="bodyFatPercent"
-                className="flex items-center gap-2 font-medium text-gray-900"
+                className="flex items-center gap-1 text-sm font-medium text-gray-900 sm:gap-2"
               >
-                <Activity className="h-4 w-4 text-[#99b94a]" />
-                Tỷ Lệ Mỡ Cơ Thể (%)
+                <Activity className="h-3.5 w-3.5 text-[#99b94a] sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Tỷ Lệ Mỡ Cơ Thể</span>
+                <span className="sm:hidden">Tỷ Lệ Mỡ Cơ Thể</span>
+                <span className="text-xs text-gray-500">(%)</span>
               </Label>
               <Input
                 id="bodyFatPercent"
@@ -213,10 +221,12 @@ export function HealthMetricForm({ onSubmit, onCancel, initialData, isEdit = fal
             <div>
               <Label
                 htmlFor="muscleMassKg"
-                className="flex items-center gap-2 font-medium text-gray-900"
+                className="flex items-center gap-1 text-sm font-medium text-gray-900 sm:gap-2"
               >
-                <Zap className="h-4 w-4 text-[#99b94a]" />
-                Khối Lượng Cơ (kg)
+                <Zap className="h-3.5 w-3.5 text-[#99b94a] sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Khối Lượng Cơ</span>
+                <span className="sm:hidden">Khối Lượng Cơ</span>
+                <span className="text-xs text-gray-500">(kg)</span>
               </Label>
               <Input
                 id="muscleMassKg"
@@ -240,9 +250,12 @@ export function HealthMetricForm({ onSubmit, onCancel, initialData, isEdit = fal
 
           {/* Notes */}
           <div>
-            <Label htmlFor="notes" className="flex items-center gap-2 font-medium text-gray-900">
-              <FileText className="h-4 w-4 text-[#99b94a]" />
-              Ghi Chú <span className="text-gray-400">(tùy chọn)</span>
+            <Label
+              htmlFor="notes"
+              className="flex items-center gap-1 text-sm font-medium text-gray-900 sm:gap-2"
+            >
+              <FileText className="h-3.5 w-3.5 text-[#99b94a] sm:h-4 sm:w-4" />
+              Ghi Chú <span className="text-xs text-gray-400">(tùy chọn)</span>
             </Label>
             <Textarea
               id="notes"
@@ -257,13 +270,13 @@ export function HealthMetricForm({ onSubmit, onCancel, initialData, isEdit = fal
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-3 px-6 pb-6">
+          <div className="flex gap-2 px-0 pb-2 sm:gap-3 sm:px-6 sm:pb-6">
             <Button
               type="submit"
               disabled={submitting}
-              className="flex flex-1 items-center justify-center gap-2 bg-[#99b94a] py-2 font-semibold text-white hover:bg-[#7a9936]"
+              className="flex flex-1 items-center justify-center gap-1.5 bg-[#99b94a] py-2 text-sm font-semibold text-white hover:bg-[#7a9936] sm:gap-2 sm:text-base"
             >
-              <Check className="h-4 w-4" />
+              <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               {submitting ? 'Đang Lưu...' : isEdit ? 'Cập Nhật' : 'Ghi Lại'}
             </Button>
             {onCancel && (
@@ -271,9 +284,9 @@ export function HealthMetricForm({ onSubmit, onCancel, initialData, isEdit = fal
                 type="button"
                 variant="outline"
                 onClick={onCancel}
-                className="flex items-center justify-center gap-2 border-[#99b94a] text-[#5a6f2a] hover:bg-[#f0f5f2]"
+                className="flex items-center justify-center gap-1.5 border-[#99b94a] text-sm text-[#5a6f2a] hover:bg-[#f0f5f2] sm:gap-2 sm:text-base"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 Hủy Bỏ
               </Button>
             )}

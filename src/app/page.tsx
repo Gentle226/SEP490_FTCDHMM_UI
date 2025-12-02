@@ -317,15 +317,18 @@ export default function HomePage() {
 
       <div className="container mx-auto px-4 py-8">
         {/* Ingredients Section */}
-        <section className="mb-12">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-[#99b94a]">Nguyên Liệu Nổi Bật</h2>
-            <Button variant="ghost" className="text-[#99b94a] hover:text-[#7a8f3a]">
+        <section className="mb-8 sm:mb-12">
+          <div className="mb-4 flex items-center justify-between sm:mb-6">
+            <h2 className="text-xl font-bold text-[#99b94a] sm:text-2xl">Nguyên Liệu Nổi Bật</h2>
+            <Button
+              variant="ghost"
+              className="text-xs text-[#99b94a] hover:text-[#7a8f3a] sm:text-sm"
+            >
               <span>Cập nhật 4:36</span>
-              <ChevronRightIcon className="ml-1 h-4 w-4" />
+              <ChevronRightIcon className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-8">
             {isLoadingIngredients || ingredients.length === 0
               ? Array.from({ length: 9 }, (_, i) => (
                   <div key={i} className={i === 8 ? 'md:hidden' : ''}>
@@ -349,9 +352,11 @@ export default function HomePage() {
 
         {/* Recent Recipes Section - Only show for logged in users with history */}
         {user && recentRecipes.length > 0 && (
-          <section className="mb-12">
-            <h2 className="mb-6 text-2xl font-bold text-[#99b94a]">Món bạn mới xem gần đây</h2>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+          <section className="mb-8 sm:mb-12">
+            <h2 className="mb-4 text-xl font-bold text-[#99b94a] sm:mb-6 sm:text-2xl">
+              Món bạn mới xem gần đây
+            </h2>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-6">
               {recentRecipes.map((recipe) => (
                 <button
                   key={recipe.id}
@@ -376,9 +381,11 @@ export default function HomePage() {
 
         {/* All Recipes Section */}
         <section>
-          <div className="mb-6 flex items-center gap-2">
-            {isUsingRecommendations && <SparklesIcon className="h-6 w-6 text-[#99b94a]" />}
-            <h2 className="text-2xl font-bold text-[#99b94a]">
+          <div className="mb-4 flex items-center gap-2 sm:mb-6">
+            {isUsingRecommendations && (
+              <SparklesIcon className="h-5 w-5 text-[#99b94a] sm:h-6 sm:w-6" />
+            )}
+            <h2 className="text-xl font-bold text-[#99b94a] sm:text-2xl">
               {isUsingRecommendations ? 'Công Thức Gợi Ý Cho Bạn' : 'Khám Phá Công Thức'}
             </h2>
           </div>

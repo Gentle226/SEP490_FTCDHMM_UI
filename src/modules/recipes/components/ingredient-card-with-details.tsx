@@ -123,13 +123,13 @@ export function IngredientCardWithDetails({
             onMouseEnter={handleMouseEnter}
             onMouseLeave={() => setIsHoverPopoverOpen(false)}
             onClick={handleCardClick}
-            className="group flex cursor-pointer items-center gap-3 rounded-lg border bg-white px-3 py-2.5 transition-all hover:border-lime-400 hover:bg-lime-50 hover:shadow-md"
+            className="group flex cursor-pointer flex-col gap-2 rounded-lg border bg-white px-2 py-2 transition-all hover:border-lime-400 hover:bg-lime-50 hover:shadow-md sm:flex-row sm:items-center sm:gap-3 sm:px-3 sm:py-2.5"
             title="Nhấp để xem chi tiết đầy đủ"
           >
-            <span className="flex-1 text-sm font-medium group-hover:text-lime-700">
+            <span className="flex-1 text-xs font-medium group-hover:text-lime-700 sm:text-sm">
               {ingredient.name}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between gap-2 sm:justify-end">
               <Input
                 type="number"
                 placeholder="0"
@@ -141,10 +141,10 @@ export function IngredientCardWithDetails({
                 onClick={(e) => e.stopPropagation()}
                 min="0"
                 step="0.1"
-                className="w-20 text-right [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                className="h-8 w-16 text-right text-sm sm:h-9 sm:w-20 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 required
               />
-              <span className="text-sm text-gray-500">g</span>
+              <span className="text-xs text-gray-500 sm:text-sm">g</span>
             </div>
             <button
               type="button"

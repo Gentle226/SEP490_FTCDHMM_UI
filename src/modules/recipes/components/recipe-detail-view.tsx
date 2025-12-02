@@ -321,11 +321,11 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   };
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:py-8">
+    <div className="mx-auto w-full max-w-6xl space-y-4 px-3 py-4 sm:space-y-6 sm:px-6 lg:py-8">
       {/* Header: Image + Title, Labels, Author, Description, Buttons */}
-      <div className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-[300px_1fr] xl:grid-cols-[350px_1fr]">
+      <div className="grid grid-cols-1 gap-4 sm:gap-8 lg:grid-cols-[300px_1fr] xl:grid-cols-[350px_1fr]">
         {/* Left: Main Image */}
-        <div className="relative h-64 w-full overflow-hidden rounded-lg border bg-gray-100 sm:h-80 lg:h-full">
+        <div className="relative h-48 w-full overflow-hidden rounded-lg border bg-gray-100 sm:h-80 lg:h-full">
           {recipe.imageUrl ? (
             <Image
               src={recipe.imageUrl}
@@ -348,9 +348,9 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
         </div>
 
         {/* Right: Title, Labels, Author, Description, Buttons */}
-        <div className="min-w-0 space-y-3 sm:space-y-4">
+        <div className="min-w-0 space-y-2 sm:space-y-4">
           {/* Title */}
-          <h1 className="text-2xl font-bold text-[#99b94a] sm:text-3xl">{recipe.name}</h1>
+          <h1 className="text-xl font-bold text-[#99b94a] sm:text-3xl">{recipe.name}</h1>
 
           {/* Labels */}
           {recipe.labels && recipe.labels.length > 0 && (
@@ -383,19 +383,19 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
           )}
 
           {/* Meta Info: Difficulty, Time, Ration, Created Date */}
-          <div className="flex flex-wrap gap-2 text-xs text-gray-600 sm:gap-4 sm:text-sm">
+          <div className="flex flex-wrap gap-2 text-[10px] text-gray-600 sm:gap-4 sm:text-sm">
             <div className="flex items-center gap-1">
-              <ChefHat className="h-4 w-4" />
+              <ChefHat className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span>
                 {difficultyMap[recipe.difficulty.value as string] || recipe.difficulty.value}
               </span>
             </div>
             <div className="flex items-center gap-1">
-              <Clock className="h-4 w-4" />
+              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span>{recipe.cookTime} phút</span>
             </div>
             <div className="flex items-center gap-1">
-              <Users className="h-4 w-4" />
+              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span>{recipe.ration} người</span>
             </div>
             {(recipe.createdAtUtc || recipe.createdAt) &&

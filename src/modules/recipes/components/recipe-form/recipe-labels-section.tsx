@@ -87,7 +87,10 @@ export function RecipeLabelsSection({
             Thêm nhãn
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[400px] p-0" align="start">
+        <PopoverContent
+          className="w-[calc(100vw-2rem)] max-w-[400px] p-0 sm:w-[400px]"
+          align="start"
+        >
           <Command shouldFilter={false}>
             <CommandInput
               placeholder="Tìm kiếm nhãn..."

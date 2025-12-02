@@ -72,76 +72,81 @@ export function RecipeCardHorizontal({
     <div
       onClick={onClick}
       className={cn(
-        'group flex cursor-pointer gap-4 rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-[#99b94a] hover:shadow-md',
+        'group flex cursor-pointer flex-col gap-3 rounded-lg border border-gray-200 bg-white p-3 transition-all hover:border-[#99b94a] hover:shadow-md sm:flex-row sm:gap-4 sm:p-4',
         className,
       )}
     >
       {/* Recipe Image */}
-      <div className="relative h-60 w-60 flex-shrink-0 rounded-lg bg-gray-100">
+      <div className="relative h-40 w-full flex-shrink-0 rounded-lg bg-gray-100 sm:h-48 sm:w-48 md:h-60 md:w-60">
         <Image
           src={image || '/Outline Illustration Card.png'}
           alt={title || 'Recipe'}
           width={240}
           height={240}
-          className="h-full w-full rounded-l-lg object-cover transition-transform duration-200 group-hover:scale-105"
+          className="h-full w-full rounded-lg object-cover transition-transform duration-200 group-hover:scale-105 sm:rounded-l-lg"
           priority={false}
         />
       </div>
 
       {/* Recipe Info */}
-      <div className="flex flex-1 flex-col justify-between gap-3">
+      <div className="flex flex-1 flex-col justify-between gap-2 sm:gap-3">
         {/* Score Badge for Recommendations */}
         {score !== undefined && score > 0 && (
           <div className="flex items-center gap-1.5">
-            <Sparkles className="h-4 w-4 text-amber-500" />
-            <span className="text-sm font-medium text-amber-600">
+            <Sparkles className="h-3.5 w-3.5 text-amber-500 sm:h-4 sm:w-4" />
+            <span className="text-xs font-medium text-amber-600 sm:text-sm">
               Điểm phù hợp: {Math.round(score * 100)}%
             </span>
           </div>
         )}
 
         {/* Recipe Title */}
-        <h3 className="line-clamp-2 text-lg font-semibold text-gray-900 group-hover:text-[#99b94a]">
+        <h3 className="line-clamp-2 text-base font-semibold text-gray-900 group-hover:text-[#99b94a] sm:text-lg">
           {title || 'Recipe name'}
         </h3>
 
         {/* Ingredients List */}
         {ingredients && ingredients.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {ingredients.map((ingredient, index) => (
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
+            {ingredients.slice(0, 4).map((ingredient, index) => (
               <span
                 key={`${id}-ingredient-${ingredient.id}-${index}`}
-                className="inline-flex rounded-full border border-green-200 bg-green-50 px-2 py-1 text-xs text-gray-600"
+                className="inline-flex rounded-full border border-green-200 bg-green-50 px-1.5 py-0.5 text-[10px] text-gray-600 sm:px-2 sm:py-1 sm:text-xs"
                 title={ingredient.name}
               >
                 {ingredient.name}
               </span>
             ))}
+            {ingredients.length > 4 && (
+              <span className="inline-flex rounded-full border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[10px] text-gray-500 sm:px-2 sm:py-1 sm:text-xs">
+                +{ingredients.length - 4}
+              </span>
+            )}
           </div>
         )}
 
         {/* Meta Info: Difficulty, Cooktime, Ration, CreatedTime */}
-        <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+        <div className="flex flex-wrap gap-2 text-[10px] text-gray-500 sm:gap-3 sm:text-xs">
           {difficulty && (
-            <span className="rounded border border-orange-200 bg-orange-50 px-2 py-1 text-orange-600">
+            <span className="rounded border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-orange-600 sm:px-2 sm:py-1">
               {getLocalizedDifficulty(difficulty)}
             </span>
           )}
           {cookTime && (
             <div className="flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5" />
+              <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               <span>{cookTime} phút</span>
             </div>
           )}
           {ration && (
             <div className="flex items-center gap-1">
-              <Users className="h-3.5 w-3.5" />
+              <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               <span>{ration} phần</span>
             </div>
           )}
           {createdAtUtc && (
             <div className="flex items-center gap-1" title={getFullDateTimeVN(createdAtUtc)}>
-              <Calendar className="h-3.5 w-3.5" />
+              <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               <span className="text-gray-400">{getRelativeTime(createdAtUtc)} trước</span>
             </div>
           )}

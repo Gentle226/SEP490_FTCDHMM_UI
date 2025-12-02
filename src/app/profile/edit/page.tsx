@@ -162,19 +162,23 @@ export default function EditProfilePage() {
 
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className="mx-auto max-w-6xl space-y-4 px-2 sm:space-y-6 sm:px-4 md:px-0">
         <div>
-          <h1 className="text-3xl font-bold text-[#99b94a]">Chỉnh sửa hồ sơ</h1>
-          <p className="text-muted-foreground">Cập nhật thông tin cá nhân của bạn</p>
+          <h1 className="text-xl font-bold text-[#99b94a] sm:text-2xl md:text-3xl">
+            Chỉnh sửa hồ sơ
+          </h1>
+          <p className="text-muted-foreground text-xs sm:text-sm">
+            Cập nhật thông tin cá nhân của bạn
+          </p>
         </div>
 
         {/* Two Column Layout */}
-        <div className="grid gap-6 lg:grid-cols-[30%_1fr]">
+        <div className="grid gap-3 sm:gap-4 md:grid-cols-[30%_1fr] md:gap-6">
           {/* Left Column - Avatar & Identity (30%) */}
-          <div className="bg-card rounded-lg border p-6">
-            <div className="flex flex-col items-center space-y-4">
+          <div className="bg-card rounded-lg border p-3 sm:p-4 md:p-6">
+            <div className="flex flex-col items-center space-y-2 sm:space-y-3 md:space-y-4">
               {/* Avatar - Centered */}
-              <Avatar className="border-primary/20 size-32 border-2">
+              <Avatar className="border-primary/20 size-20 border-2 sm:size-24 md:size-32">
                 <AvatarImage
                   src={
                     avatarPreview ||
@@ -183,7 +187,7 @@ export default function EditProfilePage() {
                   }
                   alt={user.fullName || user.email}
                 />
-                <AvatarFallback className="text-4xl">
+                <AvatarFallback className="text-2xl sm:text-3xl md:text-4xl">
                   {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}
                 </AvatarFallback>
               </Avatar>
@@ -199,43 +203,44 @@ export default function EditProfilePage() {
               />
               <Button
                 variant="outline"
-                className="text-[#99b94a]"
+                className="w-full text-xs text-[#99b94a] sm:w-auto sm:text-sm"
                 size="sm"
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <Upload className="size-4" />
-                Thay đổi ảnh đại diện
+                <Upload className="size-3 sm:size-4" />
+                <span className="xs:inline hidden">Thay đổi ảnh</span>
+                <span className="xs:hidden inline">Đổi ảnh</span>
               </Button>
 
               {/* File format info */}
-              <p className="text-muted-foreground text-center text-xs">
+              <p className="text-muted-foreground px-1 text-center text-[11px] sm:text-xs">
                 JPG, PNG hoặc GIF. Tối đa 2MB.
               </p>
 
               {/* Avatar error */}
               {form.formState.errors.avatarUrl && (
-                <p className="text-danger text-center text-sm">
+                <p className="text-danger text-center text-xs sm:text-sm">
                   {form.formState.errors.avatarUrl.message}
                 </p>
               )}
 
               {/* Display Name/Email */}
-              <div className="w-full space-y-1 border-t pt-4 text-center">
-                <p className="text-foreground text-sm font-semibold">
+              <div className="w-full space-y-1 border-t pt-3 text-center sm:pt-4">
+                <p className="text-foreground truncate text-xs font-semibold sm:text-sm">
                   {user.firstName} {user.lastName}
                 </p>
-                <div className="space-y-1">
-                  <p className="text-muted-foreground text-xs">Email của bạn</p>
-                  <p className="text-foreground text-xs break-all">
+                <div className="space-y-0.5 sm:space-y-1">
+                  <p className="text-muted-foreground text-[11px] sm:text-xs">Email của bạn</p>
+                  <p className="text-foreground text-[11px] break-all sm:text-xs">
                     {profile?.email || user.email}
                   </p>
                 </div>
               </div>
 
               {/* Change Password Button - Bottom of left column */}
-              <div className="mt-4 w-full border-t pt-4">
-                <div className="flex justify-center">
+              <div className="mt-3 w-full border-t pt-3 sm:mt-4 sm:pt-4">
+                <div className="flex w-full justify-center">
                   <ChangePasswordDialog />
                 </div>
               </div>
@@ -243,43 +248,52 @@ export default function EditProfilePage() {
           </div>
 
           {/* Right Column - Form (70%) */}
-          <div className="bg-card rounded-lg border p-6">
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="bg-card rounded-lg border p-3 sm:p-4 md:p-6">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-3 sm:space-y-4 md:space-y-6"
+            >
               {/* Row 1: First Name & Last Name (50% - 50%) */}
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-[#99b94a]" htmlFor="firstName">
+              <div className="grid gap-2 sm:grid-cols-2 sm:gap-3 md:gap-4">
+                <div className="space-y-1 sm:space-y-2">
+                  <Label className="text-xs text-[#99b94a] sm:text-sm" htmlFor="firstName">
                     Họ <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="firstName"
                     placeholder="Nhập họ của bạn"
+                    className="h-9 text-sm sm:h-10"
                     {...form.register('firstName')}
                   />
                   {form.formState.errors.firstName && (
-                    <p className="text-danger text-sm">{form.formState.errors.firstName.message}</p>
+                    <p className="text-danger text-xs sm:text-sm">
+                      {form.formState.errors.firstName.message}
+                    </p>
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-[#99b94a]" htmlFor="lastName">
+                <div className="space-y-1 sm:space-y-2">
+                  <Label className="text-xs text-[#99b94a] sm:text-sm" htmlFor="lastName">
                     Tên <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="lastName"
                     placeholder="Nhập tên của bạn"
+                    className="h-9 text-sm sm:h-10"
                     {...form.register('lastName')}
                   />
                   {form.formState.errors.lastName && (
-                    <p className="text-danger text-sm">{form.formState.errors.lastName.message}</p>
+                    <p className="text-danger text-xs sm:text-sm">
+                      {form.formState.errors.lastName.message}
+                    </p>
                   )}
                 </div>
               </div>
 
               {/* Row 2: Date of Birth & Gender (50% - 50%) */}
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-[#99b94a]">
+              <div className="grid gap-2 sm:grid-cols-2 sm:gap-3 md:gap-4">
+                <div className="space-y-1 sm:space-y-2">
+                  <Label className="text-xs text-[#99b94a] sm:text-sm">
                     Ngày sinh <span className="text-red-500">*</span>
                   </Label>
                   <DatePickerWithInput
@@ -293,14 +307,14 @@ export default function EditProfilePage() {
                     placeholder="dd/mm/yyyy"
                   />
                   {form.formState.errors.dateOfBirth && (
-                    <p className="text-sm text-red-500">
+                    <p className="text-xs text-red-500 sm:text-sm">
                       {form.formState.errors.dateOfBirth.message}
                     </p>
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-[#99b94a]">
+                <div className="space-y-1 sm:space-y-2">
+                  <Label className="text-xs text-[#99b94a] sm:text-sm">
                     Giới tính <span className="text-red-500">*</span>
                   </Label>
                   <DropdownMenu>
@@ -340,58 +354,66 @@ export default function EditProfilePage() {
                   </DropdownMenu>
                   <input type="hidden" {...form.register('gender')} value={selectedGender} />
                   {form.formState.errors.gender && (
-                    <p className="text-sm text-red-500">{form.formState.errors.gender.message}</p>
+                    <p className="text-xs text-red-500 sm:text-sm">
+                      {form.formState.errors.gender.message}
+                    </p>
                   )}
                 </div>
               </div>
 
               {/* Row 3: Address (100% - Full width) */}
-              <div className="space-y-2">
-                <Label className="text-[#99b94a]" htmlFor="address">
+              <div className="space-y-1 sm:space-y-2">
+                <Label className="text-xs text-[#99b94a] sm:text-sm" htmlFor="address">
                   Địa chỉ
                 </Label>
                 <Input
                   id="address"
                   placeholder="Nhập địa chỉ của bạn"
+                  className="h-9 text-sm sm:h-10"
                   {...form.register('address')}
                 />
                 {form.formState.errors.address && (
-                  <p className="text-danger text-sm">{form.formState.errors.address.message}</p>
+                  <p className="text-danger text-xs sm:text-sm">
+                    {form.formState.errors.address.message}
+                  </p>
                 )}
               </div>
 
               {/* Row 4: Bio (100% - Full width) */}
-              <div className="space-y-2">
-                <Label className="text-[#99b94a]" htmlFor="bio">
+              <div className="space-y-1 sm:space-y-2">
+                <Label className="text-xs text-[#99b94a] sm:text-sm" htmlFor="bio">
                   Giới thiệu bản thân
                 </Label>
                 <Textarea
                   id="bio"
                   placeholder="Viết một số thông tin về bạn..."
-                  className="min-h-32 resize-none"
+                  className="min-h-24 resize-none text-sm sm:min-h-28 md:min-h-32"
                   {...form.register('bio')}
                 />
                 {form.formState.errors.bio && (
-                  <p className="text-danger text-sm">{form.formState.errors.bio.message}</p>
+                  <p className="text-danger text-xs sm:text-sm">
+                    {form.formState.errors.bio.message}
+                  </p>
                 )}
               </div>
 
               {/* Row 5: Footer Buttons (Right aligned) */}
-              <div className="flex flex-col-reverse gap-3 border-t pt-6 sm:flex-row sm:justify-end">
+              <div className="flex flex-col-reverse gap-2 border-t pt-4 sm:flex-row sm:justify-end sm:gap-3 sm:pt-6">
                 <Button
                   type="button"
                   variant="outline"
+                  className="h-9 text-xs sm:h-10 sm:text-sm"
                   onClick={() => router.push(`/profile/${user.id}`)}
                   disabled={updateProfile.isPending}
                 >
                   Trở về
                 </Button>
                 <Button
-                  className="bg-[#99b94a] hover:bg-[#88a43a]"
+                  className="h-9 bg-[#99b94a] text-xs hover:bg-[#88a43a] sm:h-10 sm:text-sm"
                   type="submit"
                   loading={updateProfile.isPending}
                 >
-                  <Save className="size-4" />
+                  <Save className="size-3 sm:size-4" />
                   Lưu thay đổi
                 </Button>
               </div>

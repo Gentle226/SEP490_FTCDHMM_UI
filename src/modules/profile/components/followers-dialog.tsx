@@ -66,21 +66,23 @@ export function FollowersDialog({ open, onOpenChange }: FollowersDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[95vw] max-w-md sm:w-full">
         <DialogHeader>
-          <DialogTitle>Người quan tâm</DialogTitle>
-          <DialogDescription>Danh sách những người đang theo dõi bạn</DialogDescription>
+          <DialogTitle className="text-lg sm:text-xl">Người quan tâm</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm">
+            Danh sách những người đang theo dõi bạn
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-96 space-y-2 overflow-y-auto">
+        <div className="max-h-[60vh] space-y-2 overflow-y-auto">
           {isLoading ? (
             // Loading state
             Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 p-2">
-                <Skeleton className="size-10 rounded-full" />
-                <div className="flex-1 space-y-1">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-24" />
+              <div key={i} className="flex items-center gap-2 p-2 sm:gap-3">
+                <Skeleton className="size-8 shrink-0 rounded-full sm:size-10" />
+                <div className="min-w-0 flex-1 space-y-1">
+                  <Skeleton className="h-3 w-24 sm:h-4 sm:w-32" />
+                  <Skeleton className="h-2 w-20 sm:h-3" />
                 </div>
               </div>
             ))
@@ -89,14 +91,14 @@ export function FollowersDialog({ open, onOpenChange }: FollowersDialogProps) {
             followers.map((follower: UserFollower) => (
               <div
                 key={follower.id}
-                className="hover:bg-accent flex items-center gap-3 rounded-lg p-2 transition-colors"
+                className="hover:bg-accent flex items-center gap-2 rounded-lg p-2 transition-colors sm:gap-3 sm:p-3"
               >
                 <Link
                   href={`/profile/${follower.id}`}
-                  className="flex flex-1 items-center gap-3"
+                  className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3"
                   onClick={() => onOpenChange(false)}
                 >
-                  <Avatar className="size-10">
+                  <Avatar className="size-8 shrink-0 sm:size-10">
                     <AvatarImage
                       src={
                         follower.id === user?.id && profile?.avatarUrl
@@ -106,37 +108,39 @@ export function FollowersDialog({ open, onOpenChange }: FollowersDialogProps) {
                       }
                       alt={follower.fullName}
                     />
-                    <AvatarFallback>
+                    <AvatarFallback className="text-xs sm:text-sm">
                       {(follower.firstName?.[0] || '') + (follower.lastName?.[0] || '')}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1">
-                    <p className="font-medium">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium sm:text-base">
                       {follower.fullName ||
                         `${follower.firstName} ${follower.lastName}`.trim() ||
                         'Người dùng'}
                     </p>
-                    <p className="text-muted-foreground text-sm">{follower.email}</p>
+                    <p className="text-muted-foreground truncate text-xs sm:text-sm">
+                      {follower.email}
+                    </p>
                   </div>
                 </Link>
                 <Button
                   size="sm"
                   variant={followState[follower.id] ? 'default' : 'outline'}
-                  className={
+                  className={`shrink-0 text-xs sm:text-sm ${
                     followState[follower.id] ? 'bg-[#99b94a] hover:bg-[#8aa83f]' : 'text-[#99b94a]'
-                  }
+                  }`}
                   onClick={() => handleFollowToggle(follower.id)}
                   disabled={followUser.isPending || unfollowUser.isPending}
                 >
                   {followState[follower.id] ? (
                     <>
-                      <UserCheck className="size-4" />
-                      Đang theo dõi
+                      <UserCheck className="size-3 sm:size-4" />
+                      <span className="hidden sm:inline">Đang theo dõi</span>
                     </>
                   ) : (
                     <>
-                      <UserPlus className="size-4" />
-                      Theo dõi
+                      <UserPlus className="size-3 sm:size-4" />
+                      <span className="hidden sm:inline">Theo dõi</span>
                     </>
                   )}
                 </Button>
@@ -151,8 +155,12 @@ export function FollowersDialog({ open, onOpenChange }: FollowersDialogProps) {
           )}
         </div>
 
-        <div className="flex justify-end">
-          <Button variant="outline" className="text-[#99b94a]" onClick={() => onOpenChange(false)}>
+        <div className="flex justify-end gap-2 sm:gap-3">
+          <Button
+            variant="outline"
+            className="text-xs text-[#99b94a] sm:text-sm"
+            onClick={() => onOpenChange(false)}
+          >
             Đóng
           </Button>
         </div>

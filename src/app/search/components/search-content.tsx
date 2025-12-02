@@ -110,15 +110,22 @@ export function SearchContent() {
       </div>
 
       {/* Results Section */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Search Results - 2/3 width */}
+      <div className="container mx-auto px-4 py-4 sm:py-8">
+        <div className="flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-3">
+          {/* Filters - Full width on mobile, 1/3 on desktop */}
+          <div className="lg:col-span-1">
+            <SearchFilter onFilterChange={handleFilterChange} />
+          </div>
+
+          {/* Search Results - Full width on mobile, 2/3 width on desktop */}
           <div className="lg:col-span-2">
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-[#99b94a]">
+            <div className="mb-4 sm:mb-6">
+              <h1 className="text-xl font-bold text-[#99b94a] sm:text-2xl">
                 Kết quả tìm kiếm cho &quot;{searchQuery}&quot;
               </h1>
-              <p className="mt-2 text-sm text-gray-600">Tìm thấy {results.length} kết quả</p>
+              <p className="mt-1 text-xs text-gray-600 sm:mt-2 sm:text-sm">
+                Tìm thấy {results.length} kết quả
+              </p>
             </div>
 
             {isLoading ? (
@@ -128,10 +135,10 @@ export function SearchContent() {
                 ))}
               </div>
             ) : results.length === 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-                <SearchIcon className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-                <p className="text-lg text-gray-600">Không tìm thấy công thức nào</p>
-                <p className="mt-2 text-sm text-gray-500">
+              <div className="rounded-lg border border-gray-200 bg-white p-6 text-center sm:p-12">
+                <SearchIcon className="mx-auto mb-3 h-10 w-10 text-gray-300 sm:mb-4 sm:h-12 sm:w-12" />
+                <p className="text-base text-gray-600 sm:text-lg">Không tìm thấy công thức nào</p>
+                <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
                   Hãy thử thay đổi từ khóa hoặc bộ lọc của bạn
                 </p>
               </div>
@@ -194,11 +201,6 @@ export function SearchContent() {
                 </Button>
               </div>
             )}
-          </div>
-
-          {/* Filters - 1/3 width */}
-          <div className="lg:col-span-1">
-            <SearchFilter onFilterChange={handleFilterChange} />
           </div>
         </div>
       </div>

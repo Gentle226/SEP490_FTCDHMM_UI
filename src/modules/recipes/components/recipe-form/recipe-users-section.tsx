@@ -93,7 +93,10 @@ export function RecipeUsersSection({
             Thêm người dùng
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[350px] p-0" align="start">
+        <PopoverContent
+          className="w-[calc(100vw-2rem)] max-w-[350px] p-0 sm:w-[350px]"
+          align="start"
+        >
           <Command shouldFilter={false}>
             <CommandInput
               placeholder="Tìm kiếm người dùng..."
