@@ -243,6 +243,13 @@ export function LabelManagementTable() {
   };
 
   const confirmUpdateColor = () => {
+    // Validate color code (hex format)
+    const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+    if (!hexColorRegex.test(editColorValue)) {
+      toast.error('Mã màu phải là hex format hợp lệ (ví dụ: #ffffff hoặc #fff)');
+      return;
+    }
+
     if (selectedLabel) {
       updateColorMutation.mutate({
         id: selectedLabel.id,

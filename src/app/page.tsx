@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
+import { toast } from 'sonner';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { Button } from '@/base/components/ui/button';
@@ -216,6 +217,24 @@ export default function HomePage() {
     setShowDropdown(false);
   };
 
+  const handleRecipeClick = (recipeId: string) => {
+    if (!user) {
+      toast.error('Vui lòng đăng nhập để xem chi tiết công thức');
+      router.push('/auth/login');
+      return;
+    }
+    router.push(`/recipe/${recipeId}`);
+  };
+
+  const handleIngredientClick = (ingredientName: string) => {
+    if (!user) {
+      toast.error('Vui lòng đăng nhập để xem chi tiết nguyên liệu');
+      router.push('/auth/login');
+      return;
+    }
+    router.push(`/search?q=${encodeURIComponent(ingredientName)}`);
+  };
+
   // Common search and recipes section
   const mainContent = (
     <main className="min-h-screen">
@@ -266,9 +285,9 @@ export default function HomePage() {
                           <button
                             key={recipe.id || `recipe-${index}`}
                             onClick={() => {
-                              router.push(`/recipe/${recipe.id}`);
                               setShowDropdown(false);
                               setSearchQuery('');
+                              handleRecipeClick(recipe.id);
                             }}
                             className="flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left transition-all hover:bg-gray-50"
                           >
@@ -319,14 +338,17 @@ export default function HomePage() {
         {/* Ingredients Section */}
         <section className="mb-8 sm:mb-12">
           <div className="mb-4 flex items-center justify-between sm:mb-6">
-            <h2 className="text-xl font-bold text-[#99b94a] sm:text-2xl">Nguyên Liệu Nổi Bật</h2>
-            <Button
-              variant="ghost"
-              className="text-xs text-[#99b94a] hover:text-[#7a8f3a] sm:text-sm"
-            >
-              <span>Cập nhật 4:36</span>
-              <ChevronRightIcon className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
+            <h2 className="text-xl font-bold text-[#99b94a] sm:text-2xl">Danh Sách Nguyên Liệu</h2>
+            {user && (
+              <Button
+                variant="ghost"
+                className="text-xs text-[#99b94a] hover:text-[#7a8f3a] sm:text-sm"
+                onClick={() => router.push('/ingredients')}
+              >
+                <span>Xem toàn bộ</span>
+                <ChevronRightIcon className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
+              </Button>
+            )}
           </div>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-8">
             {isLoadingIngredients || ingredients.length === 0
@@ -339,9 +361,7 @@ export default function HomePage() {
                   <button
                     key={ingredient.id}
                     className={`transition-transform hover:scale-105 active:scale-95 ${index === 8 ? 'md:hidden' : ''}`}
-                    onClick={() => {
-                      router.push(`/search?q=${encodeURIComponent(ingredient.name)}`);
-                    }}
+                    onClick={() => handleIngredientClick(ingredient.name)}
                     title={ingredient.name}
                   >
                     <IngredientCard name={ingredient.name} image={ingredient.imageUrl} />
@@ -360,7 +380,7 @@ export default function HomePage() {
               {recentRecipes.map((recipe) => (
                 <button
                   key={recipe.id}
-                  onClick={() => router.push(`/recipe/${recipe.id}`)}
+                  onClick={() => handleRecipeClick(recipe.id)}
                   className="transition-transform hover:scale-105 active:scale-95"
                   title={recipe.name}
                 >
@@ -389,70 +409,81 @@ export default function HomePage() {
               {isUsingRecommendations ? 'Công Thức Gợi Ý Cho Bạn' : 'Khám Phá Công Thức'}
             </h2>
           </div>
-          <div className="space-y-4">
-            {isLoadingDisplay ? (
-              // Show skeleton loaders while initial load
-              Array.from({ length: 5 }, (_, i) => <RecipeCardHorizontal key={i} isLoading={true} />)
-            ) : (
-              <>
-                {isUsingRecommendations
-                  ? recommendedData?.pages.map((page) =>
-                      page.items.map((recipe) => (
-                        <button
-                          key={recipe.id}
-                          onClick={() => router.push(`/recipe/${recipe.id}`)}
-                          className="w-full text-left transition-transform hover:scale-[1.02] active:scale-95"
+          {user ? (
+            <div className="space-y-4">
+              {isLoadingDisplay ? (
+                // Show skeleton loaders while initial load
+                Array.from({ length: 5 }, (_, i) => (
+                  <RecipeCardHorizontal key={i} isLoading={true} />
+                ))
+              ) : (
+                <>
+                  {recommendedData?.pages.map((page) =>
+                    page.items.map((recipe) => (
+                      <button
+                        key={recipe.id}
+                        onClick={() => handleRecipeClick(recipe.id)}
+                        className="w-full text-left transition-transform hover:scale-[1.02] active:scale-95"
+                        title={recipe.name}
+                      >
+                        <RecipeCardHorizontal
+                          id={recipe.id}
                           title={recipe.name}
-                        >
-                          <RecipeCardHorizontal
-                            id={recipe.id}
-                            title={recipe.name}
-                            author={recipe.author}
-                            image={recipe.imageUrl}
-                            cookTime={recipe.cookTime}
-                            ration={recipe.ration}
-                            difficulty={recipe.difficulty?.name}
-                            ingredients={recipe.ingredients}
-                            labels={recipe.labels}
-                            createdAtUtc={recipe.createdAtUtc}
-                            isLoading={false}
-                            score={recipe.score}
-                          />
-                        </button>
-                      )),
-                    )
-                  : recipesData?.pages.map((page) =>
-                      page.items.map((recipe) => (
-                        <button
-                          key={recipe.id}
-                          onClick={() => router.push(`/recipe/${recipe.id}`)}
-                          className="w-full text-left transition-transform hover:scale-[1.02] active:scale-95"
+                          author={recipe.author}
+                          image={recipe.imageUrl}
+                          cookTime={recipe.cookTime}
+                          ration={recipe.ration}
+                          difficulty={recipe.difficulty?.name}
+                          ingredients={recipe.ingredients}
+                          labels={recipe.labels}
+                          createdAtUtc={recipe.createdAtUtc}
+                          isLoading={false}
+                          score={recipe.score}
+                        />
+                      </button>
+                    )),
+                  )}
+                  {/* Loading more indicator */}
+                  {isFetchingNextPage &&
+                    Array.from({ length: 3 }, (_, i) => (
+                      <RecipeCardHorizontal key={`loading-${i}`} isLoading={true} />
+                    ))}
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+              {isLoadingDisplay ? (
+                // Show skeleton loaders while initial load
+                Array.from({ length: 10 }, (_, i) => <RecipeCard key={i} isLoading={true} />)
+              ) : (
+                <>
+                  {recipesData?.pages.map((page) =>
+                    page.items.map((recipe) => (
+                      <button
+                        key={recipe.id}
+                        onClick={() => handleRecipeClick(recipe.id)}
+                        className="transition-transform hover:scale-105 active:scale-95"
+                        title={recipe.name}
+                      >
+                        <RecipeCard
                           title={recipe.name}
-                        >
-                          <RecipeCardHorizontal
-                            id={recipe.id}
-                            title={recipe.name}
-                            author={recipe.author}
-                            image={recipe.imageUrl}
-                            cookTime={recipe.cookTime}
-                            ration={recipe.ration}
-                            difficulty={recipe.difficulty?.name}
-                            ingredients={recipe.ingredients}
-                            labels={recipe.labels}
-                            createdAtUtc={recipe.createdAtUtc}
-                            isLoading={false}
-                          />
-                        </button>
-                      )),
-                    )}
-                {/* Loading more indicator */}
-                {isFetchingNextPage &&
-                  Array.from({ length: 3 }, (_, i) => (
-                    <RecipeCardHorizontal key={`loading-${i}`} isLoading={true} />
-                  ))}
-              </>
-            )}
-          </div>
+                          author={
+                            recipe.author
+                              ? `${recipe.author.firstName} ${recipe.author.lastName}`
+                              : ''
+                          }
+                          authorAvatar={recipe.author?.avatarUrl}
+                          image={recipe.imageUrl}
+                          isLoading={false}
+                        />
+                      </button>
+                    )),
+                  )}
+                </>
+              )}
+            </div>
+          )}
           {/* Infinite scroll trigger */}
           {hasNextPage && (
             <div ref={loadMoreRef} className="flex justify-center py-8">
