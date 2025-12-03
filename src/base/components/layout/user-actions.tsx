@@ -48,8 +48,8 @@ export function UserActions({ user, onLogout }: UserActionsProps) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost">
-            <Avatar className="size-10">
+          <Button variant="ghost" className="focus-visible:ring-0">
+            <Avatar className="size-10 ring-2 ring-[#99b94a]">
               <AvatarImage src={avatarUrl} alt={displayName || 'User avatar'} />
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>

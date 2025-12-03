@@ -118,6 +118,14 @@ export function PermissionManagementTable() {
       toast.success('Vai trò đã được tạo thành công.');
     },
     onError: (error: Error) => {
+      // Check if error is AxiosError with response data
+      if ('response' in error && error.response) {
+        const responseData = (error.response as { data?: { message?: string } }).data;
+        if (responseData?.message) {
+          toast.error(responseData.message);
+          return;
+        }
+      }
       toast.error(error.message || 'Không thể tạo vai trò.');
     },
   });
@@ -214,7 +222,7 @@ export function PermissionManagementTable() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle className="bg-[#88a838] text-[#99b94a]">Tạo Vai Trò Mới</DialogTitle>
+                <DialogTitle className="text-[#99b94a]">Tạo Vai Trò Mới</DialogTitle>
                 <DialogDescription>
                   Nhập tên cho vai trò mới. Bạn có thể cấu hình quyền sau khi tạo.
                 </DialogDescription>
