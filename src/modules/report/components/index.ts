@@ -1,7 +1,6 @@
 export * from './ExpandableReportTable';
 export * from './RejectReasonModal';
 export * from './ReportButton';
-export * from './ReportDetailModal';
 export * from './ReportDetailsModal';
 export * from './ReportFilters';
 export * from './ReportListModal';
