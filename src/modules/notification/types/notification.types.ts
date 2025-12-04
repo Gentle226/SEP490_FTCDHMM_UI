@@ -1,7 +1,11 @@
 export enum NotificationType {
-  System = 'System',
-  Comment = 'Comment',
-  Reply = 'Reply',
+  System = 'SYSTEM',
+  Comment = 'COMMENT',
+  Reply = 'REPLY',
+}
+
+export interface NotificationTypeResponse {
+  name: string;
 }
 
 export interface UserResponse {
@@ -15,7 +19,7 @@ export interface UserResponse {
 // Giao diện cho thông báo
 export interface Notification {
   id: string;
-  type: NotificationType;
+  type: NotificationTypeResponse;
   message?: string;
   targetId?: string;
   isRead: boolean;

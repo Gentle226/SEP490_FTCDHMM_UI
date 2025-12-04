@@ -1,20 +1,21 @@
-import { NotificationType } from '../types/notification.types';
+import { NotificationType, NotificationTypeResponse } from '../types/notification.types';
 
 /**
  * Tạo URL liên kết dựa trên loại thông báo và ID đích
  */
-export const getNotificationLink = (type: NotificationType, targetId?: string): string => {
+export const getNotificationLink = (type: NotificationTypeResponse, targetId?: string): string => {
   if (!targetId) {
     return '/';
   }
 
-  switch (type) {
+  const typeName = type?.name?.toUpperCase() ?? NotificationType.System;
+
+  switch (typeName) {
     case NotificationType.Comment:
     case NotificationType.Reply:
-      // Liên kết đến công thức với bình luận được làm nổi bật
-      // targetId là commentId, chúng ta cần trích xuất recipeId từ ngữ cảnh
-      // Hiện tại, trả về liên kết chung - có thể cải thiện sau
-      return `/recipes?commentId=${targetId}`;
+      // Liên kết đến trang chi tiết công thức
+      // targetId là recipeId cho thông báo comment/reply
+      return `/recipe/${targetId}`;
     case NotificationType.System:
     default:
       return '/';
@@ -24,6 +25,12 @@ export const getNotificationLink = (type: NotificationType, targetId?: string): 
 /**
  * Kiểm tra xem thông báo có nên bấm được không
  */
-export const isNotificationClickable = (type: NotificationType, targetId?: string): boolean => {
-  return !!targetId && (type === NotificationType.Comment || type === NotificationType.Reply);
+export const isNotificationClickable = (
+  type: NotificationTypeResponse,
+  targetId?: string,
+): boolean => {
+  const typeName = type?.name?.toUpperCase() ?? NotificationType.System;
+  return (
+    !!targetId && (typeName === NotificationType.Comment || typeName === NotificationType.Reply)
+  );
 };

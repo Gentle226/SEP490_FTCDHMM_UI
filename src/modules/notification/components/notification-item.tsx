@@ -30,7 +30,8 @@ export const NotificationItem = ({
 
   // Lấy biểu tượng dựa trên loại thông báo
   const getNotificationIcon = () => {
-    switch (notification.type) {
+    const typeName = notification.type?.name?.toUpperCase() ?? NotificationType.System;
+    switch (typeName) {
       case NotificationType.Comment:
         return <MessageCircle className="h-4 w-4 text-blue-500" />;
       case NotificationType.Reply:

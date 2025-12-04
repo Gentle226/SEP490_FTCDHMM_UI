@@ -6,9 +6,10 @@ import { Notification, NotificationType } from '../types/notification.types';
 export const formatNotificationMessage = (notification: Notification): string => {
   const { type, senders, message } = notification;
   const senderCount = senders.length;
+  const typeName = type?.name?.toUpperCase() ?? NotificationType.System;
 
   // Nếu tồn tại tin nhắn tùy chỉnh (cho thông báo Hệ thống), sử dụng nó
-  if (type === NotificationType.System && message) {
+  if (typeName === NotificationType.System && message) {
     return message;
   }
 
@@ -24,7 +25,7 @@ export const formatNotificationMessage = (notification: Notification): string =>
 
   // Một người gửi
   if (senderCount === 1) {
-    switch (type) {
+    switch (typeName) {
       case NotificationType.Comment:
         return `${fullName} đã bình luận về công thức của bạn`;
       case NotificationType.Reply:
@@ -38,7 +39,7 @@ export const formatNotificationMessage = (notification: Notification): string =>
   const othersCount = senderCount - 1;
   const othersText = othersCount === 1 ? '1 người khác' : `${othersCount} người khác`;
 
-  switch (type) {
+  switch (typeName) {
     case NotificationType.Comment:
       return `${fullName} và ${othersText} đã bình luận về công thức của bạn`;
     case NotificationType.Reply:
