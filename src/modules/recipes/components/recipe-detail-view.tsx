@@ -268,22 +268,22 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
     );
 
     // Handle rating update event - refresh average rating
-    signalRConnection.on('RatingUpdated', (data) => {
-      console.warn('[RecipeDetailView] Received RatingUpdated event:', data);
+    signalRConnection.on('RATINGUPDATED', (data) => {
+      console.warn('[RecipeDetailView] Received RATINGUPDATED event:', data);
       queryClient.invalidateQueries({ queryKey: ['averageRating', recipeId] });
     });
 
     // Handle rating delete event - refresh average rating
-    signalRConnection.on('RatingDeleted', (data) => {
-      console.warn('[RecipeDetailView] Received RatingDeleted event:', data);
+    signalRConnection.on('RATINGDELETED', (data) => {
+      console.warn('[RecipeDetailView] Received RATINGDELETED event:', data);
       queryClient.invalidateQueries({ queryKey: ['averageRating', recipeId] });
     });
 
     // Cleanup listeners on unmount
     return () => {
       console.warn('[RecipeDetailView] Cleaning up rating listeners');
-      signalRConnection.off('RatingUpdated');
-      signalRConnection.off('RatingDeleted');
+      signalRConnection.off('RATINGUPDATED');
+      signalRConnection.off('RATINGDELETED');
     };
   }, [signalRConnection, recipeId, queryClient]);
 

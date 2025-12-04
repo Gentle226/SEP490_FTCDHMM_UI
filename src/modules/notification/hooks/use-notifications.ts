@@ -114,10 +114,10 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
     }
 
     // Lắng nghe thông báo mới
-    connection.on('ReceiveNotification', handleNewNotification);
+    connection.on('NOTIFICATION', handleNewNotification);
 
     return () => {
-      connection.off('ReceiveNotification', handleNewNotification);
+      connection.off('NOTIFICATION', handleNewNotification);
     };
   }, [connection, handleNewNotification]);
 
