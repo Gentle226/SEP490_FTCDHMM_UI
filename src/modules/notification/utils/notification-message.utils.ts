@@ -1,69 +1,69 @@
 import { Notification, NotificationType } from '../types/notification.types';
 
 /**
- * Format notification message based on type and senders
+ * Định dạng thông báo dựa trên loại và người gửi
  */
 export const formatNotificationMessage = (notification: Notification): string => {
   const { type, senders, message } = notification;
   const senderCount = senders.length;
 
-  // If custom message exists (for System notifications), use it
+  // Nếu tồn tại tin nhắn tùy chỉnh (cho thông báo Hệ thống), sử dụng nó
   if (type === NotificationType.System && message) {
     return message;
   }
 
-  // No senders, use default message
+  // Không có người gửi, sử dụng tin nhắn mặc định
   if (senderCount === 0) {
-    return message || 'You have a new notification';
+    return message || 'Bạn có một thông báo mới';
   }
 
-  // Format sender names
-  const firstName = senders[0]?.firstName || 'Someone';
+  // Định dạng tên người gửi
+  const firstName = senders[0]?.firstName || 'Ai đó';
   const lastName = senders[0]?.lastName || '';
   const fullName = `${firstName} ${lastName}`.trim();
 
-  // Single sender
+  // Một người gửi
   if (senderCount === 1) {
     switch (type) {
       case NotificationType.Comment:
-        return `${fullName} commented on your recipe`;
+        return `${fullName} đã bình luận về công thức của bạn`;
       case NotificationType.Reply:
-        return `${fullName} replied to your comment`;
+        return `${fullName} đã trả lời bình luận của bạn`;
       default:
-        return message || `${fullName} interacted with your content`;
+        return message || `${fullName} đã tương tác với nội dung của bạn`;
     }
   }
 
-  // Multiple senders
+  // Nhiều người gửi
   const othersCount = senderCount - 1;
-  const othersText = othersCount === 1 ? '1 other' : `${othersCount} others`;
+  const othersText = othersCount === 1 ? '1 người khác' : `${othersCount} người khác`;
 
   switch (type) {
     case NotificationType.Comment:
-      return `${fullName} and ${othersText} commented on your recipe`;
+      return `${fullName} và ${othersText} đã bình luận về công thức của bạn`;
     case NotificationType.Reply:
-      return `${fullName} and ${othersText} replied to your comment`;
+      return `${fullName} và ${othersText} đã trả lời bình luận của bạn`;
     default:
-      return message || `${fullName} and ${othersText} interacted with your content`;
+      return message || `${fullName} và ${othersText} đã tương tác với nội dung của bạn`;
   }
 };
 
 /**
- * Get a short summary of sender names
+ * Lấy tóm tắt ngắn gọn về tên người gửi
  */
 export const getSendersSummary = (notification: Notification): string => {
   const { senders } = notification;
   const senderCount = senders.length;
 
   if (senderCount === 0) {
-    return 'Unknown';
+    return 'Không xác định';
   }
 
   if (senderCount === 1) {
     return `${senders[0].firstName} ${senders[0].lastName}`.trim();
   }
 
-  const firstName = senders[0]?.firstName || 'Someone';
+  const firstName = senders[0]?.firstName || 'Ai đó';
   const othersCount = senderCount - 1;
-  return `${firstName} and ${othersCount} ${othersCount === 1 ? 'other' : 'others'}`;
+  return `${firstName} và ${othersCount} ${othersCount === 1 ? 'người khác' : 'người khác'}`;
 };

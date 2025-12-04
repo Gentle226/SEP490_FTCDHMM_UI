@@ -4,9 +4,9 @@ import { HttpTransportType, HubConnection, HubConnectionBuilder } from '@microso
 import { useEffect, useRef } from 'react';
 
 /**
- * Hook to manage SignalR connection to NotificationHub
- * Creates connection and manages lifecycle (connect/disconnect)
- * Auto-reconnects if connection is lost
+ * Hook để quản lý kết nối SignalR đến NotificationHub
+ * Tạo kết nối và quản lý vòng đời (kết nối/ngắt kết nối)
+ * Tự động kết nối lại nếu mất kết nối
  */
 export const useNotificationSignalR = (userId: string | null) => {
   const connectionRef = useRef<HubConnection | null>(null);
@@ -22,7 +22,7 @@ export const useNotificationSignalR = (userId: string | null) => {
 
     const connectToHub = async () => {
       try {
-        // If connection already exists, check state
+        // Nếu kết nối đã tồn tại, kiểm tra trạng thái
         if (connectionRef.current) {
           if (
             connectionRef.current.state === 'Connected' ||
@@ -30,68 +30,68 @@ export const useNotificationSignalR = (userId: string | null) => {
           ) {
             return;
           }
-          // If disconnected, try reconnect
+          // Nếu ngắt kết nối, cố gắng kết nối lại
           if (connectionRef.current.state === 'Disconnected') {
             try {
               await connectionRef.current.start();
               reconnectAttemptsRef.current = 0;
-              console.warn('[SignalR] Reconnected to NotificationHub');
+              console.warn('[SignalR] Kết nối lại đến NotificationHub');
               return;
             } catch (error) {
-              console.error('[SignalR] Reconnection failed:', error);
+              console.error('[SignalR] Kết nối lại thất bại:', error);
             }
           }
         }
 
-        // Create new connection
+        // Tạo kết nối mới
         const connection = new HubConnectionBuilder()
           .withUrl(`http://localhost:7116/hubs/notification`, {
             transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
-            withCredentials: true, // Send cookies/credentials
-            skipNegotiation: false, // Call /negotiate endpoint
+            withCredentials: true, // Gửi cookies/thông tin xác thực
+            skipNegotiation: false, // Gọi endpoint /negotiate
           })
           .withAutomaticReconnect([0, 1000, 3000, 5000, 10000]) // Retry delays
           .configureLogging('information')
           .build();
 
-        // Configure timeouts
-        connection.serverTimeoutInMilliseconds = 60000; // 60s - wait for server response
-        connection.keepAliveIntervalInMilliseconds = 15000; // 15s - send keepalive ping
+        // Cấu hình timeout
+        connection.serverTimeoutInMilliseconds = 60000; // 60s - chờ phản hồi từ server
+        connection.keepAliveIntervalInMilliseconds = 15000; // 15s - gửi ping keepalive
 
-        // Setup event listeners
+        // Thiết lập listeners sự kiện
         connection.onreconnecting((error) => {
-          console.warn('[SignalR] Attempting to reconnect...', error);
+          console.warn('[SignalR] Đang cố gắng kết nối lại...', error);
         });
 
         connection.onreconnected((connectionId) => {
           reconnectAttemptsRef.current = 0;
-          console.warn('[SignalR] Reconnected with connection ID:', connectionId);
+          console.warn('[SignalR] Đã kết nối lại với ID kết nối:', connectionId);
         });
 
         connection.onclose((error) => {
-          console.warn('[SignalR] Connection closed', error);
-          // If not reached max attempts, schedule reconnect
+          console.warn('[SignalR] Kết nối đã đóng', error);
+          // Nếu chưa đạt tối đa lần thử, lên lịch kết nối lại
           if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
             reconnectTimeoutRef.current = setTimeout(() => {
               reconnectAttemptsRef.current += 1;
               console.warn(
-                `[SignalR] Scheduling reconnect attempt ${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS}`,
+                `[SignalR] Lên lịch lần cố gắng kết nối lại ${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS}`,
               );
               connectToHub();
             }, RECONNECT_DELAY_MS);
           }
         });
 
-        // Connect
+        // Kết nối
         await connection.start();
         connectionRef.current = connection;
         reconnectAttemptsRef.current = 0;
 
-        console.warn('[SignalR] Connected to NotificationHub successfully');
+        console.warn('[SignalR] Kết nối đến NotificationHub thành công');
       } catch (error) {
-        console.error('[SignalR] Connection failed:', error);
+        console.error('[SignalR] Kết nối thất bại:', error);
 
-        // Schedule reconnect
+        // Lên lịch kết nối lại
         if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
           reconnectTimeoutRef.current = setTimeout(() => {
             reconnectAttemptsRef.current += 1;
@@ -103,7 +103,7 @@ export const useNotificationSignalR = (userId: string | null) => {
 
     connectToHub();
 
-    // Cleanup on unmount
+    // Dọn dẹp khi unmount
     return () => {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);

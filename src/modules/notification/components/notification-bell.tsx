@@ -14,6 +14,7 @@ import { cn } from '@/base/lib';
 import { useNotifications } from '../hooks/use-notifications';
 import { NotificationList } from './notification-list';
 
+// Giao diện cho props của NotificationBell
 interface NotificationBellProps {
   userId?: string | null;
   className?: string;
@@ -27,10 +28,12 @@ export const NotificationBell = ({ userId, className }: NotificationBellProps) =
 
   const [open, setOpen] = useState(false);
 
+  // Xử lý thay đổi trạng thái mở/đóng
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
   };
 
+  // Đóng dropdown khi nhấp vào thông báo
   const handleNotificationClick = () => {
     setOpen(false);
   };
@@ -45,12 +48,12 @@ export const NotificationBell = ({ userId, className }: NotificationBellProps) =
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
-          <span className="sr-only">Notifications</span>
+          <span className="sr-only">Thông báo</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[380px] p-0">
         <div className="border-b px-4 py-3">
-          <h3 className="font-semibold">Notifications</h3>
+          <h3 className="font-semibold">Thông báo</h3>
         </div>
         <NotificationList
           notifications={notifications}

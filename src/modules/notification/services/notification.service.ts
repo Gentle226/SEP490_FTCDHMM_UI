@@ -6,14 +6,14 @@ const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7116'
 );
 
 /**
- * NotificationService for managing notifications
- * Uses fetch API directly for better control over request handling
+ * NotificationService để quản lý thông báo
+ * Sử dụng fetch API trực tiếp để kiểm soát tốt hơn việc xử lý request
  */
 class NotificationService {
   private readonly TIMEOUT_MS = 60000; // 60 seconds timeout
 
   /**
-   * Get all notifications for the current user
+   * Lấy tất cả thông báo của người dùng hiện tại
    */
   async getMyNotifications(token: string): Promise<Notification[]> {
     try {
@@ -33,13 +33,13 @@ class NotificationService {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch notifications: ${response.statusText}`);
+        throw new Error(`Lỗi khi lấy thông báo: ${response.statusText}`);
       }
 
       const data = await response.json();
       return data;
     } catch (err) {
-      console.error('[NotificationService] getMyNotifications error:', {
+      console.error('[NotificationService] Lỗi getMyNotifications:', {
         message: err instanceof Error ? err.message : 'Unknown error',
         stack: err instanceof Error ? err.stack : 'No stack',
       });
@@ -48,7 +48,7 @@ class NotificationService {
   }
 
   /**
-   * Mark a notification as read
+   * Đánh dấu thông báo là đã đọc
    */
   async markAsRead(notificationId: string, token: string): Promise<void> {
     try {
@@ -71,10 +71,10 @@ class NotificationService {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`Failed to mark notification as read: ${response.statusText}`);
+        throw new Error(`Lỗi khi đánh dấu thông báo là đã đọc: ${response.statusText}`);
       }
     } catch (err) {
-      console.error('[NotificationService] markAsRead error:', {
+      console.error('[NotificationService] Lỗi markAsRead:', {
         notificationId,
         message: err instanceof Error ? err.message : 'Unknown error',
         stack: err instanceof Error ? err.stack : 'No stack',

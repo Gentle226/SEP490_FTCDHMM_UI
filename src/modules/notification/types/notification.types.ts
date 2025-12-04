@@ -12,6 +12,7 @@ export interface UserResponse {
   email?: string;
 }
 
+// Giao diện cho thông báo
 export interface Notification {
   id: string;
   type: NotificationType;

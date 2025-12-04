@@ -6,6 +6,7 @@ import { ScrollArea } from '@/base/components/ui/scroll-area';
 import { Notification } from '../types/notification.types';
 import { NotificationItem } from './notification-item';
 
+// Giao diện cho props của NotificationList
 interface NotificationListProps {
   notifications: Notification[];
   isLoading?: boolean;
@@ -26,7 +27,7 @@ export const NotificationList = ({
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <p className="text-muted-foreground text-sm">Loading notifications...</p>
+        <p className="text-muted-foreground text-sm">Đang tải thông báo...</p>
       </div>
     );
   }
@@ -34,9 +35,9 @@ export const NotificationList = ({
   if (notifications.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center space-y-2">
-        <p className="text-muted-foreground text-sm">No notifications yet</p>
+        <p className="text-muted-foreground text-sm">Chưa có thông báo</p>
         <p className="text-muted-foreground text-xs">
-          We&apos;ll notify you when something new happens
+          Chúng tôi sẽ thông báo cho bạn khi có điều gì mới xảy ra
         </p>
       </div>
     );
@@ -44,21 +45,19 @@ export const NotificationList = ({
 
   return (
     <div className="flex flex-col">
-      {/* Header with Mark All as Read */}
+      {/* Header với nút Đánh dấu tất cả là đã đọc */}
       {unreadCount > 0 && (
         <div className="flex items-center justify-between border-b px-4 py-3">
-          <p className="text-sm font-medium">
-            {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
-          </p>
+          <p className="text-sm font-medium">{unreadCount} thông báo chưa đọc</p>
           {onMarkAllAsRead && (
             <Button variant="ghost" size="sm" onClick={onMarkAllAsRead}>
-              Mark all as read
+              Đánh dấu tất cả là đã đọc
             </Button>
           )}
         </div>
       )}
 
-      {/* Notification List */}
+      {/* Danh sách thông báo */}
       <ScrollArea className="h-[400px]">
         <div className="divide-y">
           {notifications.map((notification) => (

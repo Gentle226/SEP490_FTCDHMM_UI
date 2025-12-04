@@ -11,6 +11,7 @@ import { getNotificationLink, isNotificationClickable } from '../utils/notificat
 import { formatNotificationMessage } from '../utils/notification-message.utils';
 import { formatNotificationTime } from '../utils/notification-time.utils';
 
+// Giao diện cho props của NotificationItem
 interface NotificationItemProps {
   notification: Notification;
   onMarkAsRead?: (id: string) => void;
@@ -27,6 +28,7 @@ export const NotificationItem = ({
   const link = getNotificationLink(notification.type, notification.targetId);
   const isClickable = isNotificationClickable(notification.type, notification.targetId);
 
+  // Lấy biểu tượng dựa trên loại thông báo
   const getNotificationIcon = () => {
     switch (notification.type) {
       case NotificationType.Comment:
@@ -55,7 +57,7 @@ export const NotificationItem = ({
       )}
       onClick={handleClick}
     >
-      {/* Sender Avatar(s) */}
+      {/* Avatar của người gửi */}
       <div className="relative flex-shrink-0">
         {notification.senders.length > 0 ? (
           <div className="relative">
@@ -79,13 +81,13 @@ export const NotificationItem = ({
         )}
       </div>
 
-      {/* Notification Content */}
+      {/* Nội dung thông báo */}
       <div className="flex-1 space-y-1">
         <p className={cn('text-sm', !notification.isRead && 'font-medium')}>{message}</p>
         <p className="text-muted-foreground text-xs">{timeAgo}</p>
       </div>
 
-      {/* Unread indicator */}
+      {/* Chỉ báo chưa đọc */}
       {!notification.isRead && (
         <div className="flex-shrink-0">
           <div className="h-2 w-2 rounded-full bg-blue-500" />

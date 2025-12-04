@@ -14,8 +14,8 @@ interface UseNotificationsOptions {
 }
 
 /**
- * Hook to manage notification state and operations
- * Handles fetching, real-time updates, and mark as read
+ * Hook để quản lý trạng thái thông báo và các hoạt động
+ * Xử lý tìm nạp, cập nhật thời gian thực và đánh dấu đã đọc
  */
 export const useNotifications = (options: UseNotificationsOptions = {}) => {
   const { userId, autoFetch = true } = options;
@@ -24,19 +24,19 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Connect to SignalR
+  // Kết nối đến SignalR
   const connection = useNotificationSignalR(userId || null);
 
-  // Calculate unread count
+  // Tính số thông báo chưa đọc
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   /**
-   * Fetch all notifications
+   * Tìm nạp tất cả thông báo
    */
   const fetchNotifications = useCallback(async () => {
     const token = getToken();
     if (!token) {
-      console.warn('[useNotifications] No token available, skipping fetch');
+      console.warn('[useNotifications] Không có token sẵn, bỏ qua tìm nạp');
       return;
     }
 
@@ -47,21 +47,21 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
       const data = await notificationService.getMyNotifications(token);
       setNotifications(data);
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to fetch notifications');
+      const error = err instanceof Error ? err : new Error('Lỗi khi tìm nạp thông báo');
       setError(error);
-      console.error('[useNotifications] Error fetching notifications:', error);
+      console.error('[useNotifications] Lỗi khi tìm nạp thông báo:', error);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   /**
-   * Mark a notification as read
+   * Đánh dấu thông báo là đã đọc
    */
   const markAsRead = useCallback(async (notificationId: string) => {
     const token = getToken();
     if (!token) {
-      console.warn('[useNotifications] No token available for mark as read');
+      console.warn('[useNotifications] Không có token sẵn để đánh dấu đã đọc');
       return;
     }
 
@@ -73,16 +73,16 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
     try {
       await notificationService.markAsRead(notificationId, token);
     } catch (err) {
-      // Revert optimistic update on error
+      // Hoàn nguyên cập nhật lạc quan nếu có lỗi
       setNotifications((prev) =>
         prev.map((n) => (n.id === notificationId ? { ...n, isRead: false } : n)),
       );
-      console.error('[useNotifications] Error marking notification as read:', err);
+      console.error('[useNotifications] Lỗi khi đánh dấu thông báo là đã đọc:', err);
     }
   }, []);
 
   /**
-   * Mark all notifications as read
+   * Đánh dấu tất cả thông báo là đã đọc
    */
   const markAllAsRead = useCallback(async () => {
     const unreadNotifications = notifications.filter((n) => !n.isRead);
@@ -92,17 +92,17 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
   }, [notifications, markAsRead]);
 
   /**
-   * Handle new notification from SignalR
+   * Xử lý thông báo mới từ SignalR
    */
   const handleNewNotification = useCallback((notification: Notification) => {
     setNotifications((prev) => {
-      // Check if notification already exists to prevent duplicates
+      // Kiểm tra xem thông báo đã tồn tại để ngăn chặn trùng lặp
       const exists = prev.some((n) => n.id === notification.id);
       if (exists) {
         return prev;
       }
 
-      // Add new notification at the beginning
+      // Thêm thông báo mới vào đầu
       return [notification, ...prev];
     });
   }, []);
@@ -113,7 +113,7 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
       return;
     }
 
-    // Listen for new notifications
+    // Lắng nghe thông báo mới
     connection.on('ReceiveNotification', handleNewNotification);
 
     return () => {
@@ -121,7 +121,7 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
     };
   }, [connection, handleNewNotification]);
 
-  // Auto-fetch on mount
+  // Tự động tìm nạp khi mount
   useEffect(() => {
     if (autoFetch && userId) {
       fetchNotifications();
