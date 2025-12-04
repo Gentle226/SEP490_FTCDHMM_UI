@@ -106,8 +106,7 @@ export function EditPermissionsDialog({
 
   const getDomainDisplayName = (domainName: string) => {
     const domainMap: Record<string, string> = {
-      ModeratorManagement: 'Quản lý Kiểm duyệt viên',
-      CustomerManagement: 'Quản lý Khách hàng',
+      UserManagement: 'Quản lý Người dùng',
       Label: 'Quản lý Nhãn món ăn',
       IngredientCategory: 'Quản lý Nhóm nguyên liệu',
       Ingredient: 'Quản lý Nguyên liệu',

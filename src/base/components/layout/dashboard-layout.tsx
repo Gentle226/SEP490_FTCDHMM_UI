@@ -83,19 +83,14 @@ export function DashboardLayout({
         url: '/',
         icon: Home,
       },
-      // {
-      //   title: 'Dữ Liệu Thống Kê',
-      //   url: '/dashboard',
-      //   icon: LayoutDashboard,
-      // },
     ];
 
     if (user?.role === Role.ADMIN) {
       return [
         ...commonItems,
         {
-          title: 'Quản Lý Kiểm Duyệt Viên',
-          url: '/admin/dashboard',
+          title: 'Quản Lý Người Dùng',
+          url: '/admin/users',
           icon: Users,
         },
         {
@@ -119,11 +114,6 @@ export function DashboardLayout({
     if (user?.role === Role.MODERATOR) {
       return [
         ...commonItems,
-        {
-          title: 'Quản Lý Khách Hàng',
-          url: '/moderator/dashboard',
-          icon: Users,
-        },
         {
           title: 'Quản Lý Công Thức',
           url: '/moderator/recipe',
