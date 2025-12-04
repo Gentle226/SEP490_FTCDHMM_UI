@@ -202,13 +202,13 @@ export function RecipeForm({
         );
       }
 
-      if (initialData.taggedUsers && initialData.taggedUsers.length > 0) {
+      if (initialData.taggedUser && initialData.taggedUser.length > 0) {
         userTagging.setSelectedUsers(
-          initialData.taggedUsers.map((user) => ({
+          initialData.taggedUser.map((user) => ({
             id: user.id,
             firstName: user.firstName,
             lastName: user.lastName,
-            avatar: user.avatar?.imageUrl,
+            avatar: user.avatarUrl,
           })),
         );
       }

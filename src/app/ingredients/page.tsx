@@ -5,6 +5,7 @@ import { ChevronDown, Lightbulb, Search, X } from 'lucide-react';
 import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Suspense } from 'react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { Pagination } from '@/base/components/layout/pagination';
@@ -63,7 +64,7 @@ function convertToPaginationType(data: {
   };
 }
 
-export default function IngredientsPage() {
+function IngredientsContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -504,5 +505,19 @@ export default function IngredientsPage() {
         </Dialog>
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function IngredientsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#99b94a] border-t-transparent" />
+        </div>
+      }
+    >
+      <IngredientsContent />
+    </Suspense>
   );
 }
