@@ -14,13 +14,14 @@ import {
 import { ScrollArea } from '@/base/components/ui/scroll-area';
 import { Separator } from '@/base/components/ui/separator';
 
-import { useReportsByTargetId } from '../hooks';
+import { useReportDetails } from '../hooks';
 import { ReportStatus } from '../types';
 
 export interface ReportListModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   targetId: string | null;
+  targetType: string | null;
   targetName?: string;
 }
 
@@ -65,9 +66,10 @@ export function ReportListModal({
   open,
   onOpenChange,
   targetId,
+  targetType,
   targetName,
 }: ReportListModalProps) {
-  const { data: reports, isLoading, error } = useReportsByTargetId(targetId || '');
+  const { data, isLoading, error } = useReportDetails(targetId || '', targetType || '');
 
   const handleClose = () => {
     onOpenChange(false);
@@ -79,9 +81,9 @@ export function ReportListModal({
         <DialogHeader>
           <DialogTitle className="text-[#99b94a]">Danh sách báo cáo</DialogTitle>
           <DialogDescription>
-            {targetName ? (
+            {data?.targetName || targetName ? (
               <>
-                Tất cả báo cáo cho: <strong>{targetName}</strong>
+                Tất cả báo cáo cho: <strong>{data?.targetName || targetName}</strong>
               </>
             ) : (
               'Xem tất cả báo cáo cho đối tượng này'
@@ -101,14 +103,14 @@ export function ReportListModal({
           </div>
         )}
 
-        {reports && !isLoading && (
+        {data && !isLoading && (
           <ScrollArea className="max-h-[500px]">
             <div className="space-y-4">
-              {reports.length === 0 ? (
+              {data.reports.length === 0 ? (
                 <div className="text-muted-foreground py-8 text-center">Không có báo cáo nào</div>
               ) : (
-                reports.map((report, index) => (
-                  <div key={report.id}>
+                data.reports.map((report, index) => (
+                  <div key={report.reportId}>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <Badge variant={getStatusBadgeVariant(report.status as ReportStatus)}>
@@ -146,7 +148,7 @@ export function ReportListModal({
                         </div>
                       )}
                     </div>
-                    {index < reports.length - 1 && <Separator className="my-4" />}
+                    {index < data.reports.length - 1 && <Separator className="my-4" />}
                   </div>
                 ))
               )}

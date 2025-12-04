@@ -19,6 +19,7 @@ export interface ReportFiltersProps {
   filters: ReportFilters;
   onFiltersChange: (filters: ReportFilters) => void;
   onReset?: () => void;
+  showStatusFilter?: boolean;
 }
 
 const TARGET_TYPE_OPTIONS: SelectOption[] = [
@@ -31,12 +32,16 @@ const TARGET_TYPE_OPTIONS: SelectOption[] = [
 
 const STATUS_OPTIONS: SelectOption[] = [
   { value: '', label: 'Tất cả trạng thái' },
-  { value: ReportStatus.PENDING, label: 'Chờ xử lý' },
   { value: ReportStatus.APPROVED, label: 'Đã duyệt' },
   { value: ReportStatus.REJECTED, label: 'Đã từ chối' },
 ];
 
-export function ReportFiltersComponent({ filters, onFiltersChange, onReset }: ReportFiltersProps) {
+export function ReportFiltersComponent({
+  filters,
+  onFiltersChange,
+  onReset,
+  showStatusFilter = false,
+}: ReportFiltersProps) {
   const [searchValue, setSearchValue] = useState(filters.keyword || '');
 
   const handleTypeChange = (value: string | undefined) => {
@@ -69,7 +74,7 @@ export function ReportFiltersComponent({ filters, onFiltersChange, onReset }: Re
   const hasActiveFilters = filters.type || filters.status || filters.keyword;
 
   return (
-    <div className="grid grid-cols-4 gap-3">
+    <div className={`grid gap-3 ${showStatusFilter ? 'grid-cols-4' : 'grid-cols-3'}`}>
       <Select
         options={TARGET_TYPE_OPTIONS}
         value={filters.type || ''}
@@ -79,22 +84,27 @@ export function ReportFiltersComponent({ filters, onFiltersChange, onReset }: Re
         searchable={false}
       />
 
-      <Select
-        options={STATUS_OPTIONS}
-        value={filters.status || ''}
-        onChange={handleStatusChange}
-        placeholder="Trạng thái"
-        clearable
-        searchable={false}
-      />
+      {showStatusFilter && (
+        <Select
+          options={STATUS_OPTIONS}
+          value={filters.status || ''}
+          onChange={handleStatusChange}
+          placeholder="Trạng thái"
+          clearable
+          searchable={false}
+        />
+      )}
 
-      <form onSubmit={handleSearchSubmit} className="col-span-2 flex items-center gap-2">
+      <form
+        onSubmit={handleSearchSubmit}
+        className={`flex items-center gap-2 ${showStatusFilter ? 'col-span-2' : 'col-span-2'}`}
+      >
         <div className="relative flex-1">
           <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
           <Input
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            placeholder="Tìm kiếm báo cáo..."
+            placeholder="Tìm kiếm theo mô tả..."
             className="pl-9"
           />
         </div>

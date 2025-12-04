@@ -220,7 +220,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 sizes="36px"
                 className="object-cover"
                 onError={() => {
-                  console.error('[CommentItem] Image failed to load from URL:', comment.avatarUrl);
+                  // Image failed to load, will show fallback initial
                 }}
               />
             </div>
