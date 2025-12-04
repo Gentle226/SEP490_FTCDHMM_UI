@@ -1,7 +1,7 @@
 'use client';
 
 import { HttpTransportType, HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * Hook để quản lý kết nối SignalR đến NotificationHub
@@ -9,6 +9,8 @@ import { useEffect, useRef } from 'react';
  * Tự động kết nối lại nếu mất kết nối
  */
 export const useNotificationSignalR = (userId: string | null) => {
+  // Use state instead of ref to trigger re-renders when connection is established
+  const [connection, setConnection] = useState<HubConnection | null>(null);
   const connectionRef = useRef<HubConnection | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef(0);
@@ -43,9 +45,9 @@ export const useNotificationSignalR = (userId: string | null) => {
           }
         }
 
-        // Tạo kết nối mới
+        // Tạo kết nối mới - phải truyền userId để server thêm vào group
         const connection = new HubConnectionBuilder()
-          .withUrl(`http://localhost:7116/hubs/notification`, {
+          .withUrl(`http://localhost:7116/hubs/notification?userId=${userId}`, {
             transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
             withCredentials: true, // Gửi cookies/thông tin xác thực
             skipNegotiation: false, // Gọi endpoint /negotiate
@@ -85,6 +87,7 @@ export const useNotificationSignalR = (userId: string | null) => {
         // Kết nối
         await connection.start();
         connectionRef.current = connection;
+        setConnection(connection); // Trigger re-render so listeners can attach
         reconnectAttemptsRef.current = 0;
 
         console.warn('[SignalR] Kết nối đến NotificationHub thành công');
@@ -114,8 +117,9 @@ export const useNotificationSignalR = (userId: string | null) => {
           console.error('[SignalR] Error stopping connection:', error);
         });
       }
+      setConnection(null);
     };
   }, [userId]);
 
-  return connectionRef.current;
+  return connection;
 };
