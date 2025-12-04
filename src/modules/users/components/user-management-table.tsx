@@ -257,6 +257,12 @@ export function UserManagementTable({ canCreate = false }: UserManagementTablePr
     setUnlockDialogOpen(true);
   };
 
+  const handleChangeRole = (user: User) => {
+    setSelectedUser(user);
+    setSelectedRole(user.role || '');
+    setChangeRoleDialogOpen(true);
+  };
+
   const confirmLock = () => {
     if (selectedUser && lockDays >= 1 && lockReason.trim().length >= 3) {
       lockMutation.mutate({
@@ -480,28 +486,39 @@ export function UserManagementTable({ canCreate = false }: UserManagementTablePr
                   <TableCell>{getStatusBadge(user.status, user)}</TableCell>
                   <TableCell>{formatDate(user.createdAtUTC)}</TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      {user.status === 'Locked' ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleUnlock(user)}
-                          className="text-green-600 hover:bg-green-50"
-                        >
-                          <Unlock className="mr-1 h-4 w-4" />
-                          Mở Khóa
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleLock(user)}
-                          className="text-red-600 hover:bg-red-50"
-                        >
-                          <Lock className="mr-1 h-4 w-4" />
-                          Khóa
-                        </Button>
-                      )}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleChangeRole(user)}
+                        className="text-blue-600 hover:bg-blue-50"
+                        title="Thay đổi vai trò"
+                      >
+                        Đổi Vai Trò
+                      </Button>
+                      <div className="pl-5">
+                        {user.status === 'Locked' ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleUnlock(user)}
+                            className="text-green-600 hover:bg-green-50"
+                          >
+                            <Unlock className="mr-1 h-4 w-4" />
+                            Mở Khóa
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleLock(user)}
+                            className="text-red-600 hover:bg-red-50"
+                          >
+                            <Lock className="mr-1 h-4 w-4" />
+                            Khóa
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -771,8 +788,8 @@ export function UserManagementTable({ canCreate = false }: UserManagementTablePr
             </div>
 
             {selectedRole && (
-              <div className="rounded-lg bg-blue-50 p-3">
-                <p className="text-sm text-blue-900">
+              <div className="rounded-lg bg-[#99b94a]/10 p-3">
+                <p className="text-sm text-[#99b94a]">
                   {selectedRole === 'Customer'
                     ? 'Vai trò Khách Hàng có quyền truy cập các tính năng cơ bản như xem công thức, tạo công thức, quản lý yêu thích.'
                     : selectedRole === 'Moderator'
