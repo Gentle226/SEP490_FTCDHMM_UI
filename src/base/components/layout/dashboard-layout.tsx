@@ -41,6 +41,7 @@ import { useSidebarStateFromCookie } from '@/base/hooks/use-sidebar-cookie';
 import { Role, useAuth } from '@/modules/auth';
 import { authService } from '@/modules/auth/services/auth.service';
 import { IngredientDetectionDialog } from '@/modules/ingredients/components/ingredient-detection-dialog';
+import { NotificationBell } from '@/modules/notification';
 
 import { UserActions } from './user-actions';
 
@@ -300,6 +301,7 @@ export function DashboardLayout({
                   </Button>
                 </Link>
               )}
+              <NotificationBell userId={user?.id} />
               {user && <UserActions user={user} onLogout={handleLogout} />}
             </div>
           </header>
