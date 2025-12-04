@@ -771,7 +771,7 @@ class RecipeService extends HttpClient {
   // ========================================
 
   /**
-   * Get pending recipes list for management
+   * Get user's own pending recipes
    */
   public async getPendingRecipes(params: PaginationParams = {}) {
     const { pageNumber = 1, pageSize = 10 } = params;
@@ -783,6 +783,24 @@ class RecipeService extends HttpClient {
         PageSize: pageSize,
       },
     });
+  }
+
+  /**
+   * Get all pending recipes for management (Admin/Moderator view)
+   */
+  public async getPendingRecipesManagement(params: PaginationParams = {}) {
+    const { pageNumber = 1, pageSize = 10 } = params;
+
+    return this.get<import('../types').RecipeManagementListResponse>(
+      'api/Recipe/pendingManagement',
+      {
+        isPrivateRoute: true,
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+        },
+      },
+    );
   }
 
   /**

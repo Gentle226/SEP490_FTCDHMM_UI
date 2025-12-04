@@ -10,14 +10,18 @@ import { RecipeManagementListResponse } from '../types';
 interface UsePendingRecipesParams {
   pageNumber?: number;
   pageSize?: number;
+  isManagement?: boolean; // If true, fetch all pending recipes; if false, fetch user's own
 }
 
 export function usePendingRecipes(params: UsePendingRecipesParams = {}) {
-  const { pageNumber = 1, pageSize = 10 } = params;
+  const { pageNumber = 1, pageSize = 10, isManagement = false } = params;
 
   return useQuery<RecipeManagementListResponse>({
-    queryKey: ['pending-recipes', pageNumber, pageSize],
-    queryFn: () => recipeService.getPendingRecipes({ pageNumber, pageSize }),
+    queryKey: ['pending-recipes', pageNumber, pageSize, isManagement],
+    queryFn: () =>
+      isManagement
+        ? recipeService.getPendingRecipesManagement({ pageNumber, pageSize })
+        : recipeService.getPendingRecipes({ pageNumber, pageSize }),
   });
 }
 

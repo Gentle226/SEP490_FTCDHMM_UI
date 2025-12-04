@@ -2,33 +2,11 @@
 
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import {
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Eye,
-  Loader2,
-  Lock,
-  Trash2,
-  Users,
-  X,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Edit, Eye, FileQuestion, Users } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/base/components/ui/alert-dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/base/components/ui/avatar';
 import { Badge } from '@/base/components/ui/badge';
 import { Button } from '@/base/components/ui/button';
 import { Skeleton } from '@/base/components/ui/skeleton';
@@ -47,71 +25,21 @@ import {
   TooltipTrigger,
 } from '@/base/components/ui/tooltip';
 
-import { usePendingRecipes, useRecipeManagement } from '../hooks/use-recipe-management';
-import { RecipeManagementResponse } from '../types';
-import { ReasonDialogAction, ReasonInputDialog } from './reason-input-dialog';
+import { usePendingRecipes } from '../hooks/use-recipe-management';
 
-interface RecipeManagementTableProps {
+interface MyPendingRecipesTableProps {
   title?: React.ReactNode;
 }
 
-export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
+export function MyPendingRecipesTable({ title }: MyPendingRecipesTableProps) {
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
   const { data, isLoading, isError } = usePendingRecipes({
     pageNumber: page,
     pageSize,
-    isManagement: true, // Fetch all pending recipes for management view
+    isManagement: false, // Fetch only user's own pending recipes
   });
-
-  const {
-    lockRecipe,
-    approveRecipe,
-    rejectRecipe,
-    deleteRecipe,
-    isLoading: isActionLoading,
-  } = useRecipeManagement();
-
-  // Dialog states
-  const [reasonDialogOpen, setReasonDialogOpen] = useState(false);
-  const [reasonDialogAction, setReasonDialogAction] = useState<ReasonDialogAction>('lock');
-  const [selectedRecipe, setSelectedRecipe] = useState<RecipeManagementResponse | null>(null);
-  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
-
-  const handleOpenReasonDialog = (recipe: RecipeManagementResponse, action: ReasonDialogAction) => {
-    setSelectedRecipe(recipe);
-    setReasonDialogAction(action);
-    setReasonDialogOpen(true);
-  };
-
-  const handleOpenApproveDialog = (recipe: RecipeManagementResponse) => {
-    setSelectedRecipe(recipe);
-    setApproveDialogOpen(true);
-  };
-
-  const handleReasonConfirm = async (reason: string) => {
-    if (!selectedRecipe) return;
-
-    switch (reasonDialogAction) {
-      case 'lock':
-        await lockRecipe(selectedRecipe.id, reason);
-        break;
-      case 'reject':
-        await rejectRecipe(selectedRecipe.id, reason);
-        break;
-      case 'delete':
-        await deleteRecipe(selectedRecipe.id, reason);
-        break;
-    }
-  };
-
-  const handleApproveConfirm = async () => {
-    if (!selectedRecipe) return;
-    await approveRecipe(selectedRecipe.id);
-    setApproveDialogOpen(false);
-    setSelectedRecipe(null);
-  };
 
   const getDifficultyBadge = (difficulty: { name: string; value: number }) => {
     const colorMap: Record<string, string> = {
@@ -140,8 +68,7 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[300px]">Công thức</TableHead>
-                <TableHead>Tác giả</TableHead>
+                <TableHead className="w-[350px]">Công thức</TableHead>
                 <TableHead>Độ khó</TableHead>
                 <TableHead>Thời gian</TableHead>
                 <TableHead>Khẩu phần</TableHead>
@@ -159,9 +86,6 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>
-                  <TableCell>
                     <Skeleton className="h-6 w-16" />
                   </TableCell>
                   <TableCell>
@@ -174,7 +98,7 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
                     <Skeleton className="h-4 w-28" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="ml-auto h-8 w-24" />
+                    <Skeleton className="ml-auto h-8 w-20" />
                   </TableCell>
                 </TableRow>
               ))}
@@ -203,9 +127,11 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
       <div className="flex flex-col items-center justify-center py-10">
         {title && <div className="mb-4 w-full">{title}</div>}
         <div className="text-center">
-          <Check className="mx-auto h-12 w-12 text-green-500" />
+          <FileQuestion className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-4 text-lg font-medium">Không có công thức chờ duyệt</h3>
-          <p className="text-muted-foreground mt-2">Tất cả công thức đã được xử lý.</p>
+          <p className="text-muted-foreground mt-2">
+            Bạn không có công thức nào đang chờ được duyệt.
+          </p>
         </div>
       </div>
     );
@@ -215,12 +141,19 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
     <div className="space-y-4">
       {title && <div className="mb-4">{title}</div>}
 
+      {/* Info banner */}
+      <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900 dark:bg-yellow-950">
+        <p className="text-sm text-yellow-800 dark:text-yellow-200">
+          <strong>Lưu ý:</strong> Các công thức dưới đây đang chờ kiểm duyệt viên phê duyệt. Sau khi
+          được duyệt, công thức sẽ xuất hiện công khai trên hệ thống.
+        </p>
+      </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[300px]">Công thức</TableHead>
-              <TableHead>Tác giả</TableHead>
+              <TableHead className="w-[350px]">Công thức</TableHead>
               <TableHead>Độ khó</TableHead>
               <TableHead>Thời gian</TableHead>
               <TableHead>Khẩu phần</TableHead>
@@ -247,28 +180,17 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
                         </div>
                       )}
                     </div>
-                    <div className="flex max-w-[200px] min-w-0 flex-col">
+                    <div className="flex max-w-[250px] min-w-0 flex-col">
                       <span className="line-clamp-1 font-medium">{recipe.name}</span>
                       {recipe.description && (
                         <span className="text-muted-foreground line-clamp-1 truncate text-sm">
                           {recipe.description}
                         </span>
                       )}
+                      <Badge variant="outline" className="mt-1 w-fit text-xs text-yellow-600">
+                        Chờ duyệt
+                      </Badge>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={recipe.author.avatarUrl} />
-                      <AvatarFallback>
-                        {recipe.author.firstName?.[0]}
-                        {recipe.author.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm">
-                      {recipe.author.firstName} {recipe.author.lastName}
-                    </span>
                   </div>
                 </TableCell>
                 <TableCell>{getDifficultyBadge(recipe.difficulty)}</TableCell>
@@ -295,7 +217,7 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button variant="ghost" size="icon" asChild>
-                            <Link href={`/recipe/${recipe.id}`} target="_blank">
+                            <Link href={`/recipe/${recipe.id}`}>
                               <Eye className="h-4 w-4" />
                             </Link>
                           </Button>
@@ -307,69 +229,14 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
 
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-green-600 hover:bg-green-100 hover:text-green-700"
-                            onClick={() => handleOpenApproveDialog(recipe)}
-                            disabled={isActionLoading}
-                          >
-                            <Check className="h-4 w-4" />
+                          <Button variant="ghost" size="icon" asChild>
+                            <Link href={`/recipe/${recipe.id}/edit`}>
+                              <Edit className="h-4 w-4" />
+                            </Link>
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent className="bg-[#99b94a] text-white [--tooltip-fill:#99b94a]">
-                          Duyệt
-                        </TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-yellow-600 hover:bg-yellow-100 hover:text-yellow-700"
-                            onClick={() => handleOpenReasonDialog(recipe, 'reject')}
-                            disabled={isActionLoading}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-[#99b94a] text-white [--tooltip-fill:#99b94a]">
-                          Từ chối
-                        </TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-orange-600 hover:bg-orange-100 hover:text-orange-700"
-                            onClick={() => handleOpenReasonDialog(recipe, 'lock')}
-                            disabled={isActionLoading}
-                          >
-                            <Lock className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-[#99b94a] text-white [--tooltip-fill:#99b94a]">
-                          Khóa
-                        </TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-red-600 hover:bg-red-100 hover:text-red-700"
-                            onClick={() => handleOpenReasonDialog(recipe, 'delete')}
-                            disabled={isActionLoading}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-[#99b94a] text-white [--tooltip-fill:#99b94a]">
-                          Xóa
+                          Chỉnh sửa
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -411,39 +278,6 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
           </div>
         </div>
       )}
-
-      {/* Reason Input Dialog */}
-      <ReasonInputDialog
-        open={reasonDialogOpen}
-        onOpenChange={setReasonDialogOpen}
-        action={reasonDialogAction}
-        recipeName={selectedRecipe?.name || ''}
-        onConfirm={handleReasonConfirm}
-      />
-
-      {/* Approve Confirmation Dialog */}
-      <AlertDialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Duyệt công thức</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bạn có chắc chắn muốn duyệt công thức{' '}
-              <span className="text-foreground font-medium">{selectedRecipe?.name}</span>?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isActionLoading}>Hủy</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleApproveConfirm}
-              disabled={isActionLoading}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {isActionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Duyệt
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

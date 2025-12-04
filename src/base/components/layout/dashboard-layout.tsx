@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   BookMarked,
   ClipboardList,
+  ClockAlert,
   CookingPot,
   FileEdit,
   Goal,
@@ -99,6 +100,11 @@ export function DashboardLayout({
           icon: KeyRound,
         },
         {
+          title: 'Duyệt Công Thức',
+          url: '/admin/pending-recipes',
+          icon: ClockAlert,
+        },
+        {
           title: 'Quản Lý Mục Tiêu Sức Khỏe',
           url: '/admin/health-goals',
           icon: Goal,
@@ -164,6 +170,11 @@ export function DashboardLayout({
         title: 'Bản Nháp Của Tôi',
         url: '/drafts',
         icon: FileEdit,
+      },
+      {
+        title: 'Công Thức Chờ Duyệt',
+        url: '/pending-recipes',
+        icon: ClockAlert,
       },
       {
         title: 'Công Thức Đã Lưu',
