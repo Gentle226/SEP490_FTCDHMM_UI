@@ -231,22 +231,6 @@ class RecipeService extends HttpClient {
   }
 
   /**
-   * Get favorite recipes
-   */
-  public async getFavoriteRecipes(params: PaginationParams & { keyword?: string } = {}) {
-    const { pageNumber = 1, pageSize = 10, keyword } = params;
-
-    return this.get<MyRecipeResponse>('api/recipe/favorites', {
-      isPrivateRoute: true,
-      params: {
-        'PaginationParams.PageNumber': pageNumber,
-        'PaginationParams.PageSize': pageSize,
-        ...(keyword && { Keyword: keyword }),
-      },
-    });
-  }
-
-  /**
    * Get saved recipes
    */
   public async getSavedRecipes(params: PaginationParams & { keyword?: string } = {}) {
@@ -259,24 +243,6 @@ class RecipeService extends HttpClient {
         'PaginationParams.PageSize': pageSize,
         ...(keyword && { Keyword: keyword }),
       },
-    });
-  }
-
-  /**
-   * Add recipe to favorites
-   */
-  public async addToFavorite(recipeId: string) {
-    return this.post<void>(`api/Recipe/${recipeId}/favorite`, null, {
-      isPrivateRoute: true,
-    });
-  }
-
-  /**
-   * Remove recipe from favorites
-   */
-  public async removeFromFavorite(recipeId: string) {
-    return this.delete<void>(`api/Recipe/${recipeId}/favorite`, {
-      isPrivateRoute: true,
     });
   }
 
