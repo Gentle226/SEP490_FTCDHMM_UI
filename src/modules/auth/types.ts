@@ -266,14 +266,10 @@ export interface User {
 
 // Permission policies matching API
 export const PermissionPolicies = {
-  MODERATOR_CREATE: 'ModeratorManagement:Create',
-  MODERATOR_UPDATE: 'ModeratorManagement:Update',
-  MODERATOR_DELETE: 'ModeratorManagement:Delete',
-  MODERATOR_VIEW: 'ModeratorManagement:View',
-  CUSTOMER_VIEW: 'CustomerManagement:View',
-  CUSTOMER_UPDATE: 'CustomerManagement:Update',
-  CUSTOMER_DELETE: 'CustomerManagement:Delete',
-  CUSTOMER_CREATE: 'CustomerManagement:Create',
+  USER_MANAGEMENT_CREATE: 'UserManagement:Create',
+  USER_MANAGEMENT_UPDATE: 'UserManagement:Update',
+  USER_MANAGEMENT_DELETE: 'UserManagement:Delete',
+  USER_MANAGEMENT_VIEW: 'UserManagement:View',
   // Recipe Management Permissions
   RECIPE_MANAGEMENT_VIEW: 'Recipe:ManagementView',
   RECIPE_DELETE: 'Recipe:Delete',

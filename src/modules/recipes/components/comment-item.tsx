@@ -14,6 +14,10 @@ import { Comment } from '../types/comment.types';
 import { getFullDateTimeVN, getRelativeTime } from '../utils/time.utils';
 import { CommentForm } from './comment-form';
 
+// Fallback SVG for broken avatar images
+const BROKEN_AVATAR_SVG =
+  'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"%3E%3Ccircle cx="12" cy="12" r="10"/%3E%3C/svg%3E';
+
 interface CommentItemProps {
   comment: Comment;
   recipeId: string;
@@ -216,7 +220,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 sizes="36px"
                 className="object-cover"
                 onError={() => {
-                  console.error('[CommentItem] Image failed to load from URL:', comment.avatarUrl);
+                  // Image failed to load, will show fallback initial
                 }}
               />
             </div>
@@ -287,17 +291,33 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 {comment.mentions && comment.mentions.length > 0 && (
                   <>
                     {comment.mentions.map((mention) => (
-                      <button
-                        key={mention.mentionedUserId}
-                        onClick={() => {
-                          if (mention.mentionedUserId) {
-                            router.push(`/profile/${mention.mentionedUserId}`);
-                          }
-                        }}
-                        className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-[#99b94a] px-2 py-0.5 text-xs font-medium text-white transition-opacity hover:opacity-80"
-                      >
-                        @{mention.lastName} {mention.firstName}
-                      </button>
+                      <div key={mention.mentionedUserId} className="group relative inline-flex">
+                        <button
+                          onClick={() => {
+                            if (mention.mentionedUserId) {
+                              router.push(`/profile/${mention.mentionedUserId}`);
+                            }
+                          }}
+                          className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-[#99b94a] px-2 py-0.5 text-xs font-medium text-white transition-opacity hover:opacity-80"
+                        >
+                          @{mention.lastName} {mention.firstName}
+                        </button>
+                        {/* Avatar preview on hover */}
+                        {mention.avatarUrl && (
+                          <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 rounded-lg bg-white p-2 opacity-0 shadow-lg transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
+                            <Image
+                              src={mention.avatarUrl}
+                              alt={`${mention.firstName} ${mention.lastName}`}
+                              width={64}
+                              height={64}
+                              className="h-16 w-16 rounded-lg object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = BROKEN_AVATAR_SVG;
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </>
                 )}

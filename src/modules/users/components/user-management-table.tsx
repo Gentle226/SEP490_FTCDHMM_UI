@@ -62,12 +62,11 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 interface UserManagementTableProps {
-  userType: 'customers' | 'moderators';
   title: ReactNode;
   canCreate?: boolean;
 }
 
-export function UserManagementTable({ userType, canCreate = false }: UserManagementTableProps) {
+export function UserManagementTable({ canCreate = false }: UserManagementTableProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -75,10 +74,12 @@ export function UserManagementTable({ userType, canCreate = false }: UserManagem
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
   const currentSearch = searchParams.get('search') || '';
   const currentPageSize = parseInt(searchParams.get('pageSize') || '10', 10);
+  const currentRoleFilter = searchParams.get('role') || '';
 
   const [page, setPage] = useState(currentPage);
   const [searchTerm, setSearchTerm] = useState(currentSearch);
   const [pageSize, setPageSize] = useState(currentPageSize);
+  const [roleFilter, setRoleFilter] = useState(currentRoleFilter);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // Sync state with URL params
@@ -86,7 +87,8 @@ export function UserManagementTable({ userType, canCreate = false }: UserManagem
     setPage(currentPage);
     setSearchTerm(currentSearch);
     setPageSize(currentPageSize);
-  }, [currentPage, currentSearch, currentPageSize]);
+    setRoleFilter(currentRoleFilter);
+  }, [currentPage, currentSearch, currentPageSize, currentRoleFilter]);
 
   // Update URL when search term changes
   useEffect(() => {
@@ -121,6 +123,18 @@ export function UserManagementTable({ userType, canCreate = false }: UserManagem
     router.push(`${pathname}?${params.toString()}`);
   }, [pageSize, pathname, router, searchParams]);
 
+  // Update URL when role filter changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    if (roleFilter) {
+      params.set('role', roleFilter);
+    } else {
+      params.delete('role');
+    }
+    params.set('page', '1'); // Reset to page 1 when changing filter
+    router.push(`${pathname}?${params.toString()}`);
+  }, [roleFilter, pathname, router, searchParams]);
+
   // Helper function to convert API response to PaginationType
   const convertToPaginationType = (data: {
     totalCount: number;
@@ -152,7 +166,7 @@ export function UserManagementTable({ userType, canCreate = false }: UserManagem
   ];
 
   const queryClient = useQueryClient();
-  const queryKey = [userType, { page, search: debouncedSearchTerm, pageSize }];
+  const queryKey = ['users', { page, search: debouncedSearchTerm, pageSize, role: roleFilter }];
 
   // Fetch roles for role change feature
   useQuery({
@@ -176,28 +190,25 @@ export function UserManagementTable({ userType, canCreate = false }: UserManagem
         pageSize: pageSize,
         search: debouncedSearchTerm || undefined,
       };
-      return userType === 'customers'
-        ? userManagementService.getCustomers(params)
-        : userManagementService.getModerators(params);
+      if (roleFilter) {
+        params.role = roleFilter;
+      }
+      return userManagementService.getUsers(params);
     },
   });
 
   // Lock user mutation
   const lockMutation = useMutation({
     mutationFn: (request: LockUserRequest) => {
-      return userType === 'customers'
-        ? userManagementService.lockCustomer(request)
-        : userManagementService.lockModerator(request);
+      return userManagementService.lockUser(request);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [userType] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
       setLockDialogOpen(false);
       setSelectedUser(null);
       setLockDays(7);
       setLockReason('');
-      toast.success(
-        `Tài khoản ${userType === 'customers' ? 'Khách hàng' : 'Moderator'} đã được khóa thành công.`,
-      );
+      toast.success('Tài khoản đã được khóa thành công.');
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Không thể khóa tài khoản.');
@@ -207,17 +218,13 @@ export function UserManagementTable({ userType, canCreate = false }: UserManagem
   // Unlock user mutation
   const unlockMutation = useMutation({
     mutationFn: (request: UnlockUserRequest) => {
-      return userType === 'customers'
-        ? userManagementService.unlockCustomer(request)
-        : userManagementService.unlockModerator(request);
+      return userManagementService.unlockUser(request);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [userType] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
       setUnlockDialogOpen(false);
       setSelectedUser(null);
-      toast.success(
-        `Tài khoản ${userType === 'customers' ? 'Khách hàng' : 'Moderator'} đã được mở khóa thành công.`,
-      );
+      toast.success('Tài khoản đã được mở khóa thành công.');
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Không thể mở khóa tài khoản.');
@@ -229,7 +236,7 @@ export function UserManagementTable({ userType, canCreate = false }: UserManagem
     mutationFn: (request: { userId: string; roleId: string }) =>
       userManagementService.changeRole(request.userId, { roleId: request.roleId }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [userType] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
       setChangeRoleDialogOpen(false);
       setSelectedUser(null);
       setSelectedRole('');
@@ -250,6 +257,12 @@ export function UserManagementTable({ userType, canCreate = false }: UserManagem
     setUnlockDialogOpen(true);
   };
 
+  const handleChangeRole = (user: User) => {
+    setSelectedUser(user);
+    setSelectedRole(user.role || '');
+    setChangeRoleDialogOpen(true);
+  };
+
   const confirmLock = () => {
     if (selectedUser && lockDays >= 1 && lockReason.trim().length >= 3) {
       lockMutation.mutate({
@@ -266,11 +279,6 @@ export function UserManagementTable({ userType, canCreate = false }: UserManagem
         userId: selectedUser.id,
       });
     }
-  };
-
-  const handleChangeRole = (user: User) => {
-    setSelectedUser(user);
-    setChangeRoleDialogOpen(true);
   };
 
   const confirmChangeRole = () => {
@@ -349,13 +357,14 @@ export function UserManagementTable({ userType, canCreate = false }: UserManagem
 
   return (
     <div className="space-y-4">
-      {/* Search Bar */}
-      <div className="mb-6 flex w-full justify-end">
-        <div className="flex w-1/4 items-center space-x-2">
-          <div className="relative flex-1">
+      {/* Search Bar and Filters */}
+      <div className="mb-6 flex w-full flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        {/* Search Input */}
+        <div className="flex flex-1 items-center space-x-2">
+          <div className="relative max-w-sm flex-1">
             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />
             <Input
-              placeholder={`Tìm kiếm ${userType === 'customers' ? 'khách hàng' : 'moderator'}...`}
+              placeholder="Tìm kiếm người dùng..."
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="pr-10 pl-10"
@@ -372,6 +381,51 @@ export function UserManagementTable({ userType, canCreate = false }: UserManagem
             )}
           </div>
         </div>
+
+        {/* Role Filter */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">Vai trò:</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="min-w-[140px] gap-2">
+                {roleFilter === 'Customer'
+                  ? 'Khách Hàng'
+                  : roleFilter === 'Moderator'
+                    ? 'Kiểm Duyệt Viên'
+                    : roleFilter === 'Admin'
+                      ? 'Quản Trị Viên'
+                      : 'Tất cả'}
+                <ChevronDown className="h-4 w-4 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => setRoleFilter('')}
+                className={!roleFilter ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+              >
+                Tất cả
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setRoleFilter('Customer')}
+                className={roleFilter === 'Customer' ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+              >
+                Khách Hàng
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setRoleFilter('Moderator')}
+                className={roleFilter === 'Moderator' ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+              >
+                Kiểm Duyệt Viên
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setRoleFilter('Admin')}
+                className={roleFilter === 'Admin' ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+              >
+                Quản Trị Viên
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <div className="rounded-md border">
@@ -380,10 +434,10 @@ export function UserManagementTable({ userType, canCreate = false }: UserManagem
             <TableRow>
               <TableHead className="pl-6">Tên</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead>Vai Trò</TableHead>
               <TableHead>Trạng Thái</TableHead>
               <TableHead>Ngày Tạo</TableHead>
-              <TableHead>Vai Trò</TableHead>
-              <TableHead>Khóa/Mở Khóa</TableHead>
+              <TableHead>Thao Tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -394,15 +448,13 @@ export function UserManagementTable({ userType, canCreate = false }: UserManagem
                     <div className="flex flex-col items-center justify-center space-y-2">
                       <Search className="size-8 text-gray-400" />
                       <p className="text-gray-500">
-                        Không tìm thấy {userType === 'customers' ? 'khách hàng' : 'moderator'} nào
-                        với từ khóa &ldquo;{debouncedSearchTerm}&rdquo;
+                        Không tìm thấy người dùng nào với từ khóa &ldquo;{debouncedSearchTerm}
+                        &rdquo;
                       </p>
                     </div>
                   ) : (
                     <p className="text-gray-500">
-                      {isLoading
-                        ? 'Đang tải...'
-                        : `Không có ${userType === 'customers' ? 'khách hàng' : 'moderator'} nào`}
+                      {isLoading ? 'Đang tải...' : 'Không có người dùng nào'}
                     </p>
                   )}
                 </TableCell>
@@ -426,43 +478,47 @@ export function UserManagementTable({ userType, canCreate = false }: UserManagem
                       {user.email}
                     </button>
                   </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="font-medium">
+                      {user.role || 'N/A'}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{getStatusBadge(user.status, user)}</TableCell>
                   <TableCell>{formatDate(user.createdAtUTC)}</TableCell>
                   <TableCell>
-                    {canCreate && (
+                    <div className="flex flex-wrap items-center gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleChangeRole(user)}
                         className="text-blue-600 hover:bg-blue-50"
+                        title="Thay đổi vai trò"
                       >
-                        Thay đổi
+                        Đổi Vai Trò
                       </Button>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {user.status === 'Locked' ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleUnlock(user)}
-                          className="text-green-600 hover:bg-green-50"
-                        >
-                          <Unlock className="mr-1 h-4 w-4" />
-                          Mở Khóa
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleLock(user)}
-                          className="text-red-600 hover:bg-red-50"
-                        >
-                          <Lock className="mr-1 h-4 w-4" />
-                          Khóa
-                        </Button>
-                      )}
+                      <div className="pl-5">
+                        {user.status === 'Locked' ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleUnlock(user)}
+                            className="text-green-600 hover:bg-green-50"
+                          >
+                            <Unlock className="mr-1 h-4 w-4" />
+                            Mở Khóa
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleLock(user)}
+                            className="text-red-600 hover:bg-red-50"
+                          >
+                            <Lock className="mr-1 h-4 w-4" />
+                            Khóa
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -484,8 +540,7 @@ export function UserManagementTable({ userType, canCreate = false }: UserManagem
             ) : (
               <>
                 Hiển thị <span className="font-medium">{usersData.items.length}</span> trên tổng số{' '}
-                <span className="font-medium">{usersData.totalCount}</span>{' '}
-                {userType === 'customers' ? 'khách hàng' : 'moderator'}
+                <span className="font-medium">{usersData.totalCount}</span> người dùng
               </>
             )}
           </div>
@@ -733,8 +788,8 @@ export function UserManagementTable({ userType, canCreate = false }: UserManagem
             </div>
 
             {selectedRole && (
-              <div className="rounded-lg bg-blue-50 p-3">
-                <p className="text-sm text-blue-900">
+              <div className="rounded-lg bg-[#99b94a]/10 p-3">
+                <p className="text-sm text-[#99b94a]">
                   {selectedRole === 'Customer'
                     ? 'Vai trò Khách Hàng có quyền truy cập các tính năng cơ bản như xem công thức, tạo công thức, quản lý yêu thích.'
                     : selectedRole === 'Moderator'

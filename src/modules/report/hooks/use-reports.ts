@@ -6,7 +6,7 @@ import { reportService } from '../services';
 import { ReportFilterRequest } from '../types';
 
 /**
- * Hook to fetch report summary with filters
+ * Hook to fetch pending report summary with filters (GET /api/report)
  */
 export const useReportSummary = (filters?: ReportFilterRequest) => {
   return useQuery({
@@ -16,24 +16,23 @@ export const useReportSummary = (filters?: ReportFilterRequest) => {
 };
 
 /**
- * Hook to fetch a specific report by ID
+ * Hook to fetch report history (approved/rejected) with filters (GET /api/report/history)
  */
-export const useReport = (id: string) => {
+export const useReportHistory = (filters?: ReportFilterRequest) => {
   return useQuery({
-    queryKey: ['reports', id],
-    queryFn: () => reportService.getReportById(id),
-    enabled: !!id,
+    queryKey: ['reports', 'history', filters],
+    queryFn: () => reportService.getReportHistory(filters),
   });
 };
 
 /**
- * Hook to fetch reports by target ID
+ * Hook to fetch report details by target ID (GET /api/report/details/{targetId})
  */
-export const useReportsByTargetId = (targetId: string) => {
+export const useReportDetails = (targetId: string, targetType: string) => {
   return useQuery({
-    queryKey: ['reports', 'target', targetId],
-    queryFn: () => reportService.getReportsByTargetId(targetId),
-    enabled: !!targetId,
+    queryKey: ['reports', 'details', targetId, targetType],
+    queryFn: () => reportService.getReportDetails(targetId, targetType),
+    enabled: !!targetId && !!targetType,
   });
 };
 

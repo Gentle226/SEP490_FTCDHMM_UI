@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { Pagination } from '@/base/components/layout/pagination';
-import { Button } from '@/base/components/ui/button';
 import { Skeleton } from '@/base/components/ui/skeleton';
 import { MyRecipeCard } from '@/modules/recipes/components/my-recipe-card';
 import { useUserRecipes } from '@/modules/recipes/hooks';
@@ -80,14 +79,6 @@ export function UserRecipesList({
             ? 'Hãy bắt đầu chia sẻ những công thức nấu ăn yêu thích của bạn với cộng đồng'
             : 'Người dùng này chưa chia sẻ công thức nào'}
         </p>
-        {isOwnProfile && (
-          <Button
-            className="bg-[#99b94a] hover:bg-[#7a9a3d]"
-            onClick={() => (window.location.href = '/recipe/new')}
-          >
-            Tạo công thức mới
-          </Button>
-        )}
       </div>
     );
   }

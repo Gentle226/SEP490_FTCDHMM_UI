@@ -50,7 +50,8 @@ class RoleManagementService extends HttpClient {
 
   public async getRoles(params: PaginationParams = {}) {
     const queryParams = new URLSearchParams();
-    if (params.pageNumber) queryParams.append('PaginationParams.PageNumber', params.pageNumber.toString());
+    if (params.pageNumber)
+      queryParams.append('PaginationParams.PageNumber', params.pageNumber.toString());
     if (params.pageSize)
       queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
 
@@ -66,13 +67,13 @@ class RoleManagementService extends HttpClient {
   }
 
   public async activeRole(roleId: string) {
-    return this.put<void>(`api/Role/active?roleId=${roleId}`, undefined, {
+    return this.put<void>(`api/Role/${roleId}/active`, undefined, {
       isPrivateRoute: true,
     });
   }
 
   public async deactiveRole(roleId: string) {
-    return this.put<void>(`api/Role/deactive?roleId=${roleId}`, undefined, {
+    return this.put<void>(`api/Role/${roleId}/deactive`, undefined, {
       isPrivateRoute: true,
     });
   }

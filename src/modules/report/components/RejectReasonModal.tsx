@@ -62,9 +62,12 @@ export function RejectReasonModal({
 
     try {
       if (isBulk && bulkTarget) {
-        // Fetch all reports for this target
-        const reports = await reportService.getReportsByTargetId(bulkTarget.targetId);
-        const pendingReports = reports.filter((r) => r.status === ReportStatus.PENDING);
+        // Fetch all reports for this target using new API
+        const details = await reportService.getReportDetails(
+          bulkTarget.targetId,
+          bulkTarget.targetType,
+        );
+        const pendingReports = details.reports.filter((r) => r.status === ReportStatus.PENDING);
 
         if (pendingReports.length === 0) {
           toast.warning('Không có báo cáo nào đang chờ xử lý');
@@ -74,7 +77,9 @@ export function RejectReasonModal({
 
         // Reject all pending reports with the same reason
         await Promise.all(
-          pendingReports.map((report) => reportService.rejectReport(report.id, reason.trim())),
+          pendingReports.map((report) =>
+            reportService.rejectReport(report.reportId, reason.trim()),
+          ),
         );
 
         toast.success(`Đã từ chối ${pendingReports.length} báo cáo thành công`);

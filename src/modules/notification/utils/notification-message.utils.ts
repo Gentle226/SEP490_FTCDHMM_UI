@@ -1,0 +1,70 @@
+import { Notification, NotificationType } from '../types/notification.types';
+
+/**
+ * Định dạng thông báo dựa trên loại và người gửi
+ */
+export const formatNotificationMessage = (notification: Notification): string => {
+  const { type, senders, message } = notification;
+  const senderCount = senders.length;
+  const typeName = type?.name?.toUpperCase() ?? NotificationType.System;
+
+  // Nếu tồn tại tin nhắn tùy chỉnh (cho thông báo Hệ thống), sử dụng nó
+  if (typeName === NotificationType.System && message) {
+    return message;
+  }
+
+  // Không có người gửi, sử dụng tin nhắn mặc định
+  if (senderCount === 0) {
+    return message || 'Bạn có một thông báo mới';
+  }
+
+  // Định dạng tên người gửi
+  const firstName = senders[0]?.firstName || 'Ai đó';
+  const lastName = senders[0]?.lastName || '';
+  const fullName = `${firstName} ${lastName}`.trim();
+
+  // Một người gửi
+  if (senderCount === 1) {
+    switch (typeName) {
+      case NotificationType.Comment:
+        return `${fullName} đã bình luận về công thức của bạn`;
+      case NotificationType.Reply:
+        return `${fullName} đã trả lời bình luận của bạn`;
+      default:
+        return message || `${fullName} đã tương tác với nội dung của bạn`;
+    }
+  }
+
+  // Nhiều người gửi
+  const othersCount = senderCount - 1;
+  const othersText = othersCount === 1 ? '1 người khác' : `${othersCount} người khác`;
+
+  switch (typeName) {
+    case NotificationType.Comment:
+      return `${fullName} và ${othersText} đã bình luận về công thức của bạn`;
+    case NotificationType.Reply:
+      return `${fullName} và ${othersText} đã trả lời bình luận của bạn`;
+    default:
+      return message || `${fullName} và ${othersText} đã tương tác với nội dung của bạn`;
+  }
+};
+
+/**
+ * Lấy tóm tắt ngắn gọn về tên người gửi
+ */
+export const getSendersSummary = (notification: Notification): string => {
+  const { senders } = notification;
+  const senderCount = senders.length;
+
+  if (senderCount === 0) {
+    return 'Không xác định';
+  }
+
+  if (senderCount === 1) {
+    return `${senders[0].firstName} ${senders[0].lastName}`.trim();
+  }
+
+  const firstName = senders[0]?.firstName || 'Ai đó';
+  const othersCount = senderCount - 1;
+  return `${firstName} và ${othersCount} ${othersCount === 1 ? 'người khác' : 'người khác'}`;
+};

@@ -28,11 +28,21 @@ export interface IngredientDetailsResponse {
   categories: Array<{ id: string; name: string }>;
   nutrients: Array<{
     name: string;
+    vietnameseName?: string;
     unit: string;
     minValue?: number;
     maxValue?: number;
     medianValue?: number;
   }>;
+}
+
+export interface IngredientSearchParams {
+  pageNumber?: number;
+  pageSize?: number;
+  keyword?: string;
+  categoryIds?: string[];
+  updatedFrom?: string;
+  updatedTo?: string;
 }
 
 class IngredientPublicService extends HttpClient {
@@ -43,22 +53,21 @@ class IngredientPublicService extends HttpClient {
   /**
    * Get paginated ingredients for public display
    */
-  public async getIngredients(
-    params: {
-      pageNumber?: number;
-      pageSize?: number;
-      search?: string;
-    } = {},
-  ) {
+  public async getIngredients(params: IngredientSearchParams = {}) {
     const queryParams = new URLSearchParams();
     if (params.pageNumber)
       queryParams.append('PaginationParams.PageNumber', params.pageNumber.toString());
     if (params.pageSize)
       queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
-    if (params.search) queryParams.append('Keyword', params.search);
+    if (params.keyword) queryParams.append('Keyword', params.keyword);
+    if (params.categoryIds) {
+      params.categoryIds.forEach((id) => queryParams.append('CategoryIds', id));
+    }
+    if (params.updatedFrom) queryParams.append('UpdatedFrom', params.updatedFrom);
+    if (params.updatedTo) queryParams.append('UpdatedTo', params.updatedTo);
 
     return await this.get<IngredientsPublicResponse>(`api/Ingredient?${queryParams.toString()}`, {
-      isPrivateRoute: true,
+      isPrivateRoute: false,
     });
   }
 
@@ -67,7 +76,7 @@ class IngredientPublicService extends HttpClient {
    */
   public async getIngredientById(id: string) {
     return await this.get<IngredientDetailsResponse>(`api/Ingredient/${id}`, {
-      isPrivateRoute: true,
+      isPrivateRoute: false,
     });
   }
 

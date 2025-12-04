@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   BookMarked,
   ClipboardList,
+  ClockAlert,
   CookingPot,
   FileEdit,
   Goal,
@@ -41,6 +42,7 @@ import { useSidebarStateFromCookie } from '@/base/hooks/use-sidebar-cookie';
 import { Role, useAuth } from '@/modules/auth';
 import { authService } from '@/modules/auth/services/auth.service';
 import { IngredientDetectionDialog } from '@/modules/ingredients/components/ingredient-detection-dialog';
+import { NotificationBell } from '@/modules/notification';
 
 import { UserActions } from './user-actions';
 
@@ -82,25 +84,25 @@ export function DashboardLayout({
         url: '/',
         icon: Home,
       },
-      // {
-      //   title: 'Dữ Liệu Thống Kê',
-      //   url: '/dashboard',
-      //   icon: LayoutDashboard,
-      // },
     ];
 
     if (user?.role === Role.ADMIN) {
       return [
         ...commonItems,
         {
-          title: 'Quản Lý Kiểm Duyệt Viên',
-          url: '/admin/dashboard',
+          title: 'Quản Lý Người Dùng',
+          url: '/admin/users',
           icon: Users,
         },
         {
           title: 'Quản Lý Phân Quyền',
           url: '/admin/permissions',
           icon: KeyRound,
+        },
+        {
+          title: 'Duyệt Công Thức',
+          url: '/admin/pending-recipes',
+          icon: ClockAlert,
         },
         {
           title: 'Quản Lý Mục Tiêu Sức Khỏe',
@@ -118,11 +120,6 @@ export function DashboardLayout({
     if (user?.role === Role.MODERATOR) {
       return [
         ...commonItems,
-        {
-          title: 'Quản Lý Khách Hàng',
-          url: '/moderator/dashboard',
-          icon: Users,
-        },
         {
           title: 'Quản Lý Công Thức',
           url: '/moderator/recipe',
@@ -173,6 +170,11 @@ export function DashboardLayout({
         title: 'Bản Nháp Của Tôi',
         url: '/drafts',
         icon: FileEdit,
+      },
+      {
+        title: 'Công Thức Chờ Duyệt',
+        url: '/pending-recipes',
+        icon: ClockAlert,
       },
       {
         title: 'Công Thức Đã Lưu',
@@ -300,6 +302,7 @@ export function DashboardLayout({
                   </Button>
                 </Link>
               )}
+              <NotificationBell userId={user?.id} />
               {user && <UserActions user={user} onLogout={handleLogout} />}
             </div>
           </header>

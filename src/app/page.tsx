@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
+import { toast } from 'sonner';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { Button } from '@/base/components/ui/button';
@@ -24,6 +25,9 @@ export default function HomePage() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<MyRecipeResponse['items']>([]);
+  const [ingredientSearchResults, setIngredientSearchResults] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -120,6 +124,7 @@ export default function HomePage() {
     if (!value.trim()) {
       setShowDropdown(false);
       setSearchResults([]);
+      setIngredientSearchResults([]);
       return;
     }
 
@@ -129,15 +134,77 @@ export default function HomePage() {
     // Debounce search with 500ms delay
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const response = await recipeService.searchRecipes({
+        // Step 1: Parse multiple ingredients from input (split by comma or space)
+        const keywords = value
+          .split(/[,\s]+/)
+          .map((k) => k.trim())
+          .filter((k) => k.length > 0);
+
+        // Step 2: Search recipes by keyword first (always)
+        const keywordRecipeResponse = await recipeService.searchRecipes({
           keyword: value,
           pageNumber: 1,
           pageSize: 10,
         });
-        setSearchResults(response.items || []);
+        const keywordRecipes = keywordRecipeResponse.items || [];
+
+        // Step 3: Search for ALL matching ingredients for each keyword
+        const ingredientSearchPromises = keywords.map((keyword) =>
+          ingredientPublicService.getIngredients({
+            keyword,
+            pageNumber: 1,
+            pageSize: 10,
+          }),
+        );
+        const ingredientResponses = await Promise.all(ingredientSearchPromises);
+
+        // Flatten all ingredient results and remove duplicates
+        const allIngredients = ingredientResponses.flatMap((res) => res.items || []);
+        const uniqueIngredientsMap = new Map(allIngredients.map((item) => [item.id, item]));
+        const uniqueIngredients = Array.from(uniqueIngredientsMap.values());
+
+        // Step 4: Search recipes by ALL found ingredient IDs
+        let ingredientRecipes: typeof keywordRecipes = [];
+        if (uniqueIngredients.length > 0) {
+          const ingredientIds = uniqueIngredients.map((item) => item.id);
+          const response = await recipeService.searchRecipes({
+            includeIngredientIds: ingredientIds,
+            pageNumber: 1,
+            pageSize: 50, // Get more to sort by match count
+          });
+          ingredientRecipes = response.items || [];
+
+          // Step 5: Sort recipes by number of matching ingredients (most matches first)
+          // This requires checking which ingredients each recipe contains
+          // Since API doesn't return this info, we'll just show all results
+          // Note: Backend should ideally return match count or ingredient overlap
+          console.warn(
+            'Multi-ingredient search:',
+            keywords.length,
+            'keywords,',
+            uniqueIngredients.length,
+            'ingredients found,',
+            ingredientRecipes.length,
+            'recipes',
+          );
+        }
+
+        // Step 6: Combine results: keyword recipes first, then ingredient recipes (avoiding duplicates)
+        const keywordRecipeIds = new Set(keywordRecipes.map((r) => r.id));
+        const uniqueIngredientRecipes = ingredientRecipes.filter(
+          (r) => !keywordRecipeIds.has(r.id),
+        );
+        const combinedRecipes = [...keywordRecipes, ...uniqueIngredientRecipes];
+
+        // Limit to 5 results for dropdown display
+        setSearchResults(combinedRecipes.slice(0, 5));
+        setIngredientSearchResults(
+          uniqueIngredients.slice(0, 5).map((item) => ({ id: item.id, name: item.name })),
+        );
       } catch (error) {
-        console.warn('Error searching recipes:', error);
+        console.error('Error searching:', error);
         setSearchResults([]);
+        setIngredientSearchResults([]);
       } finally {
         setIsSearching(false);
       }
@@ -216,6 +283,24 @@ export default function HomePage() {
     setShowDropdown(false);
   };
 
+  const handleRecipeClick = (recipeId: string) => {
+    if (!user) {
+      toast.error('Vui lòng đăng nhập để xem chi tiết công thức');
+      router.push('/auth/login');
+      return;
+    }
+    router.push(`/recipe/${recipeId}`);
+  };
+
+  const handleIngredientClick = (ingredientName: string) => {
+    if (!user) {
+      toast.error('Vui lòng đăng nhập để xem chi tiết nguyên liệu');
+      router.push('/auth/login');
+      return;
+    }
+    router.push(`/search?q=${encodeURIComponent(ingredientName)}`);
+  };
+
   // Common search and recipes section
   const mainContent = (
     <main className="min-h-screen">
@@ -259,38 +344,76 @@ export default function HomePage() {
                       <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-[#99b94a] border-t-transparent"></div>
                       <p className="mt-2">Đang tìm kiếm...</p>
                     </div>
-                  ) : searchResults.length > 0 ? (
+                  ) : searchResults.length > 0 || ingredientSearchResults.length > 0 ? (
                     <>
                       <div className="max-h-96 overflow-y-auto">
-                        {searchResults.map((recipe, index) => (
-                          <button
-                            key={recipe.id || `recipe-${index}`}
-                            onClick={() => {
-                              router.push(`/recipe/${recipe.id}`);
-                              setShowDropdown(false);
-                              setSearchQuery('');
-                            }}
-                            className="flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left transition-all hover:bg-gray-50"
-                          >
-                            <Image
-                              src={recipe.imageUrl || '/Outline Illustration Card.png'}
-                              alt={recipe.name}
-                              width={48}
-                              height={48}
-                              className="h-12 w-12 rounded-lg object-cover"
-                            />
-                            <div className="flex-1">
-                              <p className="line-clamp-1 font-medium text-gray-900">
-                                {recipe.name}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {recipe.author
-                                  ? `${recipe.author.firstName} ${recipe.author.lastName}`
-                                  : 'Tác giả không xác định'}
-                              </p>
+                        {/* Recipes Section - Show First */}
+                        {searchResults.length > 0 && (
+                          <div className="border-b border-gray-200">
+                            <div className="bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-600 uppercase">
+                              Công thức
                             </div>
-                          </button>
-                        ))}
+                            {searchResults.map((recipe, index) => (
+                              <button
+                                key={recipe.id || `recipe-${index}`}
+                                onClick={() => {
+                                  setShowDropdown(false);
+                                  setSearchQuery('');
+                                  handleRecipeClick(recipe.id);
+                                }}
+                                className="flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left transition-all hover:bg-gray-50"
+                              >
+                                <Image
+                                  src={recipe.imageUrl || '/Outline Illustration Card.png'}
+                                  alt={recipe.name}
+                                  width={48}
+                                  height={48}
+                                  className="h-12 w-12 rounded-lg object-cover"
+                                />
+                                <div className="flex-1">
+                                  <p className="line-clamp-1 font-medium text-gray-900">
+                                    {recipe.name}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {recipe.author
+                                      ? `${recipe.author.firstName} ${recipe.author.lastName}`
+                                      : 'Tác giả không xác định'}
+                                  </p>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Ingredients Section - Show Second */}
+                        {ingredientSearchResults.length > 0 && (
+                          <div>
+                            <div className="bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-600 uppercase">
+                              Tìm kiếm công thức chứa nguyên liệu
+                            </div>
+                            {ingredientSearchResults.map((ingredient, index) => (
+                              <button
+                                key={ingredient.id || `ingredient-${index}`}
+                                onClick={() => {
+                                  setShowDropdown(false);
+                                  setSearchQuery('');
+                                  handleIngredientClick(ingredient.name);
+                                }}
+                                className="flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left transition-all hover:bg-gray-50"
+                              >
+                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-50">
+                                  <span className="text-2xl">🥬</span>
+                                </div>
+                                <div className="flex-1">
+                                  <p className="line-clamp-1 font-medium text-gray-900">
+                                    {ingredient.name}
+                                  </p>
+                                  <p className="text-xs text-gray-500">Nguyên liệu</p>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <button
                         onClick={() => {
@@ -305,7 +428,7 @@ export default function HomePage() {
                     </>
                   ) : (
                     <div className="px-4 py-8 text-center text-gray-500">
-                      Không tìm thấy công thức nào
+                      Không tìm thấy kết quả nào
                     </div>
                   )}
                 </div>
@@ -319,14 +442,17 @@ export default function HomePage() {
         {/* Ingredients Section */}
         <section className="mb-8 sm:mb-12">
           <div className="mb-4 flex items-center justify-between sm:mb-6">
-            <h2 className="text-xl font-bold text-[#99b94a] sm:text-2xl">Nguyên Liệu Nổi Bật</h2>
-            <Button
-              variant="ghost"
-              className="text-xs text-[#99b94a] hover:text-[#7a8f3a] sm:text-sm"
-            >
-              <span>Cập nhật 4:36</span>
-              <ChevronRightIcon className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
+            <h2 className="text-xl font-bold text-[#99b94a] sm:text-2xl">Danh Sách Nguyên Liệu</h2>
+            {user && (
+              <Button
+                variant="ghost"
+                className="text-xs text-[#99b94a] hover:text-[#7a8f3a] sm:text-sm"
+                onClick={() => router.push('/ingredients')}
+              >
+                <span>Xem toàn bộ</span>
+                <ChevronRightIcon className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
+              </Button>
+            )}
           </div>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-8">
             {isLoadingIngredients || ingredients.length === 0
@@ -339,9 +465,7 @@ export default function HomePage() {
                   <button
                     key={ingredient.id}
                     className={`transition-transform hover:scale-105 active:scale-95 ${index === 8 ? 'md:hidden' : ''}`}
-                    onClick={() => {
-                      router.push(`/search?q=${encodeURIComponent(ingredient.name)}`);
-                    }}
+                    onClick={() => handleIngredientClick(ingredient.name)}
                     title={ingredient.name}
                   >
                     <IngredientCard name={ingredient.name} image={ingredient.imageUrl} />
@@ -360,7 +484,7 @@ export default function HomePage() {
               {recentRecipes.map((recipe) => (
                 <button
                   key={recipe.id}
-                  onClick={() => router.push(`/recipe/${recipe.id}`)}
+                  onClick={() => handleRecipeClick(recipe.id)}
                   className="transition-transform hover:scale-105 active:scale-95"
                   title={recipe.name}
                 >
@@ -389,70 +513,81 @@ export default function HomePage() {
               {isUsingRecommendations ? 'Công Thức Gợi Ý Cho Bạn' : 'Khám Phá Công Thức'}
             </h2>
           </div>
-          <div className="space-y-4">
-            {isLoadingDisplay ? (
-              // Show skeleton loaders while initial load
-              Array.from({ length: 5 }, (_, i) => <RecipeCardHorizontal key={i} isLoading={true} />)
-            ) : (
-              <>
-                {isUsingRecommendations
-                  ? recommendedData?.pages.map((page) =>
-                      page.items.map((recipe) => (
-                        <button
-                          key={recipe.id}
-                          onClick={() => router.push(`/recipe/${recipe.id}`)}
-                          className="w-full text-left transition-transform hover:scale-[1.02] active:scale-95"
+          {user ? (
+            <div className="space-y-4">
+              {isLoadingDisplay ? (
+                // Show skeleton loaders while initial load
+                Array.from({ length: 5 }, (_, i) => (
+                  <RecipeCardHorizontal key={i} isLoading={true} />
+                ))
+              ) : (
+                <>
+                  {recommendedData?.pages.map((page) =>
+                    page.items.map((recipe) => (
+                      <button
+                        key={recipe.id}
+                        onClick={() => handleRecipeClick(recipe.id)}
+                        className="w-full text-left transition-transform hover:scale-[1.02] active:scale-95"
+                        title={recipe.name}
+                      >
+                        <RecipeCardHorizontal
+                          id={recipe.id}
                           title={recipe.name}
-                        >
-                          <RecipeCardHorizontal
-                            id={recipe.id}
-                            title={recipe.name}
-                            author={recipe.author}
-                            image={recipe.imageUrl}
-                            cookTime={recipe.cookTime}
-                            ration={recipe.ration}
-                            difficulty={recipe.difficulty?.name}
-                            ingredients={recipe.ingredients}
-                            labels={recipe.labels}
-                            createdAtUtc={recipe.createdAtUtc}
-                            isLoading={false}
-                            score={recipe.score}
-                          />
-                        </button>
-                      )),
-                    )
-                  : recipesData?.pages.map((page) =>
-                      page.items.map((recipe) => (
-                        <button
-                          key={recipe.id}
-                          onClick={() => router.push(`/recipe/${recipe.id}`)}
-                          className="w-full text-left transition-transform hover:scale-[1.02] active:scale-95"
+                          author={recipe.author}
+                          image={recipe.imageUrl}
+                          cookTime={recipe.cookTime}
+                          ration={recipe.ration}
+                          difficulty={recipe.difficulty?.name}
+                          ingredients={recipe.ingredients}
+                          labels={recipe.labels}
+                          createdAtUtc={recipe.createdAtUtc}
+                          isLoading={false}
+                          score={recipe.score}
+                        />
+                      </button>
+                    )),
+                  )}
+                  {/* Loading more indicator */}
+                  {isFetchingNextPage &&
+                    Array.from({ length: 3 }, (_, i) => (
+                      <RecipeCardHorizontal key={`loading-${i}`} isLoading={true} />
+                    ))}
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+              {isLoadingDisplay ? (
+                // Show skeleton loaders while initial load
+                Array.from({ length: 10 }, (_, i) => <RecipeCard key={i} isLoading={true} />)
+              ) : (
+                <>
+                  {recipesData?.pages.map((page) =>
+                    page.items.map((recipe) => (
+                      <button
+                        key={recipe.id}
+                        onClick={() => handleRecipeClick(recipe.id)}
+                        className="transition-transform hover:scale-105 active:scale-95"
+                        title={recipe.name}
+                      >
+                        <RecipeCard
                           title={recipe.name}
-                        >
-                          <RecipeCardHorizontal
-                            id={recipe.id}
-                            title={recipe.name}
-                            author={recipe.author}
-                            image={recipe.imageUrl}
-                            cookTime={recipe.cookTime}
-                            ration={recipe.ration}
-                            difficulty={recipe.difficulty?.name}
-                            ingredients={recipe.ingredients}
-                            labels={recipe.labels}
-                            createdAtUtc={recipe.createdAtUtc}
-                            isLoading={false}
-                          />
-                        </button>
-                      )),
-                    )}
-                {/* Loading more indicator */}
-                {isFetchingNextPage &&
-                  Array.from({ length: 3 }, (_, i) => (
-                    <RecipeCardHorizontal key={`loading-${i}`} isLoading={true} />
-                  ))}
-              </>
-            )}
-          </div>
+                          author={
+                            recipe.author
+                              ? `${recipe.author.firstName} ${recipe.author.lastName}`
+                              : ''
+                          }
+                          authorAvatar={recipe.author?.avatarUrl}
+                          image={recipe.imageUrl}
+                          isLoading={false}
+                        />
+                      </button>
+                    )),
+                  )}
+                </>
+              )}
+            </div>
+          )}
           {/* Infinite scroll trigger */}
           {hasNextPage && (
             <div ref={loadMoreRef} className="flex justify-center py-8">

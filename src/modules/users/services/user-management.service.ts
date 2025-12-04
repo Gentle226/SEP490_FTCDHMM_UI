@@ -10,12 +10,14 @@ export interface User {
   avatarUrl?: string;
   lockReason?: string | null;
   lockoutEnd?: string | null;
+  role?: string;
 }
 
 export interface PaginationParams {
   pageNumber?: number;
   pageSize?: number;
   search?: string;
+  role?: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -61,71 +63,35 @@ class UserManagementService extends HttpClient {
     super();
   }
 
-  // Customer management (for Moderators)
-  public async getCustomers(params: PaginationParams = {}) {
+  // User management (unified for all user types)
+  public async getUsers(params: PaginationParams = {}) {
     const queryParams = new URLSearchParams();
     if (params.pageNumber)
       queryParams.append('PaginationParams.PageNumber', params.pageNumber.toString());
     if (params.pageSize)
       queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
     if (params.search) queryParams.append('Keyword', params.search);
+    if (params.role) queryParams.append('Role', params.role);
 
-    return this.get<PaginatedResponse<User>>(`api/User/getCustomers?${queryParams}`, {
+    return this.get<PaginatedResponse<User>>(`api/User?${queryParams}`, {
       isPrivateRoute: true,
     });
   }
 
-  public async lockCustomer(request: LockUserRequest) {
-    return this.put<void>(`api/User/lockCustomer/${request.userId}`, request, {
+  public async lockUser(request: LockUserRequest) {
+    return this.put<void>(`api/User/${request.userId}/lock`, request, {
       isPrivateRoute: true,
     });
   }
 
-  public async unlockCustomer(request: UnlockUserRequest) {
+  public async unlockUser(request: UnlockUserRequest) {
     return this.put<void>(
-      `api/User/unlockCustomer/${request.userId}`,
+      `api/User/${request.userId}/unlock`,
       {},
       {
         isPrivateRoute: true,
       },
     );
-  }
-
-  // Moderator management (for Admins)
-  public async getModerators(params: PaginationParams = {}) {
-    const queryParams = new URLSearchParams();
-    // Backend expects nested PaginationParams and Keyword
-    if (params.pageNumber)
-      queryParams.append('PaginationParams.PageNumber', params.pageNumber.toString());
-    if (params.pageSize)
-      queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
-    if (params.search) queryParams.append('Keyword', params.search);
-
-    return this.get<PaginatedResponse<User>>(`api/User/getModerators?${queryParams}`, {
-      isPrivateRoute: true,
-    });
-  }
-
-  public async lockModerator(request: LockUserRequest) {
-    return this.put<void>(`api/User/lockModerator/${request.userId}`, request, {
-      isPrivateRoute: true,
-    });
-  }
-
-  public async unlockModerator(request: UnlockUserRequest) {
-    return this.put<void>(
-      `api/User/unlockModerator/${request.userId}`,
-      {},
-      {
-        isPrivateRoute: true,
-      },
-    );
-  }
-
-  public async createModerator(request: CreateModeratorRequest) {
-    return this.post<void>('api/User/createModerator', request, {
-      isPrivateRoute: true,
-    });
   }
 
   public async getRoles() {

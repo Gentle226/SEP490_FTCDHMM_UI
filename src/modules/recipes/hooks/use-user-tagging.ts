@@ -54,7 +54,7 @@ export function useUserTagging(
             email: '',
             createdAtUTC: '',
             status: 'Active',
-            avatarUrl: undefined,
+            avatarUrl: user.avatarUrl,
           }));
         setUserSearchResults(filteredUsers);
       } catch (error) {

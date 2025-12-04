@@ -80,7 +80,7 @@ export default function EditRecipePage() {
 
   return (
     <DashboardLayout showHeader={true} hideCreateButton={true}>
-      <div className="mx-auto w-[80%] py-8">
+      <div className="mx-auto w-[80%] pt-4 pb-8">
         <div className="mb-6 flex items-start gap-4">
           <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-[#99b94a]/10">
             <BookOpen className="h-7 w-7 text-[#99b94a]" />

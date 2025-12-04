@@ -22,8 +22,10 @@ interface RecipeSearchParams extends PaginationParams {
   sortBy?: string;
   ration?: number;
   maxCookTime?: number;
-  labelIds?: string[];
-  ingredientIds?: string[];
+  includeLabelIds?: string[];
+  excludeLabelIds?: string[];
+  includeIngredientIds?: string[];
+  excludeIngredientIds?: string[];
 }
 
 class RecipeService extends HttpClient {
@@ -231,22 +233,6 @@ class RecipeService extends HttpClient {
   }
 
   /**
-   * Get favorite recipes
-   */
-  public async getFavoriteRecipes(params: PaginationParams & { keyword?: string } = {}) {
-    const { pageNumber = 1, pageSize = 10, keyword } = params;
-
-    return this.get<MyRecipeResponse>('api/recipe/favorites', {
-      isPrivateRoute: true,
-      params: {
-        'PaginationParams.PageNumber': pageNumber,
-        'PaginationParams.PageSize': pageSize,
-        ...(keyword && { Keyword: keyword }),
-      },
-    });
-  }
-
-  /**
    * Get saved recipes
    */
   public async getSavedRecipes(params: PaginationParams & { keyword?: string } = {}) {
@@ -259,24 +245,6 @@ class RecipeService extends HttpClient {
         'PaginationParams.PageSize': pageSize,
         ...(keyword && { Keyword: keyword }),
       },
-    });
-  }
-
-  /**
-   * Add recipe to favorites
-   */
-  public async addToFavorite(recipeId: string) {
-    return this.post<void>(`api/Recipe/${recipeId}/favorite`, null, {
-      isPrivateRoute: true,
-    });
-  }
-
-  /**
-   * Remove recipe from favorites
-   */
-  public async removeFromFavorite(recipeId: string) {
-    return this.delete<void>(`api/Recipe/${recipeId}/favorite`, {
-      isPrivateRoute: true,
     });
   }
 
@@ -325,8 +293,10 @@ class RecipeService extends HttpClient {
       sortBy,
       ration,
       maxCookTime,
-      labelIds,
-      ingredientIds,
+      includeLabelIds,
+      excludeLabelIds,
+      includeIngredientIds,
+      excludeIngredientIds,
     } = params;
 
     const queryParams: Record<string, string | number> = {
@@ -351,15 +321,27 @@ class RecipeService extends HttpClient {
       queryParams.MaxCookTime = maxCookTime;
     }
 
-    if (labelIds && labelIds.length > 0) {
-      labelIds.forEach((id, index) => {
-        queryParams[`LabelIds[${index}]`] = id;
+    if (includeLabelIds && includeLabelIds.length > 0) {
+      includeLabelIds.forEach((id, index) => {
+        queryParams[`IncludeLabelIds[${index}]`] = id;
       });
     }
 
-    if (ingredientIds && ingredientIds.length > 0) {
-      ingredientIds.forEach((id, index) => {
-        queryParams[`IngredientIds[${index}]`] = id;
+    if (excludeLabelIds && excludeLabelIds.length > 0) {
+      excludeLabelIds.forEach((id, index) => {
+        queryParams[`ExcludeLabelIds[${index}]`] = id;
+      });
+    }
+
+    if (includeIngredientIds && includeIngredientIds.length > 0) {
+      includeIngredientIds.forEach((id, index) => {
+        queryParams[`IncludeIngredientIds[${index}]`] = id;
+      });
+    }
+
+    if (excludeIngredientIds && excludeIngredientIds.length > 0) {
+      excludeIngredientIds.forEach((id, index) => {
+        queryParams[`ExcludeIngredientIds[${index}]`] = id;
       });
     }
 
@@ -805,7 +787,7 @@ class RecipeService extends HttpClient {
   // ========================================
 
   /**
-   * Get pending recipes list for management
+   * Get user's own pending recipes
    */
   public async getPendingRecipes(params: PaginationParams = {}) {
     const { pageNumber = 1, pageSize = 10 } = params;
@@ -817,6 +799,24 @@ class RecipeService extends HttpClient {
         PageSize: pageSize,
       },
     });
+  }
+
+  /**
+   * Get all pending recipes for management (Admin/Moderator view)
+   */
+  public async getPendingRecipesManagement(params: PaginationParams = {}) {
+    const { pageNumber = 1, pageSize = 10 } = params;
+
+    return this.get<import('../types').RecipeManagementListResponse>(
+      'api/Recipe/pendingManagement',
+      {
+        isPrivateRoute: true,
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+        },
+      },
+    );
   }
 
   /**

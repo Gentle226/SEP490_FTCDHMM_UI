@@ -62,6 +62,7 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
   const { data, isLoading, isError } = usePendingRecipes({
     pageNumber: page,
     pageSize,
+    isManagement: true, // Fetch all pending recipes for management view
   });
 
   const {

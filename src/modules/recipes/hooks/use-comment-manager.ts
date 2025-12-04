@@ -167,29 +167,29 @@ export const useCommentManager = (recipeId: string, connection: any | null) => {
   useEffect(() => {
     if (!connection) return;
 
-    // Handle new comment event - backend sends 'CommentAdded' with Comment object
-    connection.on('CommentAdded', (newComment: Comment) => {
-      console.warn('[CommentManager] Received CommentAdded event:', newComment.id);
+    // Handle new comment event - backend sends 'COMMENTADDED' with Comment object
+    connection.on('COMMENTADDED', (newComment: Comment) => {
+      console.warn('[CommentManager] Received COMMENTADDED event:', newComment.id);
       addNewComment(newComment);
     });
 
-    // Handle updated comment event - backend sends 'CommentUpdated' with Comment object
-    connection.on('CommentUpdated', (updatedComment: Comment) => {
-      console.warn('[CommentManager] Received CommentUpdated event:', updatedComment.id);
+    // Handle updated comment event - backend sends 'COMMENTUPDATED' with Comment object
+    connection.on('COMMENTUPDATED', (updatedComment: Comment) => {
+      console.warn('[CommentManager] Received COMMENTUPDATED event:', updatedComment.id);
       setComments((prev) => updateCommentInTree(prev, updatedComment));
     });
 
-    // Handle deleted comment event - backend sends 'CommentDeleted' with commentId (guid)
-    connection.on('CommentDeleted', (commentId: string) => {
-      console.warn('[CommentManager] Received CommentDeleted event:', commentId);
+    // Handle deleted comment event - backend sends 'COMMENTDELETED' with commentId (guid)
+    connection.on('COMMENTDELETED', (commentId: string) => {
+      console.warn('[CommentManager] Received COMMENTDELETED event:', commentId);
       setComments((prev) => removeDeletedComment(prev, commentId));
     });
 
     // Cleanup listeners on unmount
     return () => {
-      connection.off('CommentAdded');
-      connection.off('CommentUpdated');
-      connection.off('CommentDeleted');
+      connection.off('COMMENTADDED');
+      connection.off('COMMENTUPDATED');
+      connection.off('COMMENTDELETED');
     };
   }, [connection, addNewComment, removeDeletedComment, updateCommentInTree]);
 

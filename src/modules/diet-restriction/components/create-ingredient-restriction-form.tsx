@@ -99,7 +99,7 @@ export function CreateIngredientRestrictionForm({
       setIsLoadingIngredients(true);
       try {
         const response = await ingredientPublicService.getIngredients({
-          search: searchQuery || undefined,
+          keyword: searchQuery || undefined,
           pageSize: 20,
         });
         setIngredients(response.items);

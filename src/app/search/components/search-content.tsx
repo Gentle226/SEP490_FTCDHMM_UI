@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/base/components/ui/button';
 import { Input } from '@/base/components/ui/input';
 import { RecipeCardHorizontal } from '@/base/components/ui/recipe-card-horizontal';
+import { ingredientPublicService } from '@/modules/ingredients';
 import { recipeService } from '@/modules/recipes/services/recipe.service';
 import { MyRecipeResponse } from '@/modules/recipes/types/my-recipe.types';
 
@@ -25,6 +26,8 @@ export function SearchContent() {
   const [filters, setFilters] = useState<FilterState>({});
   const [pageNumber, setPageNumber] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const [detectedIngredientIds, setDetectedIngredientIds] = useState<string[]>([]);
+  const [searchMode, setSearchMode] = useState<'keyword' | 'ingredient'>('keyword');
 
   const fetchResults = useCallback(
     async (query: string, filtersToApply: FilterState, page: number) => {
@@ -35,16 +38,101 @@ export function SearchContent() {
 
       try {
         setIsLoading(true);
-        const response = await recipeService.searchRecipes({
-          keyword: query,
-          pageNumber: page,
-          pageSize: 10,
-          ...filtersToApply,
-        });
-        setResults(response.items || []);
-        setTotalPages(response.totalPages || 0);
+
+        // Step 1: Parse multiple ingredients from query (split by comma or space)
+        const keywords = query
+          .split(/[,\s]+/)
+          .map((k) => k.trim())
+          .filter((k) => k.length > 0);
+
+        // Step 2: Search for ALL matching ingredients for each keyword
+        let allIngredientIds: string[] = [];
+        let hasIngredientMatch = false;
+
+        try {
+          const ingredientSearchPromises = keywords.map((keyword) =>
+            ingredientPublicService.getIngredients({
+              keyword,
+              pageNumber: 1,
+              pageSize: 10,
+            }),
+          );
+
+          const ingredientResponses = await Promise.all(ingredientSearchPromises);
+
+          // Flatten all ingredient results and remove duplicates
+          const allIngredients = ingredientResponses.flatMap((res) => res.items || []);
+          const uniqueIngredientsMap = new Map(allIngredients.map((item) => [item.id, item]));
+          const uniqueIngredients = Array.from(uniqueIngredientsMap.values());
+
+          if (uniqueIngredients.length > 0) {
+            allIngredientIds = uniqueIngredients.map((item) => item.id);
+            hasIngredientMatch = true;
+
+            console.warn(
+              'Multi-ingredient search:',
+              keywords.length,
+              'keywords,',
+              uniqueIngredients.length,
+              'unique ingredients found (',
+              uniqueIngredients.map((i) => i.name).join(', '),
+              ')',
+            );
+          }
+        } catch (error) {
+          console.warn('Error searching ingredients:', error);
+        }
+
+        setDetectedIngredientIds(allIngredientIds);
+        setSearchMode(hasIngredientMatch ? 'ingredient' : 'keyword');
+
+        // Step 3: Search recipes by keyword AND by ALL ingredients (if found), then combine results
+        const searchPromises = [
+          // Always search by keyword
+          recipeService.searchRecipes({
+            keyword: query,
+            pageNumber: page,
+            pageSize: 10,
+            ...filtersToApply,
+          }),
+        ];
+
+        // If ingredients found, also search by ALL ingredient IDs as include filter
+        if (hasIngredientMatch && allIngredientIds.length > 0) {
+          searchPromises.push(
+            recipeService.searchRecipes({
+              includeIngredientIds: allIngredientIds,
+              pageNumber: page,
+              pageSize: 50, // Get more results to allow better ranking
+              ...filtersToApply,
+            }),
+          );
+        }
+
+        const responses = await Promise.all(searchPromises);
+        const keywordResults = responses[0].items || [];
+        const ingredientResults = responses[1]?.items || [];
+
+        // Step 4: Combine results: keyword first, then ingredient recipes (remove duplicates)
+        const keywordRecipeIds = new Set(keywordResults.map((r) => r.id));
+        const uniqueIngredientResults = ingredientResults.filter(
+          (r) => !keywordRecipeIds.has(r.id),
+        );
+        const combinedResults = [...keywordResults, ...uniqueIngredientResults];
+
+        console.warn(
+          'Recipe search - Keyword:',
+          keywordResults.length,
+          'Ingredient:',
+          uniqueIngredientResults.length,
+          'Total:',
+          combinedResults.length,
+        );
+
+        setResults(combinedResults);
+        setTotalPages(responses[0].totalPages || 0);
       } catch (error) {
-        console.warn('Error searching recipes:', error);
+        console.error('Error searching recipes:', error);
         setResults([]);
       } finally {
         setIsLoading(false);
@@ -124,7 +212,13 @@ export function SearchContent() {
                 Kết quả tìm kiếm cho &quot;{searchQuery}&quot;
               </h1>
               <p className="mt-1 text-xs text-gray-600 sm:mt-2 sm:text-sm">
-                Tìm thấy {results.length} kết quả
+                {searchMode === 'ingredient' && detectedIngredientIds.length > 0 ? (
+                  <span>
+                    Tìm thấy {results.length} công thức chứa nguyên liệu &quot;{searchQuery}&quot;
+                  </span>
+                ) : (
+                  <span>Tìm thấy {results.length} kết quả</span>
+                )}
               </p>
             </div>
 

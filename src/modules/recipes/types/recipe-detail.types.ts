@@ -46,19 +46,11 @@ export interface RecipeDetail {
   labels: RecipeLabel[];
   ingredients: RecipeIngredient[];
   cookingSteps: CookingStepDetail[];
-  taggedUsers?: Array<{
-    id: string;
-    firstName: string;
-    lastName: string;
-    email?: string;
-    avatar?: {
-      imageUrl?: string;
-    };
-  }>;
   taggedUser?: Array<{
     id: string;
     firstName: string;
     lastName: string;
+    avatarUrl?: string;
   }>;
   createdBy?: {
     id: string;
@@ -72,7 +64,6 @@ export interface RecipeDetail {
     email: string;
     avatarUrl?: string;
   };
-  isFavorited?: boolean;
   isSaved?: boolean;
   rating?: number;
   averageRating?: number;

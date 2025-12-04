@@ -33,7 +33,7 @@ import {
 } from '@/base/components/ui/tooltip';
 import { getRelativeTime } from '@/modules/recipes/utils/time.utils';
 
-import { useReportsByTargetId } from '../hooks';
+import { useReportDetails } from '../hooks';
 import { ReportStatus, type ReportSummaryResponse, ReportTargetType } from '../types';
 
 export interface ExpandableReportTableProps {
@@ -101,12 +101,17 @@ function formatDate(dateString: string) {
 
 interface ExpandedRowProps {
   targetId: string;
+  targetType: string;
   onApproveReport: (reportId: string) => Promise<void>;
   onRejectReport: (reportId: string) => void;
 }
 
-function ExpandedRow({ targetId, onApproveReport, onRejectReport }: ExpandedRowProps) {
-  const { data: reports, isLoading } = useReportsByTargetId(targetId);
+function ExpandedRow({ targetId, targetType, onApproveReport, onRejectReport }: ExpandedRowProps) {
+  const { data: reportDetails, isLoading } = useReportDetails(
+    targetId,
+    targetType as ReportTargetType,
+  );
+  const reports = reportDetails?.reports ?? [];
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   const handleApprove = async (reportId: string) => {
@@ -144,7 +149,7 @@ function ExpandedRow({ targetId, onApproveReport, onRejectReport }: ExpandedRowP
     <>
       {reports.map((report, index) => (
         <TableRow
-          key={report.id}
+          key={report.reportId}
           className="bg-muted/40 hover:bg-muted/50 from-muted/40 to-muted/20 hover:from-muted/50 hover:to-muted/30 animate-in fade-in slide-in-from-top-2 border-l-4 border-[#99b94a] transition-all duration-300 ease-in-out"
           style={{ animationDelay: `${index * 50}ms` }}
         >
@@ -210,20 +215,17 @@ function ExpandedRow({ targetId, onApproveReport, onRejectReport }: ExpandedRowP
                         variant="ghost"
                         size="sm"
                         className="h-9 border border-transparent px-3 text-[#99b94a] shadow-sm transition-all duration-200 hover:scale-105 hover:border-[#99b94a]/30 hover:bg-[#99b94a]/15 hover:text-[#99b94a] hover:shadow active:scale-95"
-                        onClick={() => handleApprove(report.id)}
-                        disabled={processingId === report.id}
+                        onClick={() => handleApprove(report.reportId)}
+                        disabled={processingId === report.reportId}
                       >
-                        {processingId === report.id ? (
+                        {processingId === report.reportId ? (
                           <Loader2 className="size-4 animate-spin" />
                         ) : (
                           <Check className="size-4" />
                         )}
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent
-                      className="bg-[#99b94a] text-white"
-                      style={{ '--tooltip-fill': '#99b94a' } as React.CSSProperties}
-                    >
+                    <TooltipContent className="bg-[#99b94a] text-white [--tooltip-fill:#99b94a]">
                       Duyệt báo cáo
                     </TooltipContent>
                   </Tooltip>
@@ -236,16 +238,13 @@ function ExpandedRow({ targetId, onApproveReport, onRejectReport }: ExpandedRowP
                         variant="ghost"
                         size="sm"
                         className="text-danger hover:bg-danger/15 hover:text-danger hover:border-danger/30 h-9 border border-transparent px-3 shadow-sm transition-all duration-200 hover:scale-105 hover:shadow active:scale-95"
-                        onClick={() => onRejectReport(report.id)}
-                        disabled={processingId === report.id}
+                        onClick={() => onRejectReport(report.reportId)}
+                        disabled={processingId === report.reportId}
                       >
                         <X className="size-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent
-                      className="bg-[#99b94a] text-white"
-                      style={{ '--tooltip-fill': '#99b94a' } as React.CSSProperties}
-                    >
+                    <TooltipContent className="bg-[#99b94a] text-white [--tooltip-fill:#99b94a]">
                       Từ chối báo cáo
                     </TooltipContent>
                   </Tooltip>
@@ -425,10 +424,7 @@ export function ExpandableReportTable({
                               <span className="font-medium">Duyệt tất cả</span>
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent
-                            className="bg-[#99b94a] text-white"
-                            style={{ '--tooltip-fill': '#99b94a' } as React.CSSProperties}
-                          >
+                          <TooltipContent className="bg-[#99b94a] text-white [--tooltip-fill:#99b94a]">
                             Duyệt tất cả báo cáo chờ xử lý
                           </TooltipContent>
                         </Tooltip>
@@ -450,10 +446,7 @@ export function ExpandableReportTable({
                               <span className="font-medium">Từ chối tất cả</span>
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent
-                            className="bg-[#99b94a] text-white"
-                            style={{ '--tooltip-fill': '#99b94a' } as React.CSSProperties}
-                          >
+                          <TooltipContent className="bg-[#99b94a] text-white [--tooltip-fill:#99b94a]">
                             Từ chối tất cả báo cáo chờ xử lý
                           </TooltipContent>
                         </Tooltip>
@@ -465,6 +458,7 @@ export function ExpandableReportTable({
                 {isExpanded && (
                   <ExpandedRow
                     targetId={item.targetId}
+                    targetType={item.targetType}
                     onApproveReport={onApproveReport}
                     onRejectReport={onRejectReport}
                   />

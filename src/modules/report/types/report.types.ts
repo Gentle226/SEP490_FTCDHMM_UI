@@ -38,20 +38,25 @@ export interface ReportFilterRequest {
   keyword?: string | null;
 }
 
-// Response DTOs
-export interface ReportResponse {
-  id: string;
-  targetId: string;
-  targetType: ReportTargetType;
-  targetName: string;
-  description: string;
-  reporterId: string;
+// Response DTOs - Individual report detail item
+export interface ReportDetailItem {
+  reportId: string;
   reporterName: string;
+  description: string;
   status: ReportStatus;
   createdAtUtc: string;
   rejectReason?: string;
 }
 
+// Response DTOs - Detail list response from GET /api/report/details/{targetId}
+export interface ReportDetailListResponse {
+  targetId: string;
+  targetType: string;
+  targetName: string;
+  reports: ReportDetailItem[];
+}
+
+// Response DTOs - Summary response for list views
 export interface ReportSummaryResponse {
   targetType: ReportTargetType;
   targetId: string;

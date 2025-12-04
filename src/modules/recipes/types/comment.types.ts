@@ -2,6 +2,7 @@ export interface MentionedUser {
   mentionedUserId: string;
   firstName: string;
   lastName: string;
+  avatarUrl?: string;
 }
 
 export interface Comment {
