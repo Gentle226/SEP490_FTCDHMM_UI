@@ -88,7 +88,7 @@ export function SearchContent() {
 
         // Step 3: Search recipes by keyword AND by ALL ingredients (if found), then combine results
         const searchPromises = [
-          // Always search by original query as keyword
+          // Always search by keyword
           recipeService.searchRecipes({
             keyword: query,
             pageNumber: page,
@@ -97,11 +97,11 @@ export function SearchContent() {
           }),
         ];
 
-        // If ingredients found, also search by ALL ingredient IDs
+        // If ingredients found, also search by ALL ingredient IDs as include filter
         if (hasIngredientMatch && allIngredientIds.length > 0) {
           searchPromises.push(
             recipeService.searchRecipes({
-              ingredientIds: allIngredientIds,
+              includeIngredientIds: allIngredientIds,
               pageNumber: page,
               pageSize: 50, // Get more results to allow better ranking
               ...filtersToApply,

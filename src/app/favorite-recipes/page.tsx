@@ -23,7 +23,7 @@ function FavoriteRecipesContent() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['favoriteRecipes', currentPage, pageSize, searchTerm],
     queryFn: () =>
-      recipeService.getFavoriteRecipes({
+      recipeService.getSavedRecipes({
         pageNumber: currentPage,
         pageSize: pageSize,
         keyword: searchTerm,

@@ -68,8 +68,8 @@ export interface FilterState {
   sortBy?: string;
   ration?: number;
   maxCookTime?: number;
-  labelIds?: string[];
-  ingredientIds?: string[];
+  includeLabelIds?: string[];
+  includeIngredientIds?: string[];
 }
 
 const DIFFICULTIES = [
@@ -145,8 +145,8 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
       sortBy,
       ration,
       maxCookTime,
-      labelIds,
-      ingredientIds,
+      includeLabelIds: labelIds,
+      includeIngredientIds: ingredientIds,
     });
   }, [difficulty, sortBy, ration, maxCookTime, labelIds, ingredientIds, onFilterChange]);
 

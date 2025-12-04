@@ -168,7 +168,7 @@ export default function HomePage() {
         if (uniqueIngredients.length > 0) {
           const ingredientIds = uniqueIngredients.map((item) => item.id);
           const response = await recipeService.searchRecipes({
-            ingredientIds: ingredientIds,
+            includeIngredientIds: ingredientIds,
             pageNumber: 1,
             pageSize: 50, // Get more to sort by match count
           });

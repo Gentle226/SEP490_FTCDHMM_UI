@@ -275,11 +275,6 @@ export function UserManagementTable({ canCreate = false }: UserManagementTablePr
     }
   };
 
-  const handleChangeRole = (user: User) => {
-    setSelectedUser(user);
-    setChangeRoleDialogOpen(true);
-  };
-
   const confirmChangeRole = () => {
     if (selectedUser && selectedRole) {
       const roleId = roleIdMap.get(selectedRole);
