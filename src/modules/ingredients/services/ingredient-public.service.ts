@@ -67,7 +67,7 @@ class IngredientPublicService extends HttpClient {
     if (params.updatedTo) queryParams.append('UpdatedTo', params.updatedTo);
 
     return await this.get<IngredientsPublicResponse>(`api/Ingredient?${queryParams.toString()}`, {
-      isPrivateRoute: true,
+      isPrivateRoute: false,
     });
   }
 
@@ -76,7 +76,7 @@ class IngredientPublicService extends HttpClient {
    */
   public async getIngredientById(id: string) {
     return await this.get<IngredientDetailsResponse>(`api/Ingredient/${id}`, {
-      isPrivateRoute: true,
+      isPrivateRoute: false,
     });
   }
 

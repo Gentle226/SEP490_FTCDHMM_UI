@@ -10,7 +10,8 @@ export interface Nutrient {
 }
 
 export interface NutrientResponse {
-  name: string;
+  id: string;
+  vietnameseName: string;
   unit: string;
   minValue?: number;
   maxValue?: number;
@@ -109,34 +110,7 @@ class IngredientManagementService extends HttpClient {
   /**
    * Map API response to Ingredient interface
    */
-  private mapApiResponse(
-    apiResponse: IngredientApiResponse,
-    allNutrients: NutrientInfo[] = [],
-  ): Ingredient {
-    // Create a mapping from English nutrient names to Vietnamese names
-    const englishToVietnameseName: { [key: string]: string } = {
-      Protein: 'Chất đạm',
-      Calories: 'Năng lượng',
-      Fat: 'Tổng chất béo',
-      Carbohydrate: 'Tinh bột',
-      Phosphorus: 'Phốt pho',
-      Zinc: 'Kẽm',
-      Sugars: 'Đường',
-      Copper: 'Đồng',
-      Iron: 'Sắt',
-      Calcium: 'Canxi',
-      Selenium: 'Selen',
-      Manganese: 'Mangan',
-      Magnesium: 'Magie',
-      Potassium: 'Kali',
-      Sodium: 'Natri',
-      'Dietary Fiber': 'Chất xơ',
-      'Folate (Folic Acid)': 'Axit folic',
-      'Vitamin B1 (Thiamin)': 'Vitamin B1',
-      'Vitamin B2 (Riboflavin)': 'Vitamin B2',
-      'Vitamin B3 (Niacin)': 'Vitamin B3',
-    };
-
+  private mapApiResponse(apiResponse: IngredientApiResponse): Ingredient {
     return {
       id: apiResponse.id,
       name: apiResponse.name,
@@ -144,27 +118,14 @@ class IngredientManagementService extends HttpClient {
       image: apiResponse.imageUrl || '',
       ingredientCategoryIds: apiResponse.categories.map((c) => c.id),
       categoryNames: apiResponse.categories.map((c) => c.name),
-      nutrients: apiResponse.nutrients.map((n) => {
-        // Try to find nutrient by Vietnamese name first
-        const vietnameseName = englishToVietnameseName[n.name] || n.name;
-        let nutrientInfo = allNutrients.find((nut) => nut.vietnameseName === vietnameseName);
-
-        // If not found by Vietnamese name, try by English name
-        if (!nutrientInfo) {
-          nutrientInfo = allNutrients.find((nut) => nut.name === n.name);
-        }
-
-        const nutrientId = nutrientInfo?.id || n.name;
-
-        return {
-          id: nutrientId,
-          vietnameseName: nutrientInfo?.vietnameseName || vietnameseName,
-          unit: n.unit || nutrientInfo?.unit || '',
-          min: n.minValue,
-          max: n.maxValue,
-          median: n.medianValue,
-        };
-      }),
+      nutrients: apiResponse.nutrients.map((n) => ({
+        id: n.id,
+        vietnameseName: n.vietnameseName,
+        unit: n.unit,
+        min: n.minValue,
+        max: n.maxValue,
+        median: n.medianValue,
+      })),
       lastUpdatedUtc: apiResponse.lastUpdatedUtc,
     };
   }
@@ -214,28 +175,11 @@ class IngredientManagementService extends HttpClient {
         isPrivateRoute: true,
       });
 
-      // Get all nutrients to map nutrient names to IDs
-      const allNutrients = await this.getNutrientsList();
-
       // Map API response to our interface
-      return this.mapApiResponse(apiResponse, allNutrients);
+      return this.mapApiResponse(apiResponse);
     } catch (error) {
       console.warn('Error fetching ingredient:', error);
       throw error;
-    }
-  }
-
-  /**
-   * Get all nutrients (for mapping purposes)
-   */
-  private async getNutrientsList(): Promise<NutrientInfo[]> {
-    try {
-      return await this.get<NutrientInfo[]>('api/Nutrient', {
-        isPrivateRoute: true,
-      });
-    } catch (error) {
-      console.warn('Error fetching nutrients:', error);
-      return [];
     }
   }
 
