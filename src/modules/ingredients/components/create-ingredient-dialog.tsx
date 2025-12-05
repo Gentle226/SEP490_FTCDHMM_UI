@@ -389,7 +389,7 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
           <DialogDescription>Nhập thông tin nguyên liệu mới</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {/* Name */}
           <div className="space-y-2">
             <Label htmlFor="name">

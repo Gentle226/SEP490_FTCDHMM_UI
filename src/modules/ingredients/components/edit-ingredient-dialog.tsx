@@ -430,7 +430,7 @@ export function EditIngredientDialog({
           <DialogDescription>Cập nhật thông tin nguyên liệu</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {/* Name (readonly) */}
           <div className="space-y-2">
             <Label htmlFor="name">
