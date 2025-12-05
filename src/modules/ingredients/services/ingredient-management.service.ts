@@ -118,14 +118,18 @@ class IngredientManagementService extends HttpClient {
       image: apiResponse.imageUrl || '',
       ingredientCategoryIds: apiResponse.categories.map((c) => c.id),
       categoryNames: apiResponse.categories.map((c) => c.name),
-      nutrients: apiResponse.nutrients.map((n) => ({
-        id: n.id,
-        vietnameseName: n.vietnameseName,
-        unit: n.unit,
-        min: n.minValue,
-        max: n.maxValue,
-        median: n.medianValue,
-      })),
+      nutrients: apiResponse.nutrients.map((n) => {
+        // The API response doesn't include nutrient IDs, so we'll preserve the Vietnamese name
+        // The component will need to match these by name to get the IDs
+        return {
+          id: n.id || '', // Will be empty since API doesn't provide it
+          vietnameseName: n.vietnameseName,
+          unit: n.unit,
+          min: n.minValue,
+          max: n.maxValue,
+          median: n.medianValue,
+        };
+      }),
       lastUpdatedUtc: apiResponse.lastUpdatedUtc,
     };
   }

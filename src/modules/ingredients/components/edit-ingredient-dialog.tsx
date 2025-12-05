@@ -103,7 +103,7 @@ export function EditIngredientDialog({
 
   // Reset form when dialog opens or detailed ingredient loads
   useEffect(() => {
-    if (open && detailedIngredient) {
+    if (open && detailedIngredient && nutrients.length > 0) {
       console.warn('Loading ingredient:', detailedIngredient);
 
       setName(detailedIngredient.name);
@@ -112,15 +112,22 @@ export function EditIngredientDialog({
       setImagePreview(detailedIngredient.image || null);
       setImageFile(null);
 
-      // Load nutrients - prioritize macronutrients
+      // Load nutrients - match API response nutrients with the nutrients list by vietnameseName
       const allNutrientRows =
-        detailedIngredient.nutrients?.map((n) => ({
-          nutrientId: n.id,
-          vietnameseName: n.vietnameseName,
-          min: n.min,
-          max: n.max,
-          median: n.median,
-        })) || [];
+        detailedIngredient.nutrients?.map((n) => {
+          // Find the matching nutrient by vietnameseName to get the nutrient ID
+          const matchedNutrient = nutrients.find(
+            (nutrient) => nutrient.vietnameseName === n.vietnameseName,
+          );
+
+          return {
+            nutrientId: matchedNutrient?.id || '', // Use matched nutrient ID or empty string
+            vietnameseName: n.vietnameseName,
+            min: n.min,
+            max: n.max,
+            median: n.median,
+          };
+        }) || [];
 
       // Separate macronutrients and others
       const macroKeywords = [
@@ -147,7 +154,7 @@ export function EditIngredientDialog({
       console.warn('Loaded nutrients:', sortedNutrientRows);
       setNutrientRows(sortedNutrientRows);
     }
-  }, [open, ingredient?.id, detailedIngredient]);
+  }, [open, ingredient?.id, detailedIngredient, nutrients]);
 
   // Reset form when dialog closes
   useEffect(() => {
