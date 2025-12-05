@@ -275,7 +275,22 @@ export function EditIngredientDialog({
     if (field === 'nutrientId') {
       updatedRows[index][field] = value as string;
     } else {
-      updatedRows[index][field] = value === '' ? undefined : Number(value);
+      if (value === '') {
+        updatedRows[index][field] = undefined;
+      } else {
+        const numValue = Number(value);
+        // Validate nutrient values: max 9999999.999 (decimal precision constraint)
+        if (numValue > 9999999.999) {
+          toast.error('Giá trị không được vượt quá 9999999.999');
+          return;
+        }
+        // Validate non-negative values
+        if (numValue < 0) {
+          toast.error('Giá trị không được âm');
+          return;
+        }
+        updatedRows[index][field] = numValue;
+      }
     }
     setNutrientRows(updatedRows);
   };
@@ -437,7 +452,7 @@ export function EditIngredientDialog({
           <DialogDescription>Cập nhật thông tin nguyên liệu</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+        <form onSubmit={handleSubmit} className="min-w-0 space-y-5" noValidate>
           {/* Name (readonly) */}
           <div className="space-y-2">
             <Label htmlFor="name">

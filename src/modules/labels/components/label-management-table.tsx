@@ -319,15 +319,15 @@ export function LabelManagementTable() {
                   <UILabel htmlFor="name" className="text-[#99b94a]">
                     Tên Nhãn
                   </UILabel>
-                  <span className="text-muted-foreground text-xs">{newLabelName.length}/255</span>
+                  <span className="text-muted-foreground text-xs">{newLabelName.length}/100</span>
                 </div>
                 <Input
                   id="name"
                   type="text"
                   value={newLabelName}
-                  onChange={(e) => setNewLabelName(e.target.value.slice(0, 255))}
+                  onChange={(e) => setNewLabelName(e.target.value.slice(0, 100))}
                   placeholder="Nhập tên nhãn..."
-                  maxLength={255}
+                  maxLength={100}
                 />
               </div>
               <div>

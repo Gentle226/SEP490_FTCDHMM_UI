@@ -446,21 +446,21 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
 
       {/* Detail Dialog */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[700px]">
+        <DialogContent className="max-h-[80vh] w-full overflow-y-auto sm:max-w-[700px]">
           <DialogHeader>
             <DialogTitle className="text-3xl text-[#99b94a]">Chi tiết nguyên liệu</DialogTitle>
             <DialogDescription>Thông tin chi tiết và hàm lượng dinh dưỡng</DialogDescription>
           </DialogHeader>
 
           {(detailedIngredient || selectedIngredient) && (
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-hidden">
               {/* Use detailedIngredient if available, otherwise fall back to selectedIngredient */}
               {(() => {
                 const ingredient = detailedIngredient || selectedIngredient;
                 return (
                   <>
                     {/* Image and Basic Info - Side by Side Layout */}
-                    <div className="flex flex-col gap-4 sm:flex-row">
+                    <div className="flex flex-col gap-4 overflow-hidden sm:flex-row">
                       {/* Image on the left */}
                       <div className="flex-shrink-0">
                         {ingredient?.image ? (
@@ -480,16 +480,20 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                       </div>
 
                       {/* Info on the right */}
-                      <div className="flex-1 space-y-3">
-                        <div>
-                          <span className="font-semibold">Tên: </span>
-                          <span>{ingredient?.name}</span>
+                      <div className="min-w-0 flex-1 space-y-3 overflow-hidden">
+                        <div className="flex min-w-0 gap-2 overflow-hidden">
+                          <span className="flex-shrink-0 font-semibold">Tên:</span>
+                          <span className="overflow-wrap-break-word min-w-0 break-words">
+                            {ingredient?.name}
+                          </span>
                         </div>
 
                         {ingredient?.description && (
-                          <div>
-                            <span className="font-semibold">Mô tả: </span>
-                            <span>{ingredient.description}</span>
+                          <div className="flex min-w-0 gap-2 overflow-hidden">
+                            <span className="flex-shrink-0 font-semibold">Mô tả:</span>
+                            <span className="overflow-wrap-break-word min-w-0 break-words">
+                              {ingredient.description}
+                            </span>
                           </div>
                         )}
 

@@ -74,16 +74,16 @@ export function RecipeBasicInfo({
           id="name"
           placeholder="Tên món ăn của bạn"
           value={name ?? ''}
-          onChange={(e) => onNameChange(e.target.value.slice(0, 255))}
+          onChange={(e) => onNameChange(e.target.value.slice(0, 200))}
           onFocus={() => onNameFocusChange(true)}
           onBlur={() => onNameFocusChange(false)}
           onInvalid={handleInvalidField}
-          maxLength={255}
+          maxLength={200}
         />
         <p
           className={`text-right text-xs transition-opacity ${isNameFocused ? 'text-gray-500 opacity-100' : 'text-gray-300 opacity-0'}`}
         >
-          {name.length}/255
+          {name.length}/200
         </p>
       </div>
 
