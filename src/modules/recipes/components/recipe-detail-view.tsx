@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { Button } from '@/base/components/ui/button';
 import { Card, CardContent } from '@/base/components/ui/card';
 import { Skeleton } from '@/base/components/ui/skeleton';
+import { translateError } from '@/base/lib/error-translator.lib';
 import { getToken } from '@/base/lib/get-token.lib';
 import { useAuth } from '@/modules/auth/contexts/auth.context';
 import { checkIngredientRestriction, useGetUserDietRestrictions } from '@/modules/diet-restriction';
@@ -295,15 +296,11 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
-          <p className="text-lg text-red-500">
-            {(error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-              'Không thể tải thông tin công thức. Vui lòng thử lại sau.'}
-          </p>
+          <p className="text-lg text-red-500">{translateError(error)}</p>
         </div>
       </div>
     );
   }
-
   if (!recipe) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">

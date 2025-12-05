@@ -20,7 +20,6 @@ export const config = {
 
 export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get('accessToken')?.value;
-  const _refreshToken = request.cookies.get('refreshToken')?.value;
 
   const { pathname } = request.nextUrl;
   const redirectUrl = request.nextUrl.clone();
@@ -59,23 +58,42 @@ export async function middleware(request: NextRequest) {
         console.error('User cookie parse error:', userParseError, 'Raw cookie:', userCookie);
       }
 
-      // Check if token is expired - be more lenient if no exp claim
+      // Check if token is expired
       const isTokenExpired = exp ? exp * 1000 < Date.now() : false;
       const hasValidUser = user?.id;
 
-      // For protected routes, enforce validation but be more lenient during debugging
-      if (isPrivateRoute || isAdminRoute || isModeratorRoute) {
-        if (!hasValidUser) {
+      // If token is expired, clear cookies for all routes to prevent frozen state
+      if (isTokenExpired) {
+        console.warn('Token expired, clearing cookies');
+        // For auth routes, just clear cookies and continue (allow access to login/register)
+        if (isAuthRoute) {
+          return deleteCookieAndContinue();
+        }
+        // For protected routes, clear cookies and redirect to login
+        if (isPrivateRoute || isAdminRoute || isModeratorRoute) {
           redirectUrl.pathname = '/auth/login';
           redirectUrl.search = '';
           redirectUrl.searchParams.set('redirect', request.nextUrl.href);
           return deleteCookieAndRedirect(redirectUrl);
-        } else if (isTokenExpired) {
-          console.warn('Token expired but user valid - allowing access for debugging');
         }
+        // For public routes, clear cookies and continue
+        return deleteCookieAndContinue();
       }
 
-      // For public routes, be more lenient - don't clear cookies unless absolutely necessary
+      // Token is valid, check user validity
+      if (!hasValidUser) {
+        // No valid user, clear cookies
+        if (isPrivateRoute || isAdminRoute || isModeratorRoute) {
+          redirectUrl.pathname = '/auth/login';
+          redirectUrl.search = '';
+          redirectUrl.searchParams.set('redirect', request.nextUrl.href);
+          return deleteCookieAndRedirect(redirectUrl);
+        }
+        // For public routes including auth routes, clear cookies and continue
+        return deleteCookieAndContinue();
+      }
+
+      // Token and user are valid
       if (hasValidUser) {
         // Check role-based access
         if (isAuthRoute) {
@@ -119,7 +137,21 @@ function deleteCookieAndRedirect(url: NextURL) {
     headers: {
       'Set-Cookie': [
         `accessToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`,
-        `refreshToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`,
+        `user=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`,
+      ],
+    },
+  });
+}
+
+function deleteCookieAndContinue() {
+  return NextResponse.next({
+    request: {
+      headers: new Headers(),
+    },
+    // @ts-expect-error Array of cookies does work in runtime
+    headers: {
+      'Set-Cookie': [
+        `accessToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`,
         `user=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`,
       ],
     },

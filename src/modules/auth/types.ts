@@ -16,7 +16,7 @@ export type LoginSchema = z.infer<typeof loginSchema>;
 
 export type LoginSuccessResponse = SuccessResponse<{
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string; // Optional: backend doesn't support refresh tokens
   user: User;
 }>;
 

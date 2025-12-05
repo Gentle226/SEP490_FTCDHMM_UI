@@ -102,12 +102,10 @@ class AuthService extends HttpClient {
       updatedAt: new Date().toISOString(),
     };
 
-
     // Transform the response to match what the cookie API expects
     const loginResponse: LoginSuccessResponse = {
       data: {
         accessToken: res.token,
-        refreshToken: res.token, // API doesn't have separate refresh tokens
         user,
       },
     };
@@ -170,7 +168,6 @@ class AuthService extends HttpClient {
 
     // Decode JWT to get user info
     const decodedToken = decodeJwt(res.token);
-
 
     // Extract user data with flexible claim mapping
     const extractClaim = (
@@ -247,7 +244,6 @@ class AuthService extends HttpClient {
     const loginResponse: LoginSuccessResponse = {
       data: {
         accessToken: res.token,
-        refreshToken: res.token,
         user,
       },
     };
