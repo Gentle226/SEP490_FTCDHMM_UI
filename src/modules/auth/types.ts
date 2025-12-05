@@ -117,9 +117,6 @@ export type VerifyEmailOtpSchema = z.infer<typeof verifyEmailOtpSchema>;
 
 export const resendOtpSchema = z.object({
   email: z.string().trim().email(),
-  purpose: z
-    .enum(['VERIFYACCOUNTEMAIL', 'FORGOTPASSWORD', 'confirm', 'reset'])
-    .default('VERIFYACCOUNTEMAIL'),
 });
 export type ResendOtpSchema = z.infer<typeof resendOtpSchema>;
 
@@ -262,6 +259,7 @@ export interface User {
   isEmailVerified: boolean;
   createdAt: string;
   updatedAt: string;
+  permissions?: string[];
 }
 
 // Permission policies matching API

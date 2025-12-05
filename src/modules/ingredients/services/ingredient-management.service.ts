@@ -322,7 +322,7 @@ class IngredientManagementService extends HttpClient {
     const normalizedKeyword = capitalizeFirstLetter(keyword.trim());
 
     return this.get<IngredientNameResponse[]>(
-      `api/Ingredient/getForRecipe?keyword=${encodeURIComponent(normalizedKeyword)}`,
+      `api/Ingredient/usda?keyword=${encodeURIComponent(normalizedKeyword)}`,
       {
         isPrivateRoute: true,
       },

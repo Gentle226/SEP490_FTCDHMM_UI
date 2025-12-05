@@ -182,7 +182,7 @@ function RegisterStep1({
   // Mutation to resend OTP
   const { mutate: sendOtp, isPending: isSendingOtp } = useMutation({
     mutationFn: (email: string) => {
-      const payload: ResendOtpSchema = { email, purpose: 'VERIFYACCOUNTEMAIL' };
+      const payload: ResendOtpSchema = { email };
       return authService.resendOtp(payload);
     },
   });
@@ -496,7 +496,7 @@ function VerifyEmailStep({ email, onVerified }: VerifyEmailStepProps) {
 
   const { mutate: resendCode, isPending: isResending } = useMutation({
     mutationFn: async () => {
-      const payload: ResendOtpSchema = { email, purpose: 'VERIFYACCOUNTEMAIL' };
+      const payload: ResendOtpSchema = { email };
       return authService.resendOtp(payload);
     },
     onSuccess: () => setCooldown(30),

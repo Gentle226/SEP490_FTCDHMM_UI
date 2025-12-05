@@ -145,8 +145,8 @@ class AuthService extends HttpClient {
     return this.post<{ token: string }>(`api/auth/verify-email-otp`, payload);
   }
 
-  public resendOtp({ purpose = 'confirm', ...payload }: ResendOtpSchema) {
-    return this.post<unknown>(`api/auth/resend-otp?purpose=${purpose}`, payload);
+  public resendOtp(payload: ResendOtpSchema) {
+    return this.post<unknown>(`api/auth/resend-otp`, payload);
   }
 
   public forgotPassword(payload: ForgotPasswordSchema) {
