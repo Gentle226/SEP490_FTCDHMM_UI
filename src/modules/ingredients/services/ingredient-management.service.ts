@@ -135,7 +135,7 @@ class IngredientManagementService extends HttpClient {
   }
 
   /**
-   * Get paginated ingredients
+   * Get paginated ingredients for manager
    */
   public async getIngredients(params: PaginationParams = {}) {
     const queryParams = new URLSearchParams();
@@ -146,7 +146,7 @@ class IngredientManagementService extends HttpClient {
     if (params.search) queryParams.append('Keyword', params.search);
 
     const apiResponse = await this.get<IngredientsResponse>(
-      `api/Ingredient?${queryParams.toString()}`,
+      `api/Ingredient/ForManager?${queryParams.toString()}`,
       {
         isPrivateRoute: true,
       },

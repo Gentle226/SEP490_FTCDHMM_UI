@@ -9,6 +9,7 @@ import {
   capitalizeFirstLetter,
   ingredientManagementService,
 } from '@/modules/ingredients/services/ingredient-management.service';
+import { ingredientPublicService } from '@/modules/ingredients/services/ingredient-public.service';
 import { SelectedIngredient } from '@/modules/recipes/components/recipe-form/types';
 
 export interface UseIngredientSearchResult {
@@ -47,7 +48,7 @@ export function useIngredientSearch(
   const [isLoadingUsdaSearch, setIsLoadingUsdaSearch] = useState(false);
   const debouncedIngredientSearch = useDebounce(ingredientSearch, 300);
 
-  // Search ingredients from local database
+  // Search ingredients from local database (using public API for recipe creation)
   useEffect(() => {
     async function searchIngredients() {
       if (!isIngredientPopoverOpen) return;
@@ -55,12 +56,24 @@ export function useIngredientSearch(
       setIsLoadingIngredients(true);
       setUsdaSearchResults([]); // Clear USDA results when starting new search
       try {
-        const response = await ingredientManagementService.getIngredients({
-          search: debouncedIngredientSearch,
+        const response = await ingredientPublicService.getIngredients({
+          keyword: debouncedIngredientSearch,
           pageNumber: 1,
           pageSize: 50,
         });
-        setIngredientSearchResults(response.items);
+        // Map public service response to Ingredient interface
+        const mappedItems = response.items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          image: item.imageUrl,
+          ingredientCategoryIds: item.categoryNames?.map((cat) => cat.id) || [],
+          categoryNames: item.categoryNames?.map((cat) => cat.name) || [],
+          nutrients: [],
+          lastUpdatedUtc: item.lastUpdatedUtc,
+          isNew: item.isNew,
+        }));
+        setIngredientSearchResults(mappedItems);
       } catch (error) {
         console.error('Failed to search ingredients:', error);
       } finally {

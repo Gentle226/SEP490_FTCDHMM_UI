@@ -46,6 +46,7 @@ export function RecipeLabelsSection({
       <Label className="flex items-center gap-2">
         <Tag className="h-4 w-4 text-[#99b94a]" />
         Nhãn
+        <span className="text-red-500">*</span>
       </Label>
 
       {/* Selected Labels */}

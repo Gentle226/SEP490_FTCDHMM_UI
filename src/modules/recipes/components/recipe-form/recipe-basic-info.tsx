@@ -66,9 +66,10 @@ export function RecipeBasicInfo({
     <div className="min-w-0 space-y-4">
       {/* Recipe Name */}
       <div className="space-y-2">
-        <Label htmlFor="name">
+        <Label htmlFor="name" className="flex items-center gap-1">
           <ChefHat className="h-4 w-4 text-[#99b94a]" />
           Tên món
+          <span className="text-red-500">*</span>
         </Label>
         <Input
           id="name"
@@ -124,6 +125,7 @@ export function RecipeBasicInfo({
           >
             <Flame className="h-3.5 w-3.5 text-[#99b94a] sm:h-4 sm:w-4" />
             Độ khó
+            <span className="text-red-500">*</span>
           </Label>
           <Select
             options={[
@@ -144,6 +146,7 @@ export function RecipeBasicInfo({
             <Clock className="h-3.5 w-3.5 text-[#99b94a] sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Thời gian nấu</span>
             <span className="sm:hidden">T.gian</span>
+            <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <Input
@@ -171,6 +174,7 @@ export function RecipeBasicInfo({
           <Label htmlFor="ration" className="flex items-center gap-1 text-xs sm:gap-2 sm:text-sm">
             <Users className="h-3.5 w-3.5 text-[#99b94a] sm:h-4 sm:w-4" />
             Khẩu phần
+            <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <Input

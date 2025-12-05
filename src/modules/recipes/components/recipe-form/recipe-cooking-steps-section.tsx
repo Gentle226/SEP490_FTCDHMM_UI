@@ -39,9 +39,10 @@ export function RecipeCookingStepsSection({
 }: RecipeCookingStepsSectionProps) {
   return (
     <div className="space-y-4">
-      <Label>
+      <Label className="flex items-center gap-2">
         <Soup className="h-4 w-4 text-[#99b94a]" />
         Các bước nấu
+        <span className="text-red-500">*</span>
       </Label>
 
       {cookingSteps.map((step, index) => (

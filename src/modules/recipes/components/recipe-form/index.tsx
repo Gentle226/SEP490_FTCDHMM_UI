@@ -178,7 +178,11 @@ export function RecipeForm({
     if (mode === 'edit' && initialData) {
       setName(initialData.name || '');
       setDescription(initialData.description || '');
-      setDifficulty(initialData.difficulty.value as Difficulty);
+      // Handle difficulty which comes as {value: 'MEDIUM'} and normalize to 'Medium' format
+      const difficultyValue = (initialData.difficulty?.value || 'Easy').toString().toLowerCase();
+      const normalizedDifficulty = (difficultyValue.charAt(0).toUpperCase() +
+        difficultyValue.slice(1)) as Difficulty;
+      setDifficulty(normalizedDifficulty);
       setCookTime(initialData.cookTime || 0);
       setRation(initialData.ration || 1);
 

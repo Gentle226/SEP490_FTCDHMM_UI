@@ -57,9 +57,10 @@ export function RecipeIngredientsSection({
 }: RecipeIngredientsSectionProps) {
   return (
     <div className="space-y-4">
-      <Label>
+      <Label className="flex items-center gap-2">
         <Beef className="h-4 w-4 text-[#99b94a]" />
         Nguyên liệu
+        <span className="text-red-500">*</span>
       </Label>
 
       {/* Selected Ingredients */}

@@ -12,7 +12,7 @@ import {
 } from '@/base/components/ui/dialog';
 import { Input } from '@/base/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/base/components/ui/popover';
-import { ingredientManagementService } from '@/modules/ingredients';
+import { ingredientPublicService } from '@/modules/ingredients/services/ingredient-public.service';
 
 interface IngredientCardProps {
   ingredient: {
@@ -55,7 +55,24 @@ export function IngredientCardWithDetails({
 
     setIsLoadingDetails(true);
     try {
-      const details = await ingredientManagementService.getIngredientById(ingredient.id);
+      const apiResponse = await ingredientPublicService.getIngredientById(ingredient.id);
+      // Map public service response to component's IngredientDetails interface
+      const details: IngredientDetails = {
+        id: apiResponse.id,
+        name: apiResponse.name,
+        description: apiResponse.description,
+        image: apiResponse.imageUrl,
+        ingredientCategoryIds: apiResponse.categories?.map((c) => c.id) || [],
+        lastUpdatedUtc: apiResponse.lastUpdatedUtc,
+        nutrients:
+          apiResponse.nutrients?.map((n) => ({
+            vietnameseName: n.vietnameseName,
+            unit: n.unit,
+            min: n.minValue,
+            max: n.maxValue,
+            median: n.medianValue,
+          })) || [],
+      };
       setIngredientDetails(details);
     } catch (error) {
       console.error('Failed to fetch ingredient details:', error);
