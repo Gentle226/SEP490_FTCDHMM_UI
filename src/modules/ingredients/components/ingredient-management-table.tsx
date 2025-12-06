@@ -169,9 +169,19 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
       toast.success('Xóa nguyên liệu thành công');
       queryClient.invalidateQueries({ queryKey: ['ingredients'] });
     },
-    onError: (error: Error) => {
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       console.warn('Delete error:', error);
-      toast.error(error.message || 'Không thể xóa nguyên liệu');
+
+      // Extract error message from API response
+      let errorMessage = 'Không thể xóa nguyên liệu';
+
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
     },
   });
 

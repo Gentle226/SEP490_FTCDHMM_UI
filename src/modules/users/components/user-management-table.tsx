@@ -591,7 +591,7 @@ export function UserManagementTable({ canCreate = false }: UserManagementTablePr
           <div className="space-y-4">
             <div>
               <Label htmlFor="days" className="mb-3">
-                Số ngày khóa (tối thiểu 1 ngày)
+                Số ngày khóa (tối thiểu 2 ngày)
               </Label>
               <Input
                 id="days"

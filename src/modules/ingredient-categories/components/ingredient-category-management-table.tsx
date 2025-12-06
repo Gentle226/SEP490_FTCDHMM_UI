@@ -153,8 +153,14 @@ export function IngredientCategoryManagementTable() {
       setNewCategoryName('');
       toast.success('Danh mục đã được tạo thành công.');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Không thể tạo danh mục.');
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      let errorMessage = 'Không thể tạo danh mục.';
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      toast.error(errorMessage);
     },
   });
 
@@ -167,8 +173,14 @@ export function IngredientCategoryManagementTable() {
       setSelectedCategory(null);
       toast.success('Danh mục đã được xóa thành công.');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Không thể xóa danh mục.');
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      let errorMessage = 'Không thể xóa danh mục.';
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      toast.error(errorMessage);
     },
   });
 
