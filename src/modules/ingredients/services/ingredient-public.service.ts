@@ -94,6 +94,15 @@ class IngredientPublicService extends HttpClient {
       return [];
     }
   }
+
+  /**
+   * Get all ingredient categories
+   */
+  public async getCategories() {
+    return await this.get<Array<{ id: string; name: string }>>('api/IngredientCategory', {
+      isPrivateRoute: false,
+    });
+  }
 }
 
 export const ingredientPublicService = new IngredientPublicService();

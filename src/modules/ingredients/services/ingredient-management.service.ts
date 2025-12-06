@@ -92,6 +92,9 @@ export interface PaginationParams {
   pageNumber?: number;
   pageSize?: number;
   search?: string;
+  categoryIds?: string[];
+  updatedFrom?: string;
+  updatedTo?: string;
 }
 
 export interface IngredientsResponse {
@@ -144,6 +147,11 @@ class IngredientManagementService extends HttpClient {
     if (params.pageSize)
       queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
     if (params.search) queryParams.append('Keyword', params.search);
+    if (params.categoryIds) {
+      params.categoryIds.forEach((id) => queryParams.append('CategoryIds', id));
+    }
+    if (params.updatedFrom) queryParams.append('UpdatedFrom', params.updatedFrom);
+    if (params.updatedTo) queryParams.append('UpdatedTo', params.updatedTo);
 
     const apiResponse = await this.get<IngredientsResponse>(
       `api/Ingredient/ForManager?${queryParams.toString()}`,
@@ -192,7 +200,7 @@ class IngredientManagementService extends HttpClient {
    */
   public async getCategories() {
     return this.get<IngredientCategory[]>('api/IngredientCategory', {
-      isPrivateRoute: true,
+      isPrivateRoute: false,
     });
   }
 
