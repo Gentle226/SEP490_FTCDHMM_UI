@@ -171,11 +171,11 @@ class IngredientManagementService extends HttpClient {
   }
 
   /**
-   * Get ingredient by ID
+   * Get ingredient by ID (for manager)
    */
   public async getIngredientById(id: string) {
     try {
-      const apiResponse = await this.get<IngredientApiResponse>(`api/Ingredient/${id}`, {
+      const apiResponse = await this.get<IngredientApiResponse>(`api/Ingredient/ForManager/${id}`, {
         isPrivateRoute: true,
       });
 

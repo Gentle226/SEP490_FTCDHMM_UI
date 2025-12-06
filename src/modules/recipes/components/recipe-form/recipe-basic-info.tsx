@@ -105,7 +105,6 @@ export function RecipeBasicInfo({
           onBlur={() => onDescriptionFocusChange(false)}
           onInvalid={handleInvalidTextarea}
           maxLength={2000}
-          required
           className="w-full break-words sm:min-h-24 md:min-h-28"
         />
         <p

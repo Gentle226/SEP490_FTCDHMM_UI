@@ -415,6 +415,8 @@ export function RecipeForm({
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (isSubmitting) return;
+
     if (!validateForm()) return;
 
     setIsSubmitting(true);
@@ -551,6 +553,7 @@ export function RecipeForm({
   return (
     <form
       onSubmit={handleSubmit}
+      noValidate
       className="mx-auto w-full max-w-screen-2xl space-y-4 px-2 sm:space-y-6 sm:px-4"
     >
       {/* Main Image and Basic Info */}
