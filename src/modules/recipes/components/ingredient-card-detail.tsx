@@ -32,6 +32,7 @@ interface IngredientDetails {
   id: string;
   name: string;
   description?: string;
+  calories?: number;
   image?: string;
   ingredientCategoryIds?: string[];
   categories?: Array<{
@@ -75,6 +76,7 @@ export function IngredientCardDetail({
         id: details.id,
         name: details.name,
         description: details.description,
+        calories: details.calories,
         image: details.imageUrl,
         ingredientCategoryIds: details.categories?.map((c) => c.id) || [],
         categories: details.categories || [],
@@ -276,6 +278,13 @@ export function IngredientCardDetail({
                     <div>
                       <span className="font-semibold">Mô tả: </span>
                       <span>{ingredientDetails.description}</span>
+                    </div>
+                  )}
+
+                  {ingredientDetails.calories !== undefined && (
+                    <div>
+                      <span className="font-semibold">Năng lượng: </span>
+                      <span>{ingredientDetails.calories} kcal/100g</span>
                     </div>
                   )}
 

@@ -28,6 +28,7 @@ interface IngredientDetails {
   id: string;
   name: string;
   description?: string;
+  calories?: number;
   image?: string;
   ingredientCategoryIds?: string[];
   lastUpdatedUtc?: string;
@@ -61,6 +62,7 @@ export function IngredientCardWithDetails({
         id: apiResponse.id,
         name: apiResponse.name,
         description: apiResponse.description,
+        calories: apiResponse.calories,
         image: apiResponse.imageUrl,
         ingredientCategoryIds: apiResponse.categories?.map((c) => c.id) || [],
         lastUpdatedUtc: apiResponse.lastUpdatedUtc,
@@ -269,6 +271,13 @@ export function IngredientCardWithDetails({
                     <div>
                       <span className="font-semibold">Mô tả: </span>
                       <span>{ingredientDetails.description}</span>
+                    </div>
+                  )}
+
+                  {ingredientDetails.calories !== undefined && (
+                    <div>
+                      <span className="font-semibold">Năng lượng: </span>
+                      <span>{ingredientDetails.calories} kcal/100g</span>
                     </div>
                   )}
 

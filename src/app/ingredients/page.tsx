@@ -548,6 +548,13 @@ function IngredientsContent() {
                         </div>
                       )}
 
+                      {selectedIngredient.calories !== undefined && (
+                        <div>
+                          <span className="font-semibold">Năng lượng: </span>
+                          <span>{selectedIngredient.calories} kcal/100g</span>
+                        </div>
+                      )}
+
                       {selectedIngredient.categories &&
                         selectedIngredient.categories.length > 0 && (
                           <div>

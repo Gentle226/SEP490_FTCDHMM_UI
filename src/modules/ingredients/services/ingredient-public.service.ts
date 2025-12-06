@@ -22,6 +22,7 @@ export interface IngredientDetailsResponse {
   id: string;
   name: string;
   description?: string;
+  calories?: number;
   imageUrl: string;
   lastUpdatedUtc: string;
   isNew: boolean;
