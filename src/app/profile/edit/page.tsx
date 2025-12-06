@@ -5,6 +5,7 @@ import { ChevronDownIcon, Save, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { Avatar, AvatarFallback, AvatarImage } from '@/base/components/ui/avatar';
@@ -250,7 +251,18 @@ export default function EditProfilePage() {
           {/* Right Column - Form (70%) */}
           <div className="bg-card rounded-lg border p-3 sm:p-4 md:p-6">
             <form
-              onSubmit={form.handleSubmit(onSubmit)}
+              onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                // Show toast for validation errors
+                if (errors.dateOfBirth) {
+                  toast.error(errors.dateOfBirth.message || 'Vui lòng chọn ngày sinh');
+                } else if (errors.firstName) {
+                  toast.error(errors.firstName.message || 'Vui lòng nhập họ');
+                } else if (errors.lastName) {
+                  toast.error(errors.lastName.message || 'Vui lòng nhập tên');
+                } else if (errors.gender) {
+                  toast.error(errors.gender.message || 'Vui lòng chọn giới tính');
+                }
+              })}
               className="space-y-3 sm:space-y-4 md:space-y-6"
             >
               {/* Row 1: First Name & Last Name (50% - 50%) */}
@@ -302,6 +314,10 @@ export default function EditProfilePage() {
                       setSelectedDate(date);
                       if (date) {
                         form.setValue('dateOfBirth', date);
+                        form.clearErrors('dateOfBirth');
+                      } else {
+                        // Clear the form value when date is undefined/cleared
+                        form.setValue('dateOfBirth', undefined as unknown as Date);
                       }
                     }}
                     placeholder="dd/mm/yyyy"

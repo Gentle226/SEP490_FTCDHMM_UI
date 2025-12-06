@@ -118,9 +118,6 @@ export function FollowersDialog({ open, onOpenChange }: FollowersDialogProps) {
                         `${follower.firstName} ${follower.lastName}`.trim() ||
                         'Người dùng'}
                     </p>
-                    <p className="text-muted-foreground truncate text-xs sm:text-sm">
-                      {follower.email}
-                    </p>
                   </div>
                 </Link>
                 <Button
