@@ -54,6 +54,7 @@ export interface ChangeRoleRequest {
 
 export interface MentionableUser {
   id: string;
+  userName?: string;
   firstName: string;
   lastName: string;
   avatarUrl?: string;
