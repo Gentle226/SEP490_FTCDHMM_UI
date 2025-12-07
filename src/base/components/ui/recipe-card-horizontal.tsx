@@ -177,15 +177,17 @@ export function RecipeCardHorizontal({
           <div className="flex items-center gap-2 border-t border-gray-100 pt-2">
             {author && typeof author === 'object' ? (
               author.avatarUrl ? (
-                <Image
-                  src={author.avatarUrl}
-                  alt={`${author.firstName || ''} ${author.lastName || ''}`}
-                  width={28}
-                  height={28}
-                  className="rounded-full object-cover"
-                />
+                <div className="h-7 w-7 flex-shrink-0">
+                  <Image
+                    src={author.avatarUrl}
+                    alt={`${author.firstName || ''} ${author.lastName || ''}`}
+                    width={28}
+                    height={28}
+                    className="h-full w-full rounded-full object-cover"
+                  />
+                </div>
               ) : (
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#99b94a] text-xs font-semibold text-white">
+                <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#99b94a] text-xs font-semibold text-white">
                   {(author.firstName?.[0] || author.lastName?.[0] || '?').toUpperCase()}
                 </div>
               )

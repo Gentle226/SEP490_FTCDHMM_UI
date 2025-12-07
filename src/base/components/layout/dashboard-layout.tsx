@@ -256,7 +256,7 @@ export function DashboardLayout({
         },
         {
           title: 'Kho Nguyên Liệu',
-          url: '/ingredient',
+          url: '/ingredients',
           icon: Warehouse,
         },
       ],

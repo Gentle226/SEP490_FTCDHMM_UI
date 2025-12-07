@@ -216,11 +216,8 @@ export default function HomePage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!searchQuery.trim()) {
-      return;
-    }
-
-    // Navigate to search results page with query parameter
+    // Navigate to search results page with query parameter (empty or with query)
+    // If empty, the search page will call GET /api/recipe to fetch all recipes
     router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     setShowDropdown(false);
   };
