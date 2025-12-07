@@ -475,17 +475,17 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
               </div>
               <div className="space-y-3 rounded-lg bg-gray-50 p-3">
                 <Slider
-                  value={[ration || 1]}
+                  value={[ration || 6]}
                   onValueChange={(value) => setRation(value[0])}
                   min={1}
-                  max={8}
+                  max={12}
                   step={1}
                   className="w-full"
                 />
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-500">1 phần</span>
                   <span className="rounded-full bg-[#99b94a] px-3 py-1 font-semibold text-white">
-                    {ration || 1} phần
+                    {ration || 6} phần
                   </span>
                   <span className="text-gray-500">8 phần</span>
                 </div>

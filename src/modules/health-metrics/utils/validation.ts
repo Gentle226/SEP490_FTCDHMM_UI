@@ -18,7 +18,7 @@ export function validateHealthMetric(
   ) {
     errors.push({
       field: 'weightKg',
-      message: 'Cân nặng phải nằm trong khoảng từ 0 đến 300 kg',
+      message: 'Cân nặng phải nằm trong khoảng từ 0.1 đến 300 kg',
     });
   }
 

@@ -94,7 +94,7 @@ export function SearchContent() {
                 <SearchIcon className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-gray-400" />
                 <Input
                   type="text"
-                  placeholder="Nhập món ăn hoặc để trống để truy cập bộ lọc công thức"
+                  placeholder="Nhập từ khóa tìm kiếm..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-12 rounded-full border-gray-200 bg-gray-50 pr-14 pl-12 text-base transition-all focus:border-[#99b94a] focus:bg-white focus:ring-2 focus:ring-[#99b94a]/20"

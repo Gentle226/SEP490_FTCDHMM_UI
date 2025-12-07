@@ -129,7 +129,7 @@ export function HealthMetricForm({ onSubmit, onCancel, initialData, isEdit = fal
                 id="weightKg"
                 type="number"
                 step="0.1"
-                placeholder="0-300 kg"
+                placeholder="0.1-300 kg"
                 value={formData.weightKg || ''}
                 onChange={(e) => handleChange('weightKg', parseFloat(e.target.value) || 0)}
                 className={`mt-2 border-gray-300 focus:border-[#99b94a] focus:ring-[#99b94a] ${errors.weightKg ? 'border-red-500' : ''}`}

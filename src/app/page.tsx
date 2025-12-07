@@ -1,7 +1,7 @@
 'use client';
 
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { ChevronRightIcon, SearchIcon, SparklesIcon } from 'lucide-react';
+import { ChevronRightIcon, History, Leaf, SearchIcon, SparklesIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -242,56 +242,65 @@ export default function HomePage() {
 
   // Common search and recipes section
   const mainContent = (
-    <main className="min-h-screen">
-      {/* Search Section */}
-      <div className="bg-white py-8">
-        <div className="container mx-auto px-4">
+    <main className="min-h-screen bg-gradient-to-b from-white via-gray-50/50 to-white">
+      {/* Hero Search Section */}
+      <div className="relative bg-gradient-to-br from-[#99b94a]/5 via-white to-emerald-50/30 pt-6 pb-10 sm:pt-8 sm:pb-14">
+        {/* Decorative elements */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#99b94a]/10 blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
+        </div>
+
+        <div className="relative container mx-auto px-4">
           <div className="mx-auto max-w-2xl text-center">
-            <div className="mb-6">
+            {/* Logo */}
+            <div className="mb-6 sm:mb-8">
               <Image
                 src="/Fitfood Tracker Logo.png"
                 alt="FitFood Tracker"
-                className="mx-auto mb-4 h-36 w-auto"
+                className="mx-auto h-28 w-auto drop-shadow-sm sm:h-36"
                 width={500}
                 height={150}
+                priority
               />
             </div>
 
-            <div className="relative mx-auto max-w-2xl" ref={searchContainerRef}>
+            {/* Search Bar */}
+            <div className="relative mx-auto max-w-xl" ref={searchContainerRef}>
               <form onSubmit={handleSearch} className="relative">
-                <Input
-                  type="text"
-                  placeholder="Nhập món ăn hoặc để trống để truy cập bộ lọc công thức"
-                  value={searchQuery}
-                  onChange={(e) => handleSearchInput(e.target.value)}
-                  className="h-12 border-2 border-gray-200 pr-12 text-lg focus:border-[#99b94a]"
-                />
-                <Button
-                  type="submit"
-                  size="icon"
-                  className="absolute top-1 right-1 h-10 w-10 bg-[#99b94a] hover:bg-[#7a8f3a]"
-                >
-                  <SearchIcon className="h-5 w-5" />
-                </Button>
+                <div className="relative">
+                  <SearchIcon className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="Tìm kiếm món ăn hoặc để trống để truy cập bộ lọc công thức"
+                    value={searchQuery}
+                    onChange={(e) => handleSearchInput(e.target.value)}
+                    className="h-14 rounded-2xl border-2 border-gray-200 bg-white pr-14 pl-12 text-base shadow-lg shadow-gray-200/50 transition-all placeholder:text-gray-400 focus:border-[#99b94a] focus:shadow-xl focus:shadow-[#99b94a]/10 sm:text-lg"
+                  />
+                  <Button
+                    type="submit"
+                    size="icon"
+                    className="absolute top-1/2 right-2 h-10 w-10 -translate-y-1/2 rounded-xl bg-[#99b94a] shadow-md shadow-[#99b94a]/30 transition-all hover:bg-[#7a8f3a] hover:shadow-lg"
+                  >
+                    <SearchIcon className="h-5 w-5" />
+                  </Button>
+                </div>
               </form>
 
               {/* Search Dropdown Results */}
               {showDropdown && (
-                <div className="absolute top-full right-0 left-0 z-50 mt-2 rounded-lg border border-gray-200 bg-white shadow-lg">
+                <div className="absolute top-full right-0 left-0 z-[100] mt-3 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl shadow-gray-200/50">
                   {isSearching ? (
-                    <div className="px-4 py-8 text-center text-gray-500">
-                      <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-[#99b94a] border-t-transparent"></div>
-                      <p className="mt-2">Đang tìm kiếm...</p>
+                    <div className="px-4 py-10 text-center text-gray-500">
+                      <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-[#99b94a] border-t-transparent"></div>
+                      <p className="mt-3 text-sm">Đang tìm kiếm...</p>
                     </div>
                   ) : searchResults.length > 0 || ingredientSearchResults.length > 0 ? (
                     <>
-                      <div className="max-h-96 overflow-y-auto">
+                      <div className="max-h-80 overflow-y-auto">
                         {/* Recipes Section - Show First */}
                         {searchResults.length > 0 && (
-                          <div className="border-b border-gray-200">
-                            {/* <div className="bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-600 uppercase">
-                              Công thức
-                            </div> */}
+                          <div>
                             {searchResults.map((recipe, index) => (
                               <button
                                 key={recipe.id || `recipe-${index}`}
@@ -300,25 +309,26 @@ export default function HomePage() {
                                   setSearchQuery('');
                                   handleRecipeClick(recipe.id);
                                 }}
-                                className="flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left transition-all hover:bg-gray-50"
+                                className="flex w-full items-center gap-3 px-4 py-3 text-left transition-all hover:bg-gray-50"
                               >
                                 <Image
                                   src={recipe.imageUrl || '/Outline Illustration Card.png'}
                                   alt={recipe.name}
-                                  width={48}
-                                  height={48}
-                                  className="h-12 w-12 rounded-lg object-cover"
+                                  width={52}
+                                  height={52}
+                                  className="h-13 w-13 rounded-xl object-cover shadow-sm"
                                 />
                                 <div className="flex-1">
-                                  <p className="line-clamp-1 font-medium text-gray-900">
+                                  <p className="line-clamp-1 font-medium text-gray-800">
                                     {recipe.name}
                                   </p>
-                                  <p className="text-xs text-gray-500">
+                                  <p className="mt-0.5 text-xs text-gray-500">
                                     {recipe.author
                                       ? `${recipe.author.firstName} ${recipe.author.lastName}`
                                       : 'Tác giả không xác định'}
                                   </p>
                                 </div>
+                                <ChevronRightIcon className="h-4 w-4 text-gray-400" />
                               </button>
                             ))}
                           </div>
@@ -338,36 +348,40 @@ export default function HomePage() {
                                   setSearchQuery('');
                                   handleIngredientClick(ingredient.name);
                                 }}
-                                className="flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left transition-all hover:bg-gray-50"
+                                className="flex w-full items-center gap-3 px-4 py-3 text-left transition-all hover:bg-gray-50"
                               >
-                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-50">
-                                  <span className="text-2xl">🥬</span>
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50">
+                                  <Leaf className="h-5 w-5 text-green-500" />
                                 </div>
                                 <div className="flex-1">
-                                  <p className="line-clamp-1 font-medium text-gray-900">
+                                  <p className="line-clamp-1 font-medium text-gray-800">
                                     {ingredient.name}
                                   </p>
                                   <p className="text-xs text-gray-500">Nguyên liệu</p>
                                 </div>
+                                <ChevronRightIcon className="h-4 w-4 text-gray-400" />
                               </button>
                             ))}
                           </div>
                         )}
                       </div>
-                      <button
-                        onClick={() => {
-                          router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-                          setShowDropdown(false);
-                        }}
-                        className="flex w-full items-center justify-center gap-2 bg-gray-50 px-4 py-2 text-sm font-medium text-[#99b94a] transition-all hover:bg-gray-100"
-                      >
-                        Xem tất cả kết quả
-                        <SearchIcon className="h-4 w-4" />
-                      </button>
+                      <div className="border-t border-gray-100">
+                        <button
+                          onClick={() => {
+                            router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                            setShowDropdown(false);
+                          }}
+                          className="flex w-full items-center justify-center gap-2 bg-gradient-to-r from-[#99b94a]/5 to-emerald-50/50 px-4 py-3 text-sm font-medium text-[#99b94a] transition-all hover:from-[#99b94a]/10 hover:to-emerald-50"
+                        >
+                          Xem tất cả kết quả
+                          <ChevronRightIcon className="h-4 w-4" />
+                        </button>
+                      </div>
                     </>
                   ) : (
-                    <div className="px-4 py-8 text-center text-gray-500">
-                      Không tìm thấy kết quả nào
+                    <div className="px-4 py-10 text-center">
+                      <SearchIcon className="mx-auto mb-3 h-8 w-8 text-gray-300" />
+                      <p className="text-sm text-gray-500">Không tìm thấy kết quả nào</p>
                     </div>
                   )}
                 </div>
@@ -377,33 +391,45 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 sm:py-10">
         {/* Ingredients Section */}
         <section className="mb-8 sm:mb-12">
-          <div className="mb-4 flex items-center justify-between sm:mb-6">
-            <h2 className="text-xl font-bold text-[#99b94a] sm:text-2xl">Danh Sách Nguyên Liệu</h2>
+          <div className="mb-5 flex items-center justify-between sm:mb-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#99b94a] to-emerald-500 shadow-md shadow-[#99b94a]/30">
+                <Leaf className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-800 sm:text-xl">
+                  Danh Sách Nguyên Liệu
+                </h2>
+                <p className="hidden text-xs text-gray-500 sm:block">
+                  Khám phá thành phần dinh dưỡng của từng nguyên liệu
+                </p>
+              </div>
+            </div>
             {user && (
               <Button
-                variant="ghost"
-                className="text-xs text-[#99b94a] hover:text-[#7a8f3a] sm:text-sm"
+                variant="outline"
+                className="gap-1 rounded-full border-[#99b94a]/30 text-xs text-[#99b94a] transition-all hover:border-[#99b94a] hover:bg-[#99b94a]/10 sm:text-sm"
                 onClick={() => router.push('/ingredients')}
               >
-                <span>Xem toàn bộ</span>
-                <ChevronRightIcon className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Xem tất cả</span>
+                <ChevronRightIcon className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             )}
           </div>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-8">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4 md:grid-cols-6 lg:grid-cols-9">
             {isLoadingIngredients || ingredients.length === 0
               ? Array.from({ length: 9 }, (_, i) => (
-                  <div key={i} className={i === 8 ? 'md:hidden' : ''}>
+                  <div key={i} className={i >= 6 ? 'hidden sm:block' : ''}>
                     <IngredientCard isLoading={true} />
                   </div>
                 ))
-              : ingredients.map((ingredient, index) => (
+              : ingredients.slice(0, 9).map((ingredient, index) => (
                   <button
                     key={ingredient.id}
-                    className={`transition-transform hover:scale-105 active:scale-95 ${index === 8 ? 'md:hidden' : ''}`}
+                    className={`transition-all hover:scale-105 hover:shadow-lg active:scale-95 ${index >= 6 ? 'hidden sm:block' : ''}`}
                     onClick={() => handleIngredientClick(ingredient.name)}
                     title={ingredient.name}
                   >
@@ -416,15 +442,23 @@ export default function HomePage() {
         {/* Recent Recipes Section - Only show for logged in users with history */}
         {user && recentRecipes.length > 0 && (
           <section className="mb-8 sm:mb-12">
-            <h2 className="mb-4 text-xl font-bold text-[#99b94a] sm:mb-6 sm:text-2xl">
-              Món bạn mới xem gần đây
-            </h2>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-6">
-              {recentRecipes.map((recipe) => (
+            <div className="mb-5 flex items-center gap-3 sm:mb-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 shadow-md shadow-blue-500/30">
+                <History className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-800 sm:text-xl">Xem Gần Đây</h2>
+                <p className="hidden text-xs text-gray-500 sm:block">
+                  Tiếp tục khám phá các công thức bạn đã xem
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-6">
+              {recentRecipes.slice(0, 6).map((recipe) => (
                 <button
                   key={recipe.id}
                   onClick={() => handleRecipeClick(recipe.id)}
-                  className="transition-transform hover:scale-105 active:scale-95"
+                  className="transition-all hover:scale-105 hover:rounded-2xl"
                   title={recipe.name}
                 >
                   <RecipeCard
@@ -444,13 +478,26 @@ export default function HomePage() {
 
         {/* All Recipes Section */}
         <section>
-          <div className="mb-4 flex items-center gap-2 sm:mb-6">
-            {isUsingRecommendations && (
-              <SparklesIcon className="h-5 w-5 text-[#99b94a] sm:h-6 sm:w-6" />
-            )}
-            <h2 className="text-xl font-bold text-[#99b94a] sm:text-2xl">
-              {isUsingRecommendations ? 'Công Thức Gợi Ý Cho Bạn' : 'Khám Phá Công Thức'}
-            </h2>
+          <div className="mb-5 flex items-center gap-3 sm:mb-6">
+            <div
+              className={`flex h-10 w-10 items-center justify-center rounded-xl shadow-md ${
+                isUsingRecommendations
+                  ? 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-amber-500/30'
+                  : 'bg-gradient-to-br from-purple-500 to-pink-500 shadow-purple-500/30'
+              }`}
+            >
+              <SparklesIcon className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-800 sm:text-xl">
+                {isUsingRecommendations ? 'Gợi Ý Cho Bạn' : 'Khám Phá Công Thức'}
+              </h2>
+              <p className="hidden text-xs text-gray-500 sm:block">
+                {isUsingRecommendations
+                  ? 'Công thức được đề xuất dựa trên mục tiêu và chỉ số sức khỏe của bạn'
+                  : 'Khám phá các món ăn mới mỗi ngày'}
+              </p>
+            </div>
           </div>
           {user ? (
             <div className="space-y-4">
@@ -466,7 +513,7 @@ export default function HomePage() {
                       <button
                         key={recipe.id}
                         onClick={() => handleRecipeClick(recipe.id)}
-                        className="w-full text-left transition-transform hover:scale-[1.02] active:scale-95"
+                        className="w-full text-left transition-all hover:scale-[1.01] hover:shadow-lg active:scale-[0.99]"
                         title={recipe.name}
                       >
                         <RecipeCardHorizontal
@@ -495,7 +542,7 @@ export default function HomePage() {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-5">
               {isLoadingDisplay ? (
                 // Show skeleton loaders while initial load
                 Array.from({ length: 10 }, (_, i) => <RecipeCard key={i} isLoading={true} />)
@@ -506,7 +553,7 @@ export default function HomePage() {
                       <button
                         key={recipe.id}
                         onClick={() => handleRecipeClick(recipe.id)}
-                        className="transition-transform hover:scale-105 active:scale-95"
+                        className="transition-all hover:scale-105 hover:shadow-xl active:scale-95"
                         title={recipe.name}
                       >
                         <RecipeCard
@@ -529,19 +576,22 @@ export default function HomePage() {
           )}
           {/* Infinite scroll trigger */}
           {hasNextPage && (
-            <div ref={loadMoreRef} className="flex justify-center py-8">
+            <div ref={loadMoreRef} className="flex justify-center py-10">
               {isFetchingNextPage && (
-                <div className="flex items-center gap-2 text-[#99b94a]">
+                <div className="flex items-center gap-3 rounded-full bg-[#99b94a]/10 px-5 py-2.5 text-[#99b94a]">
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#99b94a] border-t-transparent"></div>
-                  <span>Đang tải thêm...</span>
+                  <span className="text-sm font-medium">Đang tải thêm...</span>
                 </div>
               )}
             </div>
           )}
           {/* No more data message */}
           {!hasNextPage && displayData && displayData.pages[0].totalCount > 0 && (
-            <div className="py-8 text-center text-gray-500">
-              Đã hiển thị tất cả {displayData.pages[0].totalCount} công thức
+            <div className="py-10 text-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-sm text-gray-500">
+                <SparklesIcon className="h-4 w-4" />
+                Đã hiển thị tất cả {displayData.pages[0].totalCount} công thức
+              </div>
             </div>
           )}
         </section>
