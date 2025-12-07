@@ -310,6 +310,12 @@ export const PermissionPolicies = {
   REPORT_VIEW: 'Báo cáo:Xem',
   REPORT_APPROVE: 'Báo cáo:Xác nhận',
   REPORT_REJECT: 'Báo cáo:Từ chối',
+
+  // Role Management
+  ROLE_CREATE: 'Vai trò:Tạo',
+  ROLE_VIEW: 'Vai trò:Xem',
+  ROLE_UPDATE: 'Vai trò:Cập nhật',
+  ROLE_DELETE: 'Vai trò:Xóa',
 } as const;
 
 // Helper function to check if user has permission

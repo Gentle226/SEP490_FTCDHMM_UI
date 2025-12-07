@@ -120,7 +120,7 @@ export function DashboardLayout({
     // Admin Group - only for users with admin permissions
     const adminItems: NavigationItem[] = [];
 
-    if (user?.role === Role.ADMIN) {
+    if (hasAnyPermission(user, [PermissionPolicies.ROLE_VIEW])) {
       adminItems.push({
         title: 'Quản Lý Phân Quyền',
         url: '/admin/permissions',

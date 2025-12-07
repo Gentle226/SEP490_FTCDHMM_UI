@@ -34,6 +34,7 @@ import {
   TableRow,
 } from '@/base/components/ui/table';
 import { Pagination as PaginationType } from '@/base/types';
+import { useAuth } from '@/modules/auth';
 
 import {
   LockUserRequest,
@@ -62,6 +63,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export function UserManagementTable() {
+  const { user: currentUser } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -237,11 +239,33 @@ export function UserManagementTable() {
       toast.success('Vai trò người dùng đã được thay đổi thành công.');
     },
     onError: (error: Error) => {
+      // Check if error is AxiosError with response data
+      if ('response' in error && error.response) {
+        const responseData = (error.response as { data?: { code?: string; message?: string } })
+          .data;
+
+        if (responseData?.code === 'INVALID_ACTION') {
+          toast.error('Không được quyền chỉnh sửa tài khoản admin');
+          return;
+        }
+
+        if (responseData?.message) {
+          toast.error(responseData.message);
+          return;
+        }
+      }
+
       toast.error(error.message || 'Không thể thay đổi vai trò người dùng.');
     },
   });
 
   const handleLock = (user: User) => {
+    // Prevent user from locking themselves
+    if (currentUser && user.id === currentUser.id) {
+      toast.error('Không được quyền khóa tài khoản của chính mình');
+      return;
+    }
+
     setSelectedUser(user);
     setLockDialogOpen(true);
   };
@@ -252,6 +276,12 @@ export function UserManagementTable() {
   };
 
   const handleChangeRole = (user: User) => {
+    // Prevent changing Admin user role
+    if (user.role === 'Admin') {
+      toast.error('Không được quyền thay đổi vai trò của người dùng Admin');
+      return;
+    }
+
     setSelectedUser(user);
     setSelectedRole(user.role || '');
     setChangeRoleDialogOpen(true);
@@ -491,7 +521,13 @@ export function UserManagementTable() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleLock(user)}
-                            className="text-red-600 hover:bg-red-50"
+                            disabled={currentUser?.id === user.id}
+                            className={
+                              currentUser?.id === user.id
+                                ? 'cursor-not-allowed text-red-600 opacity-50'
+                                : 'text-red-600 hover:bg-red-50'
+                            }
+                            title={currentUser?.id === user.id ? 'Không được khóa chính mình' : ''}
                           >
                             <Lock className="mr-1 h-4 w-4" />
                             Khóa
