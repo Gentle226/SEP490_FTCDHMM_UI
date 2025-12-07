@@ -39,10 +39,6 @@ export interface UnlockUserRequest {
   userId: string;
 }
 
-export interface CreateModeratorRequest {
-  email: string;
-}
-
 export interface RoleResponse {
   id: string;
   name: string;

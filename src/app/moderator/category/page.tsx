@@ -3,12 +3,12 @@
 import { ClipboardList } from 'lucide-react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
-import { ProtectedRoute, Role } from '@/modules/auth';
+import { PermissionPolicies, ProtectedRoute } from '@/modules/auth';
 import { IngredientCategoryManagementTable } from '@/modules/ingredient-categories/components';
 
 export default function IngredientCategoryPage() {
   return (
-    <ProtectedRoute requiredRoles={[Role.ADMIN, Role.MODERATOR]}>
+    <ProtectedRoute requiredPermissions={[PermissionPolicies.INGREDIENT_CATEGORY_CREATE]}>
       <DashboardLayout>
         <div className="space-y-6 px-3">
           {/* Header */}

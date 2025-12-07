@@ -3,7 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
-import { ProtectedRoute, Role, useAuth } from '@/modules/auth';
+import {
+  PermissionPolicies,
+  ProtectedRoute,
+  Role,
+  hasAnyPermission,
+  useAuth,
+} from '@/modules/auth';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -11,19 +17,24 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (user) {
-      // Route users based on their role
-      switch (user.role) {
-        case Role.ADMIN:
-          router.replace('/admin/dashboard');
-          break;
-        case Role.MODERATOR:
-          router.replace('/moderator/dashboard');
-          break;
-        case Role.CUSTOMER:
-          router.replace('/customer/dashboard');
-          break;
-        default:
-          router.replace('/');
+      // Route users based on their role and permissions
+      if (user.role === Role.ADMIN) {
+        router.replace('/admin/dashboard');
+      } else if (
+        hasAnyPermission(user, [
+          PermissionPolicies.USER_MANAGEMENT_VIEW,
+          PermissionPolicies.RECIPE_MANAGEMENT_VIEW,
+          PermissionPolicies.INGREDIENT_MANAGER_VIEW,
+          PermissionPolicies.LABEL_CREATE,
+          PermissionPolicies.INGREDIENT_CATEGORY_CREATE,
+          PermissionPolicies.REPORT_VIEW,
+        ])
+      ) {
+        // Users with management permissions go to moderator dashboard
+        router.replace('/moderator/dashboard');
+      } else {
+        // Regular customers go to customer dashboard
+        router.replace('/customer/dashboard');
       }
     }
   }, [user, router]);

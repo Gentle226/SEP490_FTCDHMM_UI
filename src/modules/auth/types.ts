@@ -242,7 +242,6 @@ export type Step = 'email' | 'otp' | 'password' | 'success';
 
 export enum Role {
   CUSTOMER = 'Customer',
-  MODERATOR = 'Moderator',
   ADMIN = 'Admin',
 }
 

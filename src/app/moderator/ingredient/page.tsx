@@ -3,12 +3,12 @@
 import { Salad } from 'lucide-react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
-import { ProtectedRoute, Role } from '@/modules/auth';
+import { PermissionPolicies, ProtectedRoute } from '@/modules/auth';
 import { IngredientManagementTable } from '@/modules/ingredients';
 
 export default function IngredientManagementPage() {
   return (
-    <ProtectedRoute requiredRoles={[Role.ADMIN, Role.MODERATOR]}>
+    <ProtectedRoute requiredPermissions={[PermissionPolicies.INGREDIENT_MANAGER_VIEW]}>
       <DashboardLayout>
         <div className="space-y-6 px-3">
           {/* Header */}

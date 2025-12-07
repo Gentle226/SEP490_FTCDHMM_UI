@@ -248,8 +248,8 @@ export function DashboardLayout({
               <span className="truncate text-sm font-semibold text-[#99b94a]">FitFood Tracker</span>
               <span className="text-muted-foreground truncate text-xs">
                 {user?.role === Role.ADMIN && 'Quản Trị Viên'}
-                {user?.role === Role.MODERATOR && 'Người Kiểm Duyệt'}
                 {user?.role === Role.CUSTOMER && 'Khách Hàng'}
+                {user?.role && user.role !== Role.ADMIN && user.role !== Role.CUSTOMER && user.role}
               </span>
             </div>
           </div>

@@ -3,12 +3,18 @@
 import { Tags } from 'lucide-react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
-import { ProtectedRoute, Role } from '@/modules/auth';
+import { PermissionPolicies, ProtectedRoute } from '@/modules/auth';
 import { LabelManagementTable } from '@/modules/labels/components';
 
 export default function LabelManagementPage() {
   return (
-    <ProtectedRoute requiredRoles={[Role.ADMIN, Role.MODERATOR]}>
+    <ProtectedRoute
+      requiredPermissions={[
+        PermissionPolicies.LABEL_CREATE,
+        PermissionPolicies.LABEL_UPDATE,
+        PermissionPolicies.LABEL_DELETE,
+      ]}
+    >
       <DashboardLayout>
         <div className="space-y-6">
           {/* Header */}
