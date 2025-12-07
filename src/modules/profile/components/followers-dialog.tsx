@@ -94,7 +94,7 @@ export function FollowersDialog({ open, onOpenChange }: FollowersDialogProps) {
                 className="hover:bg-accent flex items-center gap-2 rounded-lg p-2 transition-colors sm:gap-3 sm:p-3"
               >
                 <Link
-                  href={`/profile/${follower.id}`}
+                  href={`/profile/${follower.userName}`}
                   className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3"
                   onClick={() => onOpenChange(false)}
                 >

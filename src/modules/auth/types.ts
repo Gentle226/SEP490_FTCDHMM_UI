@@ -249,6 +249,7 @@ export enum Role {
 // User type based on API structure
 export interface User {
   id: string;
+  userName: string;
   email: string;
   firstName?: string;
   lastName?: string;

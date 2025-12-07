@@ -50,6 +50,7 @@ export interface RecipeDetail {
     id: string;
     firstName: string;
     lastName: string;
+    userName: string;
     avatarUrl?: string;
   }>;
   createdBy?: {
@@ -61,6 +62,7 @@ export interface RecipeDetail {
     id: string;
     firstName: string;
     lastName: string;
+    userName: string;
     email: string;
     avatarUrl?: string;
   };

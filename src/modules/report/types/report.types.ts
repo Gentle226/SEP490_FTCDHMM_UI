@@ -51,6 +51,7 @@ export interface ReportDetailItem {
 // Response DTOs - Detail list response from GET /api/report/details/{targetId}
 export interface ReportDetailListResponse {
   targetId: string;
+  targetUserName?: string;
   targetType: string;
   targetName: string;
   reports: ReportDetailItem[];
@@ -60,6 +61,7 @@ export interface ReportDetailListResponse {
 export interface ReportSummaryResponse {
   targetType: ReportTargetType;
   targetId: string;
+  targetUserName?: string;
   targetName: string;
   count: number;
   latestReportAtUtc: string;

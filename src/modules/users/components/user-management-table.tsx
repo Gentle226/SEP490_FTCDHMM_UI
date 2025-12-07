@@ -297,7 +297,7 @@ export function UserManagementTable({ canCreate = false }: UserManagementTablePr
 
   const handleUserDetail = (user: User) => {
     setSelectedUser(user);
-    router.push(`/profile/${user.id}`);
+    router.push(`/profile/${user.userName}`);
   };
 
   const handleSearchChange = (value: string) => {

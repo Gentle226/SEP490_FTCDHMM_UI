@@ -31,15 +31,15 @@ export default function UserProfilePage() {
   const params = useParams();
   const router = useRouter();
   const { user: currentUser } = useAuth();
-  const userId = params.userId as string;
-  const isOwnProfile = currentUser?.id === userId;
+  const username = params.userId as string;
+  const isOwnProfile = currentUser?.userName === username;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [recipeCount, setRecipeCount] = useState(0);
 
   // Fetch profile data based on whether it's own profile or other's
   const { data: ownProfile, isLoading: isLoadingOwn } = useProfile();
   const { data: otherProfile, isLoading: isLoadingOther } = useUserProfile(
-    isOwnProfile ? '' : userId,
+    isOwnProfile ? '' : username,
   );
   const updateProfile = useUpdateProfile();
   const followUser = useFollowUser();
@@ -55,8 +55,8 @@ export default function UserProfilePage() {
   // Build profile user object from API data
   const profileUser = profileData
     ? {
-        id: userId,
-        username: `${profileData.firstName} ${profileData.lastName}`.trim(),
+        id: profileData.id,
+        username: profileData.userName,
         fullName: `${profileData.firstName} ${profileData.lastName}`.trim(),
         handle: profileData.userName
           ? `@${profileData.userName}`
@@ -76,7 +76,7 @@ export default function UserProfilePage() {
   const handleShare = async () => {
     if (!profileUser) return;
 
-    const profileUrl = `${window.location.origin}/profile/${userId}`;
+    const profileUrl = `${window.location.origin}/profile/${username}`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -96,16 +96,16 @@ export default function UserProfilePage() {
   };
 
   const handleFollow = () => {
-    if (!userId || !profileUser || !currentUser) {
+    if (!username || !profileUser || !currentUser) {
       return;
     }
 
     if (profileUser.isFollowing) {
       // Unfollow
-      unfollowUser.mutate(userId);
+      unfollowUser.mutate(profileUser.id);
     } else {
       // Follow
-      followUser.mutate(userId);
+      followUser.mutate(profileUser.id);
     }
   };
 
@@ -383,7 +383,7 @@ export default function UserProfilePage() {
                   </DropdownMenu> */}
                   {/* Report User Button */}
                   <ReportTrigger
-                    targetId={userId}
+                    targetId={profileUser.id}
                     targetType={ReportTargetType.USER}
                     targetName={profileUser.fullName}
                     variant="outline"

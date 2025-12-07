@@ -56,11 +56,11 @@ class ProfileService extends HttpClient {
   }
 
   /**
-   * Get user profile by ID (for viewing other users' profiles)
-   * GET /api/User/profile/:userId
+   * Get user profile by username (for viewing other users' profiles)
+   * GET /api/User/profile/:username
    */
-  public async getUserProfile(userId: string): Promise<ProfileDto> {
-    return this.get<ProfileDto>(`api/User/profile/${userId}`, {
+  public async getUserProfile(username: string): Promise<ProfileDto> {
+    return this.get<ProfileDto>(`api/User/profile/${username}`, {
       isPrivateRoute: true,
     });
   }

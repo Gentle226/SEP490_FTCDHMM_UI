@@ -32,6 +32,7 @@ export interface ReportDetailsModalProps {
   targetId: string | null;
   targetType: ReportTargetType | null;
   targetName?: string;
+  targetUserName?: string;
   onApprove?: (reportId: string) => Promise<void>;
   onReject?: (reportId: string) => void;
 }
@@ -207,6 +208,7 @@ export function ReportDetailsModal({
   targetId,
   targetType,
   targetName,
+  targetUserName,
   onApprove,
   onReject,
 }: ReportDetailsModalProps) {
@@ -217,7 +219,7 @@ export function ReportDetailsModal({
     if (!targetId || !targetType) return;
 
     if (targetType === ReportTargetType.USER) {
-      router.push(`/profile/${targetId}`);
+      router.push(`/profile/${targetUserName}`);
     } else {
       router.push(`/recipes/${targetId}`);
     }
