@@ -16,14 +16,14 @@ export function useProfile() {
 }
 
 /**
- * Hook to fetch a user's profile by ID
+ * Hook to fetch a user's profile by username
  */
-export function useUserProfile(userId: string) {
+export function useUserProfile(username: string) {
   return useQuery({
-    queryKey: ['profile', userId],
-    queryFn: () => profileService.getUserProfile(userId),
+    queryKey: ['profile', username],
+    queryFn: () => profileService.getUserProfile(username),
     staleTime: 1000 * 60 * 5, // 5 minutes
-    enabled: !!userId,
+    enabled: !!username,
   });
 }
 

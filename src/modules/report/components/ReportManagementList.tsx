@@ -370,7 +370,7 @@ export function ReportManagementList() {
   const handleNavigateToTarget = useCallback(
     (item: ReportSummaryResponse) => {
       if (item.targetType === ReportTargetType.USER) {
-        router.push(`/profile/${item.targetId}`);
+        router.push(`/profile/${item.targetUserName}`);
       } else {
         // For RECIPE, COMMENT, RATING - navigate to recipe details
         // Comments and Ratings are associated with recipes
@@ -532,6 +532,7 @@ export function ReportManagementList() {
         targetId={selectedTarget?.targetId ?? null}
         targetType={selectedTarget?.targetType ?? null}
         targetName={selectedTarget?.targetName}
+        targetUserName={selectedTarget?.targetUserName}
         onApprove={async (reportId) => {
           await approveReport.mutateAsync(reportId);
           toast.success('Đã duyệt báo cáo');

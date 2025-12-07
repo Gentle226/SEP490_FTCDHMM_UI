@@ -426,7 +426,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                   {recipe.taggedUser.map((user, index) => (
                     <span key={user.id}>
                       <button
-                        onClick={() => router.push(`/profile/${user.id}`)}
+                        onClick={() => router.push(`/profile/${user.userName}`)}
                         className="font-medium text-[#99b94a] hover:underline"
                       >
                         {`${user.firstName} ${user.lastName}`}
@@ -443,9 +443,9 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
           {(recipe.createdBy || recipe.author) && (
             <button
               onClick={() => {
-                const authorId = recipe.author?.id || recipe.createdBy?.id;
-                if (authorId) {
-                  router.push(`/profile/${authorId}`);
+                const authorUserName = recipe.author?.userName || recipe.createdBy?.userName;
+                if (authorUserName) {
+                  router.push(`/profile/${authorUserName}`);
                 }
               }}
               className="-mx-2 flex w-full cursor-pointer items-center gap-2 rounded-lg border-t px-2 py-2 text-left transition-all hover:bg-gray-50 sm:-mx-3 sm:gap-3 sm:px-3 sm:pt-4"

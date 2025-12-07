@@ -171,8 +171,8 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   };
 
   const handleProfileClick = () => {
-    if (comment.userId) {
-      router.push(`/profile/${comment.userId}`);
+    if (comment.userUserName) {
+      router.push(`/profile/${comment.userUserName}`);
     }
   };
 
@@ -294,8 +294,8 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                       <div key={mention.mentionedUserId} className="group relative inline-flex">
                         <button
                           onClick={() => {
-                            if (mention.mentionedUserId) {
-                              router.push(`/profile/${mention.mentionedUserId}`);
+                            if (mention.mentionedUserUserName) {
+                              router.push(`/profile/${mention.mentionedUserUserName}`);
                             }
                           }}
                           className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-[#99b94a] px-2 py-0.5 text-xs font-medium text-white transition-opacity hover:opacity-80"

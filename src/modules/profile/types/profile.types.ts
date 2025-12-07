@@ -122,6 +122,7 @@ export interface UserFollower {
   firstName: string;
   lastName: string;
   email: string;
+  userName: string;
   avatarUrl?: string | null;
   fullName?: string;
 }

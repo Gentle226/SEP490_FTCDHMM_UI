@@ -91,7 +91,7 @@ export default function EditProfilePage() {
       });
 
       // After successful update, redirect to profile
-      router.push(`/profile/${user?.id}`);
+      router.push(`/profile/${user?.userName}`);
     } catch (error) {
       console.error('Error updating profile:', error);
       // Error handling is done in the mutation
@@ -419,7 +419,7 @@ export default function EditProfilePage() {
                   type="button"
                   variant="outline"
                   className="h-9 text-xs sm:h-10 sm:text-sm"
-                  onClick={() => router.push(`/profile/${user.id}`)}
+                  onClick={() => router.push(`/profile/${user.userName}`)}
                   disabled={updateProfile.isPending}
                 >
                   Trở về
