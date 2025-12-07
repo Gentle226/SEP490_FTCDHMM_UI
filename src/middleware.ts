@@ -50,7 +50,9 @@ export async function middleware(request: NextRequest) {
       let user: User | null = null;
       try {
         if (userCookie) {
-          user = JSON.parse(userCookie) as User;
+          // Decode base64-encoded user cookie
+          const decodedUser = Buffer.from(userCookie, 'base64').toString('utf-8');
+          user = JSON.parse(decodedUser) as User;
         } else {
           console.warn('No user cookie found');
         }

@@ -7,6 +7,7 @@ export * from './components/protected-route';
 export * from './components/role-guard';
 export * from './contexts/auth.context';
 export * from './hooks/use-change-password';
+export * from './hooks/use-permissions';
 export * from './pages/login.page';
 export * from './pages/private.page';
 export * from './pages/register.page';

@@ -4,10 +4,8 @@ export async function POST(request: Request) {
   const res = (await request.json()) as LoginSuccessResponse;
   const { accessToken, user } = res.data;
 
-  const userString = JSON.stringify({
-    ...user,
-    ...(user.fullName && { fullName: encodeURIComponent(user.fullName) }),
-  });
+  // Encode user object as base64 to handle Vietnamese characters in permissions
+  const userString = Buffer.from(JSON.stringify(user)).toString('base64');
 
   if (!accessToken)
     return Response.json({ message: 'Access token not available.' }, { status: 400 });

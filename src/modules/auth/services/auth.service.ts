@@ -44,6 +44,18 @@ class AuthService extends HttpClient {
       return undefined;
     };
 
+    // Extract permissions array from token
+    const extractPermissions = (token: Record<string, unknown>): string[] => {
+      const permissions = token['Permissions'];
+      if (Array.isArray(permissions)) {
+        return permissions.map((p) => String(p));
+      }
+      if (typeof permissions === 'string') {
+        return [permissions];
+      }
+      return [];
+    };
+
     const user: User = {
       id:
         extractClaim(
@@ -100,6 +112,7 @@ class AuthService extends HttpClient {
         Boolean(extractClaim(decodedToken, 'emailVerified', 'email_verified', 'verified')) || false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      permissions: extractPermissions(decodedToken),
     };
 
     // Transform the response to match what the cookie API expects
@@ -183,6 +196,18 @@ class AuthService extends HttpClient {
       return undefined;
     };
 
+    // Extract permissions array from token
+    const extractPermissions = (token: Record<string, unknown>): string[] => {
+      const permissions = token['Permissions'];
+      if (Array.isArray(permissions)) {
+        return permissions.map((p) => String(p));
+      }
+      if (typeof permissions === 'string') {
+        return [permissions];
+      }
+      return [];
+    };
+
     const user: User = {
       id:
         extractClaim(
@@ -238,6 +263,7 @@ class AuthService extends HttpClient {
         Boolean(extractClaim(decodedToken, 'emailVerified', 'email_verified', 'verified')) || false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      permissions: extractPermissions(decodedToken),
     };
 
     // Transform the response to match what the cookie API expects

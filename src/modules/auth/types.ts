@@ -262,15 +262,64 @@ export interface User {
   permissions?: string[];
 }
 
-// Permission policies matching API
+// Permission policies matching API (Vietnamese format from backend)
 export const PermissionPolicies = {
-  USER_MANAGEMENT_CREATE: 'UserManagement:Create',
-  USER_MANAGEMENT_UPDATE: 'UserManagement:Update',
-  USER_MANAGEMENT_DELETE: 'UserManagement:Delete',
-  USER_MANAGEMENT_VIEW: 'UserManagement:View',
-  // Recipe Management Permissions
-  RECIPE_MANAGEMENT_VIEW: 'Recipe:ManagementView',
-  RECIPE_DELETE: 'Recipe:Delete',
-  RECIPE_LOCK: 'Recipe:Lock',
-  RECIPE_APPROVE: 'Recipe:Approve',
+  // User Management
+  USER_MANAGEMENT_VIEW: 'Quản lí người dùng:Xem',
+  USER_MANAGEMENT_UPDATE: 'Quản lí người dùng:Cập nhật',
+  USER_MANAGEMENT_DELETE: 'Quản lí người dùng:Xóa',
+  USER_MANAGEMENT_CREATE: 'Quản lí người dùng:Tạo',
+
+  // Ingredient Management
+  INGREDIENT_CREATE: 'Nguyên liệu:Tạo',
+  INGREDIENT_UPDATE: 'Nguyên liệu:Cập nhật',
+  INGREDIENT_DELETE: 'Nguyên liệu:Xóa',
+  INGREDIENT_MANAGER_VIEW: 'Nguyên liệu:Xem với quyền',
+
+  // Label Management
+  LABEL_DELETE: 'Nhãn món ăn:Xóa',
+  LABEL_CREATE: 'Nhãn món ăn:Tạo',
+  LABEL_UPDATE: 'Nhãn món ăn:Cập nhật',
+
+  // Ingredient Category
+  INGREDIENT_CATEGORY_CREATE: 'Nhóm nguyên liệu:Tạo',
+  INGREDIENT_CATEGORY_DELETE: 'Nhóm nguyên liệu:Xóa',
+
+  // Health Goal
+  HEALTH_GOAL_CREATE: 'Mục tiêu sức khỏe:Tạo',
+  HEALTH_GOAL_UPDATE: 'Mục tiêu sức khỏe:Cập nhật',
+  HEALTH_GOAL_DELETE: 'Mục tiêu sức khỏe:Xóa',
+
+  // Comment
+  COMMENT_CREATE: 'Bình luận:Tạo',
+  COMMENT_DELETE: 'Bình luận:Xóa',
+  COMMENT_UPDATE: 'Bình luận:Cập nhật',
+
+  // Rating
+  RATING_CREATE: 'Đánh giá:Tạo',
+  RATING_DELETE: 'Đánh giá:Xóa',
+  RATING_UPDATE: 'Đánh giá:Cập nhật',
+
+  // Recipe Management
+  RECIPE_MANAGEMENT_VIEW: 'Công thức:Xem với quyền',
+  RECIPE_DELETE: 'Công thức:Xóa',
+  RECIPE_LOCK: 'Công thức:Khóa',
+  RECIPE_APPROVE: 'Công thức:Xác nhận',
+
+  // Report Management
+  REPORT_VIEW: 'Báo cáo:Xem',
+  REPORT_APPROVE: 'Báo cáo:Xác nhận',
+  REPORT_REJECT: 'Báo cáo:Từ chối',
 } as const;
+
+// Helper function to check if user has permission
+export const hasPermission = (user: User | null, permission: string): boolean => {
+  if (!user || !user.permissions) return false;
+  return user.permissions.includes(permission);
+};
+
+// Helper function to check if user has any of the permissions
+export const hasAnyPermission = (user: User | null, permissions: string[]): boolean => {
+  if (!user || !user.permissions) return false;
+  return permissions.some((permission) => user.permissions?.includes(permission));
+};
