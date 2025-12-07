@@ -498,9 +498,21 @@ function SidebarMenuButton({
   tooltip?: string | React.ComponentProps<typeof TooltipContent>;
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot : 'button';
-  const { isMobile, state } = useSidebar();
+  const { isMobile, state, setOpen } = useSidebar();
 
-  const { popover, ...restProps } = props as Record<string, unknown>;
+  const { popover, onClick: originalOnClick, ...restProps } = props as Record<string, unknown>;
+
+  const handleClick = (e: React.MouseEvent<HTMLElement>) => {
+    // Expand sidebar when clicking icon in collapsed state (on desktop)
+    if (state === 'collapsed' && !isMobile) {
+      setOpen(true);
+      e.preventDefault();
+    }
+    // Call the original onClick handler if it exists
+    if (originalOnClick) {
+      (originalOnClick as React.MouseEventHandler)(e);
+    }
+  };
 
   const button = (
     <Comp
@@ -509,7 +521,8 @@ function SidebarMenuButton({
       data-size={size}
       data-active={isActive}
       className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-      {...(asChild ? restProps : props)}
+      onClick={handleClick}
+      {...(asChild ? restProps : { ...restProps })}
     />
   );
 

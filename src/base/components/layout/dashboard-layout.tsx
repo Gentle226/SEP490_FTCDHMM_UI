@@ -3,11 +3,15 @@
 import {
   ArrowLeft,
   BookMarked,
+  Boxes,
+  ChefHat,
+  ChevronRight,
   ClipboardList,
   ClockAlert,
   CookingPot,
   FileEdit,
   Goal,
+  HeartPulse,
   History,
   Home,
   KeyRound,
@@ -15,8 +19,11 @@ import {
   MessageSquareWarning,
   Salad,
   ScanSearch,
+  Settings,
+  SquareActivity,
   Tags,
   Users,
+  Warehouse,
   WheatOff,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -25,6 +32,11 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { Button } from '@/base/components/ui/button';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/base/components/ui/collapsible';
 import {
   Sidebar,
   SidebarContent,
@@ -35,6 +47,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarProvider,
   SidebarTrigger,
 } from '@/base/components/ui/sidebar';
@@ -84,109 +99,155 @@ export function DashboardLayout({
       icon: React.ComponentType<{ className?: string }>;
     }
 
-    const items: NavigationItem[] = [
-      {
-        title: 'Trang Chủ',
-        url: '/',
-        icon: Home,
-      },
-    ];
-
-    // Permission-based navigation items
-    const permissionBasedItems: Array<{
+    interface NavigationGroup {
       title: string;
-      url: string;
       icon: React.ComponentType<{ className?: string }>;
-      permissions?: string[];
-      requiresRole?: Role;
-    }> = [
-      {
-        title: 'Quản Lý Người Dùng',
-        url: '/admin/users',
-        icon: Users,
-        permissions: [PermissionPolicies.USER_MANAGEMENT_VIEW],
-      },
-      {
+      items: NavigationItem[];
+      isActive?: boolean;
+    }
+
+    type NavigationStructure = (NavigationItem | NavigationGroup)[];
+
+    const structure: NavigationStructure = [];
+
+    // Home - always visible
+    structure.push({
+      title: 'Trang Chủ',
+      url: '/',
+      icon: Home,
+    });
+
+    // Admin Group - only for users with admin permissions
+    const adminItems: NavigationItem[] = [];
+
+    if (user?.role === Role.ADMIN) {
+      adminItems.push({
         title: 'Quản Lý Phân Quyền',
         url: '/admin/permissions',
         icon: KeyRound,
-        // Only Admin role can access permission management
-        requiresRole: Role.ADMIN,
-      },
-      {
+      });
+    }
+
+    if (hasAnyPermission(user, [PermissionPolicies.USER_MANAGEMENT_VIEW])) {
+      adminItems.push({
+        title: 'Quản Lý Người Dùng',
+        url: '/admin/users',
+        icon: Users,
+      });
+    }
+
+    if (adminItems.length > 0) {
+      structure.push({
+        title: 'Quản Trị',
+        icon: Settings,
+        items: adminItems,
+      });
+    }
+
+    // Content Management Group
+    const contentItems: NavigationItem[] = [];
+
+    // if (hasAnyPermission(user, [PermissionPolicies.RECIPE_MANAGEMENT_VIEW])) {
+    //   contentItems.push({
+    //     title: 'Kiểm Duyệt Công Thức',
+    //     url: '/moderator/recipe',
+    //     icon: List,
+    //   });
+    // }
+
+    if (hasAnyPermission(user, [PermissionPolicies.RECIPE_MANAGEMENT_VIEW])) {
+      contentItems.push({
         title: 'Duyệt Công Thức',
         url: '/admin/pending-recipes',
         icon: ClockAlert,
-        permissions: [PermissionPolicies.RECIPE_APPROVE],
-      },
-      {
-        title: 'Quản Lý Mục Tiêu Sức Khỏe',
-        url: '/admin/health-goals',
-        icon: Goal,
-        permissions: [
-          PermissionPolicies.HEALTH_GOAL_CREATE,
-          PermissionPolicies.HEALTH_GOAL_UPDATE,
-          PermissionPolicies.HEALTH_GOAL_DELETE,
-        ],
-      },
-      {
+      });
+    }
+
+    if (hasAnyPermission(user, [PermissionPolicies.REPORT_VIEW])) {
+      contentItems.push({
         title: 'Quản Lý Báo Cáo',
         url: '/admin/reports',
         icon: MessageSquareWarning,
-        permissions: [PermissionPolicies.REPORT_VIEW],
-      },
-      {
-        title: 'Quản Lý Công Thức',
-        url: '/moderator/recipe',
+      });
+    }
+
+    if (contentItems.length > 0) {
+      structure.push({
+        title: 'Quản Lý Nội Dung',
         icon: List,
-        permissions: [PermissionPolicies.RECIPE_MANAGEMENT_VIEW],
-      },
-      {
-        title: 'Quản Lý Nguyên Liệu',
+        items: contentItems,
+      });
+    }
+
+    // Data Management Group
+    const dataItems: NavigationItem[] = [];
+
+    if (hasAnyPermission(user, [PermissionPolicies.INGREDIENT_MANAGER_VIEW])) {
+      dataItems.push({
+        title: 'Nguyên Liệu',
         url: '/moderator/ingredient',
         icon: Salad,
-        permissions: [PermissionPolicies.INGREDIENT_MANAGER_VIEW],
-      },
-      {
-        title: 'Quản Lý Nhóm Nguyên Liệu',
+      });
+    }
+
+    if (hasAnyPermission(user, [PermissionPolicies.INGREDIENT_CATEGORY_CREATE])) {
+      dataItems.push({
+        title: 'Nhóm Nguyên Liệu',
         url: '/moderator/category',
-        icon: ClipboardList,
-        permissions: [PermissionPolicies.INGREDIENT_CATEGORY_CREATE],
-      },
-      {
-        title: 'Quản Lý Nhãn Món Ăn',
+        icon: Boxes,
+      });
+    }
+
+    if (
+      hasAnyPermission(user, [
+        PermissionPolicies.LABEL_CREATE,
+        PermissionPolicies.LABEL_UPDATE,
+        PermissionPolicies.LABEL_DELETE,
+      ])
+    ) {
+      dataItems.push({
+        title: 'Nhãn Món Ăn',
         url: '/moderator/label',
         icon: Tags,
-        permissions: [
-          PermissionPolicies.LABEL_CREATE,
-          PermissionPolicies.LABEL_UPDATE,
-          PermissionPolicies.LABEL_DELETE,
-        ],
-      },
-    ];
+      });
+    }
 
-    // Filter permission-based items
-    permissionBasedItems.forEach((item) => {
-      if (item.requiresRole) {
-        // Check role
-        if (user?.role === item.requiresRole) {
-          items.push({ title: item.title, url: item.url, icon: item.icon });
-        }
-      } else if (item.permissions) {
-        // Check if user has any of the required permissions
-        if (hasAnyPermission(user, item.permissions)) {
-          items.push({ title: item.title, url: item.url, icon: item.icon });
-        }
-      }
-    });
+    if (
+      hasAnyPermission(user, [
+        PermissionPolicies.HEALTH_GOAL_CREATE,
+        PermissionPolicies.HEALTH_GOAL_UPDATE,
+        PermissionPolicies.HEALTH_GOAL_DELETE,
+      ])
+    ) {
+      dataItems.push({
+        title: 'Mục Tiêu Sức Khỏe',
+        url: '/admin/health-goals',
+        icon: Goal,
+      });
+    }
 
-    // Customer items - always show for Customer role without permissions check
-    if (user?.role === Role.CUSTOMER || !user?.permissions || user.permissions.length === 0) {
-      items.push(
+    if (dataItems.length > 0) {
+      structure.push({
+        title: 'Quản Lý Dữ Liệu',
+        icon: ClipboardList,
+        items: dataItems,
+      });
+    }
+
+    // Personal Settings Group - available to all users
+    structure.push({
+      title: 'Sức Khỏe',
+      icon: HeartPulse,
+      items: [
         {
           title: 'Mục Tiêu Sức Khỏe',
           url: '/profile/health-goals',
           icon: Goal,
+        },
+        {
+          title: 'Chỉ Số Sức Khỏe',
+          url: '/profile/health-metrics',
+          icon: SquareActivity,
         },
         {
           title: 'Hạn Chế Thành Phần',
@@ -194,9 +255,22 @@ export function DashboardLayout({
           icon: WheatOff,
         },
         {
+          title: 'Kho Nguyên Liệu',
+          url: '/ingredient',
+          icon: Warehouse,
+        },
+      ],
+    });
+
+    // My Recipes Group - available to all users
+    structure.push({
+      title: 'Công Thức',
+      icon: CookingPot,
+      items: [
+        {
           title: 'Công Thức Của Tôi',
           url: '/myrecipe',
-          icon: CookingPot,
+          icon: ChefHat,
         },
         {
           title: 'Bản Nháp Của Tôi',
@@ -218,10 +292,10 @@ export function DashboardLayout({
           url: '/history',
           icon: History,
         },
-      );
-    }
+      ],
+    });
 
-    return items;
+    return structure;
   };
 
   const navigationItems = getNavigationItems();
@@ -255,11 +329,64 @@ export function DashboardLayout({
           </div>
         </SidebarHeader>
 
-        <SidebarContent>
+        <SidebarContent className="scrollbar-hide">
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
                 {navigationItems.map((item) => {
+                  // Check if item is a group
+                  if ('items' in item) {
+                    const group = item;
+                    const hasActiveChild = group.items.some(
+                      (child) =>
+                        pathname === child.url ||
+                        (child.url !== '/' && pathname.startsWith(child.url)),
+                    );
+
+                    return (
+                      <Collapsible
+                        key={group.title}
+                        asChild
+                        defaultOpen={hasActiveChild}
+                        className="group/collapsible"
+                      >
+                        <SidebarMenuItem>
+                          <CollapsibleTrigger asChild>
+                            <SidebarMenuButton tooltip={group.title}>
+                              <group.icon className="h-4 w-4" />
+                              <span>{group.title}</span>
+                              <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                            </SidebarMenuButton>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <SidebarMenuSub>
+                              {group.items.map((subItem) => {
+                                const isActive =
+                                  pathname === subItem.url ||
+                                  (subItem.url !== '/' && pathname.startsWith(subItem.url));
+                                return (
+                                  <SidebarMenuSubItem key={subItem.title}>
+                                    <SidebarMenuSubButton
+                                      asChild
+                                      isActive={isActive}
+                                      className={isActive ? 'sidebar-item-active' : ''}
+                                    >
+                                      <Link href={subItem.url}>
+                                        <subItem.icon className="h-4 w-4" />
+                                        <span>{subItem.title}</span>
+                                      </Link>
+                                    </SidebarMenuSubButton>
+                                  </SidebarMenuSubItem>
+                                );
+                              })}
+                            </SidebarMenuSub>
+                          </CollapsibleContent>
+                        </SidebarMenuItem>
+                      </Collapsible>
+                    );
+                  }
+
+                  // Regular item
                   const isActive =
                     pathname === item.url || (item.url !== '/' && pathname.startsWith(item.url));
                   return (
