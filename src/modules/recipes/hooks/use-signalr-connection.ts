@@ -44,7 +44,7 @@ export const useSignalRConnection = (recipeId: string | null) => {
         }
 
         // Tạo connection mới
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+        const apiBaseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, ''); // Remove trailing slashes
         const hubUrl = `${apiBaseUrl}/hubs/comments?recipeId=${recipeId}`;
 
         const connection = new HubConnectionBuilder()

@@ -46,7 +46,7 @@ export const useNotificationSignalR = (userId: string | null) => {
         }
 
         // Tạo kết nối mới - phải truyền userId để server thêm vào group
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+        const apiBaseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, ''); // Remove trailing slashes
         const hubUrl = `${apiBaseUrl}/hubs/notification?userId=${userId}`;
 
         const connection = new HubConnectionBuilder()
