@@ -134,73 +134,15 @@ export default function HomePage() {
     // Debounce search with 500ms delay
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        // Step 1: Parse multiple ingredients from input (split by comma or space)
-        const keywords = value
-          .split(/[,\s]+/)
-          .map((k) => k.trim())
-          .filter((k) => k.length > 0);
-
-        // Step 2: Search recipes by keyword first (always)
-        const keywordRecipeResponse = await recipeService.searchRecipes({
+        // Search recipes by name only
+        const response = await recipeService.searchRecipes({
           keyword: value,
           pageNumber: 1,
-          pageSize: 10,
+          pageSize: 5,
         });
-        const keywordRecipes = keywordRecipeResponse.items || [];
 
-        // Step 3: Search for ALL matching ingredients for each keyword
-        const ingredientSearchPromises = keywords.map((keyword) =>
-          ingredientPublicService.getIngredients({
-            keyword,
-            pageNumber: 1,
-            pageSize: 10,
-          }),
-        );
-        const ingredientResponses = await Promise.all(ingredientSearchPromises);
-
-        // Flatten all ingredient results and remove duplicates
-        const allIngredients = ingredientResponses.flatMap((res) => res.items || []);
-        const uniqueIngredientsMap = new Map(allIngredients.map((item) => [item.id, item]));
-        const uniqueIngredients = Array.from(uniqueIngredientsMap.values());
-
-        // Step 4: Search recipes by ALL found ingredient IDs
-        let ingredientRecipes: typeof keywordRecipes = [];
-        if (uniqueIngredients.length > 0) {
-          const ingredientIds = uniqueIngredients.map((item) => item.id);
-          const response = await recipeService.searchRecipes({
-            includeIngredientIds: ingredientIds,
-            pageNumber: 1,
-            pageSize: 50, // Get more to sort by match count
-          });
-          ingredientRecipes = response.items || [];
-
-          // Step 5: Sort recipes by number of matching ingredients (most matches first)
-          // This requires checking which ingredients each recipe contains
-          // Since API doesn't return this info, we'll just show all results
-          // Note: Backend should ideally return match count or ingredient overlap
-          console.warn(
-            'Multi-ingredient search:',
-            keywords.length,
-            'keywords,',
-            uniqueIngredients.length,
-            'ingredients found,',
-            ingredientRecipes.length,
-            'recipes',
-          );
-        }
-
-        // Step 6: Combine results: keyword recipes first, then ingredient recipes (avoiding duplicates)
-        const keywordRecipeIds = new Set(keywordRecipes.map((r) => r.id));
-        const uniqueIngredientRecipes = ingredientRecipes.filter(
-          (r) => !keywordRecipeIds.has(r.id),
-        );
-        const combinedRecipes = [...keywordRecipes, ...uniqueIngredientRecipes];
-
-        // Limit to 5 results for dropdown display
-        setSearchResults(combinedRecipes.slice(0, 5));
-        setIngredientSearchResults(
-          uniqueIngredients.slice(0, 5).map((item) => ({ id: item.id, name: item.name })),
-        );
+        setSearchResults(response.items || []);
+        setIngredientSearchResults([]);
       } catch (error) {
         console.error('Error searching:', error);
         setSearchResults([]);
@@ -322,7 +264,7 @@ export default function HomePage() {
               <form onSubmit={handleSearch} className="relative">
                 <Input
                   type="text"
-                  placeholder="Tìm món ăn hoặc nguyên liệu"
+                  placeholder="Nhập món ăn hoặc để trống để truy cập bộ lọc công thức"
                   value={searchQuery}
                   onChange={(e) => handleSearchInput(e.target.value)}
                   className="h-12 border-2 border-gray-200 pr-12 text-lg focus:border-[#99b94a]"
@@ -350,9 +292,9 @@ export default function HomePage() {
                         {/* Recipes Section - Show First */}
                         {searchResults.length > 0 && (
                           <div className="border-b border-gray-200">
-                            <div className="bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-600 uppercase">
+                            {/* <div className="bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-600 uppercase">
                               Công thức
-                            </div>
+                            </div> */}
                             {searchResults.map((recipe, index) => (
                               <button
                                 key={recipe.id || `recipe-${index}`}
