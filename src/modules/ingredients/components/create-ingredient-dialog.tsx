@@ -274,6 +274,43 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
       }
     }
 
+    // Validate all required macronutrients are present
+    const requiredMacroKeywords = {
+      protein: ['protein', 'chất đạm'],
+      fat: ['fat', 'lipid', 'tổng chất béo', 'chất béo'],
+      carbohydrate: ['carbohydrate', 'tinh bột'],
+    };
+
+    const missingMacros: string[] = [];
+
+    Object.entries(requiredMacroKeywords).forEach(([_, keywords]) => {
+      const exists = nutrientRows.some((row) => {
+        if (!row.nutrientId) return false;
+        const nutrientInfo = nutrients.find((n) => n.id === row.nutrientId);
+        return (
+          nutrientInfo &&
+          keywords.some((keyword) => nutrientInfo.vietnameseName.toLowerCase().includes(keyword))
+        );
+      });
+
+      if (!exists) {
+        // Find the macro name to display
+        const macroNutrient = requiredNutrients.find((rn) =>
+          keywords.some((keyword) => rn.vietnameseName.toLowerCase().includes(keyword)),
+        );
+        if (macroNutrient) {
+          missingMacros.push(macroNutrient.vietnameseName);
+        }
+      }
+    });
+
+    if (missingMacros.length > 0) {
+      toast.error(
+        `Thiếu các chất dinh dưỡng bắt buộc: ${missingMacros.join(', ')}. Vui lòng thêm các thành phần này.`,
+      );
+      return;
+    }
+
     // Validate all required nutrients are filled
     const filledNutrientIds = nutrientRows
       .filter((row) => row.nutrientId)

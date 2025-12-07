@@ -101,7 +101,7 @@ export function EditIngredientDialog({
 
   // Reset form when dialog opens or detailed ingredient loads
   useEffect(() => {
-    if (open && detailedIngredient && nutrients.length > 0) {
+    if (open && detailedIngredient && nutrients.length > 0 && requiredNutrients.length > 0) {
       console.warn('Loading ingredient:', detailedIngredient);
 
       setName(detailedIngredient.name);
@@ -125,12 +125,44 @@ export function EditIngredientDialog({
           };
         }) || [];
 
+      // Auto-populate missing required macronutrients with value 0
+      // Check for protein, fat/lipid, and carbohydrate
+      const macronutrientKeywords = {
+        protein: ['protein', 'chất đạm'],
+        fat: ['fat', 'lipid', 'tổng chất béo', 'chất béo'],
+        carbohydrate: ['carbohydrate', 'tinh bột'],
+      };
+
+      // For each macronutrient type, check if it exists
+      Object.entries(macronutrientKeywords).forEach(([_, keywords]) => {
+        const exists = allNutrientRows.some((n) =>
+          keywords.some((keyword) => (n.vietnameseName || '').toLowerCase().includes(keyword)),
+        );
+
+        if (!exists) {
+          // Find the nutrient in the required nutrients list
+          const requiredNutrient = requiredNutrients.find((rn) =>
+            keywords.some((keyword) => rn.vietnameseName.toLowerCase().includes(keyword)),
+          );
+
+          if (requiredNutrient) {
+            allNutrientRows.unshift({
+              nutrientId: requiredNutrient.id,
+              vietnameseName: requiredNutrient.vietnameseName,
+              value: 0,
+            });
+          }
+        }
+      });
+
       // Separate macronutrients and others
       const macroKeywords = [
         'protein',
         'chất đạm',
         'fat',
+        'lipid',
         'tổng chất béo',
+        'chất béo',
         'carbohydrate',
         'tinh bột',
       ];
@@ -150,7 +182,7 @@ export function EditIngredientDialog({
       console.warn('Loaded nutrients:', sortedNutrientRows);
       setNutrientRows(sortedNutrientRows);
     }
-  }, [open, ingredient?.id, detailedIngredient, nutrients]);
+  }, [open, ingredient?.id, detailedIngredient, nutrients, requiredNutrients]);
 
   // Reset form when dialog closes
   useEffect(() => {
@@ -315,6 +347,43 @@ export function EditIngredientDialog({
           return;
         }
       }
+    }
+
+    // Validate all required macronutrients are present
+    const requiredMacroKeywords = {
+      protein: ['protein', 'chất đạm'],
+      fat: ['fat', 'lipid', 'tổng chất béo', 'chất béo'],
+      carbohydrate: ['carbohydrate', 'tinh bột'],
+    };
+
+    const missingMacros: string[] = [];
+
+    Object.entries(requiredMacroKeywords).forEach(([_, keywords]) => {
+      const exists = nutrientRows.some((row) => {
+        if (!row.nutrientId) return false;
+        const nutrientInfo = nutrients.find((n) => n.id === row.nutrientId);
+        return (
+          nutrientInfo &&
+          keywords.some((keyword) => nutrientInfo.vietnameseName.toLowerCase().includes(keyword))
+        );
+      });
+
+      if (!exists) {
+        // Find the macro name to display
+        const macroNutrient = requiredNutrients.find((rn) =>
+          keywords.some((keyword) => rn.vietnameseName.toLowerCase().includes(keyword)),
+        );
+        if (macroNutrient) {
+          missingMacros.push(macroNutrient.vietnameseName);
+        }
+      }
+    });
+
+    if (missingMacros.length > 0) {
+      toast.error(
+        `Thiếu các chất dinh dưỡng bắt buộc: ${missingMacros.join(', ')}. Vui lòng thêm các thành phần này.`,
+      );
+      return;
     }
 
     const updateData: {

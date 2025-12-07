@@ -22,6 +22,7 @@ import {
   Settings,
   SquareActivity,
   Tags,
+  Target,
   Users,
   Warehouse,
   WheatOff,
@@ -220,9 +221,9 @@ export function DashboardLayout({
       ])
     ) {
       dataItems.push({
-        title: 'Mục Tiêu Sức Khỏe',
+        title: 'Quản Lý Mục Tiêu',
         url: '/admin/health-goals',
-        icon: Goal,
+        icon: Target,
       });
     }
 
