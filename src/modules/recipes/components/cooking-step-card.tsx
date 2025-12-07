@@ -105,17 +105,17 @@ export function CookingStepCard({
               <Textarea
                 placeholder="Ướp cá hồi với mật ong, dầu oliu và tiêu 15 phút."
                 value={step.instruction}
-                onChange={(e) => onUpdateInstruction(e.target.value.slice(0, 1000))}
+                onChange={(e) => onUpdateInstruction(e.target.value.slice(0, 2000))}
                 onFocus={() => setFocusedStepIndex(index)}
                 onBlur={() => setFocusedStepIndex(null)}
-                maxLength={1000}
+                maxLength={2000}
                 rows={2}
                 className="w-full text-sm break-words sm:text-base"
               />
               <p
                 className={`text-right text-xs transition-opacity ${focusedStepIndex === index ? 'text-gray-500 opacity-100' : 'text-gray-300 opacity-0'}`}
               >
-                {step.instruction.length}/1000
+                {step.instruction.length}/2000
               </p>
             </div>
 

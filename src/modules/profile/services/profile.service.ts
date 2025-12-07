@@ -29,8 +29,12 @@ class ProfileService extends HttpClient {
     formData.append('gender', data.gender);
 
     if (data.dateOfBirth) {
-      // Format date as ISO string (yyyy-MM-dd)
-      const dateString = data.dateOfBirth.toISOString().split('T')[0];
+      // Format date as yyyy-MM-dd in local timezone (not UTC)
+      // This prevents timezone offset issues that cause dates to shift
+      const year = data.dateOfBirth.getFullYear();
+      const month = String(data.dateOfBirth.getMonth() + 1).padStart(2, '0');
+      const day = String(data.dateOfBirth.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
       formData.append('dateOfBirth', dateString);
     }
     if (data.avatarUrl) {

@@ -22,6 +22,7 @@ export interface IngredientDetailsResponse {
   id: string;
   name: string;
   description?: string;
+  calories?: number;
   imageUrl: string;
   lastUpdatedUtc: string;
   isNew: boolean;
@@ -93,6 +94,15 @@ class IngredientPublicService extends HttpClient {
       console.warn('Error fetching ingredient details:', error);
       return [];
     }
+  }
+
+  /**
+   * Get all ingredient categories
+   */
+  public async getCategories() {
+    return await this.get<Array<{ id: string; name: string }>>('api/IngredientCategory', {
+      isPrivateRoute: false,
+    });
   }
 }
 

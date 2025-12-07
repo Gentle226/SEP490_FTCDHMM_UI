@@ -194,7 +194,10 @@ export default function UserProfilePage() {
               <p className="text-muted-foreground mt-2 text-sm sm:text-base">
                 Hồ sơ người dùng không tồn tại hoặc đã bị xóa.
               </p>
-              <Button className="mt-4 bg-[#99b94a]" onClick={() => router.push('/')}>
+              <Button
+                className="mt-4 bg-[#99b94a] hover:bg-[#88a43a]"
+                onClick={() => router.push('/')}
+              >
                 Quay lại trang chủ
               </Button>
             </div>

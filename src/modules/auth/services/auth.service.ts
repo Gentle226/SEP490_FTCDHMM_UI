@@ -44,6 +44,18 @@ class AuthService extends HttpClient {
       return undefined;
     };
 
+    // Extract permissions array from token
+    const extractPermissions = (token: Record<string, unknown>): string[] => {
+      const permissions = token['Permissions'];
+      if (Array.isArray(permissions)) {
+        return permissions.map((p) => String(p));
+      }
+      if (typeof permissions === 'string') {
+        return [permissions];
+      }
+      return [];
+    };
+
     const user: User = {
       id:
         extractClaim(
@@ -100,14 +112,13 @@ class AuthService extends HttpClient {
         Boolean(extractClaim(decodedToken, 'emailVerified', 'email_verified', 'verified')) || false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      permissions: extractPermissions(decodedToken),
     };
-
 
     // Transform the response to match what the cookie API expects
     const loginResponse: LoginSuccessResponse = {
       data: {
         accessToken: res.token,
-        refreshToken: res.token, // API doesn't have separate refresh tokens
         user,
       },
     };
@@ -147,8 +158,8 @@ class AuthService extends HttpClient {
     return this.post<{ token: string }>(`api/auth/verify-email-otp`, payload);
   }
 
-  public resendOtp({ purpose = 'confirm', ...payload }: ResendOtpSchema) {
-    return this.post<unknown>(`api/auth/resend-otp?purpose=${purpose}`, payload);
+  public resendOtp(payload: ResendOtpSchema) {
+    return this.post<unknown>(`api/auth/resend-otp`, payload);
   }
 
   public forgotPassword(payload: ForgotPasswordSchema) {
@@ -171,7 +182,6 @@ class AuthService extends HttpClient {
     // Decode JWT to get user info
     const decodedToken = decodeJwt(res.token);
 
-
     // Extract user data with flexible claim mapping
     const extractClaim = (
       token: Record<string, unknown>,
@@ -184,6 +194,18 @@ class AuthService extends HttpClient {
         }
       }
       return undefined;
+    };
+
+    // Extract permissions array from token
+    const extractPermissions = (token: Record<string, unknown>): string[] => {
+      const permissions = token['Permissions'];
+      if (Array.isArray(permissions)) {
+        return permissions.map((p) => String(p));
+      }
+      if (typeof permissions === 'string') {
+        return [permissions];
+      }
+      return [];
     };
 
     const user: User = {
@@ -241,13 +263,13 @@ class AuthService extends HttpClient {
         Boolean(extractClaim(decodedToken, 'emailVerified', 'email_verified', 'verified')) || false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      permissions: extractPermissions(decodedToken),
     };
 
     // Transform the response to match what the cookie API expects
     const loginResponse: LoginSuccessResponse = {
       data: {
         accessToken: res.token,
-        refreshToken: res.token,
         user,
       },
     };

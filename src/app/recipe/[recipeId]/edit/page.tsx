@@ -68,7 +68,7 @@ export default function EditRecipePage() {
             <p className="text-lg text-red-500">{error || 'Không tìm thấy công thức'}</p>
             <button
               onClick={() => router.back()}
-              className="mt-4 text-sm text-blue-500 hover:underline"
+              className="mt-4 rounded-md px-3 py-2 text-sm text-[#99b94a] hover:bg-[#88a43a]/10 focus:ring-2 focus:ring-[#99b94a] focus:ring-offset-2 focus:outline-none"
             >
               Quay lại
             </button>

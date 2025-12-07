@@ -241,14 +241,14 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 value={editContent}
                 onChange={handleTextareaChange}
                 onKeyDown={handleKeyDown}
-                maxLength={2048}
+                maxLength={1024}
                 rows={1}
                 className="scrollbar-hide w-full resize-none rounded-lg border border-[#99b94a] bg-white p-3 text-sm font-normal text-gray-900 placeholder-gray-500 transition-colors focus:border-[#99b94a] focus:ring-1 focus:ring-[#99b94a] focus:outline-none"
                 placeholder="Chỉnh sửa bình luận..."
                 disabled={isSavingEdit}
               />
               <div className="flex items-center justify-between px-1">
-                <span className="text-xs text-gray-500">{editContent.length}/2048</span>
+                <span className="text-xs text-gray-500">{editContent.length}/1024</span>
                 <span className="text-xs text-gray-400">Ctrl+Enter để lưu, Esc để hủy</span>
               </div>
               <div className="flex justify-end gap-2 pt-2">

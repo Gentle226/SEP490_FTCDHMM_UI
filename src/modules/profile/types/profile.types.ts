@@ -58,15 +58,20 @@ export const updateProfileSchema = z.object({
       },
     ),
   gender: z.string().min(1, 'Vui lòng chọn giới tính'),
-  dateOfBirth: z.date().refine(
-    (date) => {
-      const age = calculateAge(date);
-      return age >= 1 && age <= 120;
-    },
-    {
-      message: 'Tuổi bắt buộc: từ 1 - 120 tuổi',
-    },
-  ),
+  dateOfBirth: z
+    .date({
+      required_error: 'Vui lòng chọn ngày sinh',
+      invalid_type_error: 'Vui lòng chọn ngày sinh hợp lệ',
+    })
+    .refine(
+      (date) => {
+        const age = calculateAge(date);
+        return age >= 1 && age <= 120;
+      },
+      {
+        message: 'Tuổi bắt buộc: từ 1 - 120 tuổi',
+      },
+    ),
   avatarUrl: z
     .instanceof(File)
     .optional()

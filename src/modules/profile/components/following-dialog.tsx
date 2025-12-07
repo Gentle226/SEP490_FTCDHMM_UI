@@ -138,9 +138,6 @@ export function FollowingDialog({ open, onOpenChange }: FollowingDialogProps) {
                         `${followingUser.firstName} ${followingUser.lastName}`.trim() ||
                         'Người dùng'}
                     </p>
-                    <p className="text-muted-foreground truncate text-xs sm:text-sm">
-                      {followingUser.email}
-                    </p>
                   </div>
                 </Link>
                 <Button

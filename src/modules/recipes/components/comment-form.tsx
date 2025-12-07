@@ -288,7 +288,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
                 : 'Viết bình luận của bạn... (gõ @ để đề cập ai đó)'
             }
             disabled={submitting}
-            maxLength={2048}
+            maxLength={1024}
             onKeyDown={(e) => {
               // Handle dropdown navigation first
               handleKeyDownInDropdown(e);

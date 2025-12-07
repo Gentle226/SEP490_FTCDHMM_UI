@@ -21,9 +21,15 @@ export async function GET() {
       return Response.json({ user: null }, { status: 200 });
     }
 
-    // Parse and return user data
-    const user = JSON.parse(userCookie);
-    return Response.json({ user }, { status: 200 });
+    // Decode base64 user cookie and parse user data
+    try {
+      const decodedUser = Buffer.from(userCookie, 'base64').toString('utf-8');
+      const user = JSON.parse(decodedUser);
+      return Response.json({ user }, { status: 200 });
+    } catch (parseError) {
+      console.error('Error parsing user cookie:', parseError);
+      return Response.json({ user: null }, { status: 200 });
+    }
   } catch (error) {
     console.error('Error getting user:', error);
     return Response.json({ user: null }, { status: 200 });

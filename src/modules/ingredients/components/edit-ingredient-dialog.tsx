@@ -103,7 +103,7 @@ export function EditIngredientDialog({
 
   // Reset form when dialog opens or detailed ingredient loads
   useEffect(() => {
-    if (open && detailedIngredient) {
+    if (open && detailedIngredient && nutrients.length > 0) {
       console.warn('Loading ingredient:', detailedIngredient);
 
       setName(detailedIngredient.name);
@@ -112,15 +112,22 @@ export function EditIngredientDialog({
       setImagePreview(detailedIngredient.image || null);
       setImageFile(null);
 
-      // Load nutrients - prioritize macronutrients
+      // Load nutrients - match API response nutrients with the nutrients list by vietnameseName
       const allNutrientRows =
-        detailedIngredient.nutrients?.map((n) => ({
-          nutrientId: n.id,
-          vietnameseName: n.vietnameseName,
-          min: n.min,
-          max: n.max,
-          median: n.median,
-        })) || [];
+        detailedIngredient.nutrients?.map((n) => {
+          // Find the matching nutrient by vietnameseName to get the nutrient ID
+          const matchedNutrient = nutrients.find(
+            (nutrient) => nutrient.vietnameseName === n.vietnameseName,
+          );
+
+          return {
+            nutrientId: matchedNutrient?.id || '', // Use matched nutrient ID or empty string
+            vietnameseName: n.vietnameseName,
+            min: n.min,
+            max: n.max,
+            median: n.median,
+          };
+        }) || [];
 
       // Separate macronutrients and others
       const macroKeywords = [
@@ -147,7 +154,7 @@ export function EditIngredientDialog({
       console.warn('Loaded nutrients:', sortedNutrientRows);
       setNutrientRows(sortedNutrientRows);
     }
-  }, [open, ingredient?.id, detailedIngredient]);
+  }, [open, ingredient?.id, detailedIngredient, nutrients]);
 
   // Reset form when dialog closes
   useEffect(() => {
@@ -268,7 +275,22 @@ export function EditIngredientDialog({
     if (field === 'nutrientId') {
       updatedRows[index][field] = value as string;
     } else {
-      updatedRows[index][field] = value === '' ? undefined : Number(value);
+      if (value === '') {
+        updatedRows[index][field] = undefined;
+      } else {
+        const numValue = Number(value);
+        // Validate nutrient values: max 9999999.999 (decimal precision constraint)
+        if (numValue > 9999999.999) {
+          toast.error('Giá trị không được vượt quá 9999999.999');
+          return;
+        }
+        // Validate non-negative values
+        if (numValue < 0) {
+          toast.error('Giá trị không được âm');
+          return;
+        }
+        updatedRows[index][field] = numValue;
+      }
     }
     setNutrientRows(updatedRows);
   };
@@ -430,7 +452,7 @@ export function EditIngredientDialog({
           <DialogDescription>Cập nhật thông tin nguyên liệu</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="min-w-0 space-y-5" noValidate>
           {/* Name (readonly) */}
           <div className="space-y-2">
             <Label htmlFor="name">

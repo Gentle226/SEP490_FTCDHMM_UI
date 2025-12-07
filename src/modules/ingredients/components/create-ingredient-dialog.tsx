@@ -214,7 +214,22 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
     if (field === 'nutrientId') {
       updatedRows[index][field] = value as string;
     } else {
-      updatedRows[index][field] = value === '' ? undefined : Number(value);
+      if (value === '') {
+        updatedRows[index][field] = undefined;
+      } else {
+        const numValue = Number(value);
+        // Validate nutrient values: max 9999999.999 (decimal precision constraint)
+        if (numValue > 9999999.999) {
+          toast.error('Giá trị không được vượt quá 9999999.999');
+          return;
+        }
+        // Validate non-negative values
+        if (numValue < 0) {
+          toast.error('Giá trị không được âm');
+          return;
+        }
+        updatedRows[index][field] = numValue;
+      }
     }
     setNutrientRows(updatedRows);
   };
@@ -389,7 +404,7 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
           <DialogDescription>Nhập thông tin nguyên liệu mới</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="min-w-0 space-y-5" noValidate>
           {/* Name */}
           <div className="space-y-2">
             <Label htmlFor="name">
@@ -399,14 +414,14 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
               id="name"
               value={name}
               onChange={(e) => {
-                setName(e.target.value.slice(0, 255));
+                setName(e.target.value.slice(0, 100));
                 handleInputChange();
               }}
               placeholder="Nhập tên nguyên liệu..."
-              maxLength={255}
+              maxLength={100}
               required
             />
-            <p className="text-xs text-gray-500">{name.length}/255</p>
+            <p className="text-xs text-gray-500">{name.length}/100</p>
           </div>
 
           {/* Category (multi-select with tags) */}

@@ -39,7 +39,7 @@ import {
   SidebarTrigger,
 } from '@/base/components/ui/sidebar';
 import { useSidebarStateFromCookie } from '@/base/hooks/use-sidebar-cookie';
-import { Role, useAuth } from '@/modules/auth';
+import { PermissionPolicies, Role, hasAnyPermission, useAuth } from '@/modules/auth';
 import { authService } from '@/modules/auth/services/auth.service';
 import { IngredientDetectionDialog } from '@/modules/ingredients/components/ingredient-detection-dialog';
 import { NotificationBell } from '@/modules/notification';
@@ -76,9 +76,15 @@ export function DashboardLayout({
     }
   };
 
-  // Define navigation items based on user role
+  // Define navigation items based on user permissions
   const getNavigationItems = () => {
-    const commonItems = [
+    interface NavigationItem {
+      title: string;
+      url: string;
+      icon: React.ComponentType<{ className?: string }>;
+    }
+
+    const items: NavigationItem[] = [
       {
         title: 'Trang Chủ',
         url: '/',
@@ -86,107 +92,136 @@ export function DashboardLayout({
       },
     ];
 
-    if (user?.role === Role.ADMIN) {
-      return [
-        ...commonItems,
+    // Permission-based navigation items
+    const permissionBasedItems: Array<{
+      title: string;
+      url: string;
+      icon: React.ComponentType<{ className?: string }>;
+      permissions?: string[];
+      requiresRole?: Role;
+    }> = [
+      {
+        title: 'Quản Lý Người Dùng',
+        url: '/admin/users',
+        icon: Users,
+        permissions: [PermissionPolicies.USER_MANAGEMENT_VIEW],
+      },
+      {
+        title: 'Quản Lý Phân Quyền',
+        url: '/admin/permissions',
+        icon: KeyRound,
+        // Only Admin role can access permission management
+        requiresRole: Role.ADMIN,
+      },
+      {
+        title: 'Duyệt Công Thức',
+        url: '/admin/pending-recipes',
+        icon: ClockAlert,
+        permissions: [PermissionPolicies.RECIPE_APPROVE],
+      },
+      {
+        title: 'Quản Lý Mục Tiêu Sức Khỏe',
+        url: '/admin/health-goals',
+        icon: Goal,
+        permissions: [
+          PermissionPolicies.HEALTH_GOAL_CREATE,
+          PermissionPolicies.HEALTH_GOAL_UPDATE,
+          PermissionPolicies.HEALTH_GOAL_DELETE,
+        ],
+      },
+      {
+        title: 'Quản Lý Báo Cáo',
+        url: '/admin/reports',
+        icon: MessageSquareWarning,
+        permissions: [PermissionPolicies.REPORT_VIEW],
+      },
+      {
+        title: 'Quản Lý Công Thức',
+        url: '/moderator/recipe',
+        icon: List,
+        permissions: [PermissionPolicies.RECIPE_MANAGEMENT_VIEW],
+      },
+      {
+        title: 'Quản Lý Nguyên Liệu',
+        url: '/moderator/ingredient',
+        icon: Salad,
+        permissions: [PermissionPolicies.INGREDIENT_MANAGER_VIEW],
+      },
+      {
+        title: 'Quản Lý Nhóm Nguyên Liệu',
+        url: '/moderator/category',
+        icon: ClipboardList,
+        permissions: [PermissionPolicies.INGREDIENT_CATEGORY_CREATE],
+      },
+      {
+        title: 'Quản Lý Nhãn Món Ăn',
+        url: '/moderator/label',
+        icon: Tags,
+        permissions: [
+          PermissionPolicies.LABEL_CREATE,
+          PermissionPolicies.LABEL_UPDATE,
+          PermissionPolicies.LABEL_DELETE,
+        ],
+      },
+    ];
+
+    // Filter permission-based items
+    permissionBasedItems.forEach((item) => {
+      if (item.requiresRole) {
+        // Check role
+        if (user?.role === item.requiresRole) {
+          items.push({ title: item.title, url: item.url, icon: item.icon });
+        }
+      } else if (item.permissions) {
+        // Check if user has any of the required permissions
+        if (hasAnyPermission(user, item.permissions)) {
+          items.push({ title: item.title, url: item.url, icon: item.icon });
+        }
+      }
+    });
+
+    // Customer items - always show for Customer role without permissions check
+    if (user?.role === Role.CUSTOMER || !user?.permissions || user.permissions.length === 0) {
+      items.push(
         {
-          title: 'Quản Lý Người Dùng',
-          url: '/admin/users',
-          icon: Users,
-        },
-        {
-          title: 'Quản Lý Phân Quyền',
-          url: '/admin/permissions',
-          icon: KeyRound,
-        },
-        {
-          title: 'Duyệt Công Thức',
-          url: '/admin/pending-recipes',
-          icon: ClockAlert,
-        },
-        {
-          title: 'Quản Lý Mục Tiêu Sức Khỏe',
-          url: '/admin/health-goals',
+          title: 'Mục Tiêu Sức Khỏe',
+          url: '/profile/health-goals',
           icon: Goal,
         },
         {
-          title: 'Quản Lý Báo Cáo',
-          url: '/admin/reports',
-          icon: MessageSquareWarning,
+          title: 'Hạn Chế Thành Phần',
+          url: '/diet-restrictions',
+          icon: WheatOff,
         },
-      ];
+        {
+          title: 'Công Thức Của Tôi',
+          url: '/myrecipe',
+          icon: CookingPot,
+        },
+        {
+          title: 'Bản Nháp Của Tôi',
+          url: '/drafts',
+          icon: FileEdit,
+        },
+        {
+          title: 'Công Thức Chờ Duyệt',
+          url: '/pending-recipes',
+          icon: ClockAlert,
+        },
+        {
+          title: 'Công Thức Đã Lưu',
+          url: '/saved-recipes',
+          icon: BookMarked,
+        },
+        {
+          title: 'Công Thức Đã Xem',
+          url: '/history',
+          icon: History,
+        },
+      );
     }
 
-    if (user?.role === Role.MODERATOR) {
-      return [
-        ...commonItems,
-        {
-          title: 'Quản Lý Công Thức',
-          url: '/moderator/recipe',
-          icon: List,
-        },
-        {
-          title: 'Quản Lý Báo Cáo',
-          url: '/moderator/reports',
-          icon: MessageSquareWarning,
-        },
-        {
-          title: 'Quản Lý Nguyên Liệu',
-          url: '/moderator/ingredient',
-          icon: Salad,
-        },
-        {
-          title: 'Quản Lý Nhóm Nguyên Liệu',
-          url: '/moderator/category',
-          icon: ClipboardList,
-        },
-        {
-          title: 'Quản Lý Nhãn Món Ăn',
-          url: '/moderator/label',
-          icon: Tags,
-        },
-      ];
-    }
-
-    // Customer items
-    return [
-      ...commonItems,
-      {
-        title: 'Mục Tiêu Sức Khỏe',
-        url: '/profile/health-goals',
-        icon: Goal,
-      },
-      {
-        title: 'Hạn Chế Thành Phần',
-        url: '/diet-restrictions',
-        icon: WheatOff,
-      },
-      {
-        title: 'Công Thức Của Tôi',
-        url: '/myrecipe',
-        icon: CookingPot,
-      },
-      {
-        title: 'Bản Nháp Của Tôi',
-        url: '/drafts',
-        icon: FileEdit,
-      },
-      {
-        title: 'Công Thức Chờ Duyệt',
-        url: '/pending-recipes',
-        icon: ClockAlert,
-      },
-      {
-        title: 'Công Thức Đã Lưu',
-        url: '/saved-recipes',
-        icon: BookMarked,
-      },
-      {
-        title: 'Công Thức Đã Xem',
-        url: '/history',
-        icon: History,
-      },
-    ];
+    return items;
   };
 
   const navigationItems = getNavigationItems();

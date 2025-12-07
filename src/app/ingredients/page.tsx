@@ -4,12 +4,13 @@ import { useQuery } from '@tanstack/react-query';
 import { ChevronDown, Lightbulb, Search, X } from 'lucide-react';
 import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Suspense } from 'react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { Pagination } from '@/base/components/layout/pagination';
 import { Button } from '@/base/components/ui/button';
+import { DatePickerWithInput } from '@/base/components/ui/date-picker-with-input';
 import {
   Dialog,
   DialogContent,
@@ -73,11 +74,18 @@ function IngredientsContent() {
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
   const currentSearch = searchParams.get('search') || '';
   const currentPageSize = parseInt(searchParams.get('pageSize') || '20', 10);
+  const currentUpdatedFrom = searchParams.get('updatedFrom') || '';
+  const currentUpdatedTo = searchParams.get('updatedTo') || '';
+  const currentCategoryIds = useMemo(() => searchParams.getAll('categoryId') || [], [searchParams]);
 
   // State
   const [page, setPage] = useState(currentPage);
   const [searchTerm, setSearchTerm] = useState(currentSearch);
   const [pageSize, setPageSize] = useState(currentPageSize);
+  const [categoryIds, setCategoryIds] = useState<string[]>(currentCategoryIds);
+  const [updatedFrom, setUpdatedFrom] = useState(currentUpdatedFrom);
+  const [updatedTo, setUpdatedTo] = useState(currentUpdatedTo);
+  const [showFilters, setShowFilters] = useState(false);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // Detail dialog state
@@ -87,12 +95,29 @@ function IngredientsContent() {
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
+  // Fetch categories
+  const { data: categories } = useQuery({
+    queryKey: ['ingredient-categories-public'],
+    queryFn: () => ingredientPublicService.getCategories(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
   // Sync state with URL params
   useEffect(() => {
     setPage(currentPage);
     setSearchTerm(currentSearch);
     setPageSize(currentPageSize);
-  }, [currentPage, currentSearch, currentPageSize]);
+    setCategoryIds(currentCategoryIds);
+    setUpdatedFrom(currentUpdatedFrom);
+    setUpdatedTo(currentUpdatedTo);
+  }, [
+    currentPage,
+    currentSearch,
+    currentPageSize,
+    currentCategoryIds,
+    currentUpdatedFrom,
+    currentUpdatedTo,
+  ]);
 
   // Update URL when search term changes
   useEffect(() => {
@@ -129,12 +154,18 @@ function IngredientsContent() {
 
   // Fetch ingredients
   const { data: ingredientsData, isLoading } = useQuery({
-    queryKey: ['ingredients-public', { page, search: debouncedSearchTerm, pageSize }],
+    queryKey: [
+      'ingredients-public',
+      { page, search: debouncedSearchTerm, pageSize, categoryIds, updatedFrom, updatedTo },
+    ],
     queryFn: () =>
       ingredientPublicService.getIngredients({
         pageNumber: page,
         pageSize: pageSize,
         keyword: debouncedSearchTerm || undefined,
+        categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
+        updatedFrom: updatedFrom || undefined,
+        updatedTo: updatedTo || undefined,
       }),
   });
 
@@ -158,6 +189,48 @@ function IngredientsContent() {
 
   const handleClearSearch = () => {
     setSearchTerm('');
+  };
+
+  const handleToggleCategory = (categoryId: string) => {
+    const newCategoryIds = categoryIds.includes(categoryId)
+      ? categoryIds.filter((id) => id !== categoryId)
+      : [...categoryIds, categoryId];
+    setCategoryIds(newCategoryIds);
+    setPage(1); // Reset to page 1 when filtering
+    updateUrlParams(newCategoryIds, updatedFrom, updatedTo);
+  };
+
+  const handleClearFilters = () => {
+    setCategoryIds([]);
+    setUpdatedFrom('');
+    setUpdatedTo('');
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    params.delete('categoryId');
+    params.delete('updatedFrom');
+    params.delete('updatedTo');
+    params.set('page', '1');
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const updateUrlParams = (catIds?: string[], from?: string, to?: string) => {
+    const params = new URLSearchParams();
+    if (page) params.set('page', page.toString());
+    if (pageSize) params.set('pageSize', pageSize.toString());
+    if (searchTerm) params.set('search', searchTerm);
+    (catIds || categoryIds).forEach((id) => params.append('categoryId', id));
+    if (from || updatedFrom) params.set('updatedFrom', from || updatedFrom);
+    if (to || updatedTo) params.set('updatedTo', to || updatedTo);
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleDateFilterChange = (from?: Date, to?: Date) => {
+    const fromStr = from ? from.toISOString().split('T')[0] : '';
+    const toStr = to ? to.toISOString().split('T')[0] : '';
+    setUpdatedFrom(fromStr);
+    setUpdatedTo(toStr);
+    setPage(1);
+    updateUrlParams(categoryIds, fromStr, toStr);
   };
 
   const formatDate = (dateString?: string) => {
@@ -207,9 +280,9 @@ function IngredientsContent() {
             </p>
           </div>
 
-          {/* Search */}
-          <div className="flex w-full items-center gap-2 sm:w-80">
-            <div className="relative flex-1">
+          {/* Search and Filter */}
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+            <div className="relative flex-1 sm:w-64 sm:flex-none">
               <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />
               <Input
                 placeholder="Tìm kiếm nguyên liệu..."
@@ -227,8 +300,87 @@ function IngredientsContent() {
                 </button>
               )}
             </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex w-full items-center gap-2 sm:w-auto"
+            >
+              <ChevronDown
+                className={`size-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
+              />
+              Bộ lọc
+            </Button>
           </div>
         </div>
+
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="space-y-4 rounded-lg border bg-gray-50 p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">Bộ lọc</h3>
+              {(categoryIds.length > 0 || updatedFrom || updatedTo) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearFilters}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  Xóa tất cả bộ lọc
+                </Button>
+              )}
+            </div>
+
+            {/* Categories Filter */}
+            <div>
+              <label className="mb-2 block text-sm font-medium">Danh mục</label>
+              <div className="flex flex-wrap gap-2">
+                {categories && categories.length > 0 ? (
+                  categories.map((category: { id: string; name: string }) => (
+                    <button
+                      key={category.id}
+                      onClick={() => handleToggleCategory(category.id)}
+                      className={`rounded-full px-3 py-1 text-sm transition-colors ${
+                        categoryIds.includes(category.id)
+                          ? 'bg-[#99b94a] text-white'
+                          : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      {category.name}
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">Không có danh mục nào</p>
+                )}
+              </div>
+            </div>
+
+            {/* Date Range Filter */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium">Cập nhật từ</label>
+                <DatePickerWithInput
+                  date={updatedFrom ? new Date(updatedFrom) : undefined}
+                  onDateChange={(date) =>
+                    handleDateFilterChange(date, updatedTo ? new Date(updatedTo) : undefined)
+                  }
+                  placeholder="Chọn ngày bắt đầu"
+                  disabledDays={(date) => date > new Date()}
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium">Cập nhật đến</label>
+                <DatePickerWithInput
+                  date={updatedTo ? new Date(updatedTo) : undefined}
+                  onDateChange={(date) =>
+                    handleDateFilterChange(updatedFrom ? new Date(updatedFrom) : undefined, date)
+                  }
+                  placeholder="Chọn ngày kết thúc"
+                  disabledDays={(date) => date > new Date()}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Loading */}
         {isLoading && (
@@ -268,6 +420,7 @@ function IngredientsContent() {
                         src={ingredient.imageUrl}
                         alt={ingredient.name}
                         fill
+                        sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 16vw"
                         className="object-cover transition-transform group-hover:scale-105"
                       />
                     ) : (
@@ -370,6 +523,7 @@ function IngredientsContent() {
                             src={selectedIngredient.imageUrl}
                             alt={selectedIngredient.name}
                             fill
+                            sizes="(max-width: 640px) 100vw, 192px"
                             className="object-cover"
                           />
                         </div>
@@ -391,6 +545,13 @@ function IngredientsContent() {
                         <div>
                           <span className="font-semibold">Mô tả: </span>
                           <span>{selectedIngredient.description}</span>
+                        </div>
+                      )}
+
+                      {selectedIngredient.calories !== undefined && (
+                        <div>
+                          <span className="font-semibold">Năng lượng: </span>
+                          <span>{selectedIngredient.calories} kcal/100g</span>
                         </div>
                       )}
 

@@ -92,6 +92,9 @@ export interface PaginationParams {
   pageNumber?: number;
   pageSize?: number;
   search?: string;
+  categoryIds?: string[];
+  updatedFrom?: string;
+  updatedTo?: string;
 }
 
 export interface IngredientsResponse {
@@ -118,20 +121,24 @@ class IngredientManagementService extends HttpClient {
       image: apiResponse.imageUrl || '',
       ingredientCategoryIds: apiResponse.categories.map((c) => c.id),
       categoryNames: apiResponse.categories.map((c) => c.name),
-      nutrients: apiResponse.nutrients.map((n) => ({
-        id: n.id,
-        vietnameseName: n.vietnameseName,
-        unit: n.unit,
-        min: n.minValue,
-        max: n.maxValue,
-        median: n.medianValue,
-      })),
+      nutrients: apiResponse.nutrients.map((n) => {
+        // The API response doesn't include nutrient IDs, so we'll preserve the Vietnamese name
+        // The component will need to match these by name to get the IDs
+        return {
+          id: n.id || '', // Will be empty since API doesn't provide it
+          vietnameseName: n.vietnameseName,
+          unit: n.unit,
+          min: n.minValue,
+          max: n.maxValue,
+          median: n.medianValue,
+        };
+      }),
       lastUpdatedUtc: apiResponse.lastUpdatedUtc,
     };
   }
 
   /**
-   * Get paginated ingredients
+   * Get paginated ingredients for manager
    */
   public async getIngredients(params: PaginationParams = {}) {
     const queryParams = new URLSearchParams();
@@ -140,9 +147,14 @@ class IngredientManagementService extends HttpClient {
     if (params.pageSize)
       queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
     if (params.search) queryParams.append('Keyword', params.search);
+    if (params.categoryIds) {
+      params.categoryIds.forEach((id) => queryParams.append('CategoryIds', id));
+    }
+    if (params.updatedFrom) queryParams.append('UpdatedFrom', params.updatedFrom);
+    if (params.updatedTo) queryParams.append('UpdatedTo', params.updatedTo);
 
     const apiResponse = await this.get<IngredientsResponse>(
-      `api/Ingredient?${queryParams.toString()}`,
+      `api/Ingredient/ForManager?${queryParams.toString()}`,
       {
         isPrivateRoute: true,
       },
@@ -167,11 +179,11 @@ class IngredientManagementService extends HttpClient {
   }
 
   /**
-   * Get ingredient by ID
+   * Get ingredient by ID (for manager)
    */
   public async getIngredientById(id: string) {
     try {
-      const apiResponse = await this.get<IngredientApiResponse>(`api/Ingredient/${id}`, {
+      const apiResponse = await this.get<IngredientApiResponse>(`api/Ingredient/ForManager/${id}`, {
         isPrivateRoute: true,
       });
 
@@ -188,7 +200,7 @@ class IngredientManagementService extends HttpClient {
    */
   public async getCategories() {
     return this.get<IngredientCategory[]>('api/IngredientCategory', {
-      isPrivateRoute: true,
+      isPrivateRoute: false,
     });
   }
 
@@ -322,7 +334,7 @@ class IngredientManagementService extends HttpClient {
     const normalizedKeyword = capitalizeFirstLetter(keyword.trim());
 
     return this.get<IngredientNameResponse[]>(
-      `api/Ingredient/getForRecipe?keyword=${encodeURIComponent(normalizedKeyword)}`,
+      `api/Ingredient/usda?keyword=${encodeURIComponent(normalizedKeyword)}`,
       {
         isPrivateRoute: true,
       },

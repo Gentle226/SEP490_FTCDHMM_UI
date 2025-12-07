@@ -66,24 +66,25 @@ export function RecipeBasicInfo({
     <div className="min-w-0 space-y-4">
       {/* Recipe Name */}
       <div className="space-y-2">
-        <Label htmlFor="name">
+        <Label htmlFor="name" className="flex items-center gap-1">
           <ChefHat className="h-4 w-4 text-[#99b94a]" />
           Tên món
+          <span className="text-red-500">*</span>
         </Label>
         <Input
           id="name"
           placeholder="Tên món ăn của bạn"
           value={name ?? ''}
-          onChange={(e) => onNameChange(e.target.value.slice(0, 255))}
+          onChange={(e) => onNameChange(e.target.value.slice(0, 200))}
           onFocus={() => onNameFocusChange(true)}
           onBlur={() => onNameFocusChange(false)}
           onInvalid={handleInvalidField}
-          maxLength={255}
+          maxLength={200}
         />
         <p
           className={`text-right text-xs transition-opacity ${isNameFocused ? 'text-gray-500 opacity-100' : 'text-gray-300 opacity-0'}`}
         >
-          {name.length}/255
+          {name.length}/200
         </p>
       </div>
 
@@ -104,7 +105,6 @@ export function RecipeBasicInfo({
           onBlur={() => onDescriptionFocusChange(false)}
           onInvalid={handleInvalidTextarea}
           maxLength={2000}
-          required
           className="w-full break-words sm:min-h-24 md:min-h-28"
         />
         <p
@@ -124,6 +124,7 @@ export function RecipeBasicInfo({
           >
             <Flame className="h-3.5 w-3.5 text-[#99b94a] sm:h-4 sm:w-4" />
             Độ khó
+            <span className="text-red-500">*</span>
           </Label>
           <Select
             options={[
@@ -144,6 +145,7 @@ export function RecipeBasicInfo({
             <Clock className="h-3.5 w-3.5 text-[#99b94a] sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Thời gian nấu</span>
             <span className="sm:hidden">T.gian</span>
+            <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <Input
@@ -171,6 +173,7 @@ export function RecipeBasicInfo({
           <Label htmlFor="ration" className="flex items-center gap-1 text-xs sm:gap-2 sm:text-sm">
             <Users className="h-3.5 w-3.5 text-[#99b94a] sm:h-4 sm:w-4" />
             Khẩu phần
+            <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <Input

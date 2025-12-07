@@ -26,9 +26,10 @@ export function RecipeMainImage({
 }: RecipeMainImageProps) {
   return (
     <div className="space-y-2">
-      <Label>
+      <Label className="flex items-center gap-1">
         <ImageIcon className="h-4 w-4 text-[#99b94a]" />
         Hình ảnh món ăn
+        <span className="text-red-500">*</span>
       </Label>
       {mainImagePreview ? (
         <div className="relative h-48 w-full overflow-hidden rounded-lg border sm:h-60 md:h-75">
