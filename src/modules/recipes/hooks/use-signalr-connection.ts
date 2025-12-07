@@ -44,8 +44,11 @@ export const useSignalRConnection = (recipeId: string | null) => {
         }
 
         // Tạo connection mới
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+        const hubUrl = `${apiBaseUrl}/hubs/comments?recipeId=${recipeId}`;
+
         const connection = new HubConnectionBuilder()
-          .withUrl(`http://localhost:7116/hubs/comments?recipeId=${recipeId}`, {
+          .withUrl(hubUrl, {
             transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
             withCredentials: true, // Gửi cookies/credentials
             skipNegotiation: false, // Gọi /negotiate endpoint
