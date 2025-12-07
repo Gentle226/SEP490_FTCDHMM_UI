@@ -35,9 +35,7 @@ interface IngredientDetails {
   nutrients?: Array<{
     vietnameseName?: string;
     unit?: string;
-    min?: number;
-    max?: number;
-    median?: number;
+    value?: number;
   }>;
 }
 
@@ -70,9 +68,7 @@ export function IngredientCardWithDetails({
           apiResponse.nutrients?.map((n) => ({
             vietnameseName: n.vietnameseName,
             unit: n.unit,
-            min: n.minValue,
-            max: n.maxValue,
-            median: n.medianValue,
+            value: n.value,
           })) || [],
       };
       setIngredientDetails(details);
@@ -205,9 +201,9 @@ export function IngredientCardWithDetails({
                           {nutrient.vietnameseName || 'N/A'}
                         </div>
                         <div className="text-xs text-gray-600">
-                          {nutrient.median !== undefined ? (
+                          {nutrient.value !== undefined ? (
                             <>
-                              {nutrient.median} {nutrient.unit}
+                              {nutrient.value} {nutrient.unit}
                             </>
                           ) : (
                             'N/A'
@@ -305,24 +301,13 @@ export function IngredientCardWithDetails({
                             <span className="text-muted-foreground text-xs">({nutrient.unit})</span>
                           )}
                         </div>
-                        <div className="mt-1 space-y-1 text-xs">
-                          {nutrient.min !== undefined && (
-                            <div>
-                              <span className="text-muted-foreground">Min: </span>
-                              <span className="font-medium">{nutrient.min}</span>
-                            </div>
-                          )}
-                          {nutrient.median !== undefined && (
-                            <div>
-                              <span className="text-muted-foreground">Median: </span>
-                              <span className="font-medium text-lime-700">{nutrient.median}</span>
-                            </div>
-                          )}
-                          {nutrient.max !== undefined && (
-                            <div>
-                              <span className="text-muted-foreground">Max: </span>
-                              <span className="font-medium">{nutrient.max}</span>
-                            </div>
+                        <div className="mt-1">
+                          {nutrient.value !== undefined ? (
+                            <span className="text-lg font-semibold text-lime-700">
+                              {nutrient.value}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">N/A</span>
                           )}
                         </div>
                       </div>

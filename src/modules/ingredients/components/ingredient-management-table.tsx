@@ -710,24 +710,13 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                                     </span>
                                   )}
                                 </div>
-                                <div className="mt-1 space-y-1 text-xs">
-                                  {nutrient.min !== undefined && (
-                                    <div>
-                                      <span className="text-muted-foreground">Min: </span>
-                                      <span className="font-medium">{nutrient.min}</span>
-                                    </div>
-                                  )}
-                                  {nutrient.max !== undefined && (
-                                    <div>
-                                      <span className="text-muted-foreground">Max: </span>
-                                      <span className="font-medium">{nutrient.max}</span>
-                                    </div>
-                                  )}
-                                  {nutrient.median !== undefined && (
-                                    <div>
-                                      <span className="text-muted-foreground">Median: </span>
-                                      <span className="font-medium">{nutrient.median}</span>
-                                    </div>
+                                <div className="mt-1">
+                                  {nutrient.value !== undefined ? (
+                                    <span className="text-lg font-semibold text-lime-700">
+                                      {nutrient.value}
+                                    </span>
+                                  ) : (
+                                    <span className="text-muted-foreground text-sm">N/A</span>
                                   )}
                                 </div>
                               </div>

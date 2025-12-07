@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, Lock, Search, Unlock, X } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { ReactNode, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Pagination } from '@/base/components/layout/pagination';
@@ -34,6 +34,7 @@ import {
   TableRow,
 } from '@/base/components/ui/table';
 import { Pagination as PaginationType } from '@/base/types';
+import { useAuth } from '@/modules/auth';
 
 import {
   LockUserRequest,
@@ -61,12 +62,8 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-interface UserManagementTableProps {
-  title: ReactNode;
-  canCreate?: boolean;
-}
-
-export function UserManagementTable({ canCreate = false }: UserManagementTableProps) {
+export function UserManagementTable() {
+  const { user: currentUser } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -168,8 +165,8 @@ export function UserManagementTable({ canCreate = false }: UserManagementTablePr
   const queryClient = useQueryClient();
   const queryKey = ['users', { page, search: debouncedSearchTerm, pageSize, role: roleFilter }];
 
-  // Fetch roles for role change feature
-  useQuery({
+  // Fetch roles for role change feature and filters
+  const { data: rolesData } = useQuery({
     queryKey: ['roles'],
     queryFn: async () => {
       const response = await userManagementService.getRoles();
@@ -180,7 +177,6 @@ export function UserManagementTable({ canCreate = false }: UserManagementTablePr
       setRoleIdMap(map);
       return response;
     },
-    enabled: canCreate, // Only fetch if admin
   });
   const { data: usersData, isLoading } = useQuery({
     queryKey,
@@ -243,11 +239,33 @@ export function UserManagementTable({ canCreate = false }: UserManagementTablePr
       toast.success('Vai trò người dùng đã được thay đổi thành công.');
     },
     onError: (error: Error) => {
+      // Check if error is AxiosError with response data
+      if ('response' in error && error.response) {
+        const responseData = (error.response as { data?: { code?: string; message?: string } })
+          .data;
+
+        if (responseData?.code === 'INVALID_ACTION') {
+          toast.error('Không được quyền chỉnh sửa tài khoản admin');
+          return;
+        }
+
+        if (responseData?.message) {
+          toast.error(responseData.message);
+          return;
+        }
+      }
+
       toast.error(error.message || 'Không thể thay đổi vai trò người dùng.');
     },
   });
 
   const handleLock = (user: User) => {
+    // Prevent user from locking themselves
+    if (currentUser && user.id === currentUser.id) {
+      toast.error('Không được quyền khóa tài khoản của chính mình');
+      return;
+    }
+
     setSelectedUser(user);
     setLockDialogOpen(true);
   };
@@ -258,6 +276,12 @@ export function UserManagementTable({ canCreate = false }: UserManagementTablePr
   };
 
   const handleChangeRole = (user: User) => {
+    // Prevent changing Admin user role
+    if (user.role === 'Admin') {
+      toast.error('Không được quyền thay đổi vai trò của người dùng Admin');
+      return;
+    }
+
     setSelectedUser(user);
     setSelectedRole(user.role || '');
     setChangeRoleDialogOpen(true);
@@ -388,13 +412,7 @@ export function UserManagementTable({ canCreate = false }: UserManagementTablePr
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="min-w-[140px] gap-2">
-                {roleFilter === 'Customer'
-                  ? 'Khách Hàng'
-                  : roleFilter === 'Moderator'
-                    ? 'Kiểm Duyệt Viên'
-                    : roleFilter === 'Admin'
-                      ? 'Quản Trị Viên'
-                      : 'Tất cả'}
+                {roleFilter || 'Tất cả'}
                 <ChevronDown className="h-4 w-4 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
@@ -405,24 +423,15 @@ export function UserManagementTable({ canCreate = false }: UserManagementTablePr
               >
                 Tất cả
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setRoleFilter('Customer')}
-                className={roleFilter === 'Customer' ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
-              >
-                Khách Hàng
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setRoleFilter('Moderator')}
-                className={roleFilter === 'Moderator' ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
-              >
-                Kiểm Duyệt Viên
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setRoleFilter('Admin')}
-                className={roleFilter === 'Admin' ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
-              >
-                Quản Trị Viên
-              </DropdownMenuItem>
+              {rolesData?.items.map((role: RoleResponse) => (
+                <DropdownMenuItem
+                  key={role.id}
+                  onClick={() => setRoleFilter(role.name)}
+                  className={roleFilter === role.name ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+                >
+                  {role.name}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -512,7 +521,13 @@ export function UserManagementTable({ canCreate = false }: UserManagementTablePr
                             variant="outline"
                             size="sm"
                             onClick={() => handleLock(user)}
-                            className="text-red-600 hover:bg-red-50"
+                            disabled={currentUser?.id === user.id}
+                            className={
+                              currentUser?.id === user.id
+                                ? 'cursor-not-allowed text-red-600 opacity-50'
+                                : 'text-red-600 hover:bg-red-50'
+                            }
+                            title={currentUser?.id === user.id ? 'Không được khóa chính mình' : ''}
                           >
                             <Lock className="mr-1 h-4 w-4" />
                             Khóa
@@ -749,15 +764,7 @@ export function UserManagementTable({ canCreate = false }: UserManagementTablePr
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full justify-between">
-                    <span>
-                      {selectedRole === 'Customer'
-                        ? 'Khách Hàng'
-                        : selectedRole === 'Moderator'
-                          ? 'Kiểm Duyệt Viên'
-                          : selectedRole === 'Admin'
-                            ? 'Quản Trị Viên'
-                            : 'Chọn vai trò'}
-                    </span>
+                    <span>{selectedRole || 'Chọn vai trò'}</span>
                     <ChevronDown className="h-4 w-4 opacity-50" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -765,24 +772,15 @@ export function UserManagementTable({ canCreate = false }: UserManagementTablePr
                   align="end"
                   className="w-[--radix-dropdown-menu-trigger-width]"
                 >
-                  <DropdownMenuItem
-                    onClick={() => setSelectedRole('Customer')}
-                    className={selectedRole === 'Customer' ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
-                  >
-                    Khách Hàng
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setSelectedRole('Moderator')}
-                    className={selectedRole === 'Moderator' ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
-                  >
-                    Kiểm Duyệt Viên
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setSelectedRole('Admin')}
-                    className={selectedRole === 'Admin' ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
-                  >
-                    Quản Trị Viên
-                  </DropdownMenuItem>
+                  {rolesData?.items.map((role: RoleResponse) => (
+                    <DropdownMenuItem
+                      key={role.id}
+                      onClick={() => setSelectedRole(role.name)}
+                      className={selectedRole === role.name ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+                    >
+                      {role.name}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -790,11 +788,8 @@ export function UserManagementTable({ canCreate = false }: UserManagementTablePr
             {selectedRole && (
               <div className="rounded-lg bg-[#99b94a]/10 p-3">
                 <p className="text-sm text-[#99b94a]">
-                  {selectedRole === 'Customer'
-                    ? 'Vai trò Khách Hàng có quyền truy cập các tính năng cơ bản như xem công thức, tạo công thức, quản lý yêu thích.'
-                    : selectedRole === 'Moderator'
-                      ? 'Vai trò Kiểm Duyệt Viên có quyền quản lý nội dung và người dùng.'
-                      : 'Vai trò Quản Trị Viên có toàn quyền hệ thống, bao gồm quản lý người dùng, quyền, và cấu hình.'}
+                  Bạn đang thay đổi vai trò của người dùng thành <strong>{selectedRole}</strong>.
+                  Điều này sẽ cập nhật quyền truy cập của họ theo vai trò mới.
                 </p>
               </div>
             )}

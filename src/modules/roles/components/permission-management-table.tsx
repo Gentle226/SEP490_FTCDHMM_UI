@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, Edit, Plus } from 'lucide-react';
+import { ChevronDown, Edit, Lock, Plus } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -36,6 +36,8 @@ import {
   TableRow,
 } from '@/base/components/ui/table';
 import { Pagination as PaginationType } from '@/base/types';
+import { PermissionPolicies, useAuth } from '@/modules/auth';
+import { PermissionGuard } from '@/modules/auth/components/permission-guard';
 
 import {
   CreateRoleRequest,
@@ -46,6 +48,7 @@ import {
 import { EditPermissionsDialog } from './edit-permissions-dialog';
 
 export function PermissionManagementTable() {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -180,6 +183,12 @@ export function PermissionManagementTable() {
   };
 
   const handleToggleActive = (role: Role) => {
+    // Prevent toggling Admin role
+    if (role.name === 'Admin') {
+      toast.error('Không được quyền chỉnh sửa vai trò Admin');
+      return;
+    }
+
     toggleRoleActiveMutation.mutate({
       roleId: role.id,
       isActive: role.isActive,
@@ -187,6 +196,12 @@ export function PermissionManagementTable() {
   };
 
   const handleEditPermissions = (role: Role) => {
+    // Prevent editing Admin role permissions
+    if (role.name === 'Admin') {
+      toast.error('Không được quyền chỉnh sửa quyền của vai trò Admin');
+      return;
+    }
+
     setSelectedRole(role);
     setEditPermissionsDialogOpen(true);
   };
@@ -213,48 +228,50 @@ export function PermissionManagementTable() {
       `}</style>
       <div className="space-y-4 px-3">
         <div className="flex items-center justify-between">
-          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="ml-auto bg-[#99b94a] hover:bg-[#88a838]">
-                <Plus className="mr-2 h-4 w-4" />
-                Tạo Vai Trò
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="text-[#99b94a]">Tạo Vai Trò Mới</DialogTitle>
-                <DialogDescription>
-                  Nhập tên cho vai trò mới. Bạn có thể cấu hình quyền sau khi tạo.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label className="mb-2 text-[#99b94a]" htmlFor="roleName">
-                    Tên Vai Trò
-                  </Label>
-                  <Input
-                    id="roleName"
-                    type="text"
-                    value={newRoleName}
-                    onChange={(e) => setNewRoleName(e.target.value)}
-                    placeholder="Nhập tên vai trò"
-                  />
+          <PermissionGuard requiredPermission={PermissionPolicies.ROLE_CREATE} user={user}>
+            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="ml-auto bg-[#99b94a] hover:bg-[#88a838]">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Tạo Vai Trò
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="text-[#99b94a]">Tạo Vai Trò Mới</DialogTitle>
+                  <DialogDescription>
+                    Nhập tên cho vai trò mới. Bạn có thể cấu hình quyền sau khi tạo.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="mb-2 text-[#99b94a]" htmlFor="roleName">
+                      Tên Vai Trò
+                    </Label>
+                    <Input
+                      id="roleName"
+                      type="text"
+                      value={newRoleName}
+                      onChange={(e) => setNewRoleName(e.target.value)}
+                      placeholder="Nhập tên vai trò"
+                    />
+                  </div>
                 </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                  Hủy
-                </Button>
-                <Button
-                  className="bg-[#99b94a] hover:bg-[#88a838]"
-                  onClick={handleCreateRole}
-                  disabled={!newRoleName.trim() || createRoleMutation.isPending}
-                >
-                  {createRoleMutation.isPending ? 'Đang tạo...' : 'Tạo Vai Trò'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                    Hủy
+                  </Button>
+                  <Button
+                    className="bg-[#99b94a] hover:bg-[#88a838]"
+                    onClick={handleCreateRole}
+                    disabled={!newRoleName.trim() || createRoleMutation.isPending}
+                  >
+                    {createRoleMutation.isPending ? 'Đang tạo...' : 'Tạo Vai Trò'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </PermissionGuard>
         </div>
 
         <div className="rounded-md border">
@@ -268,39 +285,71 @@ export function PermissionManagementTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rolesData?.items?.map((role) => (
-                <TableRow key={role.id}>
-                  <TableCell className="w-36 pl-6 font-medium">{role.name}</TableCell>
-                  <TableCell className="w-36">
-                    {role.isActive ? (
-                      <Badge className="w-32 justify-center bg-[#99b94a]">Hoạt động</Badge>
-                    ) : (
-                      <Badge variant="danger" className="w-32 justify-center">
-                        Không hoạt động
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="w-36">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        checked={role.isActive}
-                        onCheckedChange={() => handleToggleActive(role)}
-                        disabled={toggleRoleActiveMutation.isPending}
-                        data-permissions-switch
-                      />
-                      <span className="w-8 text-sm text-gray-600">
-                        {role.isActive ? 'Bật' : 'Tắt'}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="w-36 text-[#99b94a]">
-                    <Button variant="outline" size="sm" onClick={() => handleEditPermissions(role)}>
-                      <Edit className="mr-1 h-3 w-3" />
-                      Chỉnh Sửa
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {rolesData?.items?.map((role) => {
+                const isAdminRole = role.name === 'Admin';
+
+                return (
+                  <TableRow key={role.id}>
+                    <TableCell className="w-36 pl-6 font-medium">
+                      <div className="flex items-center gap-2">
+                        {role.name}
+                        {isAdminRole && (
+                          <div title="Vai trò bảo vệ">
+                            <Lock className="h-4 w-4 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-36">
+                      {role.isActive ? (
+                        <Badge className="w-32 justify-center bg-[#99b94a]">Hoạt động</Badge>
+                      ) : (
+                        <Badge variant="danger" className="w-32 justify-center">
+                          Không hoạt động
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="w-36">
+                      <div className="flex items-center space-x-2">
+                        <PermissionGuard
+                          requiredPermission={PermissionPolicies.ROLE_UPDATE}
+                          user={user}
+                        >
+                          <Switch
+                            checked={role.isActive}
+                            onCheckedChange={() => handleToggleActive(role)}
+                            disabled={toggleRoleActiveMutation.isPending || isAdminRole}
+                            data-permissions-switch
+                          />
+                          <span className="w-8 text-sm text-gray-600">
+                            {role.isActive ? 'Bật' : 'Tắt'}
+                          </span>
+                        </PermissionGuard>
+                        {!user?.permissions?.includes(PermissionPolicies.ROLE_UPDATE) && (
+                          <span className="text-sm text-gray-400">Không có quyền</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-36 text-[#99b94a]">
+                      <PermissionGuard
+                        requiredPermission={PermissionPolicies.ROLE_UPDATE}
+                        user={user}
+                      >
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditPermissions(role)}
+                          disabled={isAdminRole}
+                          className={isAdminRole ? 'cursor-not-allowed opacity-50' : ''}
+                        >
+                          <Edit className="mr-1 h-3 w-3" />
+                          Chỉnh Sửa
+                        </Button>
+                      </PermissionGuard>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

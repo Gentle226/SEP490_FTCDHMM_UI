@@ -1,7 +1,6 @@
 export class RouteUtils {
   private static privateRoutes = ['/profile', '/dashboard', '/settings'];
   private static adminRoutes = ['/admin'];
-  private static moderatorRoutes = ['/moderator', '/management'];
   private static authRoutes = ['/auth'];
 
   static isPrivateRoute(route: string) {
@@ -14,9 +13,5 @@ export class RouteUtils {
 
   static isAdminRoute(route: string) {
     return this.adminRoutes.some((r) => route.startsWith(r));
-  }
-
-  static isModeratorRoute(route: string) {
-    return this.moderatorRoutes.some((r) => route.startsWith(r));
   }
 }

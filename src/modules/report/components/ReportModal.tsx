@@ -120,7 +120,7 @@ export function ReportModal({
               id="report-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Vui lòng mô tả lý do bạn báo cáo nội dung này..."
+              placeholder="Vui lòng mô tả lý do bạn báo cáo..."
               rows={4}
               maxLength={2000}
               disabled={isSubmitting}

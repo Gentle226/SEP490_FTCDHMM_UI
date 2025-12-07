@@ -26,15 +26,14 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = RouteUtils.isAuthRoute(pathname);
   const isPrivateRoute = RouteUtils.isPrivateRoute(pathname);
   const isAdminRoute = RouteUtils.isAdminRoute(pathname);
-  const isModeratorRoute = RouteUtils.isModeratorRoute(pathname);
 
   // For public routes without tokens, just continue
-  if (!accessToken && !isPrivateRoute && !isAdminRoute && !isModeratorRoute) {
+  if (!accessToken && !isPrivateRoute && !isAdminRoute) {
     return NextResponse.next();
   }
 
   // For protected routes without tokens, redirect to login
-  if (!accessToken && (isPrivateRoute || isAdminRoute || isModeratorRoute)) {
+  if (!accessToken && (isPrivateRoute || isAdminRoute)) {
     redirectUrl.pathname = '/auth/login';
     redirectUrl.search = '';
     redirectUrl.searchParams.set('redirect', request.nextUrl.href);
@@ -72,7 +71,7 @@ export async function middleware(request: NextRequest) {
           return deleteCookieAndContinue();
         }
         // For protected routes, clear cookies and redirect to login
-        if (isPrivateRoute || isAdminRoute || isModeratorRoute) {
+        if (isPrivateRoute || isAdminRoute) {
           redirectUrl.pathname = '/auth/login';
           redirectUrl.search = '';
           redirectUrl.searchParams.set('redirect', request.nextUrl.href);
@@ -85,7 +84,7 @@ export async function middleware(request: NextRequest) {
       // Token is valid, check user validity
       if (!hasValidUser) {
         // No valid user, clear cookies
-        if (isPrivateRoute || isAdminRoute || isModeratorRoute) {
+        if (isPrivateRoute || isAdminRoute) {
           redirectUrl.pathname = '/auth/login';
           redirectUrl.search = '';
           redirectUrl.searchParams.set('redirect', request.nextUrl.href);
@@ -107,17 +106,12 @@ export async function middleware(request: NextRequest) {
           redirectUrl.pathname = '/';
           return NextResponse.redirect(redirectUrl);
         }
-
-        if (isModeratorRoute && ![Role.ADMIN, Role.MODERATOR].includes(user?.role as Role)) {
-          redirectUrl.pathname = '/';
-          return NextResponse.redirect(redirectUrl);
-        }
       }
     } catch (tokenError) {
       console.error('Token validation error:', tokenError);
 
       // Only clear cookies and redirect for protected routes
-      if (isPrivateRoute || isAdminRoute || isModeratorRoute) {
+      if (isPrivateRoute || isAdminRoute) {
         redirectUrl.pathname = '/auth/login';
         redirectUrl.search = '';
         redirectUrl.searchParams.set('redirect', request.nextUrl.href);

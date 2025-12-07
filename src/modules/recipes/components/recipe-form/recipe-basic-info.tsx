@@ -157,9 +157,11 @@ export function RecipeBasicInfo({
                 const val = parseInt(e.target.value) || 0;
                 onCookTimeChange(Math.min(Math.max(val, 1), 1440));
               }}
+              onInvalid={handleInvalidField}
               min="1"
               max="1440"
               step="1"
+              required
               className="pr-12 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
             <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm font-medium text-gray-500">

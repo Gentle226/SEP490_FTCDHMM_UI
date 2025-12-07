@@ -39,18 +39,48 @@ const healthGoalSchema = z.object({
       z.object({
         nutrientId: z.string().min(1, 'Bắt buộc phải chọn ít nhất một chất dinh dưỡng'),
         targetType: z.string().optional(),
-        minValue: z.coerce.number().min(0, 'Giá trị tối thiểu phải lớn hơn hoặc bằng 0'),
+        minValue: z.coerce
+          .number({
+            required_error: 'Giá trị tối thiểu là bắt buộc',
+            invalid_type_error: 'Giá trị tối thiểu là bắt buộc',
+          })
+          .min(0, 'Giá trị tối thiểu phải lớn hơn hoặc bằng 0'),
         medianValue: z.coerce.number().min(0).optional(),
-        maxValue: z.coerce.number().min(0, 'Giá trị tối đa phải lớn hơn 0'),
-        minEnergyPct: z.coerce.number().min(0).max(100).optional(),
+        maxValue: z.coerce
+          .number({
+            required_error: 'Giá trị tối đa là bắt buộc',
+            invalid_type_error: 'Giá trị tối đa là bắt buộc',
+          })
+          .min(0, 'Giá trị tối đa phải lớn hơn 0'),
+        minEnergyPct: z.coerce
+          .number({ invalid_type_error: 'Giá trị % năng lượng tối thiểu là bắt buộc' })
+          .min(0)
+          .max(100)
+          .optional(),
         medianEnergyPct: z.coerce.number().min(0).max(100).optional(),
-        maxEnergyPct: z.coerce.number().min(0).max(100).optional(),
+        maxEnergyPct: z.coerce
+          .number({ invalid_type_error: 'Giá trị % năng lượng tối đa là bắt buộc' })
+          .min(0)
+          .max(100)
+          .optional(),
         weight: z.coerce.number().min(0).optional(),
       }),
     )
-    .refine((targets) => targets.every((t) => t.maxValue > t.minValue), {
-      message: 'Giá trị tối đa phải lớn hơn giá trị tối thiểu',
-    }),
+    .refine(
+      (targets) =>
+        targets.every((t) => {
+          // For ENERGYPERCENT type, validate energy percentages
+          if (t.targetType === 'ENERGYPERCENT') {
+            if (t.minEnergyPct === undefined || t.maxEnergyPct === undefined) return false;
+            return t.maxEnergyPct > t.minEnergyPct;
+          }
+          // For ABSOLUTE type or when targetType is not set, validate absolute values
+          return t.maxValue > t.minValue;
+        }),
+      {
+        message: 'Giá trị tối đa phải lớn hơn giá trị tối thiểu',
+      },
+    ),
 });
 
 type HealthGoalFormData = z.infer<typeof healthGoalSchema>;
@@ -110,6 +140,51 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
     };
     fetchNutrients();
   }, []);
+
+  // Show validation errors as toast (sequentially - only first error)
+  useEffect(() => {
+    const getFirstValidationError = (): string | null => {
+      // Check for name errors first
+      if (errors.name?.message) {
+        return errors.name.message;
+      }
+      // Check for description errors
+      if (errors.description?.message) {
+        return errors.description.message;
+      }
+      // Check for array-level targets errors (min > max validation)
+      if (errors.targets?.root?.message) {
+        return errors.targets.root.message;
+      }
+      // Check for individual target field errors
+      if (errors.targets && Array.isArray(errors.targets)) {
+        for (let i = 0; i < errors.targets.length; i++) {
+          const target = errors.targets[i];
+          if (target?.nutrientId?.message) {
+            return `Chỉ số ${i + 1}: ${target.nutrientId.message}`;
+          }
+          if (target?.minValue?.message) {
+            return `Chỉ số ${i + 1}: ${target.minValue.message}`;
+          }
+          if (target?.maxValue?.message) {
+            return `Chỉ số ${i + 1}: ${target.maxValue.message}`;
+          }
+          if (target?.minEnergyPct?.message) {
+            return `Chỉ số ${i + 1}: ${target.minEnergyPct.message}`;
+          }
+          if (target?.maxEnergyPct?.message) {
+            return `Chỉ số ${i + 1}: ${target.maxEnergyPct.message}`;
+          }
+        }
+      }
+      return null;
+    };
+
+    const firstError = getFirstValidationError();
+    if (firstError) {
+      toast.error(firstError);
+    }
+  }, [errors]);
 
   useEffect(() => {
     if (goal) {

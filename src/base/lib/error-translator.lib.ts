@@ -40,6 +40,9 @@ export const translateError = (error: unknown): string => {
 
   // Handle forbidden errors
   if (statusCode === 403) {
+    if (message.includes('khóa') || message.includes('locked') || message.includes('lockout')) {
+      return message || 'Tài khoản của bạn đã bị khóa.';
+    }
     return 'Bạn không có quyền thực hiện hành động này';
   }
 

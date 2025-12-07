@@ -28,7 +28,7 @@ export default function AdminDashboard() {
 
           {/* Moderator Management */}
           <div className="bg-card rounded-lg border p-6">
-            <UserManagementTable title={<span>Quản Lý Kiểm Duyệt Viên</span>} canCreate={true} />
+            <UserManagementTable />
           </div>
         </div>
       </DashboardLayout>

@@ -33,20 +33,6 @@ export function AdminGuard({ children, user, fallback = null }: AdminGuardProps)
   );
 }
 
-interface ModeratorGuardProps {
-  children: ReactNode;
-  user?: Pick<User, 'role'> | null;
-  fallback?: ReactNode;
-}
-
-export function ModeratorGuard({ children, user, fallback = null }: ModeratorGuardProps) {
-  return (
-    <RoleGuard allowedRoles={[Role.ADMIN, Role.MODERATOR]} user={user} fallback={fallback}>
-      {children}
-    </RoleGuard>
-  );
-}
-
 interface CustomerGuardProps {
   children: ReactNode;
   user?: Pick<User, 'role'> | null;

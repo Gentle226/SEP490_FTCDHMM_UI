@@ -46,8 +46,11 @@ export const useNotificationSignalR = (userId: string | null) => {
         }
 
         // Tạo kết nối mới - phải truyền userId để server thêm vào group
+        const apiBaseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, ''); // Remove trailing slashes
+        const hubUrl = `${apiBaseUrl}/hubs/notification?userId=${userId}`;
+
         const connection = new HubConnectionBuilder()
-          .withUrl(`http://localhost:7116/hubs/notification?userId=${userId}`, {
+          .withUrl(hubUrl, {
             transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
             withCredentials: true, // Gửi cookies/thông tin xác thực
             skipNegotiation: false, // Gọi endpoint /negotiate
