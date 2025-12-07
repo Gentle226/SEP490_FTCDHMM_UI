@@ -68,6 +68,17 @@ class AuthService extends HttpClient {
           'nameid',
           'unique_name',
         ) || payload.email,
+      userName:
+        extractClaim(
+          decodedToken,
+          'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname',
+          'userName',
+          'user_name',
+          'preferred_username',
+          'unique_name',
+        ) ||
+        extractClaim(decodedToken, 'email', 'email_address', 'mail') ||
+        '',
       email:
         extractClaim(
           decodedToken,
@@ -220,6 +231,17 @@ class AuthService extends HttpClient {
           'nameid',
           'unique_name',
         ) || 'google-user',
+      userName:
+        extractClaim(
+          decodedToken,
+          'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname',
+          'userName',
+          'user_name',
+          'preferred_username',
+          'unique_name',
+        ) ||
+        extractClaim(decodedToken, 'email', 'email_address', 'mail') ||
+        '',
       email:
         extractClaim(
           decodedToken,

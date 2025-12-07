@@ -49,6 +49,7 @@ export function useUserTagging(
           .filter((user) => user.id !== currentUserId)
           .map((user) => ({
             id: user.id,
+            userName: user.userName || `${user.firstName} ${user.lastName}`.trim(),
             firstName: user.firstName,
             lastName: user.lastName,
             email: '',
