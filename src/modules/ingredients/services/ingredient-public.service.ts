@@ -28,12 +28,10 @@ export interface IngredientDetailsResponse {
   isNew: boolean;
   categories: Array<{ id: string; name: string }>;
   nutrients: Array<{
-    name: string;
-    vietnameseName?: string;
+    id: string;
+    vietnameseName: string;
     unit: string;
-    minValue?: number;
-    maxValue?: number;
-    medianValue?: number;
+    value: number;
   }>;
 }
 

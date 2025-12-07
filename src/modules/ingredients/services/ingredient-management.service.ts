@@ -4,18 +4,14 @@ export interface Nutrient {
   id: string;
   vietnameseName?: string;
   unit?: string;
-  min?: number;
-  max?: number;
-  median?: number;
+  value?: number;
 }
 
 export interface NutrientResponse {
   id: string;
   vietnameseName: string;
   unit: string;
-  minValue?: number;
-  maxValue?: number;
-  medianValue?: number;
+  value: number;
 }
 
 export interface NutrientInfo {
@@ -128,9 +124,7 @@ class IngredientManagementService extends HttpClient {
           id: n.id || '', // Will be empty since API doesn't provide it
           vietnameseName: n.vietnameseName,
           unit: n.unit,
-          min: n.minValue,
-          max: n.maxValue,
-          median: n.medianValue,
+          value: n.value,
         };
       }),
       lastUpdatedUtc: apiResponse.lastUpdatedUtc,
@@ -233,14 +227,8 @@ class IngredientManagementService extends HttpClient {
     if (data.nutrients && data.nutrients.length > 0) {
       data.nutrients.forEach((nutrient, index) => {
         formData.append(`Nutrients[${index}].NutrientId`, nutrient.id);
-        if (nutrient.min !== undefined && nutrient.min !== null) {
-          formData.append(`Nutrients[${index}].Min`, nutrient.min.toString());
-        }
-        if (nutrient.max !== undefined && nutrient.max !== null) {
-          formData.append(`Nutrients[${index}].Max`, nutrient.max.toString());
-        }
-        if (nutrient.median !== undefined && nutrient.median !== null) {
-          formData.append(`Nutrients[${index}].Median`, nutrient.median.toString());
+        if (nutrient.value !== undefined && nutrient.value !== null) {
+          formData.append(`Nutrients[${index}].Value`, nutrient.value.toString());
         }
       });
     }
@@ -281,14 +269,8 @@ class IngredientManagementService extends HttpClient {
     if (data.nutrients && data.nutrients.length > 0) {
       data.nutrients.forEach((nutrient, index) => {
         formData.append(`Nutrients[${index}].NutrientId`, nutrient.id);
-        if (nutrient.min !== undefined && nutrient.min !== null) {
-          formData.append(`Nutrients[${index}].Min`, nutrient.min.toString());
-        }
-        if (nutrient.max !== undefined && nutrient.max !== null) {
-          formData.append(`Nutrients[${index}].Max`, nutrient.max.toString());
-        }
-        if (nutrient.median !== undefined && nutrient.median !== null) {
-          formData.append(`Nutrients[${index}].Median`, nutrient.median.toString());
+        if (nutrient.value !== undefined && nutrient.value !== null) {
+          formData.append(`Nutrients[${index}].Value`, nutrient.value.toString());
         }
       });
     }

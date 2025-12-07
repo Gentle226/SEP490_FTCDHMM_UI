@@ -257,7 +257,7 @@ function IngredientsContent() {
     const remainingNutrients: typeof nutrients = [];
 
     nutrients.forEach((nutrient) => {
-      const name = (nutrient.vietnameseName || nutrient.name || '').toLowerCase();
+      const name = (nutrient.vietnameseName || '').toLowerCase();
       if (macroKeywords.some((keyword) => name.includes(keyword))) {
         prioritizedNutrients.push(nutrient);
       } else {
@@ -583,11 +583,11 @@ function IngredientsContent() {
                         {getKeyNutrients(selectedIngredient.nutrients).map((nutrient, index) => (
                           <div key={index} className="rounded-lg border bg-lime-50 p-3">
                             <div className="text-sm font-medium">
-                              {nutrient.vietnameseName || nutrient.name || 'N/A'}
+                              {nutrient.vietnameseName || 'N/A'}
                             </div>
                             <div className="mt-1 text-lg font-bold text-[#99b94a]">
-                              {nutrient.medianValue !== undefined
-                                ? `${nutrient.medianValue} ${nutrient.unit}`
+                              {nutrient.value !== undefined
+                                ? `${nutrient.value} ${nutrient.unit}`
                                 : 'N/A'}
                             </div>
                           </div>
@@ -609,9 +609,7 @@ function IngredientsContent() {
                           <div key={index} className="rounded-lg border bg-gray-50 p-3">
                             <div className="flex items-center justify-between">
                               <span className="text-sm font-medium">
-                                {nutrient.vietnameseName ||
-                                  nutrient.name ||
-                                  `Dinh dưỡng ${index + 1}`}
+                                {nutrient.vietnameseName || `Dinh dưỡng ${index + 1}`}
                               </span>
                               {nutrient.unit && (
                                 <span className="text-muted-foreground text-xs">
@@ -619,26 +617,13 @@ function IngredientsContent() {
                                 </span>
                               )}
                             </div>
-                            <div className="mt-1 space-y-1 text-xs">
-                              {nutrient.minValue !== undefined && (
-                                <div>
-                                  <span className="text-muted-foreground">Min: </span>
-                                  <span className="font-medium">{nutrient.minValue}</span>
-                                </div>
-                              )}
-                              {nutrient.medianValue !== undefined && (
-                                <div>
-                                  <span className="text-muted-foreground">Median: </span>
-                                  <span className="font-medium text-lime-700">
-                                    {nutrient.medianValue}
-                                  </span>
-                                </div>
-                              )}
-                              {nutrient.maxValue !== undefined && (
-                                <div>
-                                  <span className="text-muted-foreground">Max: </span>
-                                  <span className="font-medium">{nutrient.maxValue}</span>
-                                </div>
+                            <div className="mt-1">
+                              {nutrient.value !== undefined ? (
+                                <span className="text-lg font-semibold text-lime-700">
+                                  {nutrient.value}
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">N/A</span>
                               )}
                             </div>
                           </div>

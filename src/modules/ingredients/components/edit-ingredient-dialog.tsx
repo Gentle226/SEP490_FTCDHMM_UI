@@ -47,9 +47,7 @@ interface EditIngredientDialogProps {
 
 interface NutrientRow {
   nutrientId: string;
-  min?: number;
-  max?: number;
-  median?: number;
+  value?: number;
 }
 
 export function EditIngredientDialog({
@@ -123,9 +121,7 @@ export function EditIngredientDialog({
           return {
             nutrientId: matchedNutrient?.id || '', // Use matched nutrient ID or empty string
             vietnameseName: n.vietnameseName,
-            min: n.min,
-            max: n.max,
-            median: n.median,
+            value: n.value,
           };
         }) || [];
 
@@ -247,10 +243,7 @@ export function EditIngredientDialog({
   };
 
   const handleAddNutrient = () => {
-    setNutrientRows([
-      ...nutrientRows,
-      { nutrientId: '', min: undefined, max: undefined, median: undefined },
-    ]);
+    setNutrientRows([...nutrientRows, { nutrientId: '', value: undefined }]);
   };
 
   const handleRemoveNutrient = (index: number) => {
@@ -304,57 +297,22 @@ export function EditIngredientDialog({
 
     // Validate all nutrients have required fields
     const incompletNutrients = nutrientRows.filter(
-      (row) => row.nutrientId && (row.median === undefined || row.median === null),
+      (row) => row.nutrientId && (row.value === undefined || row.value === null),
     );
 
     if (incompletNutrients.length > 0) {
-      toast.error('Vui lòng điền giá trị Median cho tất cả thành phần dinh dưỡng');
+      toast.error('Vui lòng điền giá trị cho tất cả thành phần dinh dưỡng');
       return;
     }
 
-    // Validate nutrient value constraints: only median is required, median must >= 0
-    // If min/max are provided: min >= 0, max >= 0, min < median <= max
+    // Validate nutrient values are within allowed range
     for (const row of nutrientRows) {
-      if (row.nutrientId && row.median !== undefined) {
-        const median = row.median;
-
-        if (median < 0) {
+      if (row.nutrientId && row.value !== undefined) {
+        if (row.value < 0 || row.value > 9999999.999) {
           const nutrientName =
             nutrients.find((n) => n.id === row.nutrientId)?.vietnameseName || 'Thành phần';
-          toast.error(`${nutrientName}: Median phải lớn hơn 0`);
+          toast.error(`${nutrientName}: Giá trị phải từ 0 đến 9999999.999`);
           return;
-        }
-
-        // If min is provided, validate: min >= 0 and min < median
-        if (row.min !== undefined && row.min !== null) {
-          if (row.min < 0) {
-            const nutrientName =
-              nutrients.find((n) => n.id === row.nutrientId)?.vietnameseName || 'Thành phần';
-            toast.error(`${nutrientName}: Min không được âm`);
-            return;
-          }
-          if (row.min >= median) {
-            const nutrientName =
-              nutrients.find((n) => n.id === row.nutrientId)?.vietnameseName || 'Thành phần';
-            toast.error(`${nutrientName}: Min phải nhỏ hơn Median`);
-            return;
-          }
-        }
-
-        // If max is provided, validate: max >= 0 and median <= max
-        if (row.max !== undefined && row.max !== null) {
-          if (row.max < 0) {
-            const nutrientName =
-              nutrients.find((n) => n.id === row.nutrientId)?.vietnameseName || 'Thành phần';
-            toast.error(`${nutrientName}: Max không được âm`);
-            return;
-          }
-          if (median > row.max) {
-            const nutrientName =
-              nutrients.find((n) => n.id === row.nutrientId)?.vietnameseName || 'Thành phần';
-            toast.error(`${nutrientName}: Median phải nhỏ hơn hoặc bằng Max`);
-            return;
-          }
         }
       }
     }
@@ -380,9 +338,7 @@ export function EditIngredientDialog({
         .filter((row) => row.nutrientId) // Only include rows with a nutrient selected
         .map((row) => ({
           id: row.nutrientId,
-          min: row.min,
-          max: row.max,
-          median: row.median,
+          value: row.value,
         }));
     }
 
@@ -615,14 +571,8 @@ export function EditIngredientDialog({
                         Chất béo, Tinh bột
                       </li>
                       <li>
-                        <span className="font-semibold">Min:</span> Giá trị tối thiểu (tùy chọn)
-                      </li>
-                      <li>
-                        <span className="font-semibold">Median:</span> Giá trị trung bình
-                        <span className="font-bold text-red-600"> (bắt buộc)</span>
-                      </li>
-                      <li>
-                        <span className="font-semibold">Max:</span> Giá trị tối đa (tùy chọn)
+                        <span className="font-semibold">Giá trị:</span> Giá trị dinh dưỡng
+                        <span className="font-bold text-red-600"> (bắt buộc, 0-9999999.999)</span>
                       </li>
                     </ul>
                   </div>
@@ -633,14 +583,12 @@ export function EditIngredientDialog({
             {nutrientRows.length > 0 && (
               <div className="space-y-3">
                 {/* Table header */}
-                <div className="grid grid-cols-[1.6fr_0.9fr_0.9fr_0.9fr_0.6fr] gap-2 rounded-t-lg border-b-2 bg-lime-50 px-3 py-2">
+                <div className="grid grid-cols-[2fr_1.2fr_0.6fr] gap-2 rounded-t-lg border-b-2 bg-lime-50 px-3 py-2">
                   <div className="text-sm font-bold text-lime-900">Tên Dinh Dưỡng</div>
-                  <div className="text-center text-sm font-bold text-lime-900">Min</div>
                   <div className="text-center text-sm font-bold text-lime-900">
-                    Median
+                    Giá trị
                     <span className="ml-1 text-red-500">*</span>
                   </div>
-                  <div className="text-center text-sm font-bold text-lime-900">Max</div>
                   <div className="text-center text-sm font-bold text-lime-900">Xóa</div>
                 </div>
 
@@ -651,7 +599,7 @@ export function EditIngredientDialog({
                   return (
                     <div
                       key={index}
-                      className={`grid grid-cols-[1.8fr_0.9fr_0.9fr_0.9fr_0.6fr] items-center gap-2 rounded-lg border-2 px-3 py-2 transition-all ${
+                      className={`grid grid-cols-[2fr_1.2fr_0.6fr] items-center gap-2 rounded-lg border-2 px-3 py-2 transition-all ${
                         isRequired
                           ? 'border-lime-200 bg-lime-50'
                           : 'border-gray-200 bg-white hover:border-lime-300'
@@ -671,50 +619,16 @@ export function EditIngredientDialog({
                         />
                       </div>
 
-                      {/* Min input */}
+                      {/* Value input */}
                       <div className="flex items-center gap-1">
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="min"
-                          value={row.min ?? ''}
-                          onChange={(e) => handleNutrientChange(index, 'min', e.target.value)}
-                          className="w-full text-sm [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                          title="Tối thiểu"
-                        />
-                        <span className="text-muted-foreground w-5 shrink-0 text-xs font-medium">
-                          {unit}
-                        </span>
-                      </div>
-
-                      {/* Median input */}
-                      <div className="flex items-center gap-1">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="median"
-                          value={row.median ?? ''}
-                          onChange={(e) => handleNutrientChange(index, 'median', e.target.value)}
-                          className={`w-full border-2 text-sm font-medium [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
-                            !row.median ? 'border-red-300 bg-red-50' : 'border-lime-300 bg-lime-50'
-                          }`}
-                          title="Bắt buộc"
-                        />
-                        <span className="text-muted-foreground w-5 shrink-0 text-xs font-medium">
-                          {unit}
-                        </span>
-                      </div>
-
-                      {/* Max input */}
-                      <div className="flex items-center gap-1">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="max"
-                          value={row.max ?? ''}
-                          onChange={(e) => handleNutrientChange(index, 'max', e.target.value)}
-                          className="w-full text-sm [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                          title="Tối đa"
+                          placeholder="Giá trị"
+                          value={row.value ?? ''}
+                          onChange={(e) => handleNutrientChange(index, 'value', e.target.value)}
+                          className={`border-2 ${!row.value && row.value !== 0 ? 'border-red-300' : 'border-lime-300'}`}
+                          title="Bắt buộc (0 - 9999999.999)"
                         />
                         <span className="text-muted-foreground w-5 shrink-0 text-xs font-medium">
                           {unit}
