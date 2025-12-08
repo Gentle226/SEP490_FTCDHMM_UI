@@ -62,7 +62,7 @@ export function useFollowUser(username?: string) {
 
   return useMutation({
     mutationFn: (followeeId: string) => profileService.followUser(followeeId),
-    onMutate: async (followeeId) => {
+    onMutate: async (_followeeId) => {
       // Cancel any outgoing refetches for this profile
       if (username) {
         await queryClient.cancelQueries({ queryKey: ['profile', username] });
@@ -118,7 +118,7 @@ export function useUnfollowUser(username?: string) {
 
   return useMutation({
     mutationFn: (followeeId: string) => profileService.unfollowUser(followeeId),
-    onMutate: async (followeeId) => {
+    onMutate: async (_followeeId) => {
       // Cancel any outgoing refetches for this profile
       if (username) {
         await queryClient.cancelQueries({ queryKey: ['profile', username] });

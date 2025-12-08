@@ -38,7 +38,7 @@ export function IngredientDetectionDialog({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [detectionResults, setDetectionResults] = useState<IngredientDetectionResult[]>([]);
-  const [selectedIngredients, setSelectedIngredients] = useState<Set<string>>(new Set());
+  const [selectedIngredientIds, setSelectedIngredientIds] = useState<Set<string>>(new Set());
   const [cameraActive, setCameraActive] = useState(false);
 
   const detectionMutation = useMutation({
@@ -48,18 +48,30 @@ export function IngredientDetectionDialog({
     onSuccess: (data) => {
       setDetectionResults(data);
       // Auto-select all by default (high confidence)
-      const ingredientNames = data.map((d) => d.ingredient);
-      setSelectedIngredients(new Set(ingredientNames));
+      const ingredientIds = data.map((d) => d.id);
+      setSelectedIngredientIds(new Set(ingredientIds));
       toast.success(`Phát hiện được ${data.length} nguyên liệu`);
     },
     onError: (error: Error) => {
       console.error('Detection error:', error);
-      const errorMsg = error.message || 'Không thể phân tích ảnh';
+      const errorObj = error as {
+        response?: { data?: { message?: string; statusCode?: number } };
+        message?: string;
+      };
+      const statusCode = errorObj?.response?.data?.statusCode;
+      const message = errorObj?.response?.data?.message || errorObj?.message || '';
+
+      // Handle service unavailable (416)
+      if (statusCode === 416) {
+        toast.error('Dịch vụ AI tạm thời không khả dụng. Vui lòng thử lại sau.');
+        return;
+      }
+
       // Show more helpful message for timeout errors
-      if (error.message?.includes('timeout')) {
+      if (message?.includes('timeout')) {
         toast.error('Quá trình phân tích mất quá lâu. Vui lòng thử lại.');
       } else {
-        toast.error(errorMsg);
+        toast.error(message || 'Không thể phân tích ảnh');
       }
     },
   });
@@ -75,7 +87,7 @@ export function IngredientDetectionDialog({
       reader.readAsDataURL(file);
       // Reset previous results
       setDetectionResults([]);
-      setSelectedIngredients(new Set());
+      setSelectedIngredientIds(new Set());
     }
   };
 
@@ -126,7 +138,7 @@ export function IngredientDetectionDialog({
         setImagePreview(canvasRef.current!.toDataURL('image/jpeg'));
         setCameraActive(false);
         setDetectionResults([]);
-        setSelectedIngredients(new Set());
+        setSelectedIngredientIds(new Set());
         toast.success('Chụp ảnh thành công');
       }
     }, 'image/jpeg');
@@ -145,32 +157,33 @@ export function IngredientDetectionDialog({
     detectionMutation.mutate(imageFile);
   };
 
-  const handleIngredientToggle = (ingredient: string) => {
-    const newSelected = new Set(selectedIngredients);
-    if (newSelected.has(ingredient)) {
-      newSelected.delete(ingredient);
+  const handleIngredientToggle = (ingredientId: string) => {
+    const newSelected = new Set(selectedIngredientIds);
+    if (newSelected.has(ingredientId)) {
+      newSelected.delete(ingredientId);
     } else {
-      newSelected.add(ingredient);
+      newSelected.add(ingredientId);
     }
-    setSelectedIngredients(newSelected);
+    setSelectedIngredientIds(newSelected);
   };
 
   const handleSelectAll = () => {
-    if (selectedIngredients.size === detectionResults.length) {
-      setSelectedIngredients(new Set());
+    if (selectedIngredientIds.size === detectionResults.length) {
+      setSelectedIngredientIds(new Set());
     } else {
-      const all = new Set(detectionResults.map((d) => d.ingredient));
-      setSelectedIngredients(all);
+      const all = new Set(detectionResults.map((d) => d.id));
+      setSelectedIngredientIds(all);
     }
   };
 
   const handleConfirm = () => {
-    if (selectedIngredients.size === 0) {
+    if (selectedIngredientIds.size === 0) {
       toast.error('Vui lòng chọn ít nhất một nguyên liệu');
       return;
     }
 
-    onSelect?.(Array.from(selectedIngredients));
+    // Pass the selected ingredient IDs to the callback
+    onSelect?.(Array.from(selectedIngredientIds));
     resetDialog();
     onOpenChange(false);
   };
@@ -179,7 +192,7 @@ export function IngredientDetectionDialog({
     setImageFile(null);
     setImagePreview(null);
     setDetectionResults([]);
-    setSelectedIngredients(new Set());
+    setSelectedIngredientIds(new Set());
   };
 
   const handleClose = () => {
@@ -328,13 +341,13 @@ export function IngredientDetectionDialog({
               {/* Select All Button */}
               <div className="flex items-center gap-2">
                 <Checkbox
-                  checked={selectedIngredients.size === detectionResults.length}
+                  checked={selectedIngredientIds.size === detectionResults.length}
                   onCheckedChange={handleSelectAll}
                   id="select-all"
                   className="border-[#99b94a]"
                 />
                 <label htmlFor="select-all" className="cursor-pointer font-medium">
-                  Chọn tất cả ({selectedIngredients.size}/{detectionResults.length})
+                  Chọn tất cả ({selectedIngredientIds.size}/{detectionResults.length})
                 </label>
               </div>
 
@@ -342,12 +355,12 @@ export function IngredientDetectionDialog({
               <div className="space-y-2 rounded-lg bg-gray-50 p-4">
                 {detectionResults.map((result, index) => (
                   <div
-                    key={index}
+                    key={result.id}
                     className="flex items-center gap-3 rounded-md border border-gray-200 bg-white p-3"
                   >
                     <Checkbox
-                      checked={selectedIngredients.has(result.ingredient)}
-                      onCheckedChange={() => handleIngredientToggle(result.ingredient)}
+                      checked={selectedIngredientIds.has(result.id)}
+                      onCheckedChange={() => handleIngredientToggle(result.id)}
                       id={`ingredient-${index}`}
                       className="border-[#99b94a]"
                     />
@@ -372,7 +385,7 @@ export function IngredientDetectionDialog({
                 variant="outline"
                 onClick={() => {
                   setDetectionResults([]);
-                  setSelectedIngredients(new Set());
+                  setSelectedIngredientIds(new Set());
                   setImageFile(null);
                   setImagePreview(null);
                 }}
@@ -390,7 +403,7 @@ export function IngredientDetectionDialog({
             </Button>
             {detectionResults.length > 0 && (
               <Button onClick={handleConfirm} className="bg-[#99b94a] hover:bg-[#88a839]">
-                Tìm kiếm ({selectedIngredients.size} nguyên liệu)
+                Tìm kiếm ({selectedIngredientIds.size} nguyên liệu)
               </Button>
             )}
           </div>

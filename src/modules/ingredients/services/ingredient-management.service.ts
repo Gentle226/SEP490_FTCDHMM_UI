@@ -53,6 +53,7 @@ export interface IngredientApiResponse {
 }
 
 export interface IngredientDetectionResult {
+  id: string;
   ingredient: string;
   confidence: number;
 }

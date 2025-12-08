@@ -193,10 +193,14 @@ function RegisterStep1({
 
   // Handle email already registered error
   useEffect(() => {
-    if (error instanceof AxiosError && error.response?.status === 415) {
-      const email = getValues('email');
-      setPendingEmail(email);
-      setShowEmailVerifyDialog(true);
+    if (error instanceof AxiosError) {
+      const status = error.response?.status;
+      // Status 405 = DUPLICATE (unverified email), 415 = EXISTS (verified email)
+      if (status === 405 || status === 415) {
+        const email = getValues('email');
+        setPendingEmail(email);
+        setShowEmailVerifyDialog(true);
+      }
     }
   }, [error, getValues]);
 
@@ -216,6 +220,11 @@ function RegisterStep1({
                   message?: string;
                   code?: string;
                 };
+
+                // Status 405 = DUPLICATE (unverified email) - show dialog instead of error
+                if (status === 405) {
+                  return null; // Dialog is shown instead
+                }
 
                 if (status === 415) {
                   return 'Email đã được đăng ký. Vui lòng sử dụng email khác hoặc xác thực email của bạn.';

@@ -27,6 +27,8 @@ export interface ProfileDto {
   activityLevel?: string;
   bio?: string;
   address?: string;
+  lockoutEnd?: string | null;
+  lockReason?: string | null;
 }
 
 // Update Profile Schema for form validation

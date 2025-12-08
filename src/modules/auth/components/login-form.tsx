@@ -9,10 +9,24 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/base/components/ui/alert';
+import { Button } from '@/base/components/ui/button';
 import { Card, CardContent } from '@/base/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/base/components/ui/dialog';
 import { Form } from '@/base/components/ui/form';
 import { cn } from '@/base/lib/cn.lib';
-import { LoginSchema, loginSchema } from '@/modules/auth/types';
+import {
+  LoginSchema,
+  ResendOtpSchema,
+  loginSchema,
+  verifyEmailOtpSchema,
+} from '@/modules/auth/types';
 
 import { authService } from '../services/auth.service';
 import { GoogleSignInButton } from './google-signin-button';
@@ -25,10 +39,28 @@ interface LoginFormProps extends React.ComponentProps<'div'> {
 export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProps) {
   const searchParams = useSearchParams();
   const [isClient, setIsClient] = useState(false);
+  const [step, setStep] = useState(1);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string>('');
+  const [loginCredentials, setLoginCredentials] = useState<LoginSchema | null>(null);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const handleLoginSuccess = () => {
+    const redirect = searchParams.get('redirect');
+    if (URL.canParse(redirect as string)) {
+      const redirectUrl = new URL(redirect as string);
+
+      if (redirectUrl.origin === window.location.origin) {
+        window.location.replace(redirectUrl.href);
+        return;
+      }
+    }
+
+    window.location.replace('/');
+    onLoginSuccess?.();
+  };
 
   const {
     mutate: triggerLogin,
@@ -36,21 +68,91 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
     error,
   } = useMutation({
     mutationFn: (payload: LoginSchema) => authService.login(payload),
-    onSuccess: async () => {
-      const redirect = searchParams.get('redirect');
-      if (URL.canParse(redirect as string)) {
-        const redirectUrl = new URL(redirect as string);
+    onSuccess: handleLoginSuccess,
+  });
 
-        if (redirectUrl.origin === window.location.origin) {
-          window.location.replace(redirectUrl.href);
-          return;
-        }
-      }
+  switch (step) {
+    case 1:
+      return (
+        <LoginStep1
+          className={className}
+          props={props}
+          isClient={isClient}
+          _searchParams={searchParams}
+          isPending={isPending}
+          error={error}
+          triggerLogin={(data) => {
+            setLoginCredentials(data);
+            triggerLogin(data);
+          }}
+          onSkipToEmailVerification={(email) => {
+            setUnverifiedEmail(email);
+            setStep(2);
+          }}
+          handleLoginSuccess={handleLoginSuccess}
+        />
+      );
+    case 2:
+      return (
+        <VerifyEmailStep
+          email={unverifiedEmail}
+          onVerified={() => {
+            if (loginCredentials) {
+              triggerLogin(loginCredentials);
+            }
+          }}
+        />
+      );
+    default:
+      return null;
+  }
+}
 
-      window.location.replace('/');
-      onLoginSuccess?.();
+type LoginStep1Props = {
+  className?: string;
+  props: React.ComponentProps<'div'>;
+  isClient: boolean;
+  _searchParams: ReturnType<typeof useSearchParams>;
+  isPending: boolean;
+  error: Error | null;
+  triggerLogin: (data: LoginSchema) => void;
+  onSkipToEmailVerification: (email: string) => void;
+  handleLoginSuccess: () => void;
+};
+
+function LoginStep1({
+  className,
+  props,
+  isClient,
+  isPending,
+  error,
+  triggerLogin,
+  onSkipToEmailVerification,
+  handleLoginSuccess,
+}: LoginStep1Props) {
+  const [showEmailVerifyDialog, setShowEmailVerifyDialog] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string>('');
+  const [lastAttemptedEmail, setLastAttemptedEmail] = useState<string>('');
+
+  // Mutation to resend OTP
+  const { mutate: sendOtp, isPending: isSendingOtp } = useMutation({
+    mutationFn: (email: string) => {
+      const payload: ResendOtpSchema = { email };
+      return authService.resendOtp(payload);
     },
   });
+
+  // Handle email not verified error (status 402)
+  useEffect(() => {
+    if (error instanceof AxiosError) {
+      const status = error.status ?? error.response?.status;
+      if (status === 402) {
+        // Email not confirmed - use the email from the last login attempt
+        setPendingEmail(lastAttemptedEmail);
+        setShowEmailVerifyDialog(true);
+      }
+    }
+  }, [error, lastAttemptedEmail]);
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
@@ -153,20 +255,7 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
                           size="large"
                           text="signin_with"
                           disabled={isPending}
-                          onSuccess={() => {
-                            const redirect = searchParams.get('redirect');
-                            if (URL.canParse(redirect as string)) {
-                              const redirectUrl = new URL(redirect as string);
-
-                              if (redirectUrl.origin === window.location.origin) {
-                                window.location.replace(redirectUrl.href);
-                                return;
-                              }
-                            }
-
-                            window.location.replace('/');
-                            onLoginSuccess?.();
-                          }}
+                          onSuccess={handleLoginSuccess}
                           onError={(error) => {
                             console.error('Google login error:', error);
                           }}
@@ -185,7 +274,10 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
                     </div>
                   </div>
                 )}
-                onSuccessSubmit={(data) => triggerLogin(data)}
+                onSuccessSubmit={(data) => {
+                  setLastAttemptedEmail(data.email);
+                  triggerLogin(data);
+                }}
               />
             </div>
           </div>
@@ -215,6 +307,150 @@ export function LoginForm({ className, onLoginSuccess, ...props }: LoginFormProp
         </a>
         .
       </div>
+
+      {/* Dialog để hỏi người dùng có muốn xác thực email không */}
+      <Dialog open={showEmailVerifyDialog} onOpenChange={setShowEmailVerifyDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[#99b94a]">Xác thực Email</DialogTitle>
+            <DialogDescription>
+              Email của bạn chưa được xác thực. Bạn có muốn xác thực email này không?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowEmailVerifyDialog(false)}>
+              Hủy
+            </Button>
+            <Button
+              className="bg-[#99b94a] hover:bg-[#7a8f3a]"
+              disabled={isSendingOtp}
+              onClick={() => {
+                sendOtp(pendingEmail, {
+                  onSuccess: () => {
+                    onSkipToEmailVerification(pendingEmail);
+                    setShowEmailVerifyDialog(false);
+                  },
+                });
+              }}
+            >
+              {isSendingOtp ? 'Đang gửi...' : 'Xác thực Email'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+type VerifyEmailStepProps = {
+  email: string;
+  onVerified?: () => void;
+};
+
+function VerifyEmailStep({ email, onVerified }: VerifyEmailStepProps) {
+  const {
+    mutate: verifyOtp,
+    isPending,
+    error,
+  } = useMutation({
+    mutationFn: (payload: { code: string }) =>
+      authService.verifyEmailOtp({ email, code: payload.code }),
+    onSuccess: () => onVerified?.(),
+  });
+
+  const [cooldown, setCooldown] = useState(30);
+  useEffect(() => {
+    setCooldown(30);
+  }, [email]);
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => setCooldown((c) => c - 1), 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
+
+  const { mutate: resendCode, isPending: isResending } = useMutation({
+    mutationFn: async () => {
+      const payload: ResendOtpSchema = { email };
+      return authService.resendOtp(payload);
+    },
+    onSuccess: () => setCooldown(30),
+  });
+
+  return (
+    <div className="space-y-2">
+      <Card className={`overflow-hidden p-0 ${styles.cardContainer}`}>
+        <CardContent className="grid p-0 md:grid-cols-2">
+          <div className="p-6 md:p-8">
+            <div className="flex flex-col gap-6">
+              <div className="mb-4 text-center">
+                <h3 className="text-lg font-semibold text-[#99b94a] sm:text-xl">
+                  Xác minh email của bạn
+                </h3>
+                <p className="mt-2 text-xs text-gray-600 sm:text-sm">
+                  Chúng tôi đã gửi mã xác minh 6 chữ số đến{' '}
+                  <strong className="text-[#99b94a]">{email}</strong>
+                </p>
+              </div>
+
+              {error && (
+                <Alert variant="danger" className="bg-danger/10">
+                  <AlertCircleIcon />
+                  <AlertTitle>Xác minh thất bại</AlertTitle>
+                  <AlertDescription>
+                    Mã không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu mã mới hoặc thử lại sau.
+                  </AlertDescription>
+                </Alert>
+              )}
+              <Form
+                loading={isPending}
+                className="flex flex-col gap-4"
+                schema={verifyEmailOtpSchema.pick({ code: true })}
+                fields={[
+                  {
+                    name: 'code',
+                    type: 'text',
+                    label: 'Mã xác thực',
+                    placeholder: 'Nhập mã xác thực đã gửi đến email',
+                  },
+                ]}
+                renderSubmitButton={(Button) => (
+                  <Button className="w-full border-[#99b94a] bg-[#99b94a] hover:bg-[#7a8f3a]">
+                    Xác thực
+                  </Button>
+                )}
+                onSuccessSubmit={(data: { code: string }) => verifyOtp({ code: data.code })}
+              />
+
+              <div className="flex justify-center p-6">
+                <button
+                  type="button"
+                  className="disabled:text-muted-foreground text-sm text-[#99b94a] hover:text-[#7a8f3a] hover:underline disabled:cursor-not-allowed"
+                  disabled={cooldown > 0 || isResending}
+                  onClick={() => resendCode()}
+                >
+                  {cooldown > 0
+                    ? `Gửi lại mã (${cooldown}s)`
+                    : isResending
+                      ? 'Đang gửi…'
+                      : 'Gửi lại mã'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative hidden md:block">
+            <Image
+              src="/Web Background.png"
+              alt="Login illustration"
+              className="absolute inset-0 h-full w-full object-cover"
+              width={576}
+              height={512}
+              quality={100}
+              priority
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

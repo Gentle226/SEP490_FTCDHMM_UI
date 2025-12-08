@@ -1,12 +1,23 @@
 'use client';
 
-import { Edit, MapPin, Share2, UserCheck, UserPlus } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Edit, Lock, MapPin, Share2, Unlock, UserCheck, UserPlus } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { Avatar, AvatarFallback, AvatarImage } from '@/base/components/ui/avatar';
 import { Button } from '@/base/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/base/components/ui/dialog';
+import { Label } from '@/base/components/ui/label';
 // import {
 //   DropdownMenu,
 //   DropdownMenuContent,
@@ -14,7 +25,7 @@ import { Button } from '@/base/components/ui/button';
 //   DropdownMenuTrigger,
 // } from '@/base/components/ui/dropdown-menu';
 import { Skeleton } from '@/base/components/ui/skeleton';
-import { useAuth } from '@/modules/auth';
+import { PermissionPolicies, hasPermission, useAuth } from '@/modules/auth';
 import {
   FollowersDialog,
   FollowingDialog,
@@ -26,15 +37,23 @@ import {
 } from '@/modules/profile';
 import { UserRecipesList } from '@/modules/recipes/components';
 import { ReportTargetType, ReportTrigger } from '@/modules/report';
+import { userManagementService } from '@/modules/users/services/user-management.service';
 
 export default function UserProfilePage() {
   const params = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
   const username = params.userId as string;
   const isOwnProfile = currentUser?.userName === username;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [recipeCount, setRecipeCount] = useState(0);
+  const [lockDialogOpen, setLockDialogOpen] = useState(false);
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
+  const [lockDays, setLockDays] = useState(7);
+  const [lockReason, setLockReason] = useState('');
+  const [showFollowersDialog, setShowFollowersDialog] = useState(false);
+  const [showFollowingDialog, setShowFollowingDialog] = useState(false);
 
   // Fetch profile data based on whether it's own profile or other's
   const { data: ownProfile, isLoading: isLoadingOwn } = useProfile();
@@ -45,18 +64,77 @@ export default function UserProfilePage() {
   const followUser = useFollowUser(isOwnProfile ? '' : username);
   const unfollowUser = useUnfollowUser(isOwnProfile ? '' : username);
 
+  // Lock user mutation
+  const lockMutation = useMutation({
+    mutationFn: (request: { userId: string; day: number; reason: string }) =>
+      userManagementService.lockUser(request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setLockDialogOpen(false);
+      setLockDays(7);
+      setLockReason('');
+      toast.success('Tài khoản đã được khóa thành công.');
+    },
+    onError: (error: Error) => {
+      // Handle specific error messages from backend
+      const errorObj = error as unknown as { response?: { data?: { message?: string } } };
+      const errorMessage =
+        errorObj?.response?.data?.message || error?.message || 'Không thể khóa tài khoản.';
+
+      // Check for "Invalid action" error (account already locked)
+      if (
+        errorMessage.includes('Hành động không hợp lệ') ||
+        errorMessage.includes('không hợp lệ')
+      ) {
+        toast.error('Tài khoản này đã được khóa. Vui lòng mở khóa trước khi khóa lại.');
+      } else {
+        toast.error(errorMessage);
+      }
+    },
+  });
+
+  // Unlock user mutation
+  const unlockMutation = useMutation({
+    mutationFn: (request: { userId: string }) => userManagementService.unlockUser(request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setUnlockDialogOpen(false);
+      toast.success('Tài khoản đã được mở khóa thành công.');
+    },
+    onError: (error: Error) => {
+      // Handle specific error messages from backend
+      const errorObj = error as unknown as { response?: { data?: { message?: string } } };
+      const errorMessage =
+        errorObj?.response?.data?.message || error?.message || 'Không thể mở khóa tài khoản.';
+
+      // Check for "Invalid action" error (account already unlocked)
+      if (
+        errorMessage.includes('Hành động không hợp lệ') ||
+        errorMessage.includes('không hợp lệ')
+      ) {
+        toast.error('Tài khoản này đã được mở khóa hoặc không trong tình trạng khóa.');
+      } else {
+        toast.error(errorMessage);
+      }
+    },
+  });
+
   const isLoading = isOwnProfile ? isLoadingOwn : isLoadingOther;
   const profileData = isOwnProfile ? ownProfile : otherProfile;
 
-  // Track dialog visibility
-  const [showFollowersDialog, setShowFollowersDialog] = useState(false);
-  const [showFollowingDialog, setShowFollowingDialog] = useState(false);
+  // Helper function to check if account is locked
+  const isAccountLocked = (lockoutEnd: string | null | undefined): boolean => {
+    if (!lockoutEnd) return false;
+    return new Date(lockoutEnd) > new Date();
+  };
 
   // Build profile user object from API data
   const profileUser = profileData
     ? {
         id: profileData.id,
         username: profileData.userName,
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
         fullName: `${profileData.firstName} ${profileData.lastName}`.trim(),
         handle: profileData.userName
           ? `@${profileData.userName}`
@@ -70,6 +148,9 @@ export default function UserProfilePage() {
         followersCount: profileData.followersCount ?? 0,
         followingCount: profileData.followingCount ?? 0,
         isFollowing: profileData.isFollowing ?? false,
+        status: isAccountLocked(profileData.lockoutEnd) ? 'Locked' : 'Active',
+        lockReason: profileData.lockReason || null,
+        lockoutEnd: profileData.lockoutEnd || null,
       }
     : null;
 
@@ -152,6 +233,34 @@ export default function UserProfilePage() {
   const handleAvatarClick = () => {
     if (isOwnProfile) {
       fileInputRef.current?.click();
+    }
+  };
+
+  const canLockUser = hasPermission(currentUser ?? null, PermissionPolicies.USER_MANAGEMENT_UPDATE);
+
+  const handleLock = () => {
+    setLockDialogOpen(true);
+  };
+
+  const handleUnlock = () => {
+    setUnlockDialogOpen(true);
+  };
+
+  const confirmLock = () => {
+    if (profileUser && lockDays >= 1 && lockReason.trim().length >= 3) {
+      lockMutation.mutate({
+        userId: profileUser.id,
+        day: lockDays,
+        reason: lockReason,
+      });
+    }
+  };
+
+  const confirmUnlock = () => {
+    if (profileUser) {
+      unlockMutation.mutate({
+        userId: profileUser.id,
+      });
     }
   };
 
@@ -368,6 +477,44 @@ export default function UserProfilePage() {
                   >
                     <Share2 className="size-4" />
                   </Button>
+                  {/* Lock/Unlock Button - Only show if user has permission */}
+                  {canLockUser && (
+                    <>
+                      {profileUser.status === 'Locked' ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleUnlock}
+                          disabled={unlockMutation.isPending}
+                          className="text-green-600 hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          title="Mở khóa tài khoản"
+                        >
+                          <Unlock className="mr-1 h-4 w-4" />
+                          {unlockMutation.isPending ? (
+                            <span className="hidden sm:inline">Đang mở...</span>
+                          ) : (
+                            <span className="hidden sm:inline">Mở Khóa</span>
+                          )}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleLock}
+                          disabled={lockMutation.isPending}
+                          className="text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          title="Khóa tài khoản"
+                        >
+                          <Lock className="mr-1 h-4 w-4" />
+                          {lockMutation.isPending ? (
+                            <span className="hidden sm:inline">Đang khóa...</span>
+                          ) : (
+                            <span className="hidden sm:inline">Khóa</span>
+                          )}
+                        </Button>
+                      )}
+                    </>
+                  )}
                   {/* <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="text-[#99b94a]" size="sm">
@@ -420,6 +567,150 @@ export default function UserProfilePage() {
           <FollowersDialog open={showFollowersDialog} onOpenChange={setShowFollowersDialog} />
           <FollowingDialog open={showFollowingDialog} onOpenChange={setShowFollowingDialog} />
         </>
+      )}
+
+      {/* Lock User Dialog */}
+      {!isOwnProfile && canLockUser && (
+        <Dialog open={lockDialogOpen} onOpenChange={setLockDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Khóa Tài Khoản Người Dùng</DialogTitle>
+              <DialogDescription>
+                Bạn có chắc chắn muốn khóa tài khoản của {profileUser?.firstName}{' '}
+                {profileUser?.lastName} không?
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {/* Lock Days Input */}
+              <div>
+                <Label htmlFor="days" className="mb-2 block">
+                  Số ngày khóa
+                </Label>
+                <input
+                  id="days"
+                  type="number"
+                  min="1"
+                  value={lockDays}
+                  onChange={(e) => setLockDays(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#99b94a] focus:outline-none"
+                  placeholder="Nhập số ngày"
+                />
+                {lockDays < 1 && (
+                  <p className="mt-1 text-xs text-red-500">Số ngày phải từ 1 trở lên</p>
+                )}
+              </div>
+
+              {/* Lock Reason Input */}
+              <div>
+                <Label htmlFor="reason" className="mb-2 flex items-center justify-between">
+                  <span>Lý do khóa</span>
+                  <span
+                    className={`text-xs font-medium ${
+                      lockReason.length > 512
+                        ? 'text-red-500'
+                        : lockReason.length < 50
+                          ? 'text-amber-500'
+                          : 'text-green-500'
+                    }`}
+                  >
+                    {lockReason.length} / 512
+                  </span>
+                </Label>
+                <textarea
+                  id="reason"
+                  value={lockReason}
+                  onChange={(e) => setLockReason(e.target.value.slice(0, 512))}
+                  placeholder="Mô tả chi tiết lý do khóa tài khoản (tối thiểu 3 ký tự)"
+                  className={`w-full rounded-md border p-3 text-sm transition-colors ${
+                    lockReason.trim().length < 3
+                      ? 'border-red-300 bg-red-50 focus:border-red-500 focus:bg-white focus:outline-none'
+                      : 'border-gray-300 focus:border-[#99b94a] focus:outline-none'
+                  }`}
+                  rows={3}
+                />
+                {lockReason.length < 3 && lockReason.length > 0 && (
+                  <div className="mt-2 text-xs text-red-500">
+                    Cần thêm {3 - lockReason.length} ký tự nữa
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setLockDialogOpen(false)}>
+                Hủy
+              </Button>
+              <Button
+                className="bg-red-600 text-white hover:bg-red-700"
+                onClick={confirmLock}
+                disabled={lockDays < 1 || lockReason.trim().length < 3 || lockMutation.isPending}
+                title={
+                  lockDays < 1
+                    ? 'Số ngày phải từ 1 trở lên'
+                    : lockReason.trim().length < 3
+                      ? 'Lý do khóa phải từ 3 ký tự trở lên'
+                      : ''
+                }
+              >
+                {lockMutation.isPending ? 'Đang khóa...' : 'Khóa Tài Khoản'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Unlock User Dialog */}
+      {!isOwnProfile && canLockUser && (
+        <Dialog open={unlockDialogOpen} onOpenChange={setUnlockDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-[#99b94a]">Mở Khóa Tài Khoản Người Dùng</DialogTitle>
+              <DialogDescription>
+                Bạn có chắc chắn muốn mở khóa tài khoản của {profileUser?.firstName}{' '}
+                {profileUser?.lastName} không?
+              </DialogDescription>
+            </DialogHeader>
+
+            {profileUser?.status === 'Locked' && (
+              <div className="space-y-3 rounded-lg bg-red-50 p-4">
+                {profileUser.lockReason && (
+                  <div>
+                    <p className="text-sm font-semibold text-red-900">Lý do khóa:</p>
+                    <p className="mt-1 text-sm text-red-800">{profileUser.lockReason}</p>
+                  </div>
+                )}
+                {profileUser.lockoutEnd && (
+                  <div>
+                    <p className="text-sm font-semibold text-red-900">Mở khóa vào:</p>
+                    <p className="mt-1 text-sm text-red-800">
+                      {new Date(profileUser.lockoutEnd).toLocaleDateString('vi-VN', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setUnlockDialogOpen(false)}>
+                Hủy
+              </Button>
+              <Button
+                className="bg-[#99b94a] text-white hover:bg-[#88a83a]"
+                onClick={confirmUnlock}
+                disabled={unlockMutation.isPending}
+              >
+                {unlockMutation.isPending ? 'Đang mở khóa...' : 'Mở Khóa Tài Khoản'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </DashboardLayout>
   );

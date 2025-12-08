@@ -476,9 +476,11 @@ export function DashboardLayout({
         <IngredientDetectionDialog
           open={detectionDialogOpen}
           onOpenChange={setDetectionDialogOpen}
-          onSelect={(ingredients) => {
-            // TODO: Implement search by selected ingredients
-            console.warn('Selected ingredients:', ingredients);
+          onSelect={(ingredientIds) => {
+            // Navigate to search page with selected ingredient IDs as filter
+            const params = new URLSearchParams();
+            ingredientIds.forEach((id) => params.append('ingredientId', id));
+            router.push(`/search?${params.toString()}`);
           }}
         />
       </SidebarInset>

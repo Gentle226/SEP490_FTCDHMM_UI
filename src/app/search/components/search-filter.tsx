@@ -23,7 +23,8 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 import { Button } from '@/base/components/ui/button';
@@ -127,18 +128,33 @@ const SortIcon = ({ icon, className }: { icon: string; className?: string }) => 
 };
 
 export function SearchFilter({ onFilterChange }: SearchFilterProps) {
+  const searchParams = useSearchParams();
+
+  // Get initial ingredient IDs from URL params
+  const initialIngredientIds = useMemo(
+    () => searchParams.getAll('ingredientId') || [],
+    [searchParams],
+  );
+
   const [difficulty, setDifficulty] = useState<string | undefined>();
   const [sortBy, setSortBy] = useState<string | undefined>();
   const [ration, setRation] = useState<number | undefined>();
   const [maxCookTime, setMaxCookTime] = useState<number>(240);
   const [labelIds, setLabelIds] = useState<string[]>([]);
-  const [ingredientIds, setIngredientIds] = useState<string[]>([]);
+  const [ingredientIds, setIngredientIds] = useState<string[]>(initialIngredientIds);
   const [excludeLabelIds, setExcludeLabelIds] = useState<string[]>([]);
   const [excludeIngredientIds, setExcludeIngredientIds] = useState<string[]>([]);
   const [labelSearchTerm, setLabelSearchTerm] = useState('');
   const [ingredientSearchTerm, setIngredientSearchTerm] = useState('');
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Sync ingredient IDs with URL params on mount and URL change
+  useEffect(() => {
+    if (initialIngredientIds.length > 0) {
+      setIngredientIds(initialIngredientIds);
+    }
+  }, [initialIngredientIds]);
 
   // Infinite query for labels
   const {

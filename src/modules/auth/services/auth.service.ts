@@ -21,7 +21,20 @@ class AuthService extends HttpClient {
   }
 
   public register(payload: RegisterSchema) {
-    return this.post<unknown>('api/Auth/register', payload);
+    const formData = new FormData();
+    formData.append('firstName', payload.firstName);
+    formData.append('lastName', payload.lastName);
+    formData.append('email', payload.email);
+    formData.append('password', payload.password);
+    formData.append('rePassword', payload.rePassword);
+    formData.append('gender', payload.gender);
+    formData.append('dateOfBirth', payload.dateOfBirth.toISOString());
+
+    return this.post<unknown>('api/Auth/register', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
   }
 
   public async login(payload: LoginSchema) {
