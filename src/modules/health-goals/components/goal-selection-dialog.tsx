@@ -89,8 +89,9 @@ export function GoalSelectionDialog({ goal, type, open, onOpenChange }: GoalSele
   const disableExpiredDates = (date: Date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    date.setHours(0, 0, 0, 0);
-    return date < today;
+    const dateToCheck = new Date(date);
+    dateToCheck.setHours(0, 0, 0, 0);
+    return dateToCheck < today;
   };
 
   return (

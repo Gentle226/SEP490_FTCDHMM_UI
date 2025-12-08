@@ -86,6 +86,8 @@ export function DatePickerWithDaysDisplay(props: DatePickerWithDaysDisplayProps)
       autoFocus
       captionLayout="dropdown"
       disabled={disabledDaysFn}
+      fromYear={2000}
+      toYear={2050}
       classNames={{
         day_selected: props.themeColor
           ? `bg-[${props.themeColor}] text-white font-bold`

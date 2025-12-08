@@ -1,5 +1,6 @@
 'use client';
 
+import { AxiosError } from 'axios';
 import { useCallback, useState } from 'react';
 
 import { userHealthMetricService } from '../services/user-health-metric.service';
@@ -38,8 +39,15 @@ export function useHealthMetrics() {
         await userHealthMetricService.create(data);
         await getHistory(); // Refresh list
         return true;
-      } catch {
-        setError('Failed to create metric');
+      } catch (error) {
+        // Check if error is related to invalid DoB (status 500 typically indicates validation/database error)
+        if (error instanceof AxiosError && error.response?.status === 500) {
+          setError(
+            'Không thể tạo số liệu sức khỏe. Ngày sinh của bạn chưa được cập nhật hoặc không hợp lệ. Vui lòng kiểm tra và cập nhật Ngày sinh trong Hồ sơ của bạn.',
+          );
+        } else {
+          setError('Không thể tạo số liệu sức khỏe');
+        }
         return false;
       }
     },
@@ -53,8 +61,15 @@ export function useHealthMetrics() {
         await userHealthMetricService.update(metricId, data);
         await getHistory(); // Refresh list
         return true;
-      } catch {
-        setError('Failed to update metric');
+      } catch (error) {
+        // Check if error is related to invalid DoB (status 500 typically indicates validation/database error)
+        if (error instanceof AxiosError && error.response?.status === 500) {
+          setError(
+            'Không thể cập nhật số liệu sức khỏe. Ngày sinh của bạn chưa được cập nhật hoặc không hợp lệ. Vui lòng kiểm tra và cập nhật Ngày sinh trong Hồ sơ của bạn.',
+          );
+        } else {
+          setError('Không thể cập nhật số liệu sức khỏe');
+        }
         return false;
       }
     },

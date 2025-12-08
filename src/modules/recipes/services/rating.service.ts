@@ -10,12 +10,12 @@ class RatingService extends HttpClient {
   /**
    * Get average rating (score) for a recipe
    * GET /api/Recipe/{recipeId}/score
-   * This endpoint is public (no authentication required)
+   * This endpoint requires authentication
    * Note: Moved from RatingController to RecipeController
    */
   public async getAverageRating(recipeId: string) {
     return this.get<AverageRatingResponse>(`api/Recipe/${recipeId}/score`, {
-      isPrivateRoute: false,
+      isPrivateRoute: true,
     });
   }
 

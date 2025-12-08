@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Library, Plus, Sparkles, Trash2 } from 'lucide-react';
+import { Check, Library, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -31,6 +31,7 @@ export function GoalSelector() {
   const [selectedGoal, setSelectedGoal] = useState<UserHealthGoalResponse | null>(null);
   const [selectedGoalType, setSelectedGoalType] = useState<'SYSTEM' | 'CUSTOM' | null>(null);
   const [isSelectionDialogOpen, setIsSelectionDialogOpen] = useState(false);
+  const [editingGoal, setEditingGoal] = useState<UserHealthGoalResponse | null>(null);
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
     open: boolean;
     goalId: string;
@@ -65,6 +66,17 @@ export function GoalSelector() {
   const handleDeleteClick = (e: React.MouseEvent, goalId: string, goalName: string) => {
     e.stopPropagation(); // Prevent card click from triggering
     setDeleteConfirmDialog({ open: true, goalId, goalName });
+  };
+
+  const handleEditClick = (e: React.MouseEvent, goal: UserHealthGoalResponse) => {
+    e.stopPropagation(); // Prevent card click from triggering
+    setEditingGoal(goal);
+    setIsCreateDialogOpen(true);
+  };
+
+  const handleCloseCreateDialog = () => {
+    setEditingGoal(null);
+    setIsCreateDialogOpen(false);
   };
 
   const handleConfirmDelete = async () => {
@@ -162,14 +174,24 @@ export function GoalSelector() {
                           <span className="text-xs font-bold text-white">Đã chọn</span>
                         </div>
                       ) : (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                          onClick={(e) => handleDeleteClick(e, goalId!, goal.name)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-gray-400 hover:bg-purple-50 hover:text-purple-600"
+                            onClick={(e) => handleEditClick(e, goal)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                            onClick={(e) => handleDeleteClick(e, goalId!, goal.name)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -282,8 +304,9 @@ export function GoalSelector() {
 
       {/* Dialogs */}
       <CustomHealthGoalFormDialog
+        goal={editingGoal}
         isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
+        onClose={handleCloseCreateDialog}
       />
 
       {selectedGoal && selectedGoalType && (
