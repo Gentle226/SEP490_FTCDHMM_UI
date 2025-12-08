@@ -51,7 +51,7 @@ export const useNotificationSignalR = (userId: string | null) => {
 
         const connection = new HubConnectionBuilder()
           .withUrl(hubUrl, {
-            transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
+            transport: HttpTransportType.LongPolling,
             withCredentials: true, // Gửi cookies/thông tin xác thực
             skipNegotiation: false, // Gọi endpoint /negotiate
           })
