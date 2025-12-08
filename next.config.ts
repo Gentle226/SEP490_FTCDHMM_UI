@@ -12,6 +12,7 @@ const withPWA = require('next-pwa')({
 const nextConfig: NextConfig = {
   transpilePackages: ['react-native'],
   images: {
+    unoptimized: true, // Disable Vercel Image Optimization to stay within free tier
     remotePatterns: [
       {
         protocol: 'https',
