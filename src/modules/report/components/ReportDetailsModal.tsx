@@ -221,7 +221,7 @@ export function ReportDetailsModal({
     if (targetType === ReportTargetType.USER) {
       router.push(`/profile/${targetUserName}`);
     } else {
-      router.push(`/recipes/${targetId}`);
+      router.push(`/recipe/${targetId}`);
     }
     onOpenChange(false);
   };

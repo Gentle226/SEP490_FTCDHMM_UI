@@ -1,8 +1,6 @@
 'use client';
 
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Clock, Edit, Eye, FileQuestion, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Edit, Eye, FileQuestion } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -41,23 +39,6 @@ export function MyPendingRecipesTable({ title }: MyPendingRecipesTableProps) {
     isManagement: false, // Fetch only user's own pending recipes
   });
 
-  const getDifficultyBadge = (difficulty: { name: string; value: number }) => {
-    const colorMap: Record<string, string> = {
-      Easy: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-      Medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-      Hard: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-    };
-    return (
-      <Badge className={colorMap[difficulty.name] || 'bg-gray-100 text-gray-800'} variant="outline">
-        {difficulty.name === 'Easy' ? 'Dễ' : difficulty.name === 'Medium' ? 'Trung bình' : 'Khó'}
-      </Badge>
-    );
-  };
-
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'dd/MM/yyyy HH:mm', { locale: vi });
-  };
-
   const totalPages = data ? Math.ceil(data.totalCount / pageSize) : 0;
 
   if (isLoading) {
@@ -69,10 +50,8 @@ export function MyPendingRecipesTable({ title }: MyPendingRecipesTableProps) {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[350px]">Công thức</TableHead>
-                <TableHead>Độ khó</TableHead>
-                <TableHead>Thời gian</TableHead>
-                <TableHead>Khẩu phần</TableHead>
-                <TableHead>Ngày tạo</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead>Lý do</TableHead>
                 <TableHead className="text-right">Hành động</TableHead>
               </TableRow>
             </TableHeader>
@@ -86,16 +65,10 @@ export function MyPendingRecipesTable({ title }: MyPendingRecipesTableProps) {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-6 w-16" />
+                    <Skeleton className="h-6 w-24" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-16" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-12" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-4 w-40" />
                   </TableCell>
                   <TableCell>
                     <Skeleton className="ml-auto h-8 w-20" />
@@ -144,8 +117,8 @@ export function MyPendingRecipesTable({ title }: MyPendingRecipesTableProps) {
       {/* Info banner */}
       <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900 dark:bg-yellow-950">
         <p className="text-sm text-yellow-800 dark:text-yellow-200">
-          <strong>Lưu ý:</strong> Các công thức dưới đây đang chờ kiểm duyệt viên phê duyệt. Sau khi
-          được duyệt, công thức sẽ xuất hiện công khai trên hệ thống.
+          <strong>Lưu ý:</strong> Các công thức dưới đây được báo cáo vi phạm hoặc đã bị khóa bởi
+          quản trị viên. Vui lòng xem xét và chỉnh sửa công thức của bạn để được duyệt lại.
         </p>
       </div>
 
@@ -153,19 +126,17 @@ export function MyPendingRecipesTable({ title }: MyPendingRecipesTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[350px]">Công thức</TableHead>
-              <TableHead>Độ khó</TableHead>
-              <TableHead>Thời gian</TableHead>
-              <TableHead>Khẩu phần</TableHead>
-              <TableHead>Ngày tạo</TableHead>
-              <TableHead className="text-right">Hành động</TableHead>
+              <TableHead className="w-[450px] pl-5">Công thức</TableHead>
+              <TableHead>Trạng thái</TableHead>
+              <TableHead>Lý do</TableHead>
+              <TableHead className="pr-10 text-right">Hành động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.items.map((recipe) => (
               <TableRow key={recipe.id}>
                 <TableCell>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 pl-3">
                     <div className="bg-muted relative h-12 w-12 overflow-hidden rounded-md">
                       {recipe.imageUrl ? (
                         <Image
@@ -180,39 +151,41 @@ export function MyPendingRecipesTable({ title }: MyPendingRecipesTableProps) {
                         </div>
                       )}
                     </div>
-                    <div className="flex max-w-[250px] min-w-0 flex-col">
+                    <div className="flex max-w-[350px] min-w-0 flex-col">
                       <span className="line-clamp-1 font-medium">{recipe.name}</span>
                       {recipe.description && (
                         <span className="text-muted-foreground line-clamp-1 truncate text-sm">
                           {recipe.description}
                         </span>
                       )}
-                      <Badge variant="outline" className="mt-1 w-fit text-xs text-yellow-600">
-                        Chờ duyệt
-                      </Badge>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>{getDifficultyBadge(recipe.difficulty)}</TableCell>
                 <TableCell>
-                  <div className="text-muted-foreground flex items-center gap-1 text-sm">
-                    <Clock className="h-4 w-4" />
-                    {recipe.cookTime} phút
+                  {recipe.status.value === 'LOCKED' ? (
+                    <Badge
+                      variant="outline"
+                      className="mt-1 w-fit border-red-200 bg-red-50 text-xs text-red-700"
+                    >
+                      Bị khóa
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="mt-1 w-fit text-xs text-yellow-600">
+                      Chờ duyệt
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <div className="text-muted-foreground max-w-xs text-sm">
+                    {recipe.reason ? (
+                      <p className="line-clamp-2">{recipe.reason}</p>
+                    ) : (
+                      <span className="italic">Không có lý do</span>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="text-muted-foreground flex items-center gap-1 text-sm">
-                    <Users className="h-4 w-4" />
-                    {recipe.ration}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="text-muted-foreground text-sm">
-                    {formatDate(recipe.createdAtUtc)}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-end gap-1">
+                  <div className="flex items-center justify-end gap-1 pr-7">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>

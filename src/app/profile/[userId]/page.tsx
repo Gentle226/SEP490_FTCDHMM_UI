@@ -42,8 +42,8 @@ export default function UserProfilePage() {
     isOwnProfile ? '' : username,
   );
   const updateProfile = useUpdateProfile();
-  const followUser = useFollowUser();
-  const unfollowUser = useUnfollowUser();
+  const followUser = useFollowUser(isOwnProfile ? '' : username);
+  const unfollowUser = useUnfollowUser(isOwnProfile ? '' : username);
 
   const isLoading = isOwnProfile ? isLoadingOwn : isLoadingOther;
   const profileData = isOwnProfile ? ownProfile : otherProfile;

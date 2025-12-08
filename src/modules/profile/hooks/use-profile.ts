@@ -55,36 +55,40 @@ export function useUpdateProfile() {
 
 /**
  * Hook to follow a user
+ * @param username - The username of the profile being followed (used for cache key)
  */
-export function useFollowUser() {
+export function useFollowUser(username?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (followeeId: string) => profileService.followUser(followeeId),
     onMutate: async (followeeId) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['profile', followeeId] });
+      // Cancel any outgoing refetches for this profile
+      if (username) {
+        await queryClient.cancelQueries({ queryKey: ['profile', username] });
+      }
 
       // Snapshot the previous value
-      const previousProfile = queryClient.getQueryData(['profile', followeeId]);
+      const previousProfile = username ? queryClient.getQueryData(['profile', username]) : null;
 
       // Optimistically update to the new value
-      queryClient.setQueryData(['profile', followeeId], (old: unknown) => {
-        if (!old || typeof old !== 'object') return old;
-        const profile = old as ProfileDto;
-        return {
-          ...profile,
-          isFollowing: true,
-          followersCount: (profile.followersCount ?? 0) + 1,
-        };
-      });
+      if (username) {
+        queryClient.setQueryData(['profile', username], (old: unknown) => {
+          if (!old || typeof old !== 'object') return old;
+          const profile = old as ProfileDto;
+          return {
+            ...profile,
+            isFollowing: true,
+            followersCount: (profile.followersCount ?? 0) + 1,
+          };
+        });
+      }
 
       // Return a context object with the snapshotted value
-      return { previousProfile, followeeId };
+      return { previousProfile, username };
     },
     onSuccess: () => {
-      // Only invalidate followers/following lists, don't refetch the profile
-      // The profile cache already has the correct optimistic update
+      // Invalidate followers/following lists
       queryClient.invalidateQueries({ queryKey: ['followers'] });
       queryClient.invalidateQueries({ queryKey: ['following'] });
 
@@ -92,9 +96,9 @@ export function useFollowUser() {
     },
     onError: (error: unknown, _followeeId, context: unknown) => {
       // If the mutation fails, use the context returned from onMutate to roll back
-      const ctx = context as { previousProfile?: unknown; followeeId?: string } | undefined;
-      if (ctx?.previousProfile && ctx?.followeeId) {
-        queryClient.setQueryData(['profile', ctx.followeeId], ctx.previousProfile);
+      const ctx = context as { previousProfile?: unknown; username?: string } | undefined;
+      if (ctx?.previousProfile && ctx?.username) {
+        queryClient.setQueryData(['profile', ctx.username], ctx.previousProfile);
       }
 
       const errorMessage =
@@ -107,36 +111,40 @@ export function useFollowUser() {
 
 /**
  * Hook to unfollow a user
+ * @param username - The username of the profile being unfollowed (used for cache key)
  */
-export function useUnfollowUser() {
+export function useUnfollowUser(username?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (followeeId: string) => profileService.unfollowUser(followeeId),
     onMutate: async (followeeId) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['profile', followeeId] });
+      // Cancel any outgoing refetches for this profile
+      if (username) {
+        await queryClient.cancelQueries({ queryKey: ['profile', username] });
+      }
 
       // Snapshot the previous value
-      const previousProfile = queryClient.getQueryData(['profile', followeeId]);
+      const previousProfile = username ? queryClient.getQueryData(['profile', username]) : null;
 
       // Optimistically update to the new value
-      queryClient.setQueryData(['profile', followeeId], (old: unknown) => {
-        if (!old || typeof old !== 'object') return old;
-        const profile = old as ProfileDto;
-        return {
-          ...profile,
-          isFollowing: false,
-          followersCount: Math.max((profile.followersCount ?? 0) - 1, 0),
-        };
-      });
+      if (username) {
+        queryClient.setQueryData(['profile', username], (old: unknown) => {
+          if (!old || typeof old !== 'object') return old;
+          const profile = old as ProfileDto;
+          return {
+            ...profile,
+            isFollowing: false,
+            followersCount: Math.max((profile.followersCount ?? 0) - 1, 0),
+          };
+        });
+      }
 
       // Return a context object with the snapshotted value
-      return { previousProfile, followeeId };
+      return { previousProfile, username };
     },
     onSuccess: () => {
-      // Only invalidate followers/following lists, don't refetch the profile
-      // The profile cache already has the correct optimistic update
+      // Invalidate followers/following lists
       queryClient.invalidateQueries({ queryKey: ['followers'] });
       queryClient.invalidateQueries({ queryKey: ['following'] });
 
@@ -144,9 +152,9 @@ export function useUnfollowUser() {
     },
     onError: (error: unknown, _followeeId, context: unknown) => {
       // If the mutation fails, use the context returned from onMutate to roll back
-      const ctx = context as { previousProfile?: unknown; followeeId?: string } | undefined;
-      if (ctx?.previousProfile && ctx?.followeeId) {
-        queryClient.setQueryData(['profile', ctx.followeeId], ctx.previousProfile);
+      const ctx = context as { previousProfile?: unknown; username?: string } | undefined;
+      if (ctx?.previousProfile && ctx?.username) {
+        queryClient.setQueryData(['profile', ctx.username], ctx.previousProfile);
       }
 
       const errorMessage =

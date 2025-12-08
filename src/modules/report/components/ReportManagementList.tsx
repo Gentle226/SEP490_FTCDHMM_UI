@@ -374,7 +374,7 @@ export function ReportManagementList() {
       } else {
         // For RECIPE, COMMENT, RATING - navigate to recipe details
         // Comments and Ratings are associated with recipes
-        router.push(`/recipes/${item.targetId}`);
+        router.push(`/recipe/${item.targetId}`);
       }
     },
     [router],

@@ -113,17 +113,21 @@ export function ReasonInputDialog({
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="reason">
-              Lí do <span className="text-destructive">*</span>
+              Lí do <span className="text-red-500">*</span>
             </Label>
             <Textarea
               id="reason"
               placeholder="Nhập lí do..."
-              className="min-h-[100px] resize-none"
+              className={`min-h-[100px] resize-none ${
+                form.formState.errors.reason ? 'border-2 border-red-500' : ''
+              }`}
               disabled={isSubmitting}
               {...form.register('reason')}
             />
             {form.formState.errors.reason && (
-              <p className="text-destructive text-sm">{form.formState.errors.reason.message}</p>
+              <p className="text-sm font-medium text-red-500">
+                {form.formState.errors.reason.message}
+              </p>
             )}
           </div>
 

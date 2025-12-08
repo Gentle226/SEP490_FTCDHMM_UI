@@ -1,19 +1,6 @@
 'use client';
 
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
-import {
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Eye,
-  Loader2,
-  Lock,
-  Trash2,
-  Users,
-  X,
-} from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Eye, Loader2, Lock, Trash2, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -113,23 +100,6 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
     setSelectedRecipe(null);
   };
 
-  const getDifficultyBadge = (difficulty: { name: string; value: number }) => {
-    const colorMap: Record<string, string> = {
-      Easy: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-      Medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-      Hard: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-    };
-    return (
-      <Badge className={colorMap[difficulty.name] || 'bg-gray-100 text-gray-800'} variant="outline">
-        {difficulty.name === 'Easy' ? 'Dễ' : difficulty.name === 'Medium' ? 'Trung bình' : 'Khó'}
-      </Badge>
-    );
-  };
-
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'dd/MM/yyyy HH:mm', { locale: vi });
-  };
-
   const totalPages = data ? Math.ceil(data.totalCount / pageSize) : 0;
 
   if (isLoading) {
@@ -142,10 +112,8 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
               <TableRow>
                 <TableHead className="w-[300px]">Công thức</TableHead>
                 <TableHead>Tác giả</TableHead>
-                <TableHead>Độ khó</TableHead>
-                <TableHead>Thời gian</TableHead>
-                <TableHead>Khẩu phần</TableHead>
-                <TableHead>Ngày tạo</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead>Lý do</TableHead>
                 <TableHead className="text-right">Hành động</TableHead>
               </TableRow>
             </TableHeader>
@@ -162,16 +130,10 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
                     <Skeleton className="h-4 w-24" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-6 w-16" />
+                    <Skeleton className="h-6 w-20" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-16" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-12" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-4 w-40" />
                   </TableCell>
                   <TableCell>
                     <Skeleton className="ml-auto h-8 w-24" />
@@ -219,12 +181,10 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[300px]">Công thức</TableHead>
+              <TableHead className="w-[400px]">Công thức</TableHead>
               <TableHead>Tác giả</TableHead>
-              <TableHead>Độ khó</TableHead>
-              <TableHead>Thời gian</TableHead>
-              <TableHead>Khẩu phần</TableHead>
-              <TableHead>Ngày tạo</TableHead>
+              <TableHead>Trạng thái</TableHead>
+              <TableHead>Lý do</TableHead>
               <TableHead className="text-right">Hành động</TableHead>
             </TableRow>
           </TableHeader>
@@ -271,23 +231,28 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
                     </span>
                   </div>
                 </TableCell>
-                <TableCell>{getDifficultyBadge(recipe.difficulty)}</TableCell>
                 <TableCell>
-                  <div className="text-muted-foreground flex items-center gap-1 text-sm">
-                    <Clock className="h-4 w-4" />
-                    {recipe.cookTime} phút
-                  </div>
+                  {recipe.status.value === 'LOCKED' ? (
+                    <Badge
+                      variant="outline"
+                      className="mt-1 w-fit border-red-200 bg-red-50 text-xs text-red-700"
+                    >
+                      Bị khóa
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="mt-1 w-fit text-xs text-yellow-600">
+                      Chờ duyệt
+                    </Badge>
+                  )}
                 </TableCell>
                 <TableCell>
-                  <div className="text-muted-foreground flex items-center gap-1 text-sm">
-                    <Users className="h-4 w-4" />
-                    {recipe.ration}
+                  <div className="text-muted-foreground max-w-xs text-sm">
+                    {recipe.reason ? (
+                      <p className="line-clamp-2">{recipe.reason}</p>
+                    ) : (
+                      <span className="italic">Không có lý do</span>
+                    )}
                   </div>
-                </TableCell>
-                <TableCell>
-                  <span className="text-muted-foreground text-sm">
-                    {formatDate(recipe.createdAtUtc)}
-                  </span>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-1">

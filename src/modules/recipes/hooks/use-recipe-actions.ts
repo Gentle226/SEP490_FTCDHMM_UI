@@ -210,3 +210,26 @@ export function useDeleteRating() {
     },
   });
 }
+
+/**
+ * Hook to lock a recipe (Admin/Moderator action)
+ */
+export function useLockRecipe() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ recipeId, reason }: { recipeId: string; reason: string }) =>
+      recipeService.lockRecipe(recipeId, reason),
+    onSuccess: (_, { recipeId }) => {
+      // Invalidate recipe query
+      queryClient.invalidateQueries({ queryKey: ['recipe', recipeId] });
+      toast.success('Đã khóa công thức thành công');
+    },
+    onError: (error: unknown) => {
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        'Không thể khóa công thức';
+      toast.error(errorMessage);
+    },
+  });
+}

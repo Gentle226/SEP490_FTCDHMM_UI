@@ -9,6 +9,7 @@ import {
   Clock,
   Copy,
   Edit,
+  Lock,
   Share2,
   Trash2,
   TriangleAlert,
@@ -26,15 +27,22 @@ import { Skeleton } from '@/base/components/ui/skeleton';
 import { translateError } from '@/base/lib/error-translator.lib';
 import { getToken } from '@/base/lib/get-token.lib';
 import { useAuth } from '@/modules/auth/contexts/auth.context';
+import { PermissionPolicies, hasAnyPermission } from '@/modules/auth/types';
 import { checkIngredientRestriction, useGetUserDietRestrictions } from '@/modules/diet-restriction';
 import { recipeService } from '@/modules/recipes/services/recipe.service';
 import { ReportTargetType, ReportTrigger } from '@/modules/report';
 
 import { useCommentManager, useSignalRConnection } from '../hooks';
-import { useRecipeDetail, useSaveRecipe, useUnsaveRecipe } from '../hooks/use-recipe-actions';
+import {
+  useLockRecipe,
+  useRecipeDetail,
+  useSaveRecipe,
+  useUnsaveRecipe,
+} from '../hooks/use-recipe-actions';
 import { getFullDateTimeVN, getRelativeTime } from '../utils/time.utils';
 import { CommentList } from './comment-list';
 import { IngredientCardDetail } from './ingredient-card-detail';
+import { ReasonInputDialog } from './reason-input-dialog';
 import styles from './recipe-detail-view.module.css';
 import { RecipeRating } from './recipe-rating';
 
@@ -68,6 +76,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showLockDialog, setShowLockDialog] = useState(false);
 
   // Fetch recipe using React Query
   const { data: recipe, isLoading, error } = useRecipeDetail(recipeId);
@@ -81,10 +90,18 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   // React Query mutations
   const saveRecipe = useSaveRecipe();
   const unsaveRecipe = useUnsaveRecipe();
+  const lockRecipe = useLockRecipe();
 
   // Check if current user is the author
   const isAuthor =
     user && recipe ? recipe.author?.id === user.id || recipe.createdBy?.id === user.id : false;
+
+  // Check if user has permission to lock recipe
+  const canLockRecipe = hasAnyPermission(user, [
+    PermissionPolicies.RECIPE_DELETE,
+    PermissionPolicies.RECIPE_LOCK,
+    PermissionPolicies.RECIPE_APPROVE,
+  ]);
 
   // Get saved state from recipe data
   const isSaved = recipe?.isSaved ?? false;
@@ -179,6 +196,10 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
     } else {
       saveRecipe.mutate(recipeId);
     }
+  };
+
+  const handleLockRecipe = async (reason: string) => {
+    lockRecipe.mutate({ recipeId, reason });
   };
 
   const handleDeleteComment = async (commentId: string) => {
@@ -545,6 +566,29 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
               <Share2 className="h-4 w-4" />
               Chia sẻ
             </Button>
+            {/* Lock Button - Only show if user has permission and not author */}
+            {!isAuthor && canLockRecipe && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 text-orange-500 hover:text-orange-600"
+                onClick={() => setShowLockDialog(true)}
+                disabled={lockRecipe.isPending}
+              >
+                <Lock className="h-4 w-4" />
+                {lockRecipe.isPending ? 'Đang khóa...' : 'Khóa'}
+              </Button>
+            )}
+            {/* Lock Reason Dialog */}
+            {recipe && (
+              <ReasonInputDialog
+                open={showLockDialog}
+                onOpenChange={setShowLockDialog}
+                action="lock"
+                recipeName={recipe.name}
+                onConfirm={handleLockRecipe}
+              />
+            )}
             {/* Report Button - Only show if not author */}
             {!isAuthor && user && (
               <ReportTrigger

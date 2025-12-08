@@ -33,6 +33,9 @@ export interface RecipeManagementResponse {
   cookTime: number;
   ration: number;
   imageUrl?: string;
+  status: {
+    value: RecipeStatus;
+  };
   createdAtUtc: string;
   updatedAtUtc: string;
   reason?: string;
