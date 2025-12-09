@@ -13,8 +13,9 @@ export const getNotificationLink = (type: NotificationTypeResponse, targetId?: s
   switch (typeName) {
     case NotificationType.Comment:
     case NotificationType.Reply:
+    case NotificationType.Mention:
       // Liên kết đến trang chi tiết công thức
-      // targetId là recipeId cho thông báo comment/reply
+      // targetId là recipeId cho thông báo comment/reply/mention
       return `/recipe/${targetId}`;
     case NotificationType.System:
     default:
@@ -31,6 +32,9 @@ export const isNotificationClickable = (
 ): boolean => {
   const typeName = type?.name?.toUpperCase() ?? NotificationType.System;
   return (
-    !!targetId && (typeName === NotificationType.Comment || typeName === NotificationType.Reply)
+    !!targetId &&
+    (typeName === NotificationType.Comment ||
+      typeName === NotificationType.Reply ||
+      typeName === NotificationType.Mention)
   );
 };

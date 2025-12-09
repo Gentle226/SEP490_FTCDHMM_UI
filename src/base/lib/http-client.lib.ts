@@ -24,7 +24,7 @@ export class HttpClient {
   private readonly axiosInstance: AxiosInstance;
   // Error deduplication cache: tracks recent errors to prevent duplicate toasts
   private static errorCache = new Map<string, number>();
-  private static readonly ERROR_DEDUP_WINDOW = 2000; // 2 seconds
+  private static readonly ERROR_DEDUP_WINDOW = 5000; // 5 seconds
   private static readonly CACHE_CLEANUP_THRESHOLD = 5000; // 5 seconds
 
   constructor({ headers, ...otherAxiosConfig }: Omit<CreateAxiosDefaults, 'baseURL'> = {}) {
@@ -38,6 +38,26 @@ export class HttpClient {
 
     this.axiosInstance.interceptors.request.use(this.onSuccessRequest);
     this.axiosInstance.interceptors.response.use(this.onSuccessResponse, this.onResponseFailed);
+  }
+
+  /**
+   * Check if current page is an auth page (login, register, forgot password)
+   * These pages should not use error deduplication since errors are intentional/specific
+   */
+  private static isAuthPage(): boolean {
+    if (typeof window === 'undefined') return false;
+
+    const pathname = window.location.pathname.toLowerCase();
+    const authPaths = [
+      '/auth/login',
+      '/login',
+      '/auth/register',
+      '/register',
+      '/auth/forgot-password',
+      '/forgot-password',
+    ];
+
+    return authPaths.some((path) => pathname.includes(path));
   }
 
   /**
@@ -108,12 +128,17 @@ export class HttpClient {
       // Create unique key for this error (statusCode + message)
       const errorKey = `${statusCode}:${errorMessage}`;
 
-      // Only show toast if this error wasn't shown recently (deduplication)
-      if (HttpClient.shouldShowError(errorKey)) {
-        // Dynamic import to avoid SSR issues
-        import('sonner').then(({ toast }) => {
-          toast.error(errorMessage);
-        });
+      // Check if on auth page - skip error toast entirely on login/register/forgot password
+      const isOnAuthPage = HttpClient.isAuthPage();
+
+      // Only show toast if NOT on auth page
+      if (!isOnAuthPage) {
+        if (HttpClient.shouldShowError(errorKey)) {
+          // Dynamic import to avoid SSR issues
+          import('sonner').then(({ toast }) => {
+            toast.error(errorMessage);
+          });
+        }
       }
     }
 

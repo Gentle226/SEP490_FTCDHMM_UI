@@ -2,6 +2,7 @@ export enum NotificationType {
   System = 'SYSTEM',
   Comment = 'COMMENT',
   Reply = 'REPLY',
+  Mention = 'MENTION',
 }
 
 export interface NotificationTypeResponse {

@@ -51,7 +51,7 @@ export const NotificationList = ({
           <p className="text-sm font-medium">{unreadCount} thông báo chưa đọc</p>
           {onMarkAllAsRead && (
             <Button variant="ghost" size="sm" onClick={onMarkAllAsRead}>
-              Đánh dấu tất cả là đã đọc
+              Đọc tất cả
             </Button>
           )}
         </div>

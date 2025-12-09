@@ -154,15 +154,15 @@ class AuthService extends HttpClient {
   }
 
   public async logout() {
-    try {
-      // Try to call the API logout endpoint if it exists
-      await this.delete('/auth/logout', {
-        isPrivateRoute: true,
-      });
-    } catch (error) {
-      // If API logout fails, just log it and continue with local logout
-      console.warn('API logout failed, continuing with local logout:', error);
-    }
+    // try {
+    //   // Try to call the API logout endpoint if it exists
+    //   await this.delete('/api/auth/logout', {
+    //     isPrivateRoute: true,
+    //   });
+    // } catch (error) {
+    //   // If API logout fails, just log it and continue with local logout
+    //   console.warn('API logout failed, continuing with local logout:', error);
+    // }
 
     // Always clear the cookies locally
     await axios.delete('/api/auth/delete-cookie');

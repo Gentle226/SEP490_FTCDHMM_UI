@@ -30,6 +30,8 @@ export const formatNotificationMessage = (notification: Notification): string =>
         return `${fullName} đã bình luận về công thức của bạn`;
       case NotificationType.Reply:
         return `${fullName} đã trả lời bình luận của bạn`;
+      case NotificationType.Mention:
+        return `${fullName} đã nhắc đến bạn trong một bình luận`;
       default:
         return message || `${fullName} đã tương tác với nội dung của bạn`;
     }
@@ -44,6 +46,8 @@ export const formatNotificationMessage = (notification: Notification): string =>
       return `${fullName} và ${othersText} đã bình luận về công thức của bạn`;
     case NotificationType.Reply:
       return `${fullName} và ${othersText} đã trả lời bình luận của bạn`;
+    case NotificationType.Mention:
+      return `${fullName} và ${othersText} đã nhắc đến bạn trong bình luận`;
     default:
       return message || `${fullName} và ${othersText} đã tương tác với nội dung của bạn`;
   }
