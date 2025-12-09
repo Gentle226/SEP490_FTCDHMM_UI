@@ -1,6 +1,6 @@
 /**
  * Translates backend error messages to Vietnamese
- * Handles null reference errors, validation errors, and other common backend errors
+ * Handles all AppResponseCode status codes from backend
  */
 export const translateError = (error: unknown): string => {
   const errorObj = error as {
@@ -17,44 +17,84 @@ export const translateError = (error: unknown): string => {
     return 'Dữ liệu không tồn tại hoặc đã bị xóa';
   }
 
-  // Handle validation errors
-  if (statusCode === 400) {
-    if (message.includes('already exists') || message.includes('tồn tại')) {
-      return 'Dữ liệu đã tồn tại';
-    }
-    if (message.includes('invalid') || message.includes('không hợp lệ')) {
-      return 'Dữ liệu không hợp lệ';
-    }
-    return 'Yêu cầu không hợp lệ';
-  }
+  // Handle specific status codes from AppResponseCode
+  switch (statusCode) {
+    case 101:
+      return message || 'Thiếu cấu hình tài khoản quản trị viên';
 
-  // Handle not found errors
-  if (statusCode === 404) {
-    return 'Không tìm thấy dữ liệu';
-  }
+    case 400:
+      if (message.includes('already exists') || message.includes('tồn tại')) {
+        return message || 'Dữ liệu đã tồn tại';
+      }
+      if (message.includes('invalid') || message.includes('không hợp lệ')) {
+        return message || 'Dữ liệu không hợp lệ';
+      }
+      return message || 'Tệp tin không hợp lệ';
 
-  // Handle unauthorized errors
-  if (statusCode === 401) {
-    return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại';
-  }
+    case 401:
+      return message || 'Hành động không hợp lệ';
 
-  // Handle forbidden errors
-  if (statusCode === 403) {
-    if (message.includes('khóa') || message.includes('locked') || message.includes('lockout')) {
-      return message || 'Tài khoản của bạn đã bị khóa.';
-    }
-    return 'Bạn không có quyền thực hiện hành động này';
-  }
+    case 402:
+      return message || 'Email chưa được xác thực';
 
-  // Handle server errors
-  if (statusCode === 500) {
-    return 'Có lỗi xảy ra trên máy chủ. Vui lòng thử lại sau';
-  }
+    case 403:
+      // ACCOUNT_LOCKED
+      if (message.includes('khóa') || message.includes('locked') || message.includes('lockout')) {
+        return message || 'Tài khoản đã bị khóa';
+      }
+      return message || 'Tài khoản đã bị khóa';
 
-  // If message is just an error code or technical message, return generic message
-  if (message && message.length < 10) {
-    return 'Có lỗi xảy ra. Vui lòng thử lại sau';
-  }
+    case 404:
+      return message || 'Tài khoản không hợp lệ hoặc không tồn tại';
 
-  return message || 'Có lỗi xảy ra. Vui lòng thử lại sau';
+    case 405:
+      return message || 'Dữ liệu bị trùng lặp';
+
+    case 406:
+      return message || 'Mã OTP không hợp lệ hoặc đã hết hạn';
+
+    case 407:
+      return message || 'Vai trò không hợp lệ';
+
+    case 408:
+      return message || 'Mật khẩu mới không được trùng với mật khẩu cũ';
+
+    case 409:
+      return message || 'Chưa được xác thực';
+
+    case 410:
+      return message || 'Lỗi xác thực token bảo mật';
+
+    case 411:
+      return message || 'Không có quyền truy cập';
+
+    case 412:
+      // FORBIDDEN - No permission
+      return message || 'Bạn không có quyền thực hiện yêu cầu này';
+
+    case 413:
+      return message || 'Không tìm thấy dữ liệu yêu cầu';
+
+    case 415:
+      return message || 'Dữ liệu đã tồn tại trong hệ thống';
+
+    case 416:
+      return message || 'Dịch vụ tạm thời không khả dụng';
+
+    case 419:
+      return message || 'Thiếu các chất dinh dưỡng bắt buộc';
+
+    case 421:
+      return message || 'Thiếu thông tin giới tính';
+
+    case 500:
+      return message || 'Đã xảy ra lỗi không xác định';
+
+    default:
+      // If message is just an error code or technical message, return generic message
+      if (message && message.length < 10) {
+        return 'Có lỗi xảy ra. Vui lòng thử lại sau';
+      }
+      return message || 'Có lỗi xảy ra. Vui lòng thử lại sau';
+  }
 };
