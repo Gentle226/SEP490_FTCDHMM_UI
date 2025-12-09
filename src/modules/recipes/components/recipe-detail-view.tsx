@@ -355,7 +355,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
             />
           ) : (
             <Image
-              src="/Outline Illustration Card.png"
+              src="/outline-illustration-card.png"
               alt="No recipe image"
               fill
               sizes="350px"

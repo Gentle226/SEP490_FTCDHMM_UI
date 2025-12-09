@@ -28,7 +28,7 @@ export function IngredientCard({ name, image, isLoading, onClick }: IngredientCa
     >
       <div className="relative aspect-square w-full overflow-hidden bg-gray-100">
         <Image
-          src={image || '/Outline Illustration Card.png'}
+          src={image || '/outline-illustration-card.png'}
           alt={name || 'Ingredient'}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-110"

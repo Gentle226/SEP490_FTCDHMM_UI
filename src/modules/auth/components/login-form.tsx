@@ -164,7 +164,7 @@ function LoginStep1({
               {isClient && (
                 <div className="flex justify-center md:hidden">
                   <Image
-                    src="/Fitfood Tracker Logo.png"
+                    src="/fitfood-tracker-logo.png"
                     alt="Fitfood Tracker Logo"
                     width={120}
                     height={120}
@@ -284,7 +284,7 @@ function LoginStep1({
 
           <div className="relative hidden md:block">
             <Image
-              src="/Web Background.png"
+              src="/web-background.png"
               alt="Login illustration"
               className="absolute inset-0 h-full w-full object-cover"
               width={576}
@@ -440,7 +440,7 @@ function VerifyEmailStep({ email, onVerified }: VerifyEmailStepProps) {
 
           <div className="relative hidden md:block">
             <Image
-              src="/Web Background.png"
+              src="/web-background.png"
               alt="Login illustration"
               className="absolute inset-0 h-full w-full object-cover"
               width={576}

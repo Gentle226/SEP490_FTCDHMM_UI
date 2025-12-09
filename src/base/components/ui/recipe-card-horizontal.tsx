@@ -79,7 +79,7 @@ export function RecipeCardHorizontal({
       {/* Recipe Image */}
       <div className="relative h-40 w-full flex-shrink-0 rounded-lg bg-gray-100 sm:h-48 sm:w-48 md:h-60 md:w-60">
         <Image
-          src={image || '/Outline Illustration Card.png'}
+          src={image || '/outline-illustration-card.png'}
           alt={title || 'Recipe'}
           width={240}
           height={240}

@@ -153,7 +153,7 @@ export default function DraftsPage() {
                     />
                   ) : (
                     <Image
-                      src="/Outline Illustration Card.png"
+                      src="/outline-illustration-card.png"
                       alt="Draft recipe placeholder"
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-105"

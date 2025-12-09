@@ -38,7 +38,7 @@ export function RecipeCard({
     <div className={cn('group cursor-pointer', className)}>
       <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-gray-100">
         <Image
-          src={image || '/Outline Illustration Card.png'}
+          src={image || '/outline-illustration-card.png'}
           alt={title || 'Recipe Image'}
           width={400}
           height={300}

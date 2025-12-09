@@ -26,7 +26,7 @@ export function RegisterPage() {
         <Card className="border-border/60 shadow-xl">
           <CardHeader className="space-y-1">
             <div className="flex justify-center">
-              <Image src="/Fitfood Tracker Logo.png" alt="Logo" width={150} height={150} />
+              <Image src="/fitfood-tracker-logo.png" alt="Logo" width={150} height={150} />
             </div>
             <CardTitle className="text-center text-3xl text-[#99b94a]">Tạo tài khoản</CardTitle>
             <CardDescription className="text-muted-foreground text-center text-sm">

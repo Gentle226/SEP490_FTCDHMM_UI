@@ -256,7 +256,7 @@ export default function HomePage() {
             {/* Logo */}
             <div className="mb-6 sm:mb-8">
               <Image
-                src="/Fitfood Tracker Logo.png"
+                src="/fitfood-tracker-logo.png"
                 alt="FitFood Tracker"
                 className="mx-auto h-28 w-auto drop-shadow-sm sm:h-36"
                 width={500}
@@ -312,7 +312,7 @@ export default function HomePage() {
                                 className="flex w-full items-center gap-3 px-4 py-3 text-left transition-all hover:bg-gray-50"
                               >
                                 <Image
-                                  src={recipe.imageUrl || '/Outline Illustration Card.png'}
+                                  src={recipe.imageUrl || '/outline-illustration-card.png'}
                                   alt={recipe.name}
                                   width={52}
                                   height={52}

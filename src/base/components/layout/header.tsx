@@ -33,7 +33,7 @@ export function Header() {
         <div className="flex items-center space-x-4">
           <Link href="/" className="flex items-center">
             <Image
-              src="/Fitfood Tracker Logo.png"
+              src="/fitfood-tracker-logo.png"
               alt="FitFood Tracker"
               width={120}
               height={120}

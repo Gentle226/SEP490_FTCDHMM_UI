@@ -63,7 +63,7 @@ export function MyRecipeCard({ recipe }: MyRecipeCardProps) {
             />
           ) : (
             <Image
-              src="/Outline Illustration Card.png"
+              src="/outline-illustration-card.png"
               alt="No recipe image"
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

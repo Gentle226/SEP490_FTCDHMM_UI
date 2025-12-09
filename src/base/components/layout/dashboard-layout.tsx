@@ -311,9 +311,9 @@ export function DashboardLayout({
       <Sidebar collapsible="icon">
         <SidebarHeader>
           <div className="flex items-center gap-2 px-2 py-2 group-data-[collapsible=icon]:justify-center">
-            <div className="bg-[url('/FitFood Tracker Square Logo.png')] text-primary-foreground flex h-8 w-12 flex-shrink-0 items-center justify-center rounded-lg">
+            <div className="text-primary-foreground flex h-8 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-[url('/fitfood-tracker-square-logo.png')]">
               <Image
-                src="/FitFood Tracker Square Logo.png"
+                src="/fitfood-tracker-square-logo.png"
                 alt="FitFood Tracker Logo"
                 width={150}
                 height={150}

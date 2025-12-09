@@ -29,7 +29,7 @@ export function ForgotPasswordPage() {
         <CardHeader className="space-y-2 sm:space-y-3">
           <div className="flex justify-center">
             <Image
-              src="/Fitfood Tracker Logo.png"
+              src="/fitfood-tracker-logo.png"
               alt="Logo"
               width={150}
               height={150}
