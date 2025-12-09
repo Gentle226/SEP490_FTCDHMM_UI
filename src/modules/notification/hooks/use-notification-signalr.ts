@@ -3,6 +3,8 @@
 import { HttpTransportType, HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { useEffect, useRef, useState } from 'react';
 
+import { getToken } from '@/base/lib/get-token.lib';
+
 /**
  * Hook để quản lý kết nối SignalR đến NotificationHub
  * Tạo kết nối và quản lý vòng đời (kết nối/ngắt kết nối)
@@ -15,7 +17,7 @@ export const useNotificationSignalR = (userId: string | null) => {
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const MAX_RECONNECT_ATTEMPTS = 5;
-  const RECONNECT_DELAY_MS = 3000;
+  const RECONNECT_DELAY_MS = 2000;
 
   useEffect(() => {
     if (!userId) {
@@ -45,17 +47,25 @@ export const useNotificationSignalR = (userId: string | null) => {
           }
         }
 
+        // Đảm bảo token tồn tại trước khi kết nối
+        const token = getToken();
+        if (!token) {
+          console.warn('[SignalR] Không có token, bỏ qua kết nối');
+          return;
+        }
+
         // Tạo kết nối mới - phải truyền userId để server thêm vào group
         const apiBaseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, ''); // Remove trailing slashes
         const hubUrl = `${apiBaseUrl}/hubs/notification?userId=${userId}`;
 
         const connection = new HubConnectionBuilder()
           .withUrl(hubUrl, {
-            transport: HttpTransportType.LongPolling,
-            withCredentials: true, // Gửi cookies/thông tin xác thực
+            transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
+            withCredentials: true, // Gửi cookies/thông tin xác thực (token)
             skipNegotiation: false, // Gọi endpoint /negotiate
+            accessTokenFactory: () => token, // Gửi token trong Authorization header
           })
-          .withAutomaticReconnect([0, 1000, 3000, 5000, 10000]) // Retry delays
+          .withAutomaticReconnect([1000, 3000, 5000, 10000]) // Retry delays (skip 0 để tránh spam)
           .configureLogging('information')
           .build();
 

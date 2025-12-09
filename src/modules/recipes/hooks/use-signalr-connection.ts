@@ -49,7 +49,7 @@ export const useSignalRConnection = (recipeId: string | null) => {
 
         const connection = new HubConnectionBuilder()
           .withUrl(hubUrl, {
-            transport: HttpTransportType.LongPolling,
+            transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
             withCredentials: true, // Gửi cookies/credentials
             skipNegotiation: false, // Gọi /negotiate endpoint
           })

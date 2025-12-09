@@ -107,6 +107,16 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
     });
   }, []);
 
+  /**
+   * Xử lý sự kiện đánh dấu đã đọc từ SignalR
+   * Cập nhật UI khi người dùng đánh dấu thông báo là đã đọc từ thiết bị khác
+   */
+  const handleNotificationRead = useCallback((notificationId: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
+    );
+  }, []);
+
   // Setup SignalR listeners
   useEffect(() => {
     if (!connection) {
@@ -116,10 +126,14 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
     // Lắng nghe thông báo mới
     connection.on('NOTIFICATION', handleNewNotification);
 
+    // Lắng nghe sự kiện đánh dấu đã đọc
+    connection.on('READNOTIFICATION', handleNotificationRead);
+
     return () => {
       connection.off('NOTIFICATION', handleNewNotification);
+      connection.off('READNOTIFICATION', handleNotificationRead);
     };
-  }, [connection, handleNewNotification]);
+  }, [connection, handleNewNotification, handleNotificationRead]);
 
   // Tự động tìm nạp khi mount
   useEffect(() => {

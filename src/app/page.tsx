@@ -419,17 +419,17 @@ export default function HomePage() {
               </Button>
             )}
           </div>
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4 md:grid-cols-6 lg:grid-cols-9">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4 md:grid-cols-6 lg:grid-cols-8">
             {isLoadingIngredients || ingredients.length === 0
-              ? Array.from({ length: 9 }, (_, i) => (
-                  <div key={i} className={i >= 6 ? 'hidden sm:block' : ''}>
+              ? Array.from({ length: 8 }, (_, i) => (
+                  <div key={i} className={i >= 6 ? 'hidden lg:block' : ''}>
                     <IngredientCard isLoading={true} />
                   </div>
                 ))
-              : ingredients.slice(0, 9).map((ingredient, index) => (
+              : ingredients.slice(0, 8).map((ingredient, index) => (
                   <button
                     key={ingredient.id}
-                    className={`transition-all hover:scale-105 hover:shadow-lg active:scale-95 ${index >= 6 ? 'hidden sm:block' : ''}`}
+                    className={`transition-all hover:scale-105 hover:shadow-lg active:scale-95 ${index >= 6 ? 'hidden lg:block' : ''}`}
                     onClick={() => handleIngredientClick(ingredient.name)}
                     title={ingredient.name}
                   >
