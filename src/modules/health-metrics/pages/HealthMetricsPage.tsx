@@ -1,5 +1,6 @@
 'use client';
 
+import { SquareActivity } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -98,15 +99,17 @@ export function HealthMetricsPage() {
     <div className="min-h-screenbg-gradient-to-b from-white to-[#f0f5f2]">
       <div className="container mx-auto max-w-7xl px-2 pt-2 sm:px-4">
         {/* Header */}
-        <div className="mb-4 sm:mb-6">
-          <h1 className="mb-1 text-2xl font-bold text-[#99b94a] sm:mb-2 sm:text-4xl">
-            Số Liệu Sức Khỏe
-          </h1>
-          <p className="text-sm text-gray-600 sm:text-base">
-            Theo dõi và quản lý dữ liệu sức khỏe của bạn
-          </p>
+        <div className="mb-6 flex items-start gap-4">
+          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-[#99b94a]/10">
+            <SquareActivity className="h-7 w-7 text-[#99b94a]" />
+          </div>
+          <div className="flex-1 pt-0.5">
+            <h1 className="text-2xl font-bold tracking-tight text-[#99b94a]">
+              Chỉnh sửa công thức
+            </h1>
+            <p className="text-muted-foreground text-sm">Cập nhật thông tin công thức của bạn</p>
+          </div>
         </div>
-
         {/* Alert Messages */}
         {error && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">

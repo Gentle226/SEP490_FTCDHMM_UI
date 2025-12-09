@@ -152,9 +152,13 @@ export function RecipeBasicInfo({
               id="cookTime"
               type="number"
               placeholder="30"
-              value={cookTime}
+              value={cookTime || ''}
               onChange={(e) => {
-                const val = parseInt(e.target.value) || 0;
+                const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                onCookTimeChange(Math.min(Math.max(val, 0), 1440));
+              }}
+              onBlur={(e) => {
+                const val = parseInt(e.target.value) || 1;
                 onCookTimeChange(Math.min(Math.max(val, 1), 1440));
               }}
               onInvalid={handleInvalidField}
@@ -182,8 +186,15 @@ export function RecipeBasicInfo({
               id="ration"
               type="number"
               placeholder="2"
-              value={ration}
-              onChange={(e) => onRationChange(parseInt(e.target.value) || 1)}
+              value={ration || ''}
+              onChange={(e) => {
+                const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                onRationChange(Math.max(val, 0));
+              }}
+              onBlur={(e) => {
+                const val = parseInt(e.target.value) || 1;
+                onRationChange(Math.max(val, 1));
+              }}
               onInvalid={handleInvalidField}
               min="1"
               className="pr-12 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"

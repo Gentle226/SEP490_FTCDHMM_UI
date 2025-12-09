@@ -138,20 +138,40 @@ export function IngredientCardWithDetails({
             onMouseEnter={handleMouseEnter}
             onMouseLeave={() => setIsHoverPopoverOpen(false)}
             onClick={handleCardClick}
-            className="group flex cursor-pointer flex-col gap-2 rounded-lg border bg-white px-2 py-2 transition-all hover:border-lime-400 hover:bg-lime-50 hover:shadow-md sm:flex-row sm:items-center sm:gap-3 sm:px-3 sm:py-2.5"
+            className="group relative flex cursor-pointer flex-col gap-2 rounded-lg border bg-white p-3 transition-all hover:border-lime-400 hover:bg-lime-50 hover:shadow-md sm:flex-row sm:items-center sm:gap-3 sm:p-3"
             title="Nhấp để xem chi tiết đầy đủ"
           >
-            <span className="flex-1 text-xs font-medium group-hover:text-lime-700 sm:text-sm">
+            {/* Remove button - absolute positioned on mobile, inline on desktop */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove(ingredient.id);
+              }}
+              className="absolute top-2 right-2 flex-shrink-0 rounded-full p-1.5 hover:bg-red-100 sm:static sm:order-last sm:p-1"
+              aria-label={`Xóa ${ingredient.name}`}
+            >
+              <X className="h-4 w-4 text-red-600" />
+            </button>
+
+            {/* Ingredient name */}
+            <span className="flex-1 pr-8 text-sm leading-tight font-medium group-hover:text-lime-700 sm:pr-0 sm:text-sm">
               {ingredient.name}
             </span>
-            <div className="flex items-center justify-between gap-2 sm:justify-end">
+
+            {/* Quantity input and unit */}
+            <div className="flex items-center gap-2">
               <Input
                 type="number"
                 placeholder="0"
                 value={ingredient.quantityGram || ''}
                 onChange={(e) => {
+                  const newValue = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                  onUpdateQuantity(ingredient.id, Math.max(newValue, 0));
+                }}
+                onBlur={(e) => {
                   const newValue = parseFloat(e.target.value) || 0;
-                  onUpdateQuantity(ingredient.id, newValue);
+                  onUpdateQuantity(ingredient.id, Math.max(newValue, 0));
                 }}
                 onClick={(e) => e.stopPropagation()}
                 min="0"
@@ -159,19 +179,8 @@ export function IngredientCardWithDetails({
                 className="h-8 w-16 text-right text-sm sm:h-9 sm:w-20 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 required
               />
-              <span className="text-xs text-gray-500 sm:text-sm">g</span>
+              <span className="min-w-[1rem] text-sm text-gray-500">g</span>
             </div>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove(ingredient.id);
-              }}
-              className="flex-shrink-0 rounded-full p-1 hover:bg-red-100"
-              aria-label={`Xóa ${ingredient.name}`}
-            >
-              <X className="h-4 w-4 text-red-600" />
-            </button>
           </div>
         </PopoverTrigger>
         <PopoverContent className="w-80" side="right" align="start">
