@@ -339,6 +339,11 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               {getRelativeTime(comment.createdAtUtc)}
             </span>
 
+            {/* Edited indicator */}
+            {comment.isEdited && (
+              <span className="text-xs text-gray-500 italic">(đã chỉnh sửa)</span>
+            )}
+
             {/* Reply Button */}
             {onReplyClick && (
               <button

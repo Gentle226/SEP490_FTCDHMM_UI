@@ -2,6 +2,7 @@
 
 import { Calendar as CalendarIcon, ChevronDown, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Calendar } from '@/base/components/ui/calendar';
 import {
@@ -123,12 +124,33 @@ export function CreateIngredientCategoryRestrictionForm({
     e.preventDefault();
 
     if (!selectedCategory) {
-      alert('Vui lòng chọn thể loại');
+      toast.error('Vui lòng chọn thể loại');
       return;
     }
 
     const selectedCategoryData = categories.find((c) => c.id === selectedCategory);
     if (!selectedCategoryData) return;
+
+    // Validate expiry date for TEMPORARYAVOID type
+    if (type === RestrictionType.TEMPORARYAVOID) {
+      if (!expiredAtUtc || !expiredAtUtc.includes('T')) {
+        toast.error('Vui lòng chọn cả ngày và giờ hết hạn');
+        return;
+      }
+
+      const selectedDate = parseLocalDateTime(expiredAtUtc);
+      const now = new Date();
+
+      if (isNaN(selectedDate.getTime())) {
+        toast.error('Ngày hết hạn không hợp lệ');
+        return;
+      }
+
+      if (selectedDate < now) {
+        toast.error('Ngày hết hạn phải lớn hơn hoặc bằng thời gian hiện tại');
+        return;
+      }
+    }
 
     createRestriction(
       {
@@ -153,7 +175,7 @@ export function CreateIngredientCategoryRestrictionForm({
   const selectedCategoryData = categories.find((c) => c.id === selectedCategory);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
       {/* Category Selector */}
       <div>
         <label className="mb-2 block text-sm font-medium text-gray-900">
@@ -288,7 +310,6 @@ export function CreateIngredientCategoryRestrictionForm({
               title="Chọn ngày hết hạn"
               value={expiredAtUtc}
               onChange={(e) => setExpiredAtUtc(e.target.value)}
-              required={type === RestrictionType.TEMPORARYAVOID}
               className="focus:ring-opacity-30 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-gray-900 transition-all hover:border-gray-400 focus:border-[#99b94a] focus:ring-2 focus:ring-[#99b94a] focus:outline-none"
             />
 

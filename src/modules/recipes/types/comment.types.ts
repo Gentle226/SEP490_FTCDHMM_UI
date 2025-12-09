@@ -15,6 +15,7 @@ export interface Comment {
   avatarUrl?: string;
   createdAtUtc: string;
   updatedAtUtc?: string;
+  isEdited?: boolean;
   parentCommentId?: string | null;
   replies?: Comment[];
   userId?: string;
