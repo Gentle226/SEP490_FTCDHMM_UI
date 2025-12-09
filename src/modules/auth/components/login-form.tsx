@@ -163,13 +163,11 @@ function LoginStep1({
               {/* Logo for mobile - hidden on desktop */}
               {isClient && (
                 <div className="flex justify-center md:hidden">
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src="/fitfood-tracker-logo.png"
                     alt="Fitfood Tracker Logo"
-                    width={120}
-                    height={120}
                     className="h-24 w-auto"
-                    priority
                   />
                 </div>
               )}

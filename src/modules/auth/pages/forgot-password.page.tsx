@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -28,11 +27,10 @@ export function ForgotPasswordPage() {
       <Card className={`border-border/60 w-full max-w-md shadow-xl ${styles.cardContainer}`}>
         <CardHeader className="space-y-2 sm:space-y-3">
           <div className="flex justify-center">
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src="/fitfood-tracker-logo.png"
               alt="Logo"
-              width={150}
-              height={150}
               className="h-24 w-auto sm:h-32"
             />
           </div>

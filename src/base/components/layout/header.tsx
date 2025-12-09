@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -32,13 +31,11 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center space-x-4">
           <Link href="/" className="flex items-center">
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src="/fitfood-tracker-logo.png"
               alt="FitFood Tracker"
-              width={120}
-              height={120}
-              priority
-              className="h-auto w-auto"
+              className="h-12 w-auto"
             />
           </Link>
         </div>

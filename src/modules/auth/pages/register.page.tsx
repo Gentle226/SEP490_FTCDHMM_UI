@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -26,7 +25,8 @@ export function RegisterPage() {
         <Card className="border-border/60 shadow-xl">
           <CardHeader className="space-y-1">
             <div className="flex justify-center">
-              <Image src="/fitfood-tracker-logo.png" alt="Logo" width={150} height={150} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/fitfood-tracker-logo.png" alt="Logo" className="h-24 w-auto" />
             </div>
             <CardTitle className="text-center text-3xl text-[#99b94a]">Tạo tài khoản</CardTitle>
             <CardDescription className="text-muted-foreground text-center text-sm">

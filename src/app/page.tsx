@@ -255,13 +255,11 @@ export default function HomePage() {
           <div className="mx-auto max-w-2xl text-center">
             {/* Logo */}
             <div className="mb-6 sm:mb-8">
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src="/fitfood-tracker-logo.png"
                 alt="FitFood Tracker"
                 className="mx-auto h-28 w-auto drop-shadow-sm sm:h-36"
-                width={500}
-                height={150}
-                priority
               />
             </div>
 
