@@ -2,7 +2,7 @@ export interface MentionedUser {
   mentionedUserId: string;
   firstName: string;
   lastName: string;
-  mentionedUserUserName: string;
+  mentionedUserName: string;
   avatarUrl?: string;
 }
 
@@ -11,7 +11,7 @@ export interface Comment {
   content: string;
   firstName: string;
   lastName: string;
-  userUserName: string;
+  userName: string;
   avatarUrl?: string;
   createdAtUtc: string;
   updatedAtUtc?: string;
