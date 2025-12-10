@@ -91,6 +91,11 @@ export function HealthMetricsPage() {
     }
   };
 
+  const handleEditMetric = (metric: UserHealthMetricResponse) => {
+    setEditingMetric(metric);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleCancelEdit = () => {
     setEditingMetric(null);
   };
@@ -140,7 +145,12 @@ export function HealthMetricsPage() {
               <h2 className="mb-3 text-xl font-bold text-gray-900 sm:mb-4 sm:text-2xl">
                 Lịch Sử Của Bạn
               </h2>
-              <MetricsHistory metrics={metrics} onDelete={handleDeleteMetric} loading={loading} />
+              <MetricsHistory
+                metrics={metrics}
+                onDelete={handleDeleteMetric}
+                onEdit={handleEditMetric}
+                loading={loading}
+              />
             </div>
           </div>
 

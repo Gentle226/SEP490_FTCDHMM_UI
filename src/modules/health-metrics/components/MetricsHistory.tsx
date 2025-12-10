@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { BarChart3, Calendar, ChevronDown, Clock, Trash2 } from 'lucide-react';
+import { BarChart3, Calendar, ChevronDown, Clock, Edit, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/base/components/ui/button';
@@ -14,10 +14,11 @@ import { getBMIStatus } from '../utils/validation';
 interface Props {
   metrics: UserHealthMetricResponse[];
   onDelete: (metricId: string) => Promise<boolean>;
+  onEdit?: (metric: UserHealthMetricResponse) => void;
   loading?: boolean;
 }
 
-export function MetricsHistory({ metrics, onDelete, loading }: Props) {
+export function MetricsHistory({ metrics, onDelete, onEdit, loading }: Props) {
   const [expandHistory, setExpandHistory] = useState(false);
 
   const handleDelete = async (metricId: string) => {
@@ -132,6 +133,16 @@ export function MetricsHistory({ metrics, onDelete, loading }: Props) {
               </p>
             </div>
             <div className="flex gap-2">
+              {onEdit && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onEdit(metric)}
+                  className="text-[#99b94a] hover:bg-[#f0f5f2] hover:text-[#5a6f2a]"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
               <Button
                 size="sm"
                 variant="ghost"
