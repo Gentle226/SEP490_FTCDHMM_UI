@@ -82,7 +82,7 @@ export function GoalSelectionDialog({ goal, type, open, onOpenChange }: GoalSele
       setIsConfirmDialogOpen(false);
       handleOpen(false);
     } catch (_error) {
-      toast.error('Lỗi khi đặt mục tiêu sức khỏe');
+      // toast.error('Lỗi khi đặt mục tiêu sức khỏe');
     }
   };
 

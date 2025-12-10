@@ -307,7 +307,7 @@ export function CustomHealthGoalFormDialog({
       onClose();
       reset();
     } catch {
-      toast.error(`Lỗi khi ${goal ? 'cập nhật' : 'tạo'} mục tiêu sức khỏe tùy chỉnh`);
+      // toast.error(`Lỗi khi ${goal ? 'cập nhật' : 'tạo'} mục tiêu sức khỏe tùy chỉnh`);
     }
   };
 

@@ -66,10 +66,10 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const canDelete =
-    currentUserId === comment.userId ||
+    currentUserId === comment.user?.id ||
     isRecipeAuthor ||
     hasPermission(currentUser ?? null, PermissionPolicies.COMMENT_DELETE);
-  const canEdit = currentUserId === comment.userId;
+  const canEdit = currentUserId === comment.user?.id;
   const isLastChild = index === siblingsCount - 1;
 
   // Auto-focus textarea when entering edit mode
@@ -214,7 +214,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
         <button
           onClick={handleProfileClick}
           className="relative z-10 flex flex-shrink-0 cursor-pointer items-start transition-opacity hover:opacity-80"
-          disabled={!comment.userId}
+          disabled={!comment.user?.id}
           title={`Avatar URL: ${comment.user?.avatarUrl ? 'Present' : 'Missing'}`}
         >
           {comment.user?.avatarUrl ? (
@@ -285,7 +285,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               {/* User Name */}
               <button
                 onClick={handleProfileClick}
-                disabled={!comment.userId}
+                disabled={!comment.user?.id}
                 className="text-left text-xs font-semibold text-gray-900 transition-colors hover:text-[#99b94a] disabled:cursor-default disabled:hover:text-gray-900 sm:text-sm"
               >
                 {comment.user?.firstName} {comment.user?.lastName}
@@ -382,7 +382,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             )}
 
             {/* Report Button - Only show for non-owner comments */}
-            {currentUserId && currentUserId !== comment.userId && (
+            {currentUserId && currentUserId !== comment.user?.id && (
               <>
                 <button
                   onClick={() => setReportModalOpen(true)}
