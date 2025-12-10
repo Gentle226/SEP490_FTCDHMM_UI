@@ -253,7 +253,7 @@ export function IngredientCategoryManagementTable() {
             <div className="space-y-4">
               <div>
                 <UILabel htmlFor="name" className="mb-3 text-[#99b94a]">
-                  Tên Danh Mục
+                  Tên Danh Mục <span className="text-red-500">*</span>
                 </UILabel>
                 <Input
                   id="name"

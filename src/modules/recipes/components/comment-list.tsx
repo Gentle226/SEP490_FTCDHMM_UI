@@ -4,6 +4,7 @@ import { MessageSquare } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { Skeleton } from '@/base/components/ui/skeleton';
+import { User } from '@/modules/auth/types';
 
 import { Comment } from '../types/comment.types';
 import { flattenDeepNestedComments } from '../utils/comment.utils';
@@ -21,6 +22,7 @@ interface CommentListProps {
   comments: Comment[];
   recipeId: string;
   currentUserId?: string;
+  currentUser?: User | null;
   isRecipeAuthor?: boolean;
   isAdmin?: boolean;
   onDelete: (commentId: string) => Promise<void>;
@@ -38,6 +40,7 @@ export const CommentList: React.FC<CommentListProps> = ({
   comments,
   recipeId,
   currentUserId,
+  currentUser,
   isRecipeAuthor,
   isAdmin,
   onDelete,
@@ -116,6 +119,7 @@ export const CommentList: React.FC<CommentListProps> = ({
               comment={comment}
               recipeId={recipeId}
               currentUserId={currentUserId}
+              currentUser={currentUser}
               isRecipeAuthor={isRecipeAuthor}
               isAdmin={isAdmin}
               onDelete={onDelete}

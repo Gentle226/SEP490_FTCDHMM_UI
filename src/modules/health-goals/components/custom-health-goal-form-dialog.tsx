@@ -439,7 +439,9 @@ export function CustomHealthGoalFormDialog({
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="name">Tên</Label>
+              <Label htmlFor="name">
+                Tên <span className="text-red-500">*</span>
+              </Label>
               <span className={`text-xs ${isNameFocused ? 'text-muted-foreground' : 'invisible'}`}>
                 {watch('name')?.length || 0}/100
               </span>
@@ -471,7 +473,9 @@ export function CustomHealthGoalFormDialog({
           </div>
 
           <div className="space-y-4">
-            <Label>Chỉ Số Dinh Dưỡng (Trên 100g)</Label>
+            <Label>
+              Chỉ Số Dinh Dưỡng (Trên 100g) <span className="text-red-500">*</span>
+            </Label>
 
             {fields.length === 0 && (
               <p className="text-muted-foreground text-center text-sm">
@@ -506,7 +510,9 @@ export function CustomHealthGoalFormDialog({
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Chất Dinh Dưỡng</Label>
+                    <Label>
+                      Chất Dinh Dưỡng <span className="text-red-500">*</span>
+                    </Label>
                     <Select
                       options={getAvailableNutrientOptions(index)}
                       placeholder="Chọn chất dinh dưỡng"
@@ -553,6 +559,7 @@ export function CustomHealthGoalFormDialog({
                               <div className="space-y-1">
                                 <Label htmlFor={`targets.${index}.minValue`} className="text-xs">
                                   Giá Trị Tối Thiểu ({currentNutrient?.unit || 'g'})
+                                  <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
                                   id={`targets.${index}.minValue`}
@@ -598,7 +605,9 @@ export function CustomHealthGoalFormDialog({
                       })()}
 
                       <div className="space-y-2">
-                        <Label htmlFor={`targets.${index}.weight`}>Ưu Tiên (1-5)</Label>
+                        <Label htmlFor={`targets.${index}.weight`}>
+                          Ưu Tiên (1-5) <span className="text-red-500">*</span>
+                        </Label>
                         <Input
                           id={`targets.${index}.weight`}
                           placeholder="1"
@@ -620,7 +629,9 @@ export function CustomHealthGoalFormDialog({
                       </p>
 
                       <div className="space-y-2">
-                        <Label htmlFor={`targets.${index}.targetType`}>Loại Mục Tiêu</Label>
+                        <Label htmlFor={`targets.${index}.targetType`}>
+                          Loại Mục Tiêu <span className="text-red-500">*</span>
+                        </Label>
                         <Select
                           options={targetTypeOptions}
                           placeholder="Chọn loại mục tiêu"
@@ -662,6 +673,7 @@ export function CustomHealthGoalFormDialog({
                                       className="text-xs"
                                     >
                                       Giá Trị Tối Thiểu ({currentNutrient?.unit || 'g'})
+                                      <span className="text-red-500">*</span>
                                     </Label>
                                     <Input
                                       id={`targets.${index}.minValue-macro`}
@@ -686,6 +698,8 @@ export function CustomHealthGoalFormDialog({
                                       className="text-xs"
                                     >
                                       Giá Trị Tối Đa ({currentNutrient?.unit || 'g'})
+                                      <span className="text-red-500">*</span>
+                                      <span className="text-red-500">*</span>
                                     </Label>
                                     <Input
                                       id={`targets.${index}.maxValue-macro`}
@@ -711,7 +725,7 @@ export function CustomHealthGoalFormDialog({
 
                           <div className="space-y-2">
                             <Label htmlFor={`targets.${index}.weight-macro`} className="text-xs">
-                              Ưu Tiên (1-5)
+                              Ưu Tiên (1-5) <span className="text-red-500">*</span>
                             </Label>
                             <Input
                               id={`targets.${index}.weight-macro`}
@@ -748,7 +762,7 @@ export function CustomHealthGoalFormDialog({
 
                           <div className="space-y-2">
                             <Label htmlFor={`targets.${index}.weight-energy`} className="text-xs">
-                              Ưu Tiên (1-5)
+                              Ưu Tiên (1-5) <span className="text-red-500">*</span>
                             </Label>
                             <Input
                               id={`targets.${index}.weight-energy`}

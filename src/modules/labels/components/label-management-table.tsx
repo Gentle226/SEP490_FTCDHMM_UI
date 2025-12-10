@@ -317,7 +317,7 @@ export function LabelManagementTable() {
               <div>
                 <div className="mb-3 flex h-6 items-center justify-between">
                   <UILabel htmlFor="name" className="text-[#99b94a]">
-                    Tên Nhãn
+                    Tên Nhãn <span className="text-red-500">*</span>
                   </UILabel>
                   <span className="text-muted-foreground text-xs">{newLabelName.length}/100</span>
                 </div>
@@ -332,7 +332,7 @@ export function LabelManagementTable() {
               </div>
               <div>
                 <UILabel htmlFor="color" className="mb-3 text-[#99b94a]">
-                  Mã Màu
+                  Mã Màu <span className="text-red-500">*</span>
                 </UILabel>
                 <div className="flex gap-2">
                   <Input
@@ -492,7 +492,7 @@ export function LabelManagementTable() {
           <div className="space-y-4">
             <div>
               <UILabel htmlFor="edit-color" className="mb-3 text-[#99b94a]">
-                Mã Màu
+                Mã Màu <span className="text-red-500">*</span>
               </UILabel>
               <div className="flex gap-2">
                 <Input

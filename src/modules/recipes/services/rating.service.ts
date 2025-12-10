@@ -40,6 +40,17 @@ class RatingService extends HttpClient {
       isPrivateRoute: true,
     });
   }
+
+  /**
+   * Delete rating as manager/admin (with RATING_DELETE permission)
+   * DELETE /api/rating/{ratingId}/byManager
+   * This endpoint requires RATING_DELETE permission
+   */
+  public async deleteRatingByManager(ratingId: string) {
+    return this.delete<void>(`api/rating/${ratingId}/byManager`, {
+      isPrivateRoute: true,
+    });
+  }
 }
 
 export const ratingService = new RatingService();

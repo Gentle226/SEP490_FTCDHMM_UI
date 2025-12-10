@@ -492,7 +492,7 @@ export default function HomePage() {
               </h2>
               <p className="hidden text-xs text-gray-500 sm:block">
                 {isUsingRecommendations
-                  ? 'Công thức được đề xuất dựa trên mục tiêu và chỉ số sức khỏe của bạn'
+                  ? 'Công thức được đề xuất dựa trên thói quen, mục tiêu và chỉ số sức khỏe của bạn'
                   : 'Khám phá các món ăn mới mỗi ngày'}
               </p>
             </div>

@@ -216,6 +216,7 @@ function LoginStep1({
                     label: 'Email',
                     placeholder: 'your@example.com',
                     disabled: isPending,
+                    required: true,
                   },
                   {
                     name: 'password',
@@ -223,6 +224,7 @@ function LoginStep1({
                     label: 'Mật khẩu',
                     placeholder: '',
                     disabled: isPending,
+                    required: true,
                   },
                 ]}
                 renderSubmitButton={(ButtonComponent) => (

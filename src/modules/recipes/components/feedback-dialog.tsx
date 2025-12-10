@@ -7,10 +7,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/base/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/base/components/ui/dialog';
 import { Skeleton } from '@/base/components/ui/skeleton';
+import { useAuth } from '@/modules/auth';
+import { PermissionPolicies, hasPermission } from '@/modules/auth/types';
 import { useDeleteRating } from '@/modules/recipes/hooks/use-recipe-actions';
 import { ReportModal } from '@/modules/report/components/ReportModal';
 import { ReportTargetType } from '@/modules/report/types';
 
+import { ratingService } from '../services/rating.service';
 import { recipeService } from '../services/recipe.service';
 import { RatingResponse } from '../types/rating.types';
 
@@ -25,6 +28,7 @@ interface FeedbackDialogProps {
  * Displays all user feedback and ratings for a recipe
  */
 export function FeedbackDialog({ recipeId, isOpen, onOpenChange }: FeedbackDialogProps) {
+  const { user } = useAuth();
   const [ratings, setRatings] = useState<RatingResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
@@ -33,6 +37,7 @@ export function FeedbackDialog({ recipeId, isOpen, onOpenChange }: FeedbackDialo
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [selectedRatingId, setSelectedRatingId] = useState<string | null>(null);
   const deleteRating = useDeleteRating();
+  const canDeleteRating = hasPermission(user, PermissionPolicies.RATING_DELETE);
 
   const loadRatings = useCallback(async () => {
     if (!isOpen) return;
@@ -168,19 +173,29 @@ export function FeedbackDialog({ recipeId, isOpen, onOpenChange }: FeedbackDialo
                         </span>
                       )}
 
-                      {rating.isOwner ? (
+                      {rating.isOwner || canDeleteRating ? (
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             if (confirm('Bạn có chắc chắn muốn xóa đánh giá này?')) {
-                              deleteRating.mutate(
-                                { ratingId: rating.id },
-                                {
-                                  onSuccess: () => {
-                                    // Close the feedback dialog after successful deletion
-                                    onOpenChange(false);
-                                  },
-                                },
-                              );
+                              try {
+                                if (rating.isOwner) {
+                                  // Owner deletes their own rating using mutation
+                                  deleteRating.mutate(
+                                    { ratingId: rating.id },
+                                    {
+                                      onSuccess: () => {
+                                        onOpenChange(false);
+                                      },
+                                    },
+                                  );
+                                } else {
+                                  // Manager/admin deletes rating using manager endpoint
+                                  await ratingService.deleteRatingByManager(rating.id);
+                                  onOpenChange(false);
+                                }
+                              } catch (error) {
+                                console.error('Error deleting rating:', error);
+                              }
                             }
                           }}
                           disabled={deleteRating.isPending}

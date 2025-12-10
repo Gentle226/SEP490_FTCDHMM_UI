@@ -233,6 +233,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
                 label: 'Email',
                 placeholder: 'Nhập email của bạn',
                 disabled: isSendingCode,
+                required: true,
               },
             ]}
             renderSubmitButton={(Button) => (
@@ -285,6 +286,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
                 label: 'Mã xác minh',
                 placeholder: 'Nhập mã 6 chữ số',
                 disabled: isVerifyingOtp,
+                required: true,
               },
             ]}
             renderSubmitButton={(Button) => (
@@ -348,6 +350,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
                 label: 'Mật khẩu mới',
                 placeholder: 'Nhập mật khẩu mới',
                 disabled: isResettingPassword,
+                required: true,
               },
               {
                 name: 'rePassword',
@@ -355,6 +358,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
                 label: 'Xác nhận mật khẩu mới',
                 placeholder: 'Xác nhận mật khẩu mới',
                 disabled: isResettingPassword,
+                required: true,
               },
             ]}
             renderSubmitButton={(Button) => (

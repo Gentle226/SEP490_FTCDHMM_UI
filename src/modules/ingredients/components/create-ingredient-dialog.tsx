@@ -567,8 +567,8 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
                     <p className="font-medium">📌 Hướng dẫn:</p>
                     <ul className="list-inside list-disc space-y-0.5 text-xs">
                       <li>
-                        <span className="font-semibold">4 Macronutrients bắt buộc:</span> Protein,
-                        Chất béo, Tinh bột, Calories
+                        <span className="font-semibold">3 Macronutrients bắt buộc:</span> Protein,
+                        Chất béo, Tinh bột
                       </li>
                       <li>
                         <span className="font-semibold">Giá trị:</span> Giá trị dinh dưỡng

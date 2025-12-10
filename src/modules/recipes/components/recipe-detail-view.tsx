@@ -103,6 +103,9 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
     PermissionPolicies.RECIPE_APPROVE,
   ]);
 
+  // Check if user has permission to delete recipe
+  const canDeleteRecipe = hasAnyPermission(user, [PermissionPolicies.RECIPE_DELETE]);
+
   // Get saved state from recipe data
   const isSaved = recipe?.isSaved ?? false;
 
@@ -566,6 +569,19 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
               <Share2 className="h-4 w-4" />
               Chia sẻ
             </Button>
+            {/* Delete Button - Show for author or users with RECIPE_DELETE permission */}
+            {!isAuthor && canDeleteRecipe && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 text-red-500 hover:text-red-600"
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                <Trash2 className="h-4 w-4" />
+                {isDeleting ? 'Đang xóa...' : 'Xóa'}
+              </Button>
+            )}
             {/* Lock Button - Only show if user has permission and not author */}
             {!isAuthor && canLockRecipe && (
               <Button
@@ -721,6 +737,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
           comments={comments}
           recipeId={recipeId}
           currentUserId={user?.id}
+          currentUser={user}
           isRecipeAuthor={isAuthor}
           isAdmin={isAdmin}
           onDelete={handleDeleteComment}

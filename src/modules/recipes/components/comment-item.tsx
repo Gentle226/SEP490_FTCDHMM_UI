@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/base/components/ui/button';
+import { PermissionPolicies, User, hasPermission } from '@/modules/auth/types';
 import { ReportTargetType } from '@/modules/report';
 import { ReportModal } from '@/modules/report/components/ReportModal';
 
@@ -22,6 +23,7 @@ interface CommentItemProps {
   comment: Comment;
   recipeId: string;
   currentUserId?: string;
+  currentUser?: User | null;
   isRecipeAuthor?: boolean;
   isAdmin?: boolean;
   onDelete: (commentId: string) => Promise<void>;
@@ -43,6 +45,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   comment,
   recipeId,
   currentUserId,
+  currentUser,
   isRecipeAuthor,
   isAdmin,
   onDelete,
@@ -62,7 +65,10 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const [editContent, setEditContent] = useState(comment.content);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
-  const canDelete = currentUserId === comment.userId || isRecipeAuthor || isAdmin;
+  const canDelete =
+    currentUserId === comment.userId ||
+    isRecipeAuthor ||
+    hasPermission(currentUser ?? null, PermissionPolicies.COMMENT_DELETE);
   const canEdit = currentUserId === comment.userId;
   const isLastChild = index === siblingsCount - 1;
 
@@ -418,6 +424,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               comment={reply}
               recipeId={recipeId}
               currentUserId={currentUserId}
+              currentUser={currentUser}
               isRecipeAuthor={isRecipeAuthor}
               isAdmin={isAdmin}
               onDelete={onDelete}
