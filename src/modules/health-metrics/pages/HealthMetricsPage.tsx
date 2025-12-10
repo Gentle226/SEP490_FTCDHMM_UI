@@ -109,10 +109,10 @@ export function HealthMetricsPage() {
             <SquareActivity className="h-7 w-7 text-[#99b94a]" />
           </div>
           <div className="flex-1 pt-0.5">
-            <h1 className="text-2xl font-bold tracking-tight text-[#99b94a]">
-              Chỉnh sửa công thức
-            </h1>
-            <p className="text-muted-foreground text-sm">Cập nhật thông tin công thức của bạn</p>
+            <h1 className="text-2xl font-bold tracking-tight text-[#99b94a]">Chỉ Số Sức Khỏe</h1>
+            <p className="text-muted-foreground text-sm">
+              Theo dõi và quản lý các chỉ số sức khỏe của bạn
+            </p>
           </div>
         </div>
         {/* Alert Messages */}

@@ -112,11 +112,18 @@ export function DashboardLayout({
     const structure: NavigationStructure = [];
 
     // Home - always visible
-    structure.push({
-      title: 'Trang Chủ',
-      url: '/',
-      icon: Home,
-    });
+    structure.push(
+      {
+        title: 'Trang Chủ',
+        url: '/',
+        icon: Home,
+      },
+      {
+        title: 'Kho Nguyên Liệu',
+        url: '/ingredients',
+        icon: Warehouse,
+      },
+    );
 
     // Admin Group - only for users with admin permissions
     const adminItems: NavigationItem[] = [];
@@ -254,11 +261,6 @@ export function DashboardLayout({
           title: 'Hạn Chế Thành Phần',
           url: '/diet-restrictions',
           icon: WheatOff,
-        },
-        {
-          title: 'Kho Nguyên Liệu',
-          url: '/ingredients',
-          icon: Warehouse,
         },
       ],
     });
