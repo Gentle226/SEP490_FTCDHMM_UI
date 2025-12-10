@@ -43,6 +43,11 @@ export interface CreateRoleRequest {
   name: string;
 }
 
+export interface RoleNameResponse {
+  id: string;
+  name: string;
+}
+
 class RoleManagementService extends HttpClient {
   constructor() {
     super();
@@ -86,6 +91,12 @@ class RoleManagementService extends HttpClient {
 
   public async updateRolePermissions(roleId: string, request: UpdateRolePermissionsRequest) {
     return this.put<void>(`api/Role/${roleId}/permissions`, request, {
+      isPrivateRoute: true,
+    });
+  }
+
+  public async getActiveRoles() {
+    return this.get<RoleNameResponse[]>('api/Role/activating', {
       isPrivateRoute: true,
     });
   }

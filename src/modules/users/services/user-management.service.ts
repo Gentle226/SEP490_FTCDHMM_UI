@@ -1,4 +1,5 @@
 import { HttpClient } from '@/base/lib';
+import { roleManagementService } from '@/modules/roles/services/role-management.service';
 
 export interface User {
   id: string;
@@ -93,9 +94,8 @@ class UserManagementService extends HttpClient {
   }
 
   public async getRoles() {
-    return this.get<{ items: RoleResponse[] }>('api/Role?PageNumber=1&PageSize=10', {
-      isPrivateRoute: true,
-    });
+    // Use the new active roles endpoint instead of paginated endpoint
+    return roleManagementService.getActiveRoles();
   }
 
   public async changeRole(userId: string, request: ChangeRoleRequest) {

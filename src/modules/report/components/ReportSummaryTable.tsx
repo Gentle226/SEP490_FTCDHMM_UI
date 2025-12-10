@@ -21,10 +21,10 @@ import {
   TooltipTrigger,
 } from '@/base/components/ui/tooltip';
 
-import { type ReportSummaryResponse, ReportTargetType } from '../types';
+import { ReportTargetType, type ReportsResponse } from '../types';
 
 export interface ReportSummaryTableProps {
-  data: ReportSummaryResponse[];
+  data: ReportsResponse[];
   isLoading?: boolean;
   onView?: (targetId: string, targetType: ReportTargetType, targetName: string) => void;
   onApprove?: (targetId: string, targetType: ReportTargetType) => void;

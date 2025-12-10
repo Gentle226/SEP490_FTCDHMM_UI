@@ -42,8 +42,8 @@ import { reportService } from '../services';
 import {
   ReportFilterRequest,
   ReportStatus,
-  type ReportSummaryResponse,
   ReportTargetType,
+  type ReportsResponse,
 } from '../types';
 import { RejectReasonModal } from './RejectReasonModal';
 import { ReportDetailsModal } from './ReportDetailsModal';
@@ -82,13 +82,13 @@ function getTargetTypeBadgeStyle(type: ReportTargetType) {
 }
 
 interface ReportTableProps {
-  data: ReportSummaryResponse[];
+  data: ReportsResponse[];
   isLoading: boolean;
   showActions?: boolean;
-  onViewDetails: (item: ReportSummaryResponse) => void;
-  onNavigateToTarget: (item: ReportSummaryResponse) => void;
-  onApproveAll?: (item: ReportSummaryResponse) => void;
-  onRejectAll?: (item: ReportSummaryResponse) => void;
+  onViewDetails: (item: ReportsResponse) => void;
+  onNavigateToTarget: (item: ReportsResponse) => void;
+  onApproveAll?: (item: ReportsResponse) => void;
+  onRejectAll?: (item: ReportsResponse) => void;
   processingId?: string | null;
 }
 
@@ -321,7 +321,7 @@ export function ReportManagementList() {
   // Modal states
   const [isRejectOpen, setIsRejectOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [selectedTarget, setSelectedTarget] = useState<ReportSummaryResponse | null>(null);
+  const [selectedTarget, setSelectedTarget] = useState<ReportsResponse | null>(null);
   const [bulkRejectTarget, setBulkRejectTarget] = useState<{
     targetId: string;
     targetType: ReportTargetType;
@@ -362,13 +362,13 @@ export function ReportManagementList() {
     setHistoryPage(1);
   }, []);
 
-  const handleViewDetails = useCallback((item: ReportSummaryResponse) => {
+  const handleViewDetails = useCallback((item: ReportsResponse) => {
     setSelectedTarget(item);
     setIsDetailsOpen(true);
   }, []);
 
   const handleNavigateToTarget = useCallback(
-    (item: ReportSummaryResponse) => {
+    (item: ReportsResponse) => {
       if (item.targetType === ReportTargetType.USER) {
         router.push(`/profile/${item.targetUserName}`);
       } else {
@@ -381,7 +381,7 @@ export function ReportManagementList() {
   );
 
   const handleApproveAll = useCallback(
-    async (item: ReportSummaryResponse) => {
+    async (item: ReportsResponse) => {
       const key = `${item.targetType}-${item.targetId}`;
       setProcessingId(key);
 
@@ -410,7 +410,7 @@ export function ReportManagementList() {
     [refetchPending, refetchHistory],
   );
 
-  const handleRejectAll = useCallback((item: ReportSummaryResponse) => {
+  const handleRejectAll = useCallback((item: ReportsResponse) => {
     setBulkRejectTarget({ targetId: item.targetId, targetType: item.targetType });
     setIsRejectOpen(true);
   }, []);

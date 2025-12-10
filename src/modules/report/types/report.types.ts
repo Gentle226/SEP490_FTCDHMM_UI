@@ -58,7 +58,7 @@ export interface ReportDetailListResponse {
 }
 
 // Response DTOs - Summary response for list views
-export interface ReportSummaryResponse {
+export interface ReportsResponse {
   targetType: ReportTargetType;
   targetId: string;
   targetUserName?: string;
@@ -68,7 +68,7 @@ export interface ReportSummaryResponse {
 }
 
 export interface ReportSummaryPagedResult {
-  items: ReportSummaryResponse[];
+  items: ReportsResponse[];
   totalCount: number;
   pageNumber: number;
   pageSize: number;

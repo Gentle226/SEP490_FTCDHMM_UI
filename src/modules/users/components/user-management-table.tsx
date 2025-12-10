@@ -171,7 +171,7 @@ export function UserManagementTable() {
     queryFn: async () => {
       const response = await userManagementService.getRoles();
       const map = new Map<string, string>();
-      response.items.forEach((role: RoleResponse) => {
+      response.forEach((role: RoleResponse) => {
         map.set(role.name, role.id);
       });
       setRoleIdMap(map);
@@ -423,7 +423,7 @@ export function UserManagementTable() {
               >
                 Tất cả
               </DropdownMenuItem>
-              {rolesData?.items.map((role: RoleResponse) => (
+              {rolesData?.map((role: RoleResponse) => (
                 <DropdownMenuItem
                   key={role.id}
                   onClick={() => setRoleFilter(role.name)}
@@ -772,7 +772,7 @@ export function UserManagementTable() {
                   align="end"
                   className="w-[--radix-dropdown-menu-trigger-width]"
                 >
-                  {rolesData?.items.map((role: RoleResponse) => (
+                  {rolesData?.map((role: RoleResponse) => (
                     <DropdownMenuItem
                       key={role.id}
                       onClick={() => setSelectedRole(role.name)}

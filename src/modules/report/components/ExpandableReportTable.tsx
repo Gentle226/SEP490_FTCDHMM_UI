@@ -34,10 +34,10 @@ import {
 import { getRelativeTime } from '@/modules/recipes/utils/time.utils';
 
 import { useReportDetails } from '../hooks';
-import { ReportStatus, type ReportSummaryResponse, ReportTargetType } from '../types';
+import { ReportStatus, ReportTargetType, type ReportsResponse } from '../types';
 
-export interface ExpandableReportTableProps {
-  data: ReportSummaryResponse[];
+interface ExpandableReportTableProps {
+  data: ReportsResponse[];
   isLoading?: boolean;
   onApproveReport: (reportId: string) => Promise<void>;
   onRejectReport: (reportId: string) => void;

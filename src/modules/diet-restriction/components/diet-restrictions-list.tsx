@@ -57,61 +57,100 @@ export function DietRestrictionsList({
 
   const { mutate: deleteRestriction, isPending: isDeleting } = useDeleteRestriction();
 
-  // Fetch restrictions if not provided externally
-  const { data: fetchedRestrictions, isLoading: isFetching } = useGetUserDietRestrictions();
+  // Fetch restrictions if not provided externally - now with server-side filtering and sorting
+  const { data: fetchedRestrictions, isLoading: isFetching } = useGetUserDietRestrictions(
+    externalRestrictions
+      ? undefined
+      : {
+          keyword: searchQuery || undefined,
+          type: filterType || undefined,
+          sortBy: sortBy || undefined,
+        },
+  );
 
   const restrictions = externalRestrictions || fetchedRestrictions || [];
   const isLoading = externalIsLoading || isFetching;
 
-  // Filter restrictions based on search query and type
-  const filteredRestrictions = restrictions.filter((restriction) => {
-    const searchLower = searchQuery.toLowerCase();
-    const name = (
-      restriction.ingredientName ||
-      restriction.ingredientCategoryName ||
-      ''
-    ).toLowerCase();
+  // No need for client-side filtering anymore - backend handles it
+  const displayedRestrictions = externalRestrictions
+    ? // If external restrictions provided, still do client-side filtering
+      restrictions.filter((restriction) => {
+        const searchLower = searchQuery.toLowerCase();
+        const name = (
+          restriction.ingredientName ||
+          restriction.ingredientCategoryName ||
+          ''
+        ).toLowerCase();
 
-    const matchesSearch = name.includes(searchLower);
-    const typeValue =
-      typeof restriction.type === 'string'
-        ? restriction.type
-        : (restriction.type as { value: string }).value;
-    const matchesType = !filterType || typeValue === filterType;
+        const matchesSearch = name.includes(searchLower);
+        const typeValue =
+          typeof restriction.type === 'string'
+            ? restriction.type
+            : (restriction.type as { value: string }).value;
+        const matchesType = !filterType || typeValue === filterType;
 
-    return matchesSearch && matchesType;
-  });
+        return matchesSearch && matchesType;
+      })
+    : // If fetched from API, use as-is (already filtered and sorted by backend)
+      restrictions;
 
-  // Sort restrictions
-  const sortedRestrictions = [...filteredRestrictions].sort((a, b) => {
-    switch (sortBy) {
-      case 'name-asc':
-        return (a.ingredientName || a.ingredientCategoryName || '').localeCompare(
-          b.ingredientName || b.ingredientCategoryName || '',
-        );
-      case 'name-desc':
-        return (b.ingredientName || b.ingredientCategoryName || '').localeCompare(
-          a.ingredientName || a.ingredientCategoryName || '',
-        );
-      case 'type': {
-        const aTypeValue =
-          typeof a.type === 'string' ? a.type : (a.type as { value: string }).value;
-        const bTypeValue =
-          typeof b.type === 'string' ? b.type : (b.type as { value: string }).value;
-        return (aTypeValue || '').localeCompare(bTypeValue || '');
-      }
-      case 'recent':
-        const aDate = a.expiredAtUtc
-          ? new Date(a.expiredAtUtc.endsWith('Z') ? a.expiredAtUtc : a.expiredAtUtc + 'Z').getTime()
-          : 0;
-        const bDate = b.expiredAtUtc
-          ? new Date(b.expiredAtUtc.endsWith('Z') ? b.expiredAtUtc : b.expiredAtUtc + 'Z').getTime()
-          : 0;
-        return bDate - aDate;
-      default:
-        return 0;
-    }
-  });
+  // Sort restrictions (only for external restrictions, backend handles sorting for fetched data)
+  const sortedRestrictions = externalRestrictions
+    ? [...displayedRestrictions].sort((a, b) => {
+        switch (sortBy) {
+          case 'name_asc':
+            return (a.ingredientName || a.ingredientCategoryName || '').localeCompare(
+              b.ingredientName || b.ingredientCategoryName || '',
+            );
+          case 'name_desc':
+            return (b.ingredientName || b.ingredientCategoryName || '').localeCompare(
+              a.ingredientName || a.ingredientCategoryName || '',
+            );
+          case 'type_asc': {
+            const aTypeValue =
+              typeof a.type === 'string' ? a.type : (a.type as { value: string }).value;
+            const bTypeValue =
+              typeof b.type === 'string' ? b.type : (b.type as { value: string }).value;
+            return (aTypeValue || '').localeCompare(bTypeValue || '');
+          }
+          case 'type_desc': {
+            const aTypeValue =
+              typeof a.type === 'string' ? a.type : (a.type as { value: string }).value;
+            const bTypeValue =
+              typeof b.type === 'string' ? b.type : (b.type as { value: string }).value;
+            return (bTypeValue || '').localeCompare(aTypeValue || '');
+          }
+          case 'expired_asc': {
+            const aDate = a.expiredAtUtc
+              ? new Date(
+                  a.expiredAtUtc.endsWith('Z') ? a.expiredAtUtc : a.expiredAtUtc + 'Z',
+                ).getTime()
+              : Infinity;
+            const bDate = b.expiredAtUtc
+              ? new Date(
+                  b.expiredAtUtc.endsWith('Z') ? b.expiredAtUtc : b.expiredAtUtc + 'Z',
+                ).getTime()
+              : Infinity;
+            return aDate - bDate;
+          }
+          case 'expired_desc': {
+            const aDate = a.expiredAtUtc
+              ? new Date(
+                  a.expiredAtUtc.endsWith('Z') ? a.expiredAtUtc : a.expiredAtUtc + 'Z',
+                ).getTime()
+              : -Infinity;
+            const bDate = b.expiredAtUtc
+              ? new Date(
+                  b.expiredAtUtc.endsWith('Z') ? b.expiredAtUtc : b.expiredAtUtc + 'Z',
+                ).getTime()
+              : -Infinity;
+            return bDate - aDate;
+          }
+          default:
+            return 0;
+        }
+      })
+    : displayedRestrictions;
 
   const handleDelete = (id: string) => {
     if (deleteRestrictionId === id) {
@@ -332,7 +371,7 @@ export function DietRestrictionsList({
                 <button
                   type="button"
                   onClick={() => {
-                    setSortBy('name-asc');
+                    setSortBy('name_asc');
                     setShowSortDropdown(false);
                   }}
                   className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-100"
@@ -342,7 +381,7 @@ export function DietRestrictionsList({
                 <button
                   type="button"
                   onClick={() => {
-                    setSortBy('name-desc');
+                    setSortBy('name_desc');
                     setShowSortDropdown(false);
                   }}
                   className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-100"
@@ -352,22 +391,42 @@ export function DietRestrictionsList({
                 <button
                   type="button"
                   onClick={() => {
-                    setSortBy('type');
+                    setSortBy('type_asc');
                     setShowSortDropdown(false);
                   }}
                   className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-100"
                 >
-                  Loại
+                  Loại (A-Z)
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    setSortBy('recent');
+                    setSortBy('type_desc');
+                    setShowSortDropdown(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-100"
+                >
+                  Loại (Z-A)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSortBy('expired_desc');
+                    setShowSortDropdown(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-100"
+                >
+                  Hạn gần nhất
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSortBy('expired_asc');
                     setShowSortDropdown(false);
                   }}
                   className="w-full px-4 py-2 text-left text-sm text-gray-900 last:rounded-b-lg hover:bg-gray-100"
                 >
-                  Gần đây
+                  Hạn xa nhất
                 </button>
               </div>
             )}
