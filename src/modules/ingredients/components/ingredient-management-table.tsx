@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import { Pagination } from '@/base/components/layout/pagination';
 import { Badge } from '@/base/components/ui/badge';
 import { Button } from '@/base/components/ui/button';
-import { DatePickerWithInput } from '@/base/components/ui/date-picker-with-input';
 import {
   Dialog,
   DialogContent,
@@ -72,8 +71,6 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
   const currentSearch = searchParams.get('search') || '';
   const currentPageSize = parseInt(searchParams.get('pageSize') || '10', 10);
-  const currentUpdatedFrom = searchParams.get('updatedFrom') || '';
-  const currentUpdatedTo = searchParams.get('updatedTo') || '';
 
   // Memoize currentCategoryIds to prevent infinite dependency updates
   const currentCategoryIds = useMemo(() => searchParams.getAll('categoryId') || [], [searchParams]);
@@ -82,8 +79,6 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
   const [searchTerm, setSearchTerm] = useState(currentSearch);
   const [pageSize, setPageSize] = useState(currentPageSize);
   const [categoryIds, setCategoryIds] = useState<string[]>(currentCategoryIds);
-  const [updatedFrom, setUpdatedFrom] = useState(currentUpdatedFrom);
-  const [updatedTo, setUpdatedTo] = useState(currentUpdatedTo);
   const [showFilters, setShowFilters] = useState(false);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
@@ -97,16 +92,7 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
     setSearchTerm(currentSearch);
     setPageSize(currentPageSize);
     setCategoryIds(currentCategoryIds);
-    setUpdatedFrom(currentUpdatedFrom);
-    setUpdatedTo(currentUpdatedTo);
-  }, [
-    currentPage,
-    currentSearch,
-    currentPageSize,
-    currentCategoryIds,
-    currentUpdatedFrom,
-    currentUpdatedTo,
-  ]);
+  }, [currentPage, currentSearch, currentPageSize, currentCategoryIds]);
 
   // Update URL when search term changes
   useEffect(() => {
@@ -206,23 +192,13 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
     isLoading,
     error,
   } = useQuery({
-    queryKey: [
-      'ingredients',
-      page,
-      debouncedSearchTerm,
-      pageSize,
-      categoryIds,
-      updatedFrom,
-      updatedTo,
-    ],
+    queryKey: ['ingredients', page, debouncedSearchTerm, pageSize, categoryIds],
     queryFn: async () => {
       const params: PaginationParams = {
         pageNumber: page,
         pageSize: pageSize,
         search: debouncedSearchTerm || undefined,
         categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
-        updatedFrom: updatedFrom || undefined,
-        updatedTo: updatedTo || undefined,
       };
       return ingredientManagementService.getIngredients(params);
     },
@@ -285,40 +261,25 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
       : [...categoryIds, categoryId];
     setCategoryIds(newCategoryIds);
     setPage(1); // Reset to page 1 when filtering
-    updateUrlParams(newCategoryIds, updatedFrom, updatedTo);
+    updateUrlParams(newCategoryIds);
   };
 
   const handleClearFilters = () => {
     setCategoryIds([]);
-    setUpdatedFrom('');
-    setUpdatedTo('');
     setPage(1);
     const params = new URLSearchParams(searchParams);
     params.delete('categoryId');
-    params.delete('updatedFrom');
-    params.delete('updatedTo');
     params.set('page', '1');
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const updateUrlParams = (catIds?: string[], from?: string, to?: string) => {
+  const updateUrlParams = (catIds?: string[]) => {
     const params = new URLSearchParams();
     if (page) params.set('page', page.toString());
     if (pageSize) params.set('pageSize', pageSize.toString());
     if (searchTerm) params.set('search', searchTerm);
     (catIds || categoryIds).forEach((id) => params.append('categoryId', id));
-    if (from || updatedFrom) params.set('updatedFrom', from || updatedFrom);
-    if (to || updatedTo) params.set('updatedTo', to || updatedTo);
     router.push(`${pathname}?${params.toString()}`);
-  };
-
-  const handleDateFilterChange = (from?: Date, to?: Date) => {
-    const fromStr = from ? from.toISOString().split('T')[0] : '';
-    const toStr = to ? to.toISOString().split('T')[0] : '';
-    setUpdatedFrom(fromStr);
-    setUpdatedTo(toStr);
-    setPage(1);
-    updateUrlParams(categoryIds, fromStr, toStr);
   };
 
   if (error) {
@@ -380,7 +341,7 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
         <div className="space-y-4 rounded-lg border bg-gray-50 p-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold">Bộ lọc</h3>
-            {(categoryIds.length > 0 || updatedFrom || updatedTo) && (
+            {categoryIds.length > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -413,32 +374,6 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
               ) : (
                 <p className="text-sm text-gray-500">Không có danh mục nào</p>
               )}
-            </div>
-          </div>
-
-          {/* Date Range Filter */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className="mb-2 block text-sm font-medium">Cập nhật từ</label>
-              <DatePickerWithInput
-                date={updatedFrom ? new Date(updatedFrom) : undefined}
-                onDateChange={(date) =>
-                  handleDateFilterChange(date, updatedTo ? new Date(updatedTo) : undefined)
-                }
-                placeholder="Chọn ngày bắt đầu"
-                disabledDays={(date) => date > new Date()}
-              />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium">Cập nhật đến</label>
-              <DatePickerWithInput
-                date={updatedTo ? new Date(updatedTo) : undefined}
-                onDateChange={(date) =>
-                  handleDateFilterChange(updatedFrom ? new Date(updatedFrom) : undefined, date)
-                }
-                placeholder="Chọn ngày kết thúc"
-                disabledDays={(date) => date > new Date()}
-              />
             </div>
           </div>
         </div>
