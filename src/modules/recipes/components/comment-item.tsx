@@ -177,8 +177,8 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   };
 
   const handleProfileClick = () => {
-    if (comment.userName) {
-      router.push(`/profile/${comment.userName}`);
+    if (comment.user?.userName) {
+      router.push(`/profile/${comment.user.userName}`);
     }
   };
 
@@ -215,13 +215,13 @@ export const CommentItem: React.FC<CommentItemProps> = ({
           onClick={handleProfileClick}
           className="relative z-10 flex flex-shrink-0 cursor-pointer items-start transition-opacity hover:opacity-80"
           disabled={!comment.userId}
-          title={`Avatar URL: ${comment.avatarUrl ? 'Present' : 'Missing'}`}
+          title={`Avatar URL: ${comment.user?.avatarUrl ? 'Present' : 'Missing'}`}
         >
-          {comment.avatarUrl ? (
+          {comment.user?.avatarUrl ? (
             <div className="relative h-8 w-8 overflow-hidden rounded-full sm:h-9 sm:w-9">
               <Image
-                src={comment.avatarUrl}
-                alt={`${comment.firstName} ${comment.lastName}`}
+                src={comment.user.avatarUrl}
+                alt={`${comment.user.firstName} ${comment.user.lastName}`}
                 fill
                 sizes="36px"
                 className="object-cover"
@@ -232,7 +232,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             </div>
           ) : (
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300 text-xs font-semibold text-white sm:h-9 sm:w-9 sm:text-sm">
-              {(comment.firstName?.charAt(0) || 'U').toUpperCase()}
+              {(comment.user?.firstName?.charAt(0) || 'U').toUpperCase()}
             </div>
           )}
         </button>
@@ -288,7 +288,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 disabled={!comment.userId}
                 className="text-left text-xs font-semibold text-gray-900 transition-colors hover:text-[#99b94a] disabled:cursor-default disabled:hover:text-gray-900 sm:text-sm"
               >
-                {comment.firstName} {comment.lastName}
+                {comment.user?.firstName} {comment.user?.lastName}
               </button>
 
               {/* Content - Display with mentions */}
@@ -395,7 +395,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                   onOpenChange={setReportModalOpen}
                   targetId={comment.id}
                   targetType={ReportTargetType.COMMENT}
-                  targetName={`Bình luận của ${comment.firstName} ${comment.lastName}`}
+                  targetName={`Bình luận của ${comment.user?.firstName} ${comment.user?.lastName}`}
                 />
               </>
             )}

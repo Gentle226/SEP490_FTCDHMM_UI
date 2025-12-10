@@ -1,25 +1,30 @@
+export interface UserInfo {
+  id: string;
+  firstName: string;
+  lastName: string;
+  userName?: string;
+  avatarUrl?: string;
+}
+
 export interface MentionedUser {
   mentionedUserId: string;
   firstName: string;
   lastName: string;
-  mentionedUserName: string;
+  mentionedUserName?: string;
   avatarUrl?: string;
 }
 
 export interface Comment {
   id: string;
   content: string;
-  firstName: string;
-  lastName: string;
-  userName: string;
-  avatarUrl?: string;
+  user: UserInfo;
   createdAtUtc: string;
   updatedAtUtc?: string;
   isEdited?: boolean;
   parentCommentId?: string | null;
   replies?: Comment[];
   userId?: string;
-  mentions?: MentionedUser[]; // New field for mentions
+  mentions?: MentionedUser[];
 }
 
 export interface CreateCommentRequest {
