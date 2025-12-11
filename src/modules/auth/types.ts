@@ -94,9 +94,7 @@ export const registerSchema = z
           message: 'Tuổi phải từ 1 đến 120',
         },
       ),
-    gender: z.enum(['Male', 'Female'], {
-      errorMap: () => ({ message: 'Vui lòng chọn giới tính' }),
-    }),
+    gender: z.enum(['Male', 'Female']).optional(),
   })
   .refine((v) => v.password === v.rePassword, {
     message: 'Mật khẩu xác nhận không khớp',

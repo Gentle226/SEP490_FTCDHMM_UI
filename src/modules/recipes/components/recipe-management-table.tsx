@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, ChevronLeft, ChevronRight, Eye, Loader2, Lock, Trash2, X } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Eye, Loader2, Trash2, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -53,7 +53,6 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
   });
 
   const {
-    lockRecipe,
     approveRecipe,
     rejectRecipe,
     deleteRecipe,
@@ -81,9 +80,6 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
     if (!selectedRecipe) return;
 
     switch (reasonDialogAction) {
-      case 'lock':
-        await lockRecipe(selectedRecipe.id, reason);
-        break;
       case 'reject':
         await rejectRecipe(selectedRecipe.id, reason);
         break;
@@ -301,23 +297,6 @@ export function RecipeManagementTable({ title }: RecipeManagementTableProps) {
                         </TooltipTrigger>
                         <TooltipContent className="bg-[#99b94a] text-white [--tooltip-fill:#99b94a]">
                           Từ chối
-                        </TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-orange-600 hover:bg-orange-100 hover:text-orange-700"
-                            onClick={() => handleOpenReasonDialog(recipe, 'lock')}
-                            disabled={isActionLoading}
-                          >
-                            <Lock className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-[#99b94a] text-white [--tooltip-fill:#99b94a]">
-                          Khóa
                         </TooltipContent>
                       </Tooltip>
 

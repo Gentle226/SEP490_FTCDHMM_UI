@@ -40,9 +40,6 @@ export function useRecipeManagement() {
       toast.success('Đã khóa công thức thành công');
       invalidatePendingRecipes();
     },
-    onError: () => {
-      toast.error('Không thể khóa công thức. Vui lòng thử lại.');
-    },
   });
 
   const approveMutation = useMutation({

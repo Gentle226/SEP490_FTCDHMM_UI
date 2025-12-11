@@ -131,8 +131,13 @@ export class HttpClient {
       // Check if on auth page - skip error toast entirely on login/register/forgot password
       const isOnAuthPage = HttpClient.isAuthPage();
 
-      // Only show toast if NOT on auth page
-      if (!isOnAuthPage) {
+      // Check if user is logged out (no token) and got a 409 Unauthenticated error
+      // This prevents showing error toasts for expected 409 errors after logout
+      const token = getToken();
+      const isUnauthenticatedAfterLogout = statusCode === 409 && !token;
+
+      // Only show toast if NOT on auth page AND NOT unauthenticated after logout
+      if (!isOnAuthPage && !isUnauthenticatedAfterLogout) {
         if (HttpClient.shouldShowError(errorKey)) {
           // Dynamic import to avoid SSR issues
           import('sonner').then(({ toast }) => {

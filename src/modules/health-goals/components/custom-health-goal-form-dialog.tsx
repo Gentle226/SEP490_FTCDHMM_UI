@@ -67,7 +67,7 @@ const customHealthGoalSchema = z.object({
           .min(0)
           .max(100)
           .optional(),
-        weight: z.coerce.number().min(0).optional(),
+        weight: z.coerce.number().int().min(1).max(5).optional(),
       }),
     )
     .refine(

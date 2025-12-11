@@ -58,14 +58,14 @@ export function IngredientDetectionDialog({
         response?: { data?: { message?: string; statusCode?: number } };
         message?: string;
       };
-      const statusCode = errorObj?.response?.data?.statusCode;
+      // const statusCode = errorObj?.response?.data?.statusCode;
       const message = errorObj?.response?.data?.message || errorObj?.message || '';
 
       // Handle service unavailable (416)
-      if (statusCode === 416) {
-        toast.error('Dịch vụ AI tạm thời không khả dụng. Vui lòng thử lại sau.');
-        return;
-      }
+      // if (statusCode === 416) {
+      //   toast.error('Dịch vụ AI tạm thời không khả dụng. Vui lòng thử lại sau.');
+      //   return;
+      // }
 
       // Show more helpful message for timeout errors
       if (message?.includes('timeout')) {

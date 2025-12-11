@@ -370,10 +370,24 @@ export function ReportManagementList() {
   const handleNavigateToTarget = useCallback(
     (item: ReportsResponse) => {
       if (item.targetType === ReportTargetType.USER) {
-        router.push(`/profile/${item.targetUserName}`);
+        // Use targetUserName for user profile navigation
+        if (item.targetUserName) {
+          router.push(`/profile/${item.targetUserName}`);
+        } else {
+          toast.error('Không tìm thấy tên người dùng');
+        }
+      } else if (
+        item.targetType === ReportTargetType.COMMENT ||
+        item.targetType === ReportTargetType.RATING
+      ) {
+        // Use recipeId for comments and ratings navigation
+        if (item.recipeId) {
+          router.push(`/recipe/${item.recipeId}`);
+        } else {
+          toast.error('Không tìm thấy công thức liên quan');
+        }
       } else {
-        // For RECIPE, COMMENT, RATING - navigate to recipe details
-        // Comments and Ratings are associated with recipes
+        // For RECIPE type, use targetId directly
         router.push(`/recipe/${item.targetId}`);
       }
     },

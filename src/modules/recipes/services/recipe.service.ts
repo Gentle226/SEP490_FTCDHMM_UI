@@ -39,7 +39,7 @@ class RecipeService extends HttpClient {
   public async getMyRecipes(params: PaginationParams = {}) {
     const { pageNumber = 1, pageSize = 12 } = params;
 
-    return this.get<MyRecipeResponse>('api/Recipe/myRecipe', {
+    return this.get<MyRecipeResponse>('api/Recipe/my', {
       isPrivateRoute: true,
       params: {
         PageNumber: pageNumber,
@@ -794,7 +794,7 @@ class RecipeService extends HttpClient {
   public async getPendingRecipes(params: PaginationParams = {}) {
     const { pageNumber = 1, pageSize = 10 } = params;
 
-    return this.get<import('../types').RecipeManagementListResponse>('api/Recipe/pending', {
+    return this.get<import('../types').RecipeManagementListResponse>('api/Recipe/pendings', {
       isPrivateRoute: true,
       params: {
         PageNumber: pageNumber,
@@ -810,7 +810,7 @@ class RecipeService extends HttpClient {
     const { pageNumber = 1, pageSize = 10 } = params;
 
     return this.get<import('../types').RecipeManagementListResponse>(
-      'api/Recipe/pendingManagement',
+      'api/Recipe/pendingsManagement',
       {
         isPrivateRoute: true,
         params: {

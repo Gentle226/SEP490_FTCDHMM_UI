@@ -72,7 +72,7 @@ function IngredientsContent() {
   // URL params
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
   const currentSearch = searchParams.get('search') || '';
-  const currentPageSize = parseInt(searchParams.get('pageSize') || '20', 10);
+  const currentPageSize = parseInt(searchParams.get('pageSize') || '12', 10);
   const currentCategoryIds = useMemo(() => searchParams.getAll('categoryId') || [], [searchParams]);
 
   // State
@@ -413,7 +413,7 @@ function IngredientsContent() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {[10, 20, 50].map((size) => (
+                      {[12, 20, 50].map((size) => (
                         <DropdownMenuItem
                           key={size}
                           onClick={() => setPageSize(size)}

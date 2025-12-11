@@ -62,6 +62,7 @@ export interface ReportsResponse {
   targetType: ReportTargetType;
   targetId: string;
   targetUserName?: string;
+  recipeId?: string;
   targetName: string;
   count: number;
   latestReportAtUtc: string;

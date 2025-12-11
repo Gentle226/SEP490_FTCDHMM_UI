@@ -227,8 +227,7 @@ export function useLockRecipe() {
     },
     onError: (error: unknown) => {
       const errorMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        'Không thể khóa công thức';
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
       toast.error(errorMessage);
     },
   });
