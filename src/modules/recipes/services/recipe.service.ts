@@ -724,9 +724,11 @@ class RecipeService extends HttpClient {
       formData.append('Description', data.description);
     }
 
-    // Image - send as IFormFile
+    // Image - send as IFormFile if new image, otherwise send existing image URL
     if (data.image) {
       formData.append('Image', data.image);
+    } else if (data.existingImageUrl) {
+      formData.append('ExistingImageUrl', data.existingImageUrl);
     }
 
     // Append array fields (LabelIds and Ingredients)

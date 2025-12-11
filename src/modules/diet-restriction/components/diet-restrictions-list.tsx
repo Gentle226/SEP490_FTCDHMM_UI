@@ -208,15 +208,6 @@ export function DietRestrictionsList({
     );
   }
 
-  if (!restrictions || restrictions.length === 0) {
-    return (
-      <div className="rounded-lg border-2 border-dashed border-gray-300 py-12 text-center">
-        <p className="text-gray-500">Chưa có hạn chế nào được thêm</p>
-        <p className="text-sm text-gray-400">Thêm hạn chế để quản lý chế độ ăn của bạn</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-3 sm:space-y-4">
       {/* Search and Filter Controls */}
@@ -442,10 +433,17 @@ export function DietRestrictionsList({
         </p>
       ) : null}
 
-      {/* Restrictions List */}
+      {/* Restrictions List or Empty State */}
       {sortedRestrictions.length === 0 ? (
         <div className="rounded-lg border-2 border-dashed border-gray-300 py-6 text-center sm:py-8">
-          <p className="text-sm text-gray-500 sm:text-base">Không tìm thấy hạn chế nào phù hợp</p>
+          <p className="text-sm text-gray-500 sm:text-base">
+            {searchQuery || filterType
+              ? 'Không tìm thấy hạn chế nào phù hợp'
+              : 'Chưa có hạn chế nào được thêm'}
+          </p>
+          {!searchQuery && !filterType && (
+            <p className="text-sm text-gray-400">Thêm hạn chế để quản lý chế độ ăn của bạn</p>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-2 sm:gap-3 md:grid-cols-2">

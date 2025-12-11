@@ -89,7 +89,7 @@ export function RecipeLabelsSection({
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-[calc(100vw-2rem)] max-w-[400px] p-0 sm:w-[400px]"
+          className="w-[calc(100vw-2rem)] max-w-[710px] p-0 sm:w-[710px]"
           align="start"
         >
           <Command shouldFilter={false}>

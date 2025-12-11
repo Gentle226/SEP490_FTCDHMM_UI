@@ -402,6 +402,11 @@ export function RecipeForm({
     difficulty,
     cookTime,
     image: imageUpload.mainImage || undefined,
+    // When copying and no new image is uploaded, use the existing image URL from the parent recipe
+    existingImageUrl:
+      copyParentId && !imageUpload.mainImage && imageUpload.isCopiedRecipe
+        ? imageUpload.mainImagePreview || undefined
+        : undefined,
     ration,
     labelIds: labelSearch.selectedLabels.map((l) => l.id),
     ingredients: ingredientSearch.selectedIngredients.map((i) => ({

@@ -26,6 +26,8 @@ export interface CreateRecipeRequest {
   difficulty: 'Easy' | 'Medium' | 'Hard';
   cookTime: number;
   image?: File;
+  /** URL of an existing image to copy (used when copying recipes without uploading new image) */
+  existingImageUrl?: string;
   ration: number;
   labelIds: string[];
   ingredients: RecipeIngredient[];
