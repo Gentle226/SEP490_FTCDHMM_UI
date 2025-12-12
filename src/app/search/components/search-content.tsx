@@ -6,10 +6,12 @@ import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
+import { toast } from 'sonner';
 
 import { Button } from '@/base/components/ui/button';
 import { Input } from '@/base/components/ui/input';
 import { RecipeCardHorizontal } from '@/base/components/ui/recipe-card-horizontal';
+import { useAuth } from '@/modules/auth';
 import { recipeService } from '@/modules/recipes/services/recipe.service';
 
 import { FilterState, SearchFilter } from './search-filter';
@@ -17,6 +19,7 @@ import { FilterState, SearchFilter } from './search-filter';
 export function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
 
   const initialQuery = searchParams.get('q') || '';
 
@@ -73,6 +76,15 @@ export function SearchContent() {
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);
   }, []);
+
+  const handleRecipeClick = (recipeId: string) => {
+    if (!user) {
+      toast.error('Vui lòng đăng nhập để xem chi tiết công thức');
+      router.push('/auth/login');
+      return;
+    }
+    router.push(`/recipe/${recipeId}`);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50/30">
@@ -186,7 +198,7 @@ export function SearchContent() {
                       ingredients={recipe.ingredients || []}
                       labels={recipe.labels || []}
                       createdAtUtc={recipe.createdAtUtc}
-                      onClick={() => router.push(`/recipe/${recipe.id}`)}
+                      onClick={() => handleRecipeClick(recipe.id)}
                     />
                   ))}
                 </div>
