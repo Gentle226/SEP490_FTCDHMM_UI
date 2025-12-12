@@ -1,5 +1,5 @@
 export * from './confirm-dialog';
-export * from './current-goal-hero';
+export * from './current-goal-card';
 export * from './custom-health-goal-editor';
 export * from './custom-health-goal-form-dialog';
 export * from './custom-health-goal-list';

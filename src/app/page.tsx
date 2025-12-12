@@ -243,7 +243,7 @@ export default function HomePage() {
   // Common search and recipes section
   const mainContent = (
     <main className="min-h-screen bg-gradient-to-b from-white via-gray-50/50 to-white">
-      {/* Hero Search Section */}
+      {/* Search Section */}
       <div className="relative bg-gradient-to-br from-[#99b94a]/5 via-white to-emerald-50/30 pt-6 pb-10 sm:pt-8 sm:pb-14">
         {/* Decorative elements */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">

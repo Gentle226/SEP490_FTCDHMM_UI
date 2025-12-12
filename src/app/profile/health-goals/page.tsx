@@ -4,7 +4,7 @@ import { Goal, History, Library, Target } from 'lucide-react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { ProtectedRoute } from '@/modules/auth';
-import { CurrentGoalHero, GoalSelector, HealthGoalHistory } from '@/modules/health-goals';
+import { CurrentGoal, GoalSelector, HealthGoalHistory } from '@/modules/health-goals';
 
 export default function MyHealthGoalsPage() {
   return (
@@ -43,7 +43,7 @@ export default function MyHealthGoalsPage() {
                 </p>
               </div>
             </div>
-            <CurrentGoalHero />
+            <CurrentGoal />
           </section>
 
           {/* Goal Selection Section */}

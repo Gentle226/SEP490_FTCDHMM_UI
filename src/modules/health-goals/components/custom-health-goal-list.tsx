@@ -22,6 +22,7 @@ import { Skeleton } from '@/base/components/ui/skeleton';
 
 import { useDeleteCustomHealthGoal, useMyCustomHealthGoals } from '../hooks';
 import { CustomHealthGoalResponse } from '../types';
+import { ConfirmDialog } from './confirm-dialog';
 import { CustomHealthGoalFormDialog } from './custom-health-goal-form-dialog';
 
 export function CustomHealthGoalList() {
@@ -29,11 +30,21 @@ export function CustomHealthGoalList() {
   const deleteGoal = useDeleteCustomHealthGoal();
   const [editingGoal, setEditingGoal] = useState<CustomHealthGoalResponse | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [goalToDelete, setGoalToDelete] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteClick = (id: string) => {
+    setGoalToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!goalToDelete) return;
     try {
-      await deleteGoal.mutateAsync(id);
+      await deleteGoal.mutateAsync(goalToDelete);
       toast.success('Mục tiêu sức khỏe đã được xóa thành công');
+      setIsDeleteDialogOpen(false);
+      setGoalToDelete(null);
     } catch (_error) {
       toast.error('Lỗi khi xóa mục tiêu sức khỏe');
     }
@@ -111,7 +122,7 @@ export function CustomHealthGoalList() {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="text-red-600"
-                      onClick={() => handleDelete(goal.id)}
+                      onClick={() => handleDeleteClick(goal.id)}
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Xóa
@@ -143,6 +154,18 @@ export function CustomHealthGoalList() {
         goal={editingGoal}
         isOpen={isFormOpen}
         onClose={handleCloseForm}
+      />
+
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="Xóa Mục Tiêu Sức Khỏe Tùy Chỉnh"
+        description="Bạn có chắc chắn muốn xóa mục tiêu này? Hành động này không thể hoàn tác."
+        confirmText="Xóa"
+        cancelText="Hủy"
+        onConfirm={handleConfirmDelete}
+        variant="destructive"
+        isLoading={deleteGoal.isPending}
       />
     </div>
   );

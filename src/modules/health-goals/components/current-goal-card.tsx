@@ -19,7 +19,7 @@ import { useCurrentHealthGoal, useRemoveHealthGoal } from '../hooks';
 import { formatNutrientTargetValue, getVietnameseNutrientName } from '../utils';
 import { ConfirmDialog } from './confirm-dialog';
 
-export function CurrentGoalHero() {
+export function CurrentGoal() {
   const { data: currentGoal = null, isLoading } = useCurrentHealthGoal();
   const removeGoal = useRemoveHealthGoal();
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);

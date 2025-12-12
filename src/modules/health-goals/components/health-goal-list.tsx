@@ -23,6 +23,7 @@ import { Skeleton } from '@/base/components/ui/skeleton';
 import { useDeleteHealthGoal, useHealthGoals } from '../hooks';
 import { HealthGoalResponse } from '../types';
 import { formatNutrientTargetValue, getVietnameseNutrientName } from '../utils';
+import { ConfirmDialog } from './confirm-dialog';
 import { HealthGoalFormDialog } from './health-goal-form-dialog';
 
 interface HealthGoalListProps {
@@ -34,11 +35,21 @@ export function HealthGoalList({ showHeader = true }: HealthGoalListProps) {
   const deleteHealthGoal = useDeleteHealthGoal();
   const [editingGoal, setEditingGoal] = useState<HealthGoalResponse | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [goalToDelete, setGoalToDelete] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteClick = (id: string) => {
+    setGoalToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!goalToDelete) return;
     try {
-      await deleteHealthGoal.mutateAsync(id);
+      await deleteHealthGoal.mutateAsync(goalToDelete);
       toast.success('Xóa mục tiêu sức khỏe thành công');
+      setIsDeleteDialogOpen(false);
+      setGoalToDelete(null);
     } catch (_error) {
       toast.error('Không thể xóa mục tiêu sức khỏe');
     }
@@ -107,11 +118,11 @@ export function HealthGoalList({ showHeader = true }: HealthGoalListProps) {
 
       {healthGoals?.length === 0 ? (
         <Card className="border-2 border-dashed border-[#99b94a]/30 bg-[#99b94a]/5">
-          <CardHeader className="items-center py-10">
+          <CardHeader className="flex flex-col items-center justify-center py-16">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#99b94a]/10">
               <Plus className="h-8 w-8 text-[#99b94a]" />
             </div>
-            <CardTitle className="text-lg">Chưa có mục tiêu nào</CardTitle>
+            <CardTitle className="text-center text-lg">Chưa có mục tiêu nào</CardTitle>
             <CardDescription className="text-center">
               Bắt đầu tạo mục tiêu sức khỏe đầu tiên cho hệ thống
             </CardDescription>
@@ -147,7 +158,7 @@ export function HealthGoalList({ showHeader = true }: HealthGoalListProps) {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-600"
-                        onClick={() => handleDelete(goal.id)}
+                        onClick={() => handleDeleteClick(goal.id)}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Xóa
@@ -181,6 +192,18 @@ export function HealthGoalList({ showHeader = true }: HealthGoalListProps) {
       )}
 
       <HealthGoalFormDialog goal={editingGoal} isOpen={isFormOpen} onClose={handleCloseForm} />
+
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="Xóa Mục Tiêu Sức Khỏe"
+        description="Bạn có chắc chắn muốn xóa mục tiêu này? Hành động này không thể hoàn tác."
+        confirmText="Xóa"
+        cancelText="Hủy"
+        onConfirm={handleConfirmDelete}
+        variant="destructive"
+        isLoading={deleteHealthGoal.isPending}
+      />
     </div>
   );
 }
