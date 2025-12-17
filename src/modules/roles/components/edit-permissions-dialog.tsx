@@ -66,7 +66,7 @@ export function EditPermissionsDialog({
         });
       });
       setPermissions(permMap);
-      setLastUpdatedUtc(permissionsData.LastUpdatedUtc);
+      setLastUpdatedUtc(permissionsData.lastUpdatedUtc);
     }
   }, [permissionsData]);
 

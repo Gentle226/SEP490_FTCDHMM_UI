@@ -33,7 +33,7 @@ export interface PermissionDomain {
 
 export interface RoleDetailsResponse {
   name: string;
-  LastUpdatedUtc: string;
+  lastUpdatedUtc: string;
   domains: PermissionDomain[];
 }
 
