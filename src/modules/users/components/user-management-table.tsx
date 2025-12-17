@@ -241,25 +241,6 @@ export function UserManagementTable() {
       setSelectedRole('');
       toast.success('Vai trò người dùng đã được thay đổi thành công.');
     },
-    onError: (error: Error) => {
-      // Check if error is AxiosError with response data
-      if ('response' in error && error.response) {
-        const responseData = (error.response as { data?: { code?: string; message?: string } })
-          .data;
-
-        if (responseData?.code === 'INVALID_ACTION') {
-          toast.error('Không được quyền chỉnh sửa tài khoản admin');
-          return;
-        }
-
-        if (responseData?.message) {
-          toast.error(responseData.message);
-          return;
-        }
-      }
-
-      toast.error(error.message || 'Không thể thay đổi vai trò người dùng.');
-    },
   });
 
   const handleLock = (user: User) => {

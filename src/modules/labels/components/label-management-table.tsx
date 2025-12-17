@@ -187,9 +187,9 @@ export function LabelManagementTable() {
       setSelectedLabel(null);
       toast.success('Nhãn đã được xóa thành công.');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Không thể xóa nhãn.');
-    },
+    // onError: (error: Error) => {
+    //   toast.error(error.message || 'Không thể xóa nhãn.');
+    // },
   });
 
   // Update color mutation
@@ -214,8 +214,6 @@ export function LabelManagementTable() {
       if (error.response?.status === 409) {
         setEditColorDialogOpen(false);
         setConflictDialogOpen(true);
-      } else {
-        toast.error(error.message || 'Không thể cập nhật màu nhãn.');
       }
     },
   });

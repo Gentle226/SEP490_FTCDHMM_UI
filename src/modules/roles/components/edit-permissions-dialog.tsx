@@ -84,8 +84,8 @@ export function EditPermissionsDialog({
       if (error.response?.status === 409) {
         onOpenChange(false);
         setConflictDialogOpen(true);
-      } else {
-        toast.error(error.message || 'Không thể cập nhật quyền.');
+        // } else {
+        //   toast.error(error.message || 'Không thể cập nhật quyền.');
       }
     },
   });

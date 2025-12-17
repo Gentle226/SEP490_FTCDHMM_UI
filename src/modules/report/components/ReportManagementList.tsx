@@ -569,7 +569,7 @@ export function ReportManagementList() {
         isBulk={true}
         bulkTarget={bulkRejectTarget}
         onSuccess={handleRejectSuccess}
-        onError={(error) => toast.error(error.message)}
+        // onError={(error) => toast.error(error.message)}
       />
     </div>
   );

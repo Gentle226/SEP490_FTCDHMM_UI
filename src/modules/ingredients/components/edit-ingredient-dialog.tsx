@@ -1,7 +1,6 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AxiosError } from 'axios';
 import { ChefHat, HelpCircle, Lock, Plus, Trash2, Upload, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -33,11 +32,11 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
 const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif'];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
-interface ApiErrorResponse {
-  code?: string;
-  statusCode?: number;
-  message?: string;
-}
+// interface ApiErrorResponse {
+//   code?: string;
+//   statusCode?: number;
+//   message?: string;
+// }
 
 interface EditIngredientDialogProps {
   ingredient: Ingredient | null;
@@ -222,16 +221,16 @@ export function EditIngredientDialog({
       queryClient.invalidateQueries({ queryKey: ['ingredient-detail', ingredient?.id] });
       onOpenChange(false);
     },
-    onError: (error: AxiosError) => {
-      console.warn('Update error:', error);
-      // Check if error is due to duplicate name (EXISTS error code)
-      const responseData = error?.response?.data as ApiErrorResponse;
-      if (responseData?.code === 'EXISTS' || responseData?.statusCode === 415) {
-        toast.error('Tên nguyên liệu đã tồn tại');
-      } else {
-        toast.error(error?.message || 'Không thể cập nhật nguyên liệu');
-      }
-    },
+    // onError: (error: AxiosError) => {
+    //   console.warn('Update error:', error);
+    //   // Check if error is due to duplicate name (EXISTS error code)
+    //   const responseData = error?.response?.data as ApiErrorResponse;
+    //   if (responseData?.code === 'EXISTS' || responseData?.statusCode === 415) {
+    //     toast.error('Tên nguyên liệu đã tồn tại');
+    //   } else {
+    //     toast.error(error?.message || 'Không thể cập nhật nguyên liệu');
+    //   }
+    // },
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

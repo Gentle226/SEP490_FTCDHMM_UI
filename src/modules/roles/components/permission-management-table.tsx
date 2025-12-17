@@ -120,17 +120,17 @@ export function PermissionManagementTable() {
       setNewRoleName('');
       toast.success('Vai trò đã được tạo thành công.');
     },
-    onError: (error: Error) => {
-      // Check if error is AxiosError with response data
-      if ('response' in error && error.response) {
-        const responseData = (error.response as { data?: { message?: string } }).data;
-        if (responseData?.message) {
-          toast.error(responseData.message);
-          return;
-        }
-      }
-      toast.error(error.message || 'Không thể tạo vai trò.');
-    },
+    // onError: (error: Error) => {
+    //   // Check if error is AxiosError with response data
+    //   if ('response' in error && error.response) {
+    //     const responseData = (error.response as { data?: { message?: string } }).data;
+    //     if (responseData?.message) {
+    //       toast.error(responseData.message);
+    //       return;
+    //     }
+    //   }
+    //   toast.error(error.message || 'Không thể tạo vai trò.');
+    // },
   });
 
   const getErrorMessage = (error: Error, isDeactivating: boolean): string => {
