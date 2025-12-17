@@ -3,12 +3,12 @@
 import { KeyRound } from 'lucide-react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
-import { ProtectedRoute, Role } from '@/modules/auth';
+import { PermissionPolicies, ProtectedRoute } from '@/modules/auth';
 import { PermissionManagementTable } from '@/modules/roles/components/permission-management-table';
 
 export default function PermissionsPage() {
   return (
-    <ProtectedRoute requiredRoles={[Role.ADMIN]}>
+    <ProtectedRoute requiredPermissions={[PermissionPolicies.ROLE_VIEW]}>
       <DashboardLayout>
         <div className="space-y-6">
           {/* Header */}

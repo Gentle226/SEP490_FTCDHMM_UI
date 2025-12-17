@@ -7,12 +7,13 @@ export interface User {
   lastName: string;
   userName: string;
   email: string;
-  createdAtUTC: string;
+  createdAtUtc: string;
   status: string;
   avatarUrl?: string;
   lockReason?: string | null;
   lockoutEnd?: string | null;
   role?: string;
+  lastUpdatedUtc: string;
 }
 
 export interface PaginationParams {
@@ -46,7 +47,8 @@ export interface RoleResponse {
 }
 
 export interface ChangeRoleRequest {
-  roleId: string;
+  RoleId: string;
+  LastUpdatedUtc: string;
 }
 
 export interface MentionableUser {

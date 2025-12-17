@@ -3,12 +3,18 @@
 import { Goal } from 'lucide-react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
-import { ProtectedRoute, Role } from '@/modules/auth';
+import { PermissionPolicies, ProtectedRoute } from '@/modules/auth';
 import { HealthGoalList } from '@/modules/health-goals';
 
 export default function HealthGoalsPage() {
   return (
-    <ProtectedRoute requiredRoles={[Role.ADMIN]}>
+    <ProtectedRoute
+      requiredPermissions={[
+        PermissionPolicies.HEALTH_GOAL_CREATE,
+        PermissionPolicies.HEALTH_GOAL_UPDATE,
+        PermissionPolicies.HEALTH_GOAL_DELETE,
+      ]}
+    >
       <DashboardLayout>
         <div className="space-y-6">
           {/* Header */}

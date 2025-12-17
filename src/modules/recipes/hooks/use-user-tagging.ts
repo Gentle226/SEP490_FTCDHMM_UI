@@ -53,7 +53,8 @@ export function useUserTagging(
             firstName: user.firstName,
             lastName: user.lastName,
             email: '',
-            createdAtUTC: '',
+            createdAtUtc: '',
+            lastUpdatedUtc: '',
             status: 'Active',
             avatarUrl: user.avatarUrl,
           }));

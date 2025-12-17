@@ -229,8 +229,11 @@ export function UserManagementTable() {
 
   // Change role mutation (Admin only)
   const changeRoleMutation = useMutation({
-    mutationFn: (request: { userId: string; roleId: string }) =>
-      userManagementService.changeRole(request.userId, { roleId: request.roleId }),
+    mutationFn: (request: { userId: string; roleId: string; lastUpdatedUtc: string }) =>
+      userManagementService.changeRole(request.userId, {
+        RoleId: request.roleId,
+        LastUpdatedUtc: request.lastUpdatedUtc,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setChangeRoleDialogOpen(false);
@@ -312,6 +315,7 @@ export function UserManagementTable() {
         changeRoleMutation.mutate({
           userId: selectedUser.id,
           roleId,
+          lastUpdatedUtc: selectedUser.lastUpdatedUtc,
         });
       } else {
         toast.error('Không tìm thấy ID của vai trò được chọn.');
@@ -493,7 +497,7 @@ export function UserManagementTable() {
                     </Badge>
                   </TableCell>
                   <TableCell>{getStatusBadge(user.status, user)}</TableCell>
-                  <TableCell>{formatDate(user.createdAtUTC)}</TableCell>
+                  <TableCell>{formatDate(user.createdAtUtc)}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap items-center gap-2">
                       <Button

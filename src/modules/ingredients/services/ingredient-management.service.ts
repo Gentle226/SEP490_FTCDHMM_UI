@@ -209,6 +209,7 @@ class IngredientManagementService extends HttpClient {
       image?: File | string;
       nutrients?: Nutrient[];
       ingredientCategoryIds?: string[];
+      lastUpdatedUtc?: string;
     },
   ) {
     const formData = new FormData();
@@ -238,6 +239,10 @@ class IngredientManagementService extends HttpClient {
       data.ingredientCategoryIds.forEach((categoryId) => {
         formData.append('IngredientCategoryIds', categoryId);
       });
+    }
+
+    if (data.lastUpdatedUtc) {
+      formData.append('LastUpdatedUtc', data.lastUpdatedUtc);
     }
 
     return this.put<Ingredient>(`api/Ingredient/${id}`, formData, {

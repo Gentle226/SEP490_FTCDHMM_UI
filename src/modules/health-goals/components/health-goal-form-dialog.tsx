@@ -1,12 +1,14 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AxiosError } from 'axios';
 import { AlertTriangle, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+import { ConflictDialog } from '@/base/components/conflict-dialog';
 import { Button } from '@/base/components/ui/button';
 import {
   Dialog,
@@ -95,6 +97,7 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
   const [nutrients, setNutrients] = useState<NutrientInfo[]>([]);
   const [requiredNutrients, setRequiredNutrients] = useState<NutrientInfo[]>([]);
   const [isNameFocused, setIsNameFocused] = useState(false);
+  const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
   const [safetyWarningDialog, setSafetyWarningDialog] = useState<{
     open: boolean;
     message: string;
@@ -305,7 +308,10 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
       if (goal) {
         await updateHealthGoal.mutateAsync({
           id: goal.id,
-          data: processedData,
+          data: {
+            ...processedData,
+            lastUpdatedUtc: goal.lastUpdatedUtc,
+          },
         });
         toast.success('Mục tiêu sức khỏe đã được cập nhật thành công');
       } else {
@@ -314,8 +320,10 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
       }
       onClose();
       reset();
-    } catch {
-      // toast.error(`Lỗi khi ${goal ? 'cập nhật' : 'tạo'} mục tiêu sức khỏe`);
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 409) {
+        setConflictDialogOpen(true);
+      }
     }
   };
 
@@ -790,6 +798,17 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
         cancelText="Hủy"
         onConfirm={safetyWarningDialog.onConfirm}
         variant="destructive"
+      />
+
+      {/* Conflict Dialog */}
+      <ConflictDialog
+        open={conflictDialogOpen}
+        onOpenChange={setConflictDialogOpen}
+        description="Mục tiêu sức khỏe này đã được cập nhật bởi người khác. Vui lòng tải lại trang để xem thông tin mới nhất và thử lại."
+        onReload={() => {
+          onClose();
+          window.location.reload();
+        }}
       />
     </Dialog>
   );

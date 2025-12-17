@@ -391,6 +391,7 @@ export function EditIngredientDialog({
       image?: File;
       nutrients?: Nutrient[];
       ingredientCategoryIds?: string[];
+      lastUpdatedUtc?: string;
     } = {};
 
     if (description !== ingredient?.description) {
@@ -414,6 +415,11 @@ export function EditIngredientDialog({
     // Always send ingredient categories if any are selected
     if (selectedCategoryIds.length > 0) {
       updateData.ingredientCategoryIds = selectedCategoryIds;
+    }
+
+    // Add lastUpdatedUtc from the loaded ingredient for optimistic locking
+    if (detailedIngredient?.lastUpdatedUtc) {
+      updateData.lastUpdatedUtc = detailedIngredient.lastUpdatedUtc;
     }
 
     // Debug log

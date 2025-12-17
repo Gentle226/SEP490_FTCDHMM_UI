@@ -3,12 +3,12 @@
 import { ChefHat } from 'lucide-react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
-import { ProtectedRoute, Role } from '@/modules/auth';
+import { PermissionPolicies, ProtectedRoute } from '@/modules/auth';
 import { RecipeManagementTable } from '@/modules/recipes/components';
 
 export default function AdminRecipeManagementPage() {
   return (
-    <ProtectedRoute requiredRoles={[Role.ADMIN]}>
+    <ProtectedRoute requiredPermissions={[PermissionPolicies.RECIPE_MANAGEMENT_VIEW]}>
       <DashboardLayout>
         <div className="space-y-6 px-3">
           {/* Header */}

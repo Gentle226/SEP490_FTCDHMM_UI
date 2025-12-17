@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { ConflictDialog } from '@/base/components/conflict-dialog';
 import { Pagination } from '@/base/components/layout/pagination';
 import { Button } from '@/base/components/ui/button';
 import {
@@ -94,6 +95,7 @@ export function LabelManagementTable() {
   const [editColorDialogOpen, setEditColorDialogOpen] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState<Label | null>(null);
   const [editColorValue, setEditColorValue] = useState('#99b94a');
+  const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
 
   const [newLabelName, setNewLabelName] = useState('');
   const [newLabelColor, setNewLabelColor] = useState('#99b94a');
@@ -192,8 +194,15 @@ export function LabelManagementTable() {
 
   // Update color mutation
   const updateColorMutation = useMutation({
-    mutationFn: ({ id, colorCode }: { id: string; colorCode: string }) =>
-      labelManagementService.updateColorCode(id, { colorCode }),
+    mutationFn: ({
+      id,
+      colorCode,
+      lastUpdatedUtc,
+    }: {
+      id: string;
+      colorCode: string;
+      lastUpdatedUtc: string;
+    }) => labelManagementService.updateColorCode(id, { colorCode, lastUpdatedUtc }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['labels'] });
       setEditColorDialogOpen(false);
@@ -201,8 +210,13 @@ export function LabelManagementTable() {
       setEditColorValue('#99b94a');
       toast.success('Màu nhãn đã được cập nhật thành công.');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Không thể cập nhật màu nhãn.');
+    onError: (error: AxiosError) => {
+      if (error.response?.status === 409) {
+        setEditColorDialogOpen(false);
+        setConflictDialogOpen(true);
+      } else {
+        toast.error(error.message || 'Không thể cập nhật màu nhãn.');
+      }
     },
   });
 
@@ -254,6 +268,7 @@ export function LabelManagementTable() {
       updateColorMutation.mutate({
         id: selectedLabel.id,
         colorCode: editColorValue,
+        lastUpdatedUtc: selectedLabel.lastUpdatedUtc,
       });
     }
   };
@@ -551,6 +566,17 @@ export function LabelManagementTable() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Conflict Dialog */}
+      <ConflictDialog
+        open={conflictDialogOpen}
+        onOpenChange={setConflictDialogOpen}
+        description="Nhãn này đã được cập nhật bởi người khác. Vui lòng tải lại trang để xem thông tin mới nhất và thử lại."
+        onReload={() => {
+          queryClient.invalidateQueries({ queryKey: ['labels'] });
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

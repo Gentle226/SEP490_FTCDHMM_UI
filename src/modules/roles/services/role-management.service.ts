@@ -4,6 +4,7 @@ export interface Role {
   id: string;
   name: string;
   isActive: boolean;
+  lastUpdatedUtc: string;
 }
 
 export interface PaginationParams {
@@ -30,13 +31,20 @@ export interface PermissionDomain {
   actions: PermissionAction[];
 }
 
+export interface RoleDetailsResponse {
+  name: string;
+  LastUpdatedUtc: string;
+  domains: PermissionDomain[];
+}
+
 export interface PermissionToggle {
   permissionActionId: string;
   isActive: boolean;
 }
 
 export interface UpdateRolePermissionsRequest {
-  permissions: PermissionToggle[];
+  Permissions: PermissionToggle[];
+  LastUpdatedUtc: string;
 }
 
 export interface CreateRoleRequest {
@@ -84,7 +92,7 @@ class RoleManagementService extends HttpClient {
   }
 
   public async getRolePermissions(roleId: string) {
-    return this.get<PermissionDomain[]>(`api/Role/${roleId}/permissions`, {
+    return this.get<RoleDetailsResponse>(`api/Role/${roleId}/permissions`, {
       isPrivateRoute: true,
     });
   }

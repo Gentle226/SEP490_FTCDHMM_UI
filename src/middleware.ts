@@ -2,7 +2,7 @@ import { decodeJwt } from 'jose';
 import { NextURL } from 'next/dist/server/web/next-url';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { Role, User } from '@/modules/auth/types';
+import { User } from '@/modules/auth/types';
 
 import { RouteUtils } from './base/utils';
 
@@ -102,10 +102,8 @@ export async function middleware(request: NextRequest) {
           return NextResponse.redirect(redirectUrl);
         }
 
-        if (isAdminRoute && user?.role !== Role.ADMIN) {
-          redirectUrl.pathname = '/';
-          return NextResponse.redirect(redirectUrl);
-        }
+        // Note: Permission checks are handled by ProtectedRoute components on each page
+        // This allows dynamic role-based access based on permissions, not hardcoded roles
       }
     } catch (tokenError) {
       console.error('Token validation error:', tokenError);

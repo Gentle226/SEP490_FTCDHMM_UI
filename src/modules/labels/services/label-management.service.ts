@@ -4,6 +4,7 @@ export interface Label {
   id: string;
   name: string;
   colorCode: string;
+  lastUpdatedUtc: string;
 }
 
 export interface PaginationParams {
@@ -27,6 +28,7 @@ export interface CreateLabelRequest {
 
 export interface UpdateColorCodeRequest {
   colorCode: string;
+  lastUpdatedUtc: string;
 }
 
 class LabelManagementService extends HttpClient {

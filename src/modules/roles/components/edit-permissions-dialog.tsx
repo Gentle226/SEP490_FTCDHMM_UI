@@ -1,9 +1,11 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { ConflictDialog } from '@/base/components/conflict-dialog';
 import {
   Accordion,
   AccordionContent,
@@ -23,7 +25,11 @@ import {
 import { Label } from '@/base/components/ui/label';
 import { ScrollArea } from '@/base/components/ui/scroll-area';
 
-import { PermissionToggle, roleManagementService } from '../services/role-management.service';
+import {
+  PermissionToggle,
+  UpdateRolePermissionsRequest,
+  roleManagementService,
+} from '../services/role-management.service';
 
 interface EditPermissionsDialogProps {
   open: boolean;
@@ -39,6 +45,8 @@ export function EditPermissionsDialog({
   roleName,
 }: EditPermissionsDialogProps) {
   const [permissions, setPermissions] = useState<Map<string, boolean>>(new Map());
+  const [lastUpdatedUtc, setLastUpdatedUtc] = useState<string>('');
+  const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch role permissions
@@ -52,27 +60,33 @@ export function EditPermissionsDialog({
   useEffect(() => {
     if (permissionsData) {
       const permMap = new Map<string, boolean>();
-      permissionsData.forEach((domain) => {
+      permissionsData.domains.forEach((domain) => {
         domain.actions.forEach((action) => {
           permMap.set(action.actionId, action.isActive);
         });
       });
       setPermissions(permMap);
+      setLastUpdatedUtc(permissionsData.LastUpdatedUtc);
     }
   }, [permissionsData]);
 
   // Update permissions mutation
   const updatePermissionsMutation = useMutation({
-    mutationFn: (permissionToggles: PermissionToggle[]) =>
-      roleManagementService.updateRolePermissions(roleId, { permissions: permissionToggles }),
+    mutationFn: (data: UpdateRolePermissionsRequest) =>
+      roleManagementService.updateRolePermissions(roleId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       queryClient.invalidateQueries({ queryKey: ['rolePermissions', roleId] });
       onOpenChange(false);
       toast.success('Quyền đã được cập nhật thành công.');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Không thể cập nhật quyền.');
+    onError: (error: AxiosError) => {
+      if (error.response?.status === 409) {
+        onOpenChange(false);
+        setConflictDialogOpen(true);
+      } else {
+        toast.error(error.message || 'Không thể cập nhật quyền.');
+      }
     },
   });
 
@@ -81,13 +95,22 @@ export function EditPermissionsDialog({
   };
 
   const handleSave = () => {
+    // Validate that lastUpdatedUtc is properly loaded
+    if (!lastUpdatedUtc) {
+      toast.error('Không thể tải thông tin cập nhật. Vui lòng làm mới trang và thử lại.');
+      return;
+    }
+
     const permissionToggles: PermissionToggle[] = Array.from(permissions.entries()).map(
       ([actionId, isActive]) => ({
         permissionActionId: actionId,
         isActive,
       }),
     );
-    updatePermissionsMutation.mutate(permissionToggles);
+    updatePermissionsMutation.mutate({
+      Permissions: permissionToggles,
+      LastUpdatedUtc: lastUpdatedUtc,
+    });
   };
 
   const getActionDisplayName = (actionName: string) => {
@@ -145,7 +168,7 @@ export function EditPermissionsDialog({
             <div className="flex justify-center p-8">Đang tải...</div>
           ) : (
             <Accordion type="multiple" className="w-full">
-              {permissionsData?.map((domain) => (
+              {permissionsData?.domains.map((domain) => (
                 <AccordionItem key={domain.domainName} value={domain.domainName}>
                   <AccordionTrigger className="text-sm font-semibold text-[#57701a]">
                     {getDomainDisplayName(domain.domainName)}
@@ -185,12 +208,31 @@ export function EditPermissionsDialog({
           <Button
             className="bg-[#99b94a] hover:bg-[#88a43a]"
             onClick={handleSave}
-            disabled={updatePermissionsMutation.isPending}
+            disabled={updatePermissionsMutation.isPending || isLoading || !lastUpdatedUtc}
+            title={
+              isLoading
+                ? 'Đang tải dữ liệu...'
+                : !lastUpdatedUtc
+                  ? 'Vui lòng đợi dữ liệu tải xong'
+                  : ''
+            }
           >
             {updatePermissionsMutation.isPending ? 'Đang lưu...' : 'Lưu Thay Đổi'}
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Conflict Dialog */}
+      <ConflictDialog
+        open={conflictDialogOpen}
+        onOpenChange={setConflictDialogOpen}
+        description="Quyền của vai trò này đã được cập nhật bởi người khác. Vui lòng tải lại trang để xem thông tin mới nhất và thử lại."
+        onReload={() => {
+          queryClient.invalidateQueries({ queryKey: ['roles'] });
+          queryClient.invalidateQueries({ queryKey: ['rolePermissions', roleId] });
+          window.location.reload();
+        }}
+      />
     </Dialog>
   );
 }

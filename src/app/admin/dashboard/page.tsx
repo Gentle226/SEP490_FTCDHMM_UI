@@ -3,12 +3,12 @@
 import { Users } from 'lucide-react';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
-import { ProtectedRoute, Role } from '@/modules/auth';
+import { PermissionPolicies, ProtectedRoute } from '@/modules/auth';
 import { UserManagementTable } from '@/modules/users/components/user-management-table';
 
 export default function AdminDashboard() {
   return (
-    <ProtectedRoute requiredRoles={[Role.ADMIN]}>
+    <ProtectedRoute requiredPermissions={[PermissionPolicies.USER_MANAGEMENT_VIEW]}>
       <DashboardLayout>
         <div className="space-y-6">
           {/* Header */}

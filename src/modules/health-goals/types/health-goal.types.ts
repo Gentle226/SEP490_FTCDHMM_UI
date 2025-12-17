@@ -28,6 +28,7 @@ export interface HealthGoalResponse {
   name: string;
   description?: string;
   targets: NutrientTarget[];
+  lastUpdatedUtc: string;
 }
 
 export interface CreateHealthGoalRequest {
@@ -40,6 +41,7 @@ export interface UpdateHealthGoalRequest {
   name?: string;
   description?: string;
   targets?: NutrientTargetDto[];
+  lastUpdatedUtc?: string;
 }
 
 export type CustomHealthGoalResponse = HealthGoalResponse;
@@ -66,6 +68,7 @@ export interface UserHealthGoalResponse {
   targets: NutrientTarget[];
   startedAtUtc?: string; // ISO 8601 date string - when the goal was set
   expiredAtUtc?: string; // ISO 8601 date string - when the goal expired (null if active)
+  lastUpdatedUtc: string; // ISO 8601 date string - for optimistic locking
 }
 
 export interface SetUserHealthGoalRequest {
