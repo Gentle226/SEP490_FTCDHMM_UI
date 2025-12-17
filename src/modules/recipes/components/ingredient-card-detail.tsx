@@ -11,21 +11,18 @@ import {
   DialogTitle,
 } from '@/base/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/base/components/ui/popover';
-import {
-  IngredientRestrictionBadge,
-  UserDietRestrictionResponse,
-  checkIngredientCategoryRestriction,
-  checkIngredientRestriction,
-} from '@/modules/diet-restriction';
+import { IngredientRestrictionBadge } from '@/modules/diet-restriction';
 import { ingredientPublicService } from '@/modules/ingredients';
+
+import { RestrictionTypeObject } from '../types/recipe-detail.types';
 
 interface IngredientCardDetailProps {
   ingredient: {
     id?: string;
     name: string;
     quantityGram: number;
+    restrictionType?: RestrictionTypeObject; // Restriction type from API - returns as {value: \"TYPE\"}
   };
-  dietRestrictions?: UserDietRestrictionResponse[];
 }
 
 interface IngredientDetails {
@@ -47,22 +44,14 @@ interface IngredientDetails {
   }>;
 }
 
-export function IngredientCardDetail({
-  ingredient,
-  dietRestrictions = [],
-}: IngredientCardDetailProps) {
+export function IngredientCardDetail({ ingredient }: IngredientCardDetailProps) {
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [isHoverPopoverOpen, setIsHoverPopoverOpen] = useState(false);
   const [ingredientDetails, setIngredientDetails] = useState<IngredientDetails | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
-  // Check if this ingredient has any diet restrictions (by name)
-  const restrictionMatches = checkIngredientRestriction(ingredient.name, dietRestrictions);
-
-  // Check if this ingredient's categories have restrictions
-  const categoryRestrictionMatches = ingredientDetails?.ingredientCategoryIds
-    ? checkIngredientCategoryRestriction(ingredientDetails.ingredientCategoryIds, dietRestrictions)
-    : [];
+  // Get restriction type from ingredient data (already compared by API)
+  const hasRestriction = !!ingredient.restrictionType;
 
   const fetchIngredientDetails = async () => {
     if (ingredientDetails || !ingredient.id) return; // Already loaded or no ID
@@ -152,9 +141,9 @@ export function IngredientCardDetail({
             <div className="flex-1 space-y-1">
               <span className="flex items-center gap-2 text-sm font-semibold text-gray-800 group-hover:text-lime-700">
                 {ingredient.name || 'Không tên'}
-                {(restrictionMatches.length > 0 || categoryRestrictionMatches.length > 0) && (
+                {hasRestriction && ingredient.restrictionType && (
                   <IngredientRestrictionBadge
-                    restrictions={[...restrictionMatches, ...categoryRestrictionMatches]}
+                    restrictionType={ingredient.restrictionType}
                     compact
                   />
                 )}

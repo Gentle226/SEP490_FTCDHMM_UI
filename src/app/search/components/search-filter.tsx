@@ -247,17 +247,24 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
     fetchNextIngredientsPage,
   ]);
 
+  // Debounce filter changes to prevent multiple API calls
   useEffect(() => {
-    onFilterChange({
-      difficulty,
-      sortBy,
-      ration,
-      maxCookTime,
-      includeLabelIds: labelIds,
-      includeIngredientIds: ingredientIds,
-      excludeLabelIds,
-      excludeIngredientIds,
-    });
+    const timer = setTimeout(() => {
+      const filters: FilterState = {};
+
+      if (difficulty !== undefined) filters.difficulty = difficulty;
+      if (sortBy !== undefined) filters.sortBy = sortBy;
+      if (ration !== undefined) filters.ration = ration;
+      if (maxCookTime !== 240) filters.maxCookTime = maxCookTime; // Only include if not default
+      if (labelIds.length > 0) filters.includeLabelIds = labelIds;
+      if (ingredientIds.length > 0) filters.includeIngredientIds = ingredientIds;
+      if (excludeLabelIds.length > 0) filters.excludeLabelIds = excludeLabelIds;
+      if (excludeIngredientIds.length > 0) filters.excludeIngredientIds = excludeIngredientIds;
+
+      onFilterChange(filters);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
   }, [
     difficulty,
     sortBy,

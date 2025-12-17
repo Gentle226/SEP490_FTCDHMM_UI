@@ -1,12 +1,11 @@
 'use client';
 
-import { AlertCircle, AlertTriangle, Utensils } from 'lucide-react';
+import { AlertCircle, AlertTriangle, ClockAlert } from 'lucide-react';
 
 import { RESTRICTION_TYPE_CONFIG } from '../types';
-import { IngredientRestrictionMatch } from '../utils';
 
 interface RestrictionBadgeProps {
-  restrictions: IngredientRestrictionMatch[];
+  restrictionType: string | { value: string } | null | undefined;
   className?: string;
   compact?: boolean;
 }
@@ -16,31 +15,34 @@ interface RestrictionBadgeProps {
  * Shows visual indicator of whether ingredient has diet restrictions
  */
 export function IngredientRestrictionBadge({
-  restrictions,
+  restrictionType,
   className = '',
   compact = false,
 }: RestrictionBadgeProps) {
-  const activeRestrictions = restrictions.filter((r) => !r.isExpired);
-
-  if (activeRestrictions.length === 0) {
+  if (!restrictionType) {
     return null;
   }
 
-  // Get the most critical restriction
-  const primaryRestriction = activeRestrictions[0];
+  // Extract value from object if needed
+  const typeValue = typeof restrictionType === 'string' ? restrictionType : restrictionType?.value;
+
+  if (!typeValue) {
+    return null;
+  }
+
   const config =
-    RESTRICTION_TYPE_CONFIG[primaryRestriction.type as keyof typeof RESTRICTION_TYPE_CONFIG] ||
+    RESTRICTION_TYPE_CONFIG[typeValue as keyof typeof RESTRICTION_TYPE_CONFIG] ||
     RESTRICTION_TYPE_CONFIG.ALLERGY;
 
   // Icon based on restriction type
   const getIcon = () => {
-    switch (primaryRestriction.type) {
+    switch (typeValue) {
       case 'ALLERGY':
         return <AlertTriangle className="h-4 w-4" />;
       case 'DISLIKE':
         return <AlertCircle className="h-4 w-4" />;
       case 'TEMPORARYAVOID':
-        return <Utensils className="h-4 w-4" />;
+        return <ClockAlert className="h-4 w-4" />;
       default:
         return <AlertTriangle className="h-4 w-4" />;
     }

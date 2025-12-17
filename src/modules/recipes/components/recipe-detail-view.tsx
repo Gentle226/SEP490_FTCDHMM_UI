@@ -2,6 +2,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import {
+  AlertCircle,
   Bookmark,
   BookmarkCheck,
   Calendar,
@@ -28,7 +29,7 @@ import { translateError } from '@/base/lib/error-translator.lib';
 import { getToken } from '@/base/lib/get-token.lib';
 import { useAuth } from '@/modules/auth/contexts/auth.context';
 import { PermissionPolicies, hasAnyPermission } from '@/modules/auth/types';
-import { checkIngredientRestriction, useGetUserDietRestrictions } from '@/modules/diet-restriction';
+import { RestrictionType } from '@/modules/diet-restriction';
 import { recipeService } from '@/modules/recipes/services/recipe.service';
 import { ReportTargetType, ReportTrigger } from '@/modules/report';
 
@@ -39,6 +40,7 @@ import {
   useSaveRecipe,
   useUnsaveRecipe,
 } from '../hooks/use-recipe-actions';
+import { RestrictionTypeObject } from '../types/recipe-detail.types';
 import { getFullDateTimeVN, getRelativeTime } from '../utils/time.utils';
 import { CommentList } from './comment-list';
 import { IngredientCardDetail } from './ingredient-card-detail';
@@ -80,9 +82,6 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
 
   // Fetch recipe using React Query
   const { data: recipe, isLoading, error } = useRecipeDetail(recipeId);
-
-  // Fetch user's diet restrictions (only if user is logged in)
-  const { data: userRestrictions = [] } = useGetUserDietRestrictions(user ? {} : undefined);
 
   // SignalR connection for real-time updates
   const signalRConnection = useSignalRConnection(recipeId);
@@ -627,28 +626,87 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
           <div className="space-y-3 sm:space-y-4">
             <h2 className="text-xl font-semibold sm:text-2xl">Nguyên liệu</h2>
 
-            {/* Show alert if user has diet restrictions affecting this recipe */}
+            {/* Show detailed alerts based on restriction types */}
             {user &&
-              userRestrictions.length > 0 &&
-              recipe.ingredients.some((ing) => {
-                // Check ingredient name restrictions
-                const ingredientRestrictions = checkIngredientRestriction(
-                  ing.name,
-                  userRestrictions,
+              (() => {
+                const restrictedIngredients = recipe.ingredients.filter(
+                  (ing) => ing.restrictionType,
                 );
-                return ingredientRestrictions.length > 0;
-              }) && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                  <p className="text-sm font-medium text-amber-900">
-                    <TriangleAlert className="inline-block h-4 w-4" />
-                    <span> Công thức này chứa thành phần bị hạn chế theo danh sách của bạn</span>
-                  </p>
-                  <p className="mt-1 text-xs text-amber-800 italic">
-                    Chú ý các thành phần có ký hiệu để tránh hoặc thay thế cho phù hợp chế độ ăn
-                    uống của bạn.
-                  </p>
-                </div>
-              )}
+                // Extract value from restriction type object
+                const getRestrictionTypeValue = (
+                  rt: RestrictionTypeObject | string | null | undefined,
+                ): string | null => {
+                  if (!rt) return null;
+                  return typeof rt === 'string' ? rt : rt?.value;
+                };
+                const allergies = restrictedIngredients.filter(
+                  (ing) => getRestrictionTypeValue(ing.restrictionType) === RestrictionType.ALLERGY,
+                );
+                const dislikes = restrictedIngredients.filter(
+                  (ing) => getRestrictionTypeValue(ing.restrictionType) === RestrictionType.DISLIKE,
+                );
+                const temporary = restrictedIngredients.filter(
+                  (ing) =>
+                    getRestrictionTypeValue(ing.restrictionType) === RestrictionType.TEMPORARYAVOID,
+                );
+
+                if (restrictedIngredients.length === 0) return null;
+
+                return (
+                  <div className="space-y-2">
+                    {/* Allergy Alert - Most Critical */}
+                    {allergies.length > 0 && (
+                      <div className="rounded-lg border-2 border-red-300 bg-red-50 p-4">
+                        <p className="text-sm font-bold text-red-900">
+                          <TriangleAlert className="inline-block h-5 w-5" />
+                          <span> CẢNH BÁO DỊ ỨNG</span>
+                        </p>
+                        <p className="mt-1 text-xs text-red-800">
+                          Công thức này chứa <strong>{allergies.length}</strong> thành phần bạn bị
+                          dị ứng: <strong>{allergies.map((ing) => ing.name).join(', ')}</strong>
+                        </p>
+                        <p className="mt-1 text-xs font-semibold text-red-900 italic">
+                          Không nên sử dụng công thức này để tránh phản ứng dị ứng nghiêm trọng!
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Dislike Alert - Medium Priority */}
+                    {dislikes.length > 0 && (
+                      <div className="rounded-lg border border-orange-300 bg-orange-50 p-4">
+                        <p className="text-sm font-semibold text-orange-900">
+                          <AlertCircle className="inline-block h-4 w-4" />
+                          <span> Không thích</span>
+                        </p>
+                        <p className="mt-1 text-xs text-orange-800">
+                          Công thức chứa <strong>{dislikes.length}</strong> thành phần bạn không
+                          thích: <strong>{dislikes.map((ing) => ing.name).join(', ')}</strong>
+                        </p>
+                        <p className="mt-1 text-xs text-orange-700 italic">
+                          Bạn có thể thay thế hoặc loại bỏ các thành phần này.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Temporary Avoid Alert - Low Priority */}
+                    {temporary.length > 0 && (
+                      <div className="rounded-lg border border-amber-300 bg-amber-50 p-4">
+                        <p className="text-sm font-medium text-amber-900">
+                          <Clock className="inline-block h-4 w-4" />
+                          <span> Tạm tránh</span>
+                        </p>
+                        <p className="mt-1 text-xs text-amber-800">
+                          Công thức chứa <strong>{temporary.length}</strong> thành phần bạn đang tạm
+                          tránh: <strong>{temporary.map((ing) => ing.name).join(', ')}</strong>
+                        </p>
+                        <p className="mt-1 text-xs text-amber-700 italic">
+                          Có thể sử dụng sau khi hết thời gian hạn chế.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             <div className="space-y-3">
               {recipe.ingredients.map((ingredient, index) => {
                 // Use ingredientId if available, fallback to id
@@ -660,8 +718,8 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                       id: ingredientId,
                       name: ingredient.name,
                       quantityGram: ingredient.quantityGram,
+                      restrictionType: ingredient.restrictionType,
                     }}
-                    dietRestrictions={userRestrictions}
                   />
                 );
               })}

@@ -1,8 +1,13 @@
+export interface RestrictionTypeObject {
+  value: string; // ALLERGY, DISLIKE, TEMPORARYAVOID
+}
+
 export interface RecipeIngredient {
   id?: string; // Optional for backward compatibility
   ingredientId?: string; // API might use this field name instead
   name: string;
   quantityGram: number;
+  restrictionType?: RestrictionTypeObject; // Diet restriction type from API - returns as {value: "TYPE"}
 }
 
 export interface RecipeLabel {
