@@ -231,13 +231,13 @@ export default function HomePage() {
     router.push(`/recipe/${recipeId}`);
   };
 
-  const handleIngredientClick = (ingredientName: string) => {
+  const handleIngredientClick = (ingredientId: string) => {
     if (!user) {
       toast.error('Vui lòng đăng nhập để xem chi tiết nguyên liệu');
       router.push('/auth/login');
       return;
     }
-    router.push(`/search?q=${encodeURIComponent(ingredientName)}`);
+    router.push(`/search?ingredientId=${ingredientId}`);
   };
 
   // Common search and recipes section
@@ -428,7 +428,7 @@ export default function HomePage() {
                   <button
                     key={ingredient.id}
                     className={`transition-all hover:scale-105 hover:shadow-lg active:scale-95 ${index >= 6 ? 'hidden lg:block' : ''}`}
-                    onClick={() => handleIngredientClick(ingredient.name)}
+                    onClick={() => handleIngredientClick(ingredient.id)}
                     title={ingredient.name}
                   >
                     <IngredientCard name={ingredient.name} image={ingredient.imageUrl} />

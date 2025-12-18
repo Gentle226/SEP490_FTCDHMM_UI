@@ -52,28 +52,28 @@ export function IngredientDetectionDialog({
       setSelectedIngredientIds(new Set(ingredientIds));
       toast.success(`Phát hiện được ${data.length} nguyên liệu`);
     },
-    onError: (error: Error) => {
-      console.error('Detection error:', error);
-      const errorObj = error as {
-        response?: { data?: { message?: string; statusCode?: number } };
-        message?: string;
-      };
-      // const statusCode = errorObj?.response?.data?.statusCode;
-      const message = errorObj?.response?.data?.message || errorObj?.message || '';
+    // onError: (error: Error) => {
+    //   console.error('Detection error:', error);
+    //   const errorObj = error as {
+    //     response?: { data?: { message?: string; statusCode?: number } };
+    //     message?: string;
+    //   };
+    //   // const statusCode = errorObj?.response?.data?.statusCode;
+    //   const message = errorObj?.response?.data?.message || errorObj?.message || '';
 
-      // Handle service unavailable (416)
-      // if (statusCode === 416) {
-      //   toast.error('Dịch vụ AI tạm thời không khả dụng. Vui lòng thử lại sau.');
-      //   return;
-      // }
+    //   // Handle service unavailable (416)
+    //   if (statusCode === 416) {
+    //     toast.error('Dịch vụ AI tạm thời không khả dụng. Vui lòng thử lại sau.');
+    //     return;
+    //   }
 
-      // Show more helpful message for timeout errors
-      if (message?.includes('timeout')) {
-        toast.error('Quá trình phân tích mất quá lâu. Vui lòng thử lại.');
-      } else {
-        toast.error(message || 'Không thể phân tích ảnh');
-      }
-    },
+    //   // Show more helpful message for timeout errors
+    //   if (message?.includes('timeout')) {
+    //     toast.error('Quá trình phân tích mất quá lâu. Vui lòng thử lại.');
+    //   } else {
+    //     toast.error(message || 'Không thể phân tích ảnh');
+    //   }
+    // },
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

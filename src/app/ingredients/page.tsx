@@ -576,7 +576,9 @@ function IngredientsContent() {
                     <Button
                       className="w-full bg-[#99b94a] hover:bg-[#7a8f3a]"
                       onClick={() => {
-                        router.push(`/search?q=${encodeURIComponent(selectedIngredient.name)}`);
+                        router.push(
+                          `/search?ingredientId=${encodeURIComponent(selectedIngredient.id)}`,
+                        );
                         setIsDetailDialogOpen(false);
                       }}
                     >
