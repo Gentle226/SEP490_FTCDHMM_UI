@@ -1,6 +1,7 @@
 'use client';
 
-import { Bell, MessageCircle, Reply } from 'lucide-react';
+import { Bell, CheckCircle2, MessageCircle, Reply, ThumbsUp, UserPlus } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/base/components/ui/avatar';
@@ -25,7 +26,7 @@ export const NotificationItem = ({
 }: NotificationItemProps) => {
   const message = formatNotificationMessage(notification);
   const timeAgo = formatNotificationTime(notification.createdAtUtc);
-  const link = getNotificationLink(notification.type, notification.targetId);
+  const link = getNotificationLink(notification.type, notification.targetId, notification);
   const isClickable = isNotificationClickable(notification.type, notification.targetId);
 
   // Lấy biểu tượng dựa trên loại thông báo
@@ -36,6 +37,20 @@ export const NotificationItem = ({
         return <MessageCircle className="h-4 w-4 text-blue-500" />;
       case NotificationType.Reply:
         return <Reply className="h-4 w-4 text-green-500" />;
+      case NotificationType.Like:
+        return <ThumbsUp className="h-4 w-4 text-red-500" />;
+      case NotificationType.Follow:
+        return <UserPlus className="h-4 w-4 text-purple-500" />;
+      case NotificationType.NewRecipe:
+        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+      case NotificationType.LockRecipe:
+        return <Bell className="h-4 w-4 text-orange-500" />;
+      case NotificationType.DeleteRecipe:
+        return <Bell className="h-4 w-4 text-red-500" />;
+      case NotificationType.ApproveRecipe:
+        return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+      case NotificationType.RejectRecipe:
+        return <Bell className="h-4 w-4 text-red-600" />;
       case NotificationType.System:
       default:
         return <Bell className="h-4 w-4 text-gray-500" />;
@@ -58,9 +73,21 @@ export const NotificationItem = ({
       )}
       onClick={handleClick}
     >
-      {/* Avatar của người gửi */}
+      {/* Avatar của người gửi hoặc ảnh công thức */}
       <div className="relative flex-shrink-0">
-        {notification.senders.length > 0 ? (
+        {notification.recipeImageUrl ? (
+          // For system notifications, show recipe image
+          <div className="relative h-10 w-10 overflow-hidden rounded-full bg-gray-100">
+            <Image
+              src={notification.recipeImageUrl}
+              alt="Recipe"
+              fill
+              className="object-cover"
+              priority={false}
+            />
+          </div>
+        ) : notification.senders.length > 0 ? (
+          // For user notifications, show sender avatar
           <div className="relative">
             <Avatar className="h-10 w-10">
               <AvatarImage src={notification.senders[0].avatarUrl} />
@@ -76,6 +103,7 @@ export const NotificationItem = ({
             )}
           </div>
         ) : (
+          // Fallback to icon
           <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-full">
             {getNotificationIcon()}
           </div>

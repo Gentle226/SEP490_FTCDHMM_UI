@@ -13,9 +13,20 @@ export const formatNotificationMessage = (notification: Notification): string =>
     return message;
   }
 
-  // Không có người gửi, sử dụng tin nhắn mặc định
+  // Handle system notifications (no sender required)
   if (senderCount === 0) {
-    return message || 'Bạn có một thông báo mới';
+    switch (typeName) {
+      case NotificationType.LockRecipe:
+        return 'Công thức của bạn đã bị khóa';
+      case NotificationType.DeleteRecipe:
+        return 'Công thức của bạn đã bị xóa';
+      case NotificationType.ApproveRecipe:
+        return 'Công thức của bạn đã được duyệt';
+      case NotificationType.RejectRecipe:
+        return 'Công thức của bạn đã bị từ chối';
+      default:
+        return message || 'Bạn có một thông báo mới';
+    }
   }
 
   // Định dạng tên người gửi
@@ -32,6 +43,20 @@ export const formatNotificationMessage = (notification: Notification): string =>
         return `${fullName} đã trả lời bình luận của bạn`;
       case NotificationType.Mention:
         return `${fullName} đã nhắc đến bạn trong một bình luận`;
+      case NotificationType.NewRecipe:
+        return `${fullName} đã tạo một công thức mới`;
+      case NotificationType.Like:
+        return `${fullName} đã thích công thức của bạn`;
+      case NotificationType.Follow:
+        return `${fullName} đã theo dõi bạn`;
+      case NotificationType.LockRecipe:
+        return `Công thức của bạn đã bị khóa`;
+      case NotificationType.DeleteRecipe:
+        return `Công thức của bạn đã bị xóa`;
+      case NotificationType.ApproveRecipe:
+        return `Công thức của bạn đã được duyệt`;
+      case NotificationType.RejectRecipe:
+        return `Công thức của bạn đã bị từ chối`;
       default:
         return message || `${fullName} đã tương tác với nội dung của bạn`;
     }
@@ -48,6 +73,12 @@ export const formatNotificationMessage = (notification: Notification): string =>
       return `${fullName} và ${othersText} đã trả lời bình luận của bạn`;
     case NotificationType.Mention:
       return `${fullName} và ${othersText} đã nhắc đến bạn trong bình luận`;
+    case NotificationType.NewRecipe:
+      return `${fullName} và ${othersText} đã tạo công thức mới`;
+    case NotificationType.Like:
+      return `${fullName} và ${othersText} đã thích công thức của bạn`;
+    case NotificationType.Follow:
+      return `${fullName} và ${othersText} đã theo dõi bạn`;
     default:
       return message || `${fullName} và ${othersText} đã tương tác với nội dung của bạn`;
   }

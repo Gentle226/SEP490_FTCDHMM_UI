@@ -1,9 +1,18 @@
-import { NotificationType, NotificationTypeResponse } from '../types/notification.types';
+import {
+  Notification,
+  NotificationType,
+  NotificationTypeResponse,
+} from '../types/notification.types';
 
 /**
  * Tạo URL liên kết dựa trên loại thông báo và ID đích
+ * Cho Follow notifications, sử dụng username của sender
  */
-export const getNotificationLink = (type: NotificationTypeResponse, targetId?: string): string => {
+export const getNotificationLink = (
+  type: NotificationTypeResponse,
+  targetId?: string,
+  notification?: Notification,
+): string => {
   if (!targetId) {
     return '/';
   }
@@ -14,9 +23,19 @@ export const getNotificationLink = (type: NotificationTypeResponse, targetId?: s
     case NotificationType.Comment:
     case NotificationType.Reply:
     case NotificationType.Mention:
-      // Liên kết đến trang chi tiết công thức
-      // targetId là recipeId cho thông báo comment/reply/mention
+    case NotificationType.NewRecipe:
+    case NotificationType.LockRecipe:
+    case NotificationType.DeleteRecipe:
+    case NotificationType.ApproveRecipe:
+    case NotificationType.RejectRecipe:
       return `/recipe/${targetId}`;
+    case NotificationType.Follow:
+      // Use username from sender for profile link
+      if (notification?.senders?.[0]?.userName) {
+        return `/profile/${notification.senders[0].userName}`;
+      }
+      return `/profile/${targetId}`;
+    case NotificationType.Like:
     case NotificationType.System:
     default:
       return '/';
@@ -35,6 +54,12 @@ export const isNotificationClickable = (
     !!targetId &&
     (typeName === NotificationType.Comment ||
       typeName === NotificationType.Reply ||
-      typeName === NotificationType.Mention)
+      typeName === NotificationType.Mention ||
+      typeName === NotificationType.NewRecipe ||
+      typeName === NotificationType.LockRecipe ||
+      typeName === NotificationType.DeleteRecipe ||
+      typeName === NotificationType.ApproveRecipe ||
+      typeName === NotificationType.RejectRecipe ||
+      typeName === NotificationType.Follow)
   );
 };
