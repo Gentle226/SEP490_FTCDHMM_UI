@@ -4,6 +4,7 @@ export enum NotificationType {
   Reply = 'REPLY',
   Mention = 'MENTION',
   Like = 'LIKE',
+  Rating = 'RATING',
   Follow = 'FOLLOW',
   NewRecipe = 'NEWRECIPE',
   LockRecipe = 'LOCKRECIPE',

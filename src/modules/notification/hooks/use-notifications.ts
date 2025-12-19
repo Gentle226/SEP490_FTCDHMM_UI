@@ -36,7 +36,6 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
   const fetchNotifications = useCallback(async () => {
     const token = getToken();
     if (!token) {
-      console.warn('[useNotifications] Không có token sẵn, bỏ qua tìm nạp');
       return;
     }
 
@@ -45,11 +44,15 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
 
     try {
       const data = await notificationService.getMyNotifications(token);
+
+      if (!Array.isArray(data)) {
+        throw new Error('Invalid notifications response format');
+      }
+
       setNotifications(data);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Lỗi khi tìm nạp thông báo');
       setError(error);
-      console.error('[useNotifications] Lỗi khi tìm nạp thông báo:', error);
     } finally {
       setIsLoading(false);
     }
@@ -93,19 +96,12 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
 
   /**
    * Xử lý thông báo mới từ SignalR
+   * Backend chỉ gửi tín hiệu "notification_created", không gửi object
+   * Khi nhận được tín hiệu, refetch toàn bộ danh sách từ API
    */
-  const handleNewNotification = useCallback((notification: Notification) => {
-    setNotifications((prev) => {
-      // Kiểm tra xem thông báo đã tồn tại để ngăn chặn trùng lặp
-      const exists = prev.some((n) => n.id === notification.id);
-      if (exists) {
-        return prev;
-      }
-
-      // Thêm thông báo mới vào đầu
-      return [notification, ...prev];
-    });
-  }, []);
+  const handleNewNotification = useCallback(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   /**
    * Xử lý sự kiện đánh dấu đã đọc từ SignalR
@@ -123,7 +119,7 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
       return;
     }
 
-    // Lắng nghe thông báo mới
+    // Lắng nghe thông báo mới - backend gửi string "notification_created"
     connection.on('NOTIFICATION', handleNewNotification);
 
     // Lắng nghe sự kiện đánh dấu đã đọc

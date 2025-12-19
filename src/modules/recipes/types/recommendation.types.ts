@@ -30,7 +30,7 @@ export interface RecommendedRecipeResponse {
   ingredients: IngredientName[];
   createdAtUtc: string;
   updatedAtUtc: string;
-  score: number;
+  score: number | null;
 }
 
 /**

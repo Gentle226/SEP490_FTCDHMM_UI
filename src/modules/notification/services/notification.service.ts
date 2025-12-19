@@ -15,20 +15,32 @@ class NotificationService {
   /**
    * Lấy tất cả thông báo của người dùng hiện tại
    */
-  async getMyNotifications(token: string): Promise<Notification[]> {
+  async getMyNotifications(
+    token: string,
+    pageNumber: number = 1,
+    pageSize: number = 50,
+  ): Promise<Notification[]> {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
 
-      const response = await fetch(`${API_BASE_URL}/api/notifications/myNotifications`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        credentials: 'include',
-        signal: controller.signal,
+      const queryParams = new URLSearchParams({
+        pageNumber: pageNumber.toString(),
+        pageSize: pageSize.toString(),
       });
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/notifications/myNotifications?${queryParams}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: 'include',
+          signal: controller.signal,
+        },
+      );
 
       clearTimeout(timeoutId);
 
@@ -37,7 +49,20 @@ class NotificationService {
       }
 
       const data = await response.json();
-      return data;
+
+      // Handle paginated response
+      if (data && typeof data === 'object') {
+        // If response has items property (paginated response)
+        if ('items' in data && Array.isArray(data.items)) {
+          return data.items;
+        }
+        // If response is already an array (backward compatibility)
+        if (Array.isArray(data)) {
+          return data;
+        }
+      }
+
+      return [];
     } catch (err) {
       console.error('[NotificationService] Lỗi getMyNotifications:', {
         message: err instanceof Error ? err.message : 'Unknown error',

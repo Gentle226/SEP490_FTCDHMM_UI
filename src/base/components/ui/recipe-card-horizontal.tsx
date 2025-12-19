@@ -34,7 +34,7 @@ interface RecipeCardHorizontalProps {
   className?: string;
   isLoading?: boolean;
   onClick?: () => void;
-  score?: number;
+  score?: number | null;
 }
 
 export function RecipeCardHorizontal({
@@ -91,7 +91,7 @@ export function RecipeCardHorizontal({
       {/* Recipe Info */}
       <div className="flex flex-1 flex-col justify-between gap-2 sm:gap-3">
         {/* Score Badge for Recommendations */}
-        {score !== undefined && score > 0 && (
+        {score !== undefined && score !== null && score > 0 && (
           <div className="flex items-center gap-1.5">
             <Sparkles className="h-3.5 w-3.5 text-amber-500 sm:h-4 sm:w-4" />
             <span className="text-xs font-medium text-amber-600 sm:text-sm">

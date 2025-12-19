@@ -5,7 +5,7 @@ import { Notification, NotificationType } from '../types/notification.types';
  */
 export const formatNotificationMessage = (notification: Notification): string => {
   const { type, senders, message } = notification;
-  const senderCount = senders.length;
+  const senderCount = senders?.length ?? 0;
   const typeName = type?.name?.toUpperCase() ?? NotificationType.System;
 
   // Nếu tồn tại tin nhắn tùy chỉnh (cho thông báo Hệ thống), sử dụng nó
@@ -47,6 +47,8 @@ export const formatNotificationMessage = (notification: Notification): string =>
         return `${fullName} đã tạo một công thức mới`;
       case NotificationType.Like:
         return `${fullName} đã thích công thức của bạn`;
+      case NotificationType.Rating:
+        return `${fullName} đã đánh giá công thức của bạn`;
       case NotificationType.Follow:
         return `${fullName} đã theo dõi bạn`;
       case NotificationType.LockRecipe:
@@ -77,6 +79,8 @@ export const formatNotificationMessage = (notification: Notification): string =>
       return `${fullName} và ${othersText} đã tạo công thức mới`;
     case NotificationType.Like:
       return `${fullName} và ${othersText} đã thích công thức của bạn`;
+    case NotificationType.Rating:
+      return `${fullName} và ${othersText} đã đánh giá công thức của bạn`;
     case NotificationType.Follow:
       return `${fullName} và ${othersText} đã theo dõi bạn`;
     default:

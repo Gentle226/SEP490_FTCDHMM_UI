@@ -526,7 +526,7 @@ export default function HomePage() {
                           labels={recipe.labels}
                           createdAtUtc={recipe.createdAtUtc}
                           isLoading={false}
-                          score={recipe.score}
+                          score={recipe.score ?? undefined}
                         />
                       </button>
                     )),

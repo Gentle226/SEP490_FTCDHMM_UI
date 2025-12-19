@@ -86,14 +86,14 @@ export const NotificationItem = ({
               priority={false}
             />
           </div>
-        ) : notification.senders.length > 0 ? (
+        ) : notification.senders && notification.senders.length > 0 ? (
           // For user notifications, show sender avatar
           <div className="relative">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={notification.senders[0].avatarUrl} />
+              <AvatarImage src={notification.senders[0]?.avatarUrl} />
               <AvatarFallback>
-                {notification.senders[0].firstName.charAt(0)}
-                {notification.senders[0].lastName.charAt(0)}
+                {notification.senders[0]?.firstName?.charAt(0) ?? '?'}
+                {notification.senders[0]?.lastName?.charAt(0) ?? '?'}
               </AvatarFallback>
             </Avatar>
             {notification.senders.length > 1 && (
