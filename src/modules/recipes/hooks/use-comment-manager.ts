@@ -146,7 +146,8 @@ export const useCommentManager = (recipeId: string, connection: any | null) => {
       return commentList.map((comment) => {
         if (comment.id === updatedComment.id) {
           console.warn('[CommentManager] Updating comment:', updatedComment.id);
-          return { ...comment, ...updatedComment };
+          // Preserve existing replies when updating
+          return { ...comment, ...updatedComment, replies: comment.replies };
         }
 
         // Recursively search in nested replies

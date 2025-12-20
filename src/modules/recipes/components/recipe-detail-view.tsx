@@ -79,6 +79,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   const { user } = useAuth();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showLockDialog, setShowLockDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Fetch recipe using React Query
   const { data: recipe, isLoading, error } = useRecipeDetail(recipeId);
@@ -138,6 +139,25 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
       router.push('/myrecipe');
     } catch (err) {
       console.error('Delete recipe error:', err);
+      toast.error('Có lỗi xảy ra khi xóa công thức');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteAsManager = async (reason: string) => {
+    try {
+      setIsDeleting(true);
+      await recipeService.deleteRecipeByAdmin(recipeId, reason);
+
+      // Invalidate queries to refresh
+      await queryClient.invalidateQueries({ queryKey: ['myRecipes'] });
+      await queryClient.invalidateQueries({ queryKey: ['recipes'] });
+
+      toast.success('Công thức đã được xóa thành công');
+      router.push('/');
+    } catch (err) {
+      console.error('Delete recipe as manager error:', err);
       toast.error('Có lỗi xảy ra khi xóa công thức');
     } finally {
       setIsDeleting(false);
@@ -568,13 +588,13 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
               <Share2 className="h-4 w-4" />
               Chia sẻ
             </Button>
-            {/* Delete Button - Show for author or users with RECIPE_DELETE permission */}
+            {/* Delete Button - Show for users with RECIPE_DELETE permission (managers) */}
             {!isAuthor && canDeleteRecipe && (
               <Button
                 variant="outline"
                 size="sm"
                 className="gap-2 text-red-500 hover:text-red-600"
-                onClick={handleDelete}
+                onClick={() => setShowDeleteDialog(true)}
                 disabled={isDeleting}
               >
                 <Trash2 className="h-4 w-4" />
@@ -602,6 +622,16 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
                 action="lock"
                 recipeName={recipe.name}
                 onConfirm={handleLockRecipe}
+              />
+            )}
+            {/* Delete Reason Dialog */}
+            {recipe && (
+              <ReasonInputDialog
+                open={showDeleteDialog}
+                onOpenChange={setShowDeleteDialog}
+                action="delete"
+                recipeName={recipe.name}
+                onConfirm={handleDeleteAsManager}
               />
             )}
             {/* Report Button - Only show if not author */}

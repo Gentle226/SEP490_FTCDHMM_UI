@@ -296,7 +296,7 @@ function LoginStep1({
         </CardContent>
       </Card>
 
-      <div className="text-center text-xs text-balance text-neutral-50">
+      {/* <div className="text-center text-xs text-balance text-neutral-50">
         Bằng cách tiếp tục, bạn đồng ý với{' '}
         <a href="#" className="hover:text-primary underline underline-offset-4">
           Điều khoản dịch vụ
@@ -306,7 +306,7 @@ function LoginStep1({
           Chính sách bảo mật
         </a>
         .
-      </div>
+      </div> */}
 
       {/* Dialog để hỏi người dùng có muốn xác thực email không */}
       <Dialog open={showEmailVerifyDialog} onOpenChange={setShowEmailVerifyDialog}>
