@@ -79,6 +79,11 @@ class RecipeService extends HttpClient {
   public async createRecipe(data: CreateRecipeRequest) {
     const formData = new FormData();
 
+    // Optional draft ID - API will delete draft after publishing
+    if (data.draftId) {
+      formData.append('DraftId', data.draftId);
+    }
+
     // Required fields
     formData.append('Name', data.name);
     formData.append('Difficulty', data.difficulty);
@@ -92,9 +97,14 @@ class RecipeService extends HttpClient {
     // CookTime - send as number string (API expects number type)
     formData.append('CookTime', String(data.cookTime));
 
-    // Image - send as IFormFile
+    // Image - send as IFormFile OR existing image ID/URL
     if (data.image) {
       formData.append('Image', data.image);
+    } else if (data.existingMainImageId) {
+      formData.append('ExistingMainImageId', data.existingMainImageId);
+    } else if (data.existingMainImageUrl) {
+      // For draft migration - URL-based image copying
+      formData.append('ExistingMainImageUrl', data.existingMainImageUrl);
     }
 
     // Append array fields (LabelIds and Ingredients)
@@ -122,6 +132,15 @@ class RecipeService extends HttpClient {
           step.images.forEach((img, imgIndex) => {
             if (img.image instanceof File) {
               formData.append(`CookingSteps[${index}].Images[${imgIndex}].Image`, img.image);
+              formData.append(
+                `CookingSteps[${index}].Images[${imgIndex}].ImageOrder`,
+                String(img.imageOrder),
+              );
+            } else if (img.existingImageUrl) {
+              formData.append(
+                `CookingSteps[${index}].Images[${imgIndex}].ExistingImageUrl`,
+                img.existingImageUrl,
+              );
               formData.append(
                 `CookingSteps[${index}].Images[${imgIndex}].ImageOrder`,
                 String(img.imageOrder),
@@ -194,6 +213,16 @@ class RecipeService extends HttpClient {
             if (img.image instanceof File) {
               // New image upload
               formData.append(`CookingSteps[${index}].Images[${imgIndex}].Image`, img.image);
+              formData.append(
+                `CookingSteps[${index}].Images[${imgIndex}].ImageOrder`,
+                String(img.imageOrder),
+              );
+            } else if (img.existingImageUrl) {
+              // Existing image URL (for copying)
+              formData.append(
+                `CookingSteps[${index}].Images[${imgIndex}].ExistingImageUrl`,
+                img.existingImageUrl,
+              );
               formData.append(
                 `CookingSteps[${index}].Images[${imgIndex}].ImageOrder`,
                 String(img.imageOrder),
@@ -480,83 +509,14 @@ class RecipeService extends HttpClient {
       formData.append('Ration', String(data.ration));
     }
 
-    // Image - send as IFormFile
+    // Image - send new image file, existing image URL, or existing image ID
     if (data.image) {
       formData.append('Image', data.image);
-    }
-
-    // Append array fields (LabelIds and Ingredients)
-    if (data.labelIds && data.labelIds.length > 0) {
-      data.labelIds.forEach((id) => {
-        formData.append('LabelIds', id);
-      });
-    }
-
-    if (data.ingredients && data.ingredients.length > 0) {
-      data.ingredients.forEach((ingredient, index) => {
-        formData.append(`Ingredients[${index}].IngredientId`, ingredient.ingredientId);
-        formData.append(`Ingredients[${index}].QuantityGram`, String(ingredient.quantityGram));
-      });
-    }
-
-    // Append cooking steps with correct field names (StepOrder and Instruction)
-    if (data.cookingSteps && data.cookingSteps.length > 0) {
-      data.cookingSteps.forEach((step, index) => {
-        formData.append(`CookingSteps[${index}].StepOrder`, String(step.stepOrder));
-        formData.append(`CookingSteps[${index}].Instruction`, step.instruction);
-        if (step.images && step.images.length > 0) {
-          step.images.forEach((img, imgIndex) => {
-            if (img.image instanceof File) {
-              formData.append(`CookingSteps[${index}].Images[${imgIndex}].Image`, img.image);
-              formData.append(
-                `CookingSteps[${index}].Images[${imgIndex}].ImageOrder`,
-                String(img.imageOrder),
-              );
-            }
-          });
-        }
-      });
-    }
-
-    // Tagged user IDs
-    if (data.taggedUserIds && data.taggedUserIds.length > 0) {
-      data.taggedUserIds.forEach((id) => {
-        formData.append('TaggedUserIds', id);
-      });
-    }
-
-    return this.put<void>(`api/Draft/${draftId}`, formData, {
-      isPrivateRoute: true,
-    });
-  }
-
-  /**
-   * Publish a draft recipe - converts the draft to a published recipe
-   * Note: Backend automatically deletes the draft after successful recipe creation
-   */
-  public async publishDraft(
-    _draftId: string,
-    data: CreateRecipeRequest,
-    existingImageUrl?: string,
-  ) {
-    const formData = new FormData();
-
-    // Required fields
-    formData.append('Name', data.name);
-    formData.append('Difficulty', data.difficulty);
-    formData.append('CookTime', String(data.cookTime));
-    formData.append('Ration', String(data.ration));
-
-    // Optional fields
-    if (data.description) {
-      formData.append('Description', data.description);
-    }
-
-    // Image - send as IFormFile if new image, otherwise send existing image URL
-    if (data.image) {
-      formData.append('Image', data.image);
-    } else if (existingImageUrl) {
-      formData.append('ExistingImageUrl', existingImageUrl);
+    } else if (data.existingMainImageUrl) {
+      formData.append('ExistingMainImageUrl', data.existingMainImageUrl);
+    } else if (data.existingMainImageId) {
+      // Keep existing main image
+      formData.append('ExistingMainImageId', data.existingMainImageId);
     }
 
     // Append array fields (LabelIds and Ingredients)
@@ -587,6 +547,16 @@ class RecipeService extends HttpClient {
                 `CookingSteps[${index}].Images[${imgIndex}].ImageOrder`,
                 String(img.imageOrder),
               );
+            } else if (img.existingImageUrl) {
+              // Existing image URL (for copying)
+              formData.append(
+                `CookingSteps[${index}].Images[${imgIndex}].ExistingImageUrl`,
+                img.existingImageUrl,
+              );
+              formData.append(
+                `CookingSteps[${index}].Images[${imgIndex}].ImageOrder`,
+                String(img.imageOrder),
+              );
             } else if (img.id) {
               // Existing image - send the image ID to keep it
               formData.append(`CookingSteps[${index}].Images[${imgIndex}].ExistingImageId`, img.id);
@@ -607,10 +577,19 @@ class RecipeService extends HttpClient {
       });
     }
 
-    // Create recipe from draft data
-    // Note: Backend automatically deletes the draft after successful recipe creation
-    return this.post<void>('api/Recipe', formData, {
+    return this.put<void>(`api/Draft/${draftId}`, formData, {
       isPrivateRoute: true,
+    });
+  }
+
+  /**
+   * Publish a draft as a recipe (uses createRecipe endpoint with draftId to auto-delete draft)
+   */
+  public async publishDraft(draftId: string, data: CreateRecipeRequest) {
+    // Simply call createRecipe with draftId - API will handle draft deletion
+    return this.createRecipe({
+      ...data,
+      draftId, // Include draftId so API can delete draft after publishing
     });
   }
 
@@ -724,11 +703,13 @@ class RecipeService extends HttpClient {
       formData.append('Description', data.description);
     }
 
-    // Image - send as IFormFile if new image, otherwise send existing image URL
+    // Image handling for copy
     if (data.image) {
+      // New image uploaded by user
       formData.append('Image', data.image);
-    } else if (data.existingImageUrl) {
-      formData.append('ExistingImageUrl', data.existingImageUrl);
+    } else if (data.existingMainImageUrl) {
+      // Reuse existing image URL
+      formData.append('ExistingMainImageUrl', data.existingMainImageUrl);
     }
 
     // Append array fields (LabelIds and Ingredients)
@@ -759,9 +740,12 @@ class RecipeService extends HttpClient {
                 `CookingSteps[${index}].Images[${imgIndex}].ImageOrder`,
                 String(img.imageOrder),
               );
-            } else if (img.id) {
-              // Existing image - send the image ID to keep it
-              formData.append(`CookingSteps[${index}].Images[${imgIndex}].ExistingImageId`, img.id);
+            } else if (img.existingImageUrl) {
+              // Reuse existing image URL
+              formData.append(
+                `CookingSteps[${index}].Images[${imgIndex}].ExistingImageUrl`,
+                img.existingImageUrl,
+              );
               formData.append(
                 `CookingSteps[${index}].Images[${imgIndex}].ImageOrder`,
                 String(img.imageOrder),

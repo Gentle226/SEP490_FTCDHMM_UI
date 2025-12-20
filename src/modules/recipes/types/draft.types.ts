@@ -16,6 +16,8 @@ export interface DraftCookingStepImage {
   id: string;
   imageUrl?: string;
   imageOrder: number;
+  /** ID of the actual image (used to keep existing image when updating) */
+  imageId: string;
 }
 
 export interface DraftCookingStep {
@@ -49,6 +51,8 @@ export interface DraftDetailsResponse {
   difficulty: string;
   cookTime: number;
   imageUrl?: string;
+  /** ID of the main image (used to keep existing image when updating) */
+  imageId?: string;
   ration?: number;
   labels: DraftLabel[];
   ingredients: DraftIngredient[];
@@ -62,6 +66,10 @@ export interface DraftRecipeRequest {
   difficulty: string;
   cookTime: number;
   image?: File;
+  /** URL of an existing image to copy (used when copying recipes without uploading new image) */
+  existingMainImageUrl?: string;
+  /** ID of existing main image to keep (used when updating draft without changing main image) */
+  existingMainImageId?: string;
   ration?: number;
   labelIds: string[];
   ingredients: RecipeIngredient[];

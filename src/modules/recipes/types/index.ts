@@ -1,8 +1,9 @@
 export interface CookingStepImage {
   id?: string;
-  image: File | string;
+  image?: File | string;
   imageOrder: number;
   imageUrl?: string;
+  existingImageUrl?: string;
 }
 
 export interface CookingStep {
@@ -21,6 +22,8 @@ export interface RecipeIngredient {
 }
 
 export interface CreateRecipeRequest {
+  /** Optional draft ID - if provided, API will delete the draft after publishing */
+  draftId?: string;
   name: string;
   description: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
@@ -28,6 +31,14 @@ export interface CreateRecipeRequest {
   image?: File;
   /** URL of an existing image to copy (used when copying recipes without uploading new image) */
   existingImageUrl?: string;
+  /** URL of existing main image (used when migrating from draft) */
+  existingMainImageUrl?: string;
+  /** ID of existing main image to use (e.g., when publishing a draft) */
+  existingMainImageId?: string;
+  /** If true, copy the main image from parent recipe (when no new image is uploaded) */
+  copyMainImageFromParent?: boolean;
+  /** If true, copy step images from parent recipe (for steps without new images) */
+  copyStepImagesFromParent?: boolean;
   ration: number;
   labelIds: string[];
   ingredients: RecipeIngredient[];

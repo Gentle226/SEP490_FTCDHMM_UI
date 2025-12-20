@@ -13,6 +13,7 @@ export interface UseImageUploadResult {
   // State
   mainImage: File | null;
   mainImagePreview: string | null;
+  existingMainImageUrl: string | null;
   isCopiedRecipe: boolean;
   isCropDialogOpen: boolean;
   imageToCrop: string | null;
@@ -21,6 +22,7 @@ export interface UseImageUploadResult {
   // Setters
   setMainImage: (file: File | null) => void;
   setMainImagePreview: (preview: string | null) => void;
+  setExistingMainImageUrl: (url: string | null) => void;
   setIsCopiedRecipe: (value: boolean) => void;
 
   // Actions
@@ -37,6 +39,7 @@ export interface UseImageUploadResult {
 export function useImageUpload(initialPreview?: string | null): UseImageUploadResult {
   const [mainImage, setMainImage] = useState<File | null>(null);
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(initialPreview || null);
+  const [existingMainImageUrl, setExistingMainImageUrl] = useState<string | null>(null);
   const [isCopiedRecipe, setIsCopiedRecipe] = useState(false);
   const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
@@ -138,12 +141,14 @@ export function useImageUpload(initialPreview?: string | null): UseImageUploadRe
   return {
     mainImage,
     mainImagePreview,
+    existingMainImageUrl,
     isCopiedRecipe,
     isCropDialogOpen,
     imageToCrop,
     isDragOver,
     setMainImage,
     setMainImagePreview,
+    setExistingMainImageUrl,
     setIsCopiedRecipe,
     handleMainImageChange,
     handleDragOver,

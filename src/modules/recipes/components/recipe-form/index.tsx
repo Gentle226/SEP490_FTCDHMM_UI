@@ -157,10 +157,11 @@ export function RecipeForm({
               instruction: step.instruction || '',
               images:
                 step.cookingStepImages?.map((img) => ({
-                  id: img.id,
-                  image: img.imageUrl || '',
+                  id: img.imageId, // Use imageId to reference the actual Image entity
+                  image: undefined, // Don't set image here - we'll use existingImageUrl
                   imageOrder: img.imageOrder,
                   imageUrl: img.imageUrl,
+                  existingImageUrl: img.imageUrl, // Store for reuse when submitting without new upload
                 })) || [],
             })),
         );
@@ -168,6 +169,7 @@ export function RecipeForm({
 
       if (initialDraft.imageUrl) {
         imageUpload.setMainImagePreview(initialDraft.imageUrl);
+        imageUpload.setExistingMainImageUrl(initialDraft.imageUrl); // Store for reuse
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -228,9 +230,10 @@ export function RecipeForm({
               images:
                 step.cookingStepImages?.map((img) => ({
                   id: img.imageId,
-                  image: img.imageUrl || '',
+                  image: undefined, // Don't set image here - we'll use existingImageUrl
                   imageOrder: img.imageOrder,
                   imageUrl: img.imageUrl,
+                  existingImageUrl: img.imageUrl, // Store for reuse when submitting without new upload
                 })) || [],
               image: undefined,
               imagePreview: step.imageUrl,
@@ -240,6 +243,7 @@ export function RecipeForm({
 
       if (initialData.imageUrl) {
         imageUpload.setMainImagePreview(initialData.imageUrl);
+        imageUpload.setExistingMainImageUrl(initialData.imageUrl); // Store for reuse
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -307,9 +311,10 @@ export function RecipeForm({
                     images:
                       step.cookingStepImages?.map((img) => ({
                         id: img.imageId,
-                        image: img.imageUrl || '',
+                        image: undefined, // Don't set as string - we'll use existingImageUrl
                         imageOrder: img.imageOrder,
                         imageUrl: img.imageUrl,
+                        existingImageUrl: img.imageUrl, // Store for reuse when submitting without new upload
                       })) || [],
                     image: undefined,
                   }),
@@ -319,6 +324,7 @@ export function RecipeForm({
 
           if (copyData.sourceImageUrl) {
             imageUpload.setMainImagePreview(copyData.sourceImageUrl);
+            imageUpload.setExistingMainImageUrl(copyData.sourceImageUrl); // Store for reuse
             imageUpload.setIsCopiedRecipe(true);
           }
 
@@ -397,15 +403,16 @@ export function RecipeForm({
   };
 
   const buildRecipeData = () => ({
+    draftId: draftId, // Include draftId so API can delete draft after publishing
     name,
     description,
     difficulty,
     cookTime,
     image: imageUpload.mainImage || undefined,
-    // When copying and no new image is uploaded, use the existing image URL from the parent recipe
-    existingImageUrl:
-      copyParentId && !imageUpload.mainImage && imageUpload.isCopiedRecipe
-        ? imageUpload.mainImagePreview || undefined
+    // When no new image is uploaded but we have an existing image URL, use it
+    existingMainImageUrl:
+      !imageUpload.mainImage && imageUpload.existingMainImageUrl
+        ? imageUpload.existingMainImageUrl
         : undefined,
     ration,
     labelIds: labelSearch.selectedLabels.map((l) => l.id),
@@ -414,7 +421,16 @@ export function RecipeForm({
       quantityGram: i.quantityGram,
     })),
     taggedUserIds: userTagging.selectedUsers.map((u) => u.id),
-    cookingSteps: cookingStepsManager.cookingSteps,
+    cookingSteps: cookingStepsManager.cookingSteps.map((step, index) => ({
+      ...step,
+      stepOrder: index + 1,
+      images: step.images?.map((img) => ({
+        ...img,
+        // If image is not a File and we have imageUrl, it means it's existing - pass existingImageUrl
+        image: img.image instanceof File ? img.image : undefined,
+        existingImageUrl: !(img.image instanceof File) && img.imageUrl ? img.imageUrl : undefined,
+      })),
+    })),
   });
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -441,7 +457,15 @@ export function RecipeForm({
         await recipeService.updateRecipe(recipeId, recipeData);
         toast.success('Công thức đã được cập nhật thành công');
       } else if (copyParentId) {
-        await recipeService.copyRecipe(copyParentId, recipeData);
+        // When copying, set flags to copy images from parent if user didn't upload new ones
+        const copyData = {
+          ...recipeData,
+          // Copy main image from parent if no new image was uploaded
+          copyMainImageFromParent: !imageUpload.mainImage && !!imageUpload.mainImagePreview,
+          // Copy step images from parent for steps that don't have new image uploads
+          copyStepImagesFromParent: true,
+        };
+        await recipeService.copyRecipe(copyParentId, copyData);
         toast.success('Công thức đã được sao chép thành công');
       } else {
         await recipeService.createRecipe(recipeData);
@@ -476,7 +500,13 @@ export function RecipeForm({
       const draftData = buildRecipeData();
 
       if (mode === 'draft-edit' && draftId) {
-        await recipeService.updateDraft(draftId, draftData);
+        // When updating draft, include existing main image ID if no new image was uploaded
+        const updateData = {
+          ...draftData,
+          existingMainImageId:
+            !imageUpload.mainImage && initialDraft?.imageId ? initialDraft.imageId : undefined,
+        };
+        await recipeService.updateDraft(draftId, updateData);
         toast.success('Bản nháp đã được cập nhật');
       } else {
         await recipeService.createDraft(draftData);
@@ -518,11 +548,9 @@ export function RecipeForm({
       const recipeData = buildRecipeData();
 
       if (mode === 'draft-edit' && draftId) {
-        await recipeService.publishDraft(
-          draftId,
-          recipeData,
-          imageUpload.mainImagePreview || undefined,
-        );
+        // When publishing draft, the existing image URLs are already in buildRecipeData
+        // No need to override - just pass recipeData as-is
+        await recipeService.publishDraft(draftId, recipeData);
         toast.success('Công thức đã được xuất bản thành công');
       }
 
