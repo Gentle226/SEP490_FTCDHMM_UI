@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AxiosError } from 'axios';
-import { HelpCircle, Lock, Plus, Trash2, Upload, X } from 'lucide-react';
+import { HelpCircle, ImageIcon, Lock, Plus, Trash2, Upload, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -59,6 +59,7 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
   const [showNutrientHelp, setShowNutrientHelp] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // Fetch categories
   const { data: categories = [] } = useQuery({
@@ -179,6 +180,55 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
   const handleRemoveImage = () => {
     setImageFile(null);
     setImagePreview(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        toast.error(`Chỉ hỗ trợ hình ảnh JPG, PNG và GIF. Bạn đã tải lên ${file.type}`);
+        return;
+      }
+
+      // Validate file extension
+      const fileName = file.name.toLowerCase();
+      const fileExtension = fileName.split('.').pop();
+      if (!fileExtension || !ALLOWED_IMAGE_EXTENSIONS.includes(fileExtension)) {
+        toast.error('Định dạng tệp không hợp lệ. Vui lòng tải lên JPG, PNG hoặc GIF');
+        return;
+      }
+
+      // Validate file size
+      if (file.size > MAX_IMAGE_SIZE) {
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        toast.error(
+          `Kích thước hình ảnh không được vượt quá 5MB. Hình ảnh hiện tại là ${sizeMB}MB`,
+        );
+        return;
+      }
+
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      handleInputChange();
+    }
   };
 
   const handleAddNutrient = () => {
@@ -489,8 +539,8 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
             <Label>
               Hình ảnh nguyên liệu <span className="font-bold text-red-500">*</span>
             </Label>
-            <div className="flex justify-center">
-              {imagePreview ? (
+            {imagePreview ? (
+              <div className="flex justify-center">
                 <div className="relative">
                   <button
                     type="button"
@@ -522,28 +572,45 @@ export function CreateIngredientDialog({ open, onOpenChange }: CreateIngredientD
                     <X className="size-5" />
                   </button>
                 </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('image-upload')?.click()}
-                  className="group flex h-40 w-40 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 transition-colors hover:border-[#99b94a]"
-                  title="Click để tải ảnh lên"
-                >
-                  <Upload className="text-muted-foreground mb-2 size-8 group-hover:text-[#99b94a]" />
-                  <span className="text-sm text-gray-500 group-hover:text-[#99b94a]">
-                    Nhấn để tải ảnh
-                  </span>
-                </button>
-              )}
-              <input
-                type="file"
-                id="image-upload"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-                aria-label="Upload ingredient image"
-              />
-            </div>
+              </div>
+            ) : (
+              <div className="flex justify-center">
+                <div className="relative">
+                  <label
+                    htmlFor="image-upload"
+                    className={`flex h-40 w-40 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-all ${
+                      isDragOver
+                        ? 'border-[#99b94a] bg-green-50 ring-2 ring-[#b2df3f]'
+                        : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <ImageIcon
+                      className={`h-12 w-12 transition-colors ${
+                        isDragOver ? 'text-[#99b94a]' : 'text-gray-400'
+                      }`}
+                    />
+                    <span
+                      className={`mt-2 text-center text-sm transition-colors ${
+                        isDragOver ? 'text-[#99b94a]' : 'text-gray-500'
+                      }`}
+                    >
+                      {isDragOver ? 'Thả ảnh vào đây' : 'Tải ảnh lên hoặc kéo thả'}
+                    </span>
+                  </label>
+                </div>
+              </div>
+            )}
+            <input
+              type="file"
+              id="image-upload"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+              aria-label="Upload ingredient image"
+            />
           </div>
 
           {/* Nutrients */}

@@ -205,7 +205,7 @@ function IngredientsContent() {
     return new Date(utcDateString).toLocaleDateString('vi-VN');
   };
 
-  // Get key nutrients for display
+  // Get key nutrients for display (macronutrients only)
   const getKeyNutrients = (nutrients?: IngredientDetailsResponse['nutrients']) => {
     if (!nutrients) return [];
 
@@ -216,22 +216,17 @@ function IngredientsContent() {
       'tổng chất béo',
       'carbohydrate',
       'tinh bột',
-      'năng lượng',
-      'calories',
     ];
-    const prioritizedNutrients: typeof nutrients = [];
-    const remainingNutrients: typeof nutrients = [];
+    const macroNutrients: typeof nutrients = [];
 
     nutrients.forEach((nutrient) => {
       const name = (nutrient.vietnameseName || '').toLowerCase();
       if (macroKeywords.some((keyword) => name.includes(keyword))) {
-        prioritizedNutrients.push(nutrient);
-      } else {
-        remainingNutrients.push(nutrient);
+        macroNutrients.push(nutrient);
       }
     });
 
-    return [...prioritizedNutrients.slice(0, 4), ...remainingNutrients.slice(0, 2)];
+    return macroNutrients.slice(0, 6);
   };
 
   return (
@@ -543,7 +538,7 @@ function IngredientsContent() {
                     {!selectedIngredient.nutrients || selectedIngredient.nutrients.length === 0 ? (
                       <p className="text-muted-foreground text-sm">Chưa có thông tin dinh dưỡng</p>
                     ) : (
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                         {selectedIngredient.nutrients.map((nutrient, index) => (
                           <div key={index} className="rounded-lg border bg-gray-50 p-3">
                             <div className="flex items-center justify-between">
