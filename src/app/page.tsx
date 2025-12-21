@@ -517,14 +517,16 @@ export default function HomePage() {
                     const nextHasScores =
                       nextPage &&
                       nextPage.items.length > 0 &&
-                      nextPage.items.some((recipe) => recipe.score !== null && recipe.score !== undefined);
+                      nextPage.items.some(
+                        (recipe) => recipe.score !== null && recipe.score !== undefined,
+                      );
 
                     // Show divider when transitioning from null scores (pre-computed)
                     // to calculated scores (personalized with health goals/metrics)
                     const showDivider = allNullScores && nextHasScores;
 
                     return (
-                      <div key={`page-${pageIndex}`}>
+                      <div key={`page-${pageIndex}`} className="space-y-4">
                         {page.items.map((recipe) => (
                           <button
                             key={recipe.id}

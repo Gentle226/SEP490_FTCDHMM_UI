@@ -241,15 +241,15 @@ export function CustomHealthGoalFormDialog({
       targets: data.targets.map((target) => {
         const isMacronutrient = requiredNutrients.some((n) => n.id === target.nutrientId);
 
-        // For micronutrients (non-required nutrients), auto set targetType to ABSOLUTE
+        // For micronutrients (non-required nutrients), auto set targetType to Absolute
         if (!isMacronutrient) {
           return {
             nutrientId: target.nutrientId,
-            targetType: 'ABSOLUTE',
+            targetType: 'Absolute' as const,
             minValue: target.minValue,
             maxValue: target.maxValue,
             medianValue: target.medianValue || 0,
-            // Clear energy percentage values for ABSOLUTE type
+            // Clear energy percentage values for Absolute type
             minEnergyPct: 0,
             maxEnergyPct: 0,
             medianEnergyPct: 0,
@@ -261,8 +261,8 @@ export function CustomHealthGoalFormDialog({
         if (target.targetType === 'ENERGYPERCENT') {
           return {
             nutrientId: target.nutrientId,
-            targetType: 'ENERGYPERCENT',
-            // Clear absolute values for ENERGYPERCENT type
+            targetType: 'EnergyPercentage' as const,
+            // Clear absolute values for EnergyPercentage type
             minValue: 0,
             maxValue: 0,
             medianValue: 0,
@@ -273,14 +273,17 @@ export function CustomHealthGoalFormDialog({
           };
         }
 
-        // Default to ABSOLUTE for macronutrients
+        // Default to Absolute for macronutrients
+        const defaultTargetType: 'Absolute' | 'EnergyPercentage' =
+          target.targetType === 'ENERGYPERCENT' ? 'EnergyPercentage' : 'Absolute';
+
         return {
           nutrientId: target.nutrientId,
-          targetType: target.targetType || 'ABSOLUTE',
+          targetType: defaultTargetType,
           minValue: target.minValue,
           maxValue: target.maxValue,
           medianValue: target.medianValue || 0,
-          // Clear energy percentage values for ABSOLUTE type
+          // Clear energy percentage values for Absolute type
           minEnergyPct: 0,
           maxEnergyPct: 0,
           medianEnergyPct: 0,
