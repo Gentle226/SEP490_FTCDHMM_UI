@@ -664,18 +664,20 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
                           </button>
                         </div>
                       ))}
+                    {/* Infinite scroll trigger for labels - INSIDE the scrollable container */}
+                    {hasNextLabelsPage && (
+                      <div ref={labelsLoadMoreRef} className="py-2 text-center">
+                        {isFetchingNextLabelsPage ? (
+                          <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#99b94a] border-t-transparent" />
+                            Đang tải thêm...
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">Cuộn để tải thêm...</span>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {/* Infinite scroll trigger for labels */}
-                  {hasNextLabelsPage && (
-                    <div ref={labelsLoadMoreRef} className="py-2 text-center">
-                      {isFetchingNextLabelsPage && (
-                        <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-                          <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#99b94a] border-t-transparent" />
-                          Đang tải thêm...
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </>
               ) : (
                 <div className="rounded-lg border border-dashed border-gray-200 py-4 text-center text-sm text-gray-500">
@@ -807,18 +809,20 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
                           </button>
                         </div>
                       ))}
+                    {/* Infinite scroll trigger for ingredients - INSIDE the scrollable container */}
+                    {hasNextIngredientsPage && (
+                      <div ref={ingredientsLoadMoreRef} className="py-2 text-center">
+                        {isFetchingNextIngredientsPage ? (
+                          <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#99b94a] border-t-transparent" />
+                            Đang tải thêm...
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">Cuộn để tải thêm...</span>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {/* Infinite scroll trigger for ingredients */}
-                  {hasNextIngredientsPage && (
-                    <div ref={ingredientsLoadMoreRef} className="py-2 text-center">
-                      {isFetchingNextIngredientsPage && (
-                        <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-                          <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#99b94a] border-t-transparent" />
-                          Đang tải thêm...
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </>
               ) : (
                 <div className="rounded-lg border border-dashed border-gray-200 py-4 text-center text-sm text-gray-500">
