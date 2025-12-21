@@ -492,7 +492,7 @@ export default function HomePage() {
               </h2>
               <p className="hidden text-xs text-gray-500 sm:block">
                 {isUsingRecommendations
-                  ? 'Công thức được đề xuất dựa trên thói quen, mục tiêu và chỉ số sức khỏe của bạn'
+                  ? 'Gợi ý nhanh và đề xuất món ăn phù hợp với thói quen, mục tiêu và chỉ số sức khỏe của bạn'
                   : 'Khám phá các món ăn mới mỗi ngày'}
               </p>
             </div>
@@ -506,31 +506,65 @@ export default function HomePage() {
                 ))
               ) : (
                 <>
-                  {recommendedData?.pages.map((page) =>
-                    page.items.map((recipe) => (
-                      <button
-                        key={recipe.id}
-                        onClick={() => handleRecipeClick(recipe.id)}
-                        className="w-full text-left transition-all hover:scale-[1.01] hover:shadow-lg active:scale-[0.99]"
-                        title={recipe.name}
-                      >
-                        <RecipeCardHorizontal
-                          id={recipe.id}
-                          title={recipe.name}
-                          author={recipe.author}
-                          image={recipe.imageUrl}
-                          cookTime={recipe.cookTime}
-                          ration={recipe.ration}
-                          difficulty={recipe.difficulty?.name}
-                          ingredients={recipe.ingredients}
-                          labels={recipe.labels}
-                          createdAtUtc={recipe.createdAtUtc}
-                          isLoading={false}
-                          score={recipe.score ?? undefined}
-                        />
-                      </button>
-                    )),
-                  )}
+                  {recommendedData?.pages.map((page, pageIndex) => {
+                    // Detect if current page is pre-computed (scores are null/undefined)
+                    const allNullScores = page.items.every(
+                      (recipe) => recipe.score === null || recipe.score === undefined,
+                    );
+
+                    // Check if next page has calculated scores (personalized)
+                    const nextPage = recommendedData.pages[pageIndex + 1];
+                    const nextHasScores =
+                      nextPage &&
+                      nextPage.items.length > 0 &&
+                      nextPage.items.some((recipe) => recipe.score !== null && recipe.score !== undefined);
+
+                    // Show divider when transitioning from null scores (pre-computed)
+                    // to calculated scores (personalized with health goals/metrics)
+                    const showDivider = allNullScores && nextHasScores;
+
+                    return (
+                      <div key={`page-${pageIndex}`}>
+                        {page.items.map((recipe) => (
+                          <button
+                            key={recipe.id}
+                            onClick={() => handleRecipeClick(recipe.id)}
+                            className="w-full text-left transition-all hover:scale-[1.01] hover:shadow-lg active:scale-[0.99]"
+                            title={recipe.name}
+                          >
+                            <RecipeCardHorizontal
+                              id={recipe.id}
+                              title={recipe.name}
+                              author={recipe.author}
+                              image={recipe.imageUrl}
+                              cookTime={recipe.cookTime}
+                              ration={recipe.ration}
+                              difficulty={recipe.difficulty?.name}
+                              ingredients={recipe.ingredients}
+                              labels={recipe.labels}
+                              createdAtUtc={recipe.createdAtUtc}
+                              isLoading={false}
+                              score={recipe.score ?? undefined}
+                            />
+                          </button>
+                        ))}
+                        {/* Show divider when transitioning from pre-computed to personalized */}
+                        {showDivider && (
+                          <div className="relative my-8 flex items-center justify-center">
+                            <div className="absolute inset-0 flex items-center">
+                              <div className="w-full border-t-2 border-dashed border-gray-200"></div>
+                            </div>
+                            <div className="relative z-10 flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-2 shadow-sm">
+                              <SparklesIcon className="h-4 w-4 text-amber-500" />
+                              <span className="text-sm font-semibold text-amber-700">
+                                Đề xuất món ăn cho riêng bạn
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                   {/* Loading more indicator */}
                   {isFetchingNextPage &&
                     Array.from({ length: 3 }, (_, i) => (

@@ -13,14 +13,14 @@ export interface NutrientTarget {
 
 export interface NutrientTargetDto {
   nutrientId: string;
-  targetType?: string;
-  minValue: number;
+  targetType?: 'Absolute' | 'EnergyPercentage';
+  minValue?: number | null;
   medianValue?: number;
-  maxValue: number;
-  minEnergyPct?: number;
+  maxValue?: number | null;
+  minEnergyPct?: number | null;
   medianEnergyPct?: number;
-  maxEnergyPct?: number;
-  weight?: number;
+  maxEnergyPct?: number | null;
+  weight?: number; // Default: 1
 }
 
 export interface HealthGoalResponse {

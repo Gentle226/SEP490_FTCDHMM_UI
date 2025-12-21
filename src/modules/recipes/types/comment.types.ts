@@ -7,6 +7,7 @@ export interface UserInfo {
 }
 
 export interface MentionedUser {
+  commentId: string; // Added in backend commit 498d540
   mentionedUserId: string;
   firstName: string;
   lastName: string;
