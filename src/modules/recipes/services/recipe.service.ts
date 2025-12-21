@@ -439,9 +439,11 @@ class RecipeService extends HttpClient {
       formData.append('Ration', String(data.ration));
     }
 
-    // Image - send as IFormFile
+    // Image - send new image file or existing image URL
     if (data.image) {
       formData.append('Image', data.image);
+    } else if (data.existingMainImageUrl) {
+      formData.append('ExistingMainImageUrl', data.existingMainImageUrl);
     }
 
     // Append array fields (LabelIds and Ingredients)
@@ -467,6 +469,16 @@ class RecipeService extends HttpClient {
           step.images.forEach((img, imgIndex) => {
             if (img.image instanceof File) {
               formData.append(`CookingSteps[${index}].Images[${imgIndex}].Image`, img.image);
+              formData.append(
+                `CookingSteps[${index}].Images[${imgIndex}].ImageOrder`,
+                String(img.imageOrder),
+              );
+            } else if (img.existingImageUrl) {
+              // Existing image URL (for copying from recipe to draft)
+              formData.append(
+                `CookingSteps[${index}].Images[${imgIndex}].ExistingImageUrl`,
+                img.existingImageUrl,
+              );
               formData.append(
                 `CookingSteps[${index}].Images[${imgIndex}].ImageOrder`,
                 String(img.imageOrder),

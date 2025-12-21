@@ -455,7 +455,7 @@ export function IngredientManagementTable({ title }: IngredientManagementTablePr
                   </TableCell>
                   <TableCell className="text-center">
                     <span className="text-sm font-medium">
-                      {ingredient.calories ? `${ingredient.calories.toFixed(2)}` : '-'}
+                      {ingredient.calories ? `${ingredient.calories.toFixed(2)}` : '0'}
                     </span>
                   </TableCell>
                   <TableCell className="text-center text-sm">
