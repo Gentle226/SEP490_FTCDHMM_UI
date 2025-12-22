@@ -71,7 +71,7 @@ export function UserManagementTable() {
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
   const currentSearch = searchParams.get('search') || '';
   const currentPageSize = parseInt(searchParams.get('pageSize') || '10', 10);
-  const currentRoleFilter = searchParams.get('role') || '';
+  const currentRoleFilter = searchParams.get('roleId') || '';
 
   const [page, setPage] = useState(currentPage);
   const [searchTerm, setSearchTerm] = useState(currentSearch);
@@ -124,9 +124,9 @@ export function UserManagementTable() {
   useEffect(() => {
     const params = new URLSearchParams(searchParams);
     if (roleFilter) {
-      params.set('role', roleFilter);
+      params.set('roleId', roleFilter);
     } else {
-      params.delete('role');
+      params.delete('roleId');
     }
     params.set('page', '1'); // Reset to page 1 when changing filter
     router.push(`${pathname}?${params.toString()}`);
@@ -163,7 +163,7 @@ export function UserManagementTable() {
   ];
 
   const queryClient = useQueryClient();
-  const queryKey = ['users', { page, search: debouncedSearchTerm, pageSize, role: roleFilter }];
+  const queryKey = ['users', { page, search: debouncedSearchTerm, pageSize, roleId: roleFilter }];
 
   // Fetch roles for role change feature and filters
   const { data: rolesData } = useQuery({
@@ -187,7 +187,7 @@ export function UserManagementTable() {
         search: debouncedSearchTerm || undefined,
       };
       if (roleFilter) {
-        params.role = roleFilter;
+        params.roleId = roleFilter;
       }
       return userManagementService.getUsers(params);
     },
@@ -397,7 +397,9 @@ export function UserManagementTable() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="min-w-[140px] gap-2">
-                {roleFilter || 'Tất cả'}
+                {roleFilter
+                  ? rolesData?.find((r: RoleResponse) => r.id === roleFilter)?.name || 'Tất cả'
+                  : 'Tất cả'}
                 <ChevronDown className="h-4 w-4 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
@@ -411,8 +413,8 @@ export function UserManagementTable() {
               {rolesData?.map((role: RoleResponse) => (
                 <DropdownMenuItem
                   key={role.id}
-                  onClick={() => setRoleFilter(role.name)}
-                  className={roleFilter === role.name ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
+                  onClick={() => setRoleFilter(role.id)}
+                  className={roleFilter === role.id ? 'bg-[#99b94a]/10 text-[#99b94a]' : ''}
                 >
                   {role.name}
                 </DropdownMenuItem>

@@ -33,12 +33,22 @@ export function DietRestrictionsList({
 }: DietRestrictionsListProps) {
   const [deleteRestrictionId, setDeleteRestrictionId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const typeDropdownRef = useRef<HTMLDivElement>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -62,7 +72,7 @@ export function DietRestrictionsList({
     externalRestrictions
       ? undefined
       : {
-          keyword: searchQuery || undefined,
+          keyword: debouncedSearchQuery || undefined,
           type: filterType || undefined,
           sortBy: sortBy || undefined,
         },
@@ -332,10 +342,12 @@ export function DietRestrictionsList({
               <span>
                 {sortBy ? (
                   <>
-                    {sortBy === 'name-asc' && 'Tên (A-Z)'}
-                    {sortBy === 'name-desc' && 'Tên (Z-A)'}
-                    {sortBy === 'type' && 'Loại'}
-                    {sortBy === 'recent' && 'Gần đây'}
+                    {sortBy === 'name_asc' && 'Tên (A-Z)'}
+                    {sortBy === 'name_desc' && 'Tên (Z-A)'}
+                    {sortBy === 'type_asc' && 'Loại (A-Z)'}
+                    {sortBy === 'type_desc' && 'Loại (Z-A)'}
+                    {sortBy === 'expired_asc' && 'Hết hạn (Sớm nhất)'}
+                    {sortBy === 'expired_desc' && 'Hết hạn (Muộn nhất)'}
                   </>
                 ) : (
                   'Mặc định'
@@ -407,7 +419,7 @@ export function DietRestrictionsList({
                   }}
                   className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-100"
                 >
-                  Hạn gần nhất
+                  Hết hạn (Muộn nhất)
                 </button>
                 <button
                   type="button"
@@ -417,7 +429,7 @@ export function DietRestrictionsList({
                   }}
                   className="w-full px-4 py-2 text-left text-sm text-gray-900 last:rounded-b-lg hover:bg-gray-100"
                 >
-                  Hạn xa nhất
+                  Hết hạn (Sớm nhất)
                 </button>
               </div>
             )}

@@ -20,7 +20,7 @@ export interface PaginationParams {
   pageNumber?: number;
   pageSize?: number;
   search?: string;
-  role?: string;
+  roleId?: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -72,7 +72,7 @@ class UserManagementService extends HttpClient {
     if (params.pageSize)
       queryParams.append('PaginationParams.PageSize', params.pageSize.toString());
     if (params.search) queryParams.append('Keyword', params.search);
-    if (params.role) queryParams.append('Role', params.role);
+    if (params.roleId) queryParams.append('RoleId', params.roleId);
 
     return this.get<PaginatedResponse<User>>(`api/User?${queryParams}`, {
       isPrivateRoute: true,
