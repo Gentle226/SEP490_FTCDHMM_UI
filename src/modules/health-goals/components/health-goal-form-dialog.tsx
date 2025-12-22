@@ -587,7 +587,7 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
 
                       <div className="space-y-2">
                         <Label htmlFor={`targets.${index}.weight`}>
-                          Ưu Tiên (1-5) <span className="text-red-500">*</span>
+                          Ưu Tiên (1-5, 5 là cao nhất) <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id={`targets.${index}.weight`}
@@ -705,7 +705,7 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
 
                           <div className="space-y-2">
                             <Label htmlFor={`targets.${index}.weight-macro`} className="text-xs">
-                              Ưu Tiên (1-5) <span className="text-red-500">*</span>
+                              Ưu Tiên (1-5, 5 là cao nhất) <span className="text-red-500">*</span>
                             </Label>
                             <Input
                               id={`targets.${index}.weight-macro`}
@@ -741,7 +741,7 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
 
                           <div className="space-y-2">
                             <Label htmlFor={`targets.${index}.weight-energy`} className="text-xs">
-                              Ưu Tiên (1-5) <span className="text-red-500">*</span>
+                              Ưu Tiên (1-5, 5 là cao nhất) <span className="text-red-500">*</span>
                             </Label>
                             <Input
                               id={`targets.${index}.weight-energy`}
