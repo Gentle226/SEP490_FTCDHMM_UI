@@ -1,6 +1,6 @@
 'use client';
 
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { ChevronRightIcon, History, Leaf, SearchIcon, SparklesIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -62,6 +62,22 @@ export default function HomePage() {
     enabled: !user, // Only fetch all recipes when not logged in
   });
 
+  // Query for pre-computed recommendations (logged-in users only)
+  // This returns a fixed pre-computed list, not paginated
+  const {
+    data: preComputedData,
+    isLoading: _isLoadingPreComputed,
+    isError: _isPreComputedError,
+  } = useQuery({
+    queryKey: ['preComputedRecipes'],
+    queryFn: async () => {
+      const response = await recommendationService.getPreComputedRecommendations();
+      return response;
+    },
+    enabled: !!user, // Only fetch when logged in
+    retry: 1,
+  });
+
   // Infinite query for recommended recipes (for logged-in users)
   const {
     data: recommendedData,
@@ -110,7 +126,8 @@ export default function HomePage() {
     if (inView && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
-  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inView, hasNextPage, isFetchingNextPage]);
 
   // Handle search with debouncing
   const handleSearchInput = (value: string) => {
@@ -492,7 +509,7 @@ export default function HomePage() {
               </h2>
               <p className="hidden text-xs text-gray-500 sm:block">
                 {isUsingRecommendations
-                  ? 'Gợi ý nhanh và đề xuất món ăn phù hợp với thói quen, mục tiêu và chỉ số sức khỏe của bạn'
+                  ? 'Các món ăn được gợi ý phù hợp với thói quen, mục tiêu và chỉ số sức khỏe của bạn'
                   : 'Khám phá các món ăn mới mỗi ngày'}
               </p>
             </div>
@@ -506,67 +523,82 @@ export default function HomePage() {
                 ))
               ) : (
                 <>
-                  {recommendedData?.pages.map((page, pageIndex) => {
-                    // Detect if current page is pre-computed (scores are null/undefined)
-                    const allNullScores = page.items.every(
-                      (recipe) => recipe.score === null || recipe.score === undefined,
-                    );
-
-                    // Check if next page has calculated scores (personalized)
-                    const nextPage = recommendedData.pages[pageIndex + 1];
-                    const nextHasScores =
-                      nextPage &&
-                      nextPage.items.length > 0 &&
-                      nextPage.items.some(
-                        (recipe) => recipe.score !== null && recipe.score !== undefined,
-                      );
-
-                    // Show divider when transitioning from null scores (pre-computed)
-                    // to calculated scores (personalized with health goals/metrics)
-                    const showDivider = allNullScores && nextHasScores;
-
-                    return (
-                      <div key={`page-${pageIndex}`} className="space-y-4">
-                        {page.items.map((recipe) => (
-                          <button
-                            key={recipe.id}
-                            onClick={() => handleRecipeClick(recipe.id)}
-                            className="w-full text-left transition-all hover:scale-[1.01] hover:shadow-lg active:scale-[0.99]"
+                  {/* Pre-computed recommendations section - only show if data exists */}
+                  {preComputedData && preComputedData.totalCount > 0 && (
+                    <div className="space-y-4">
+                      {preComputedData.items.map((recipe) => (
+                        <button
+                          key={recipe.id}
+                          onClick={() => handleRecipeClick(recipe.id)}
+                          className="w-full text-left transition-all hover:scale-[1.01] hover:shadow-lg active:scale-[0.99]"
+                          title={recipe.name}
+                        >
+                          <RecipeCardHorizontal
+                            id={recipe.id}
                             title={recipe.name}
-                          >
-                            <RecipeCardHorizontal
-                              id={recipe.id}
-                              title={recipe.name}
-                              author={recipe.author}
-                              image={recipe.imageUrl}
-                              cookTime={recipe.cookTime}
-                              ration={recipe.ration}
-                              difficulty={recipe.difficulty?.name}
-                              ingredients={recipe.ingredients}
-                              labels={recipe.labels}
-                              createdAtUtc={recipe.createdAtUtc}
-                              isLoading={false}
-                              score={recipe.score ?? undefined}
-                            />
-                          </button>
-                        ))}
-                        {/* Show divider when transitioning from pre-computed to personalized */}
-                        {showDivider && (
-                          <div className="relative my-8 flex items-center justify-center">
-                            <div className="absolute inset-0 flex items-center">
-                              <div className="w-full border-t-2 border-dashed border-gray-200"></div>
-                            </div>
-                            <div className="relative z-10 flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-2 shadow-sm">
-                              <SparklesIcon className="h-4 w-4 text-amber-500" />
-                              <span className="text-sm font-semibold text-amber-700">
-                                Đề xuất món ăn cho riêng bạn
-                              </span>
-                            </div>
-                          </div>
-                        )}
+                            author={recipe.author}
+                            image={recipe.imageUrl}
+                            cookTime={recipe.cookTime}
+                            ration={recipe.ration}
+                            difficulty={recipe.difficulty?.name}
+                            ingredients={recipe.ingredients}
+                            labels={recipe.labels}
+                            createdAtUtc={recipe.createdAtUtc}
+                            isLoading={false}
+                            score={recipe.score ?? undefined}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Divider between pre-computed and personalized */}
+                  {preComputedData &&
+                    preComputedData.totalCount > 0 &&
+                    recommendedData &&
+                    recommendedData.pages[0]?.totalCount > 0 && (
+                      <div className="relative my-8 flex items-center justify-center">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t-2 border-dashed border-gray-200"></div>
+                        </div>
+                        <div className="relative z-10 flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-2 shadow-sm">
+                          <SparklesIcon className="h-4 w-4 text-amber-500" />
+                          <span className="text-sm font-semibold text-amber-700">
+                            Đề xuất món ăn cho riêng bạn
+                          </span>
+                        </div>
                       </div>
-                    );
-                  })}
+                    )}
+
+                  {/* Personalized recommendations section */}
+                  {recommendedData?.pages.map((page, pageIndex) => (
+                    <div key={`personalized-page-${pageIndex}`} className="space-y-4">
+                      {page.items.map((recipe) => (
+                        <button
+                          key={recipe.id}
+                          onClick={() => handleRecipeClick(recipe.id)}
+                          className="w-full text-left transition-all hover:scale-[1.01] hover:shadow-lg active:scale-[0.99]"
+                          title={recipe.name}
+                        >
+                          <RecipeCardHorizontal
+                            id={recipe.id}
+                            title={recipe.name}
+                            author={recipe.author}
+                            image={recipe.imageUrl}
+                            cookTime={recipe.cookTime}
+                            ration={recipe.ration}
+                            difficulty={recipe.difficulty?.name}
+                            ingredients={recipe.ingredients}
+                            labels={recipe.labels}
+                            createdAtUtc={recipe.createdAtUtc}
+                            isLoading={false}
+                            score={recipe.score ?? undefined}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+
                   {/* Loading more indicator */}
                   {isFetchingNextPage &&
                     Array.from({ length: 3 }, (_, i) => (
