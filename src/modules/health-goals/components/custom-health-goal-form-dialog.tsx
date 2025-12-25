@@ -257,36 +257,17 @@ export function CustomHealthGoalFormDialog({
           };
         }
 
-        // For macronutrients, process based on targetType
-        if (target.targetType === 'ENERGYPERCENT') {
-          return {
-            nutrientId: target.nutrientId,
-            targetType: 'ENERGYPERCENT' as const,
-            // Clear absolute values for ENERGYPERCENT type
-            minValue: 0,
-            maxValue: 0,
-            medianValue: 0,
-            minEnergyPct: target.minEnergyPct || 0,
-            maxEnergyPct: target.maxEnergyPct || 0,
-            medianEnergyPct: target.medianEnergyPct || 0,
-            weight: target.weight || 1,
-          };
-        }
-
-        // Default to Absolute for macronutrients
-        const defaultTargetType: 'Absolute' | 'ENERGYPERCENT' =
-          target.targetType === 'ENERGYPERCENT' ? 'ENERGYPERCENT' : 'Absolute';
-
+        // For macronutrients, always use EnergyPercentage
         return {
           nutrientId: target.nutrientId,
-          targetType: defaultTargetType,
-          minValue: target.minValue,
-          maxValue: target.maxValue,
-          medianValue: target.medianValue || 0,
-          // Clear energy percentage values for Absolute type
-          minEnergyPct: 0,
-          maxEnergyPct: 0,
-          medianEnergyPct: 0,
+          targetType: 'EnergyPercent' as const,
+          // Clear absolute values for EnergyPercentage type
+          minValue: 0,
+          maxValue: 0,
+          medianValue: 0,
+          minEnergyPct: target.minEnergyPct || 0,
+          maxEnergyPct: target.maxEnergyPct || 0,
+          medianEnergyPct: target.medianEnergyPct || 0,
           weight: target.weight || 1,
         };
       }),
@@ -323,9 +304,9 @@ export function CustomHealthGoalFormDialog({
       if (!nutrient) continue;
 
       const isMacronutrient = requiredNutrients.some((n) => n.id === target.nutrientId);
-      const targetType = isMacronutrient ? target.targetType || 'ABSOLUTE' : 'ABSOLUTE';
 
-      if (targetType === 'ABSOLUTE') {
+      // Only check absolute values for micronutrients (macronutrients use energy percentage)
+      if (!isMacronutrient) {
         const maxValidation = validateNutrientValue(nutrient.vietnameseName, target.maxValue);
         if (maxValidation.exceedsSafetyLimit) {
           warnings.push(`${nutrient.vietnameseName}: ${maxValidation.safetyWarning}`);
@@ -420,11 +401,6 @@ export function CustomHealthGoalFormDialog({
   //   label: `${nutrient.vietnameseName} (${nutrient.unit})`,
   // }));
 
-  const targetTypeOptions: SelectOption[] = [
-    { value: 'ABSOLUTE', label: 'Absolute (Tuyệt Đối)' },
-    { value: 'ENERGYPERCENT', label: 'Energy Percent (% Năng Lượng)' },
-  ];
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
@@ -490,7 +466,6 @@ export function CustomHealthGoalFormDialog({
               const currentNutrientId = watch(`targets.${index}.nutrientId`);
               const currentNutrient = nutrients.find((n) => n.id === currentNutrientId);
               const isMacronutrient = requiredNutrients.some((n) => n.id === currentNutrientId);
-              const currentTargetType = watch(`targets.${index}.targetType`) || 'ABSOLUTE';
               const minValue = watch(`targets.${index}.minValue`) || 0;
               const maxValue = watch(`targets.${index}.maxValue`) || 0;
 
@@ -628,157 +603,43 @@ export function CustomHealthGoalFormDialog({
                   {isMacronutrient && (
                     <div className="space-y-3 rounded-lg bg-amber-50 p-3">
                       <p className="text-xs font-semibold text-amber-900">
-                        Đa Chất (Macronutrients)
+                        Đa Chất (Macronutrients) - Phần Trăm Năng Lượng
                       </p>
 
-                      <div className="space-y-2">
-                        <Label htmlFor={`targets.${index}.targetType`}>
-                          Loại Mục Tiêu <span className="text-red-500">*</span>
-                        </Label>
-                        <Select
-                          options={targetTypeOptions}
-                          placeholder="Chọn loại mục tiêu"
-                          value={watch(`targets.${index}.targetType`)}
-                          onChange={(value) => {
-                            if (value) setValue(`targets.${index}.targetType`, value);
+                      {/* Energy Percentage Fields - always shown for macronutrients */}
+                      <div className="space-y-3">
+                        <RangeSlider
+                          min={0}
+                          max={100}
+                          step={0.1}
+                          value={[
+                            watch(`targets.${index}.minEnergyPct`) || 0,
+                            watch(`targets.${index}.maxEnergyPct`) || 0,
+                          ]}
+                          onChange={(newRange) => {
+                            setValue(`targets.${index}.minEnergyPct`, newRange[0]);
+                            setValue(`targets.${index}.maxEnergyPct`, newRange[1]);
                           }}
-                          searchable={false}
+                          unit="%"
+                          numberFormat={(value) => value.toFixed(1)}
+                          themeColor="#99b94a"
                         />
-                      </div>
 
-                      {/* Min, Max, Weight - only for ABSOLUTE - Use inputs instead of slider */}
-                      {currentTargetType === 'ABSOLUTE' && (
-                        <div className="space-y-3">
-                          {(() => {
-                            const nutrientLimit = currentNutrient
-                              ? getNutrientLimit(currentNutrient.vietnameseName)
-                              : null;
-                            const minValidation = currentNutrient
-                              ? validateNutrientValue(currentNutrient.vietnameseName, minValue)
-                              : null;
-                            const maxValidation = currentNutrient
-                              ? validateNutrientValue(currentNutrient.vietnameseName, maxValue)
-                              : null;
-
-                            return (
-                              <>
-                                {nutrientLimit && (
-                                  <p className="text-xs text-gray-600">
-                                    RDA: {nutrientLimit.rda} {currentNutrient?.unit}
-                                    {nutrientLimit.safetyLimit !== null &&
-                                      ` | Giới hạn an toàn: ${nutrientLimit.safetyLimit} ${currentNutrient?.unit}`}
-                                  </p>
-                                )}
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div className="space-y-1">
-                                    <Label
-                                      htmlFor={`targets.${index}.minValue-macro`}
-                                      className="text-xs"
-                                    >
-                                      Giá Trị Tối Thiểu ({currentNutrient?.unit || 'g'})
-                                      <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Input
-                                      id={`targets.${index}.minValue-macro`}
-                                      placeholder="0"
-                                      type="number"
-                                      step="0.01"
-                                      min="0"
-                                      {...register(`targets.${index}.minValue`, {
-                                        valueAsNumber: true,
-                                      })}
-                                    />
-                                    {minValidation?.belowRda && (
-                                      <p className="flex items-center gap-1 text-xs text-amber-600">
-                                        <AlertTriangle className="h-3 w-3" />
-                                        {minValidation.rdaWarning}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <div className="space-y-1">
-                                    <Label
-                                      htmlFor={`targets.${index}.maxValue-macro`}
-                                      className="text-xs"
-                                    >
-                                      Giá Trị Tối Đa ({currentNutrient?.unit || 'g'})
-                                      <span className="text-red-500">*</span>
-                                      <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Input
-                                      id={`targets.${index}.maxValue-macro`}
-                                      placeholder="100"
-                                      type="number"
-                                      step="0.01"
-                                      min="0"
-                                      {...register(`targets.${index}.maxValue`, {
-                                        valueAsNumber: true,
-                                      })}
-                                    />
-                                    {maxValidation?.exceedsSafetyLimit && (
-                                      <p className="flex items-center gap-1 text-xs text-red-600">
-                                        <AlertTriangle className="h-3 w-3" />
-                                        {maxValidation.safetyWarning}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </>
-                            );
-                          })()}
-
-                          <div className="space-y-2">
-                            <Label htmlFor={`targets.${index}.weight-macro`} className="text-xs">
-                              Ưu Tiên (1-5, 5 là cao nhất) <span className="text-red-500">*</span>
-                            </Label>
-                            <Input
-                              id={`targets.${index}.weight-macro`}
-                              placeholder="1"
-                              type="number"
-                              step="1"
-                              min="1"
-                              max="5"
-                              {...register(`targets.${index}.weight`)}
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Energy Percentage Fields - only for ENERGYPERCENT */}
-                      {currentTargetType === 'ENERGYPERCENT' && (
-                        <div className="space-y-3">
-                          <RangeSlider
-                            min={0}
-                            max={100}
-                            step={0.1}
-                            value={[
-                              watch(`targets.${index}.minEnergyPct`) || 0,
-                              watch(`targets.${index}.maxEnergyPct`) || 0,
-                            ]}
-                            onChange={(newRange) => {
-                              setValue(`targets.${index}.minEnergyPct`, newRange[0]);
-                              setValue(`targets.${index}.maxEnergyPct`, newRange[1]);
-                            }}
-                            unit="%"
-                            numberFormat={(value) => value.toFixed(1)}
-                            themeColor="#99b94a"
+                        <div className="space-y-2">
+                          <Label htmlFor={`targets.${index}.weight-energy`} className="text-xs">
+                            Ưu Tiên (1-5, 5 là cao nhất) <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id={`targets.${index}.weight-energy`}
+                            placeholder="1"
+                            type="number"
+                            step="1"
+                            min="1"
+                            max="5"
+                            {...register(`targets.${index}.weight`)}
                           />
-
-                          <div className="space-y-2">
-                            <Label htmlFor={`targets.${index}.weight-energy`} className="text-xs">
-                              Ưu Tiên (1-5, 5 là cao nhất) <span className="text-red-500">*</span>
-                            </Label>
-                            <Input
-                              id={`targets.${index}.weight-energy`}
-                              placeholder="1"
-                              type="number"
-                              step="1"
-                              min="1"
-                              max="5"
-                              {...register(`targets.${index}.weight`)}
-                            />
-                          </div>
                         </div>
-                      )}
+                      </div>
                     </div>
                   )}
                 </div>
