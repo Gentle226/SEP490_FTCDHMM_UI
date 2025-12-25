@@ -13,7 +13,7 @@ export interface NutrientTarget {
 
 export interface NutrientTargetDto {
   nutrientId: string;
-  targetType?: 'Absolute' | 'EnergyPercentage';
+  targetType?: 'Absolute' | 'EnergyPercent';
   minValue?: number | null;
   medianValue?: number;
   maxValue?: number | null;

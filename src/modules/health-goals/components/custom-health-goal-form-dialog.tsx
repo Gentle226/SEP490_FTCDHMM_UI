@@ -260,7 +260,7 @@ export function CustomHealthGoalFormDialog({
         // For macronutrients, always use EnergyPercentage
         return {
           nutrientId: target.nutrientId,
-          targetType: 'EnergyPercentage' as const,
+          targetType: 'EnergyPercent' as const,
           // Clear absolute values for EnergyPercentage type
           minValue: 0,
           maxValue: 0,
