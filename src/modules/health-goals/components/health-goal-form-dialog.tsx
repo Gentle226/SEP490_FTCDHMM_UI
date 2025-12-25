@@ -277,8 +277,8 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
           if (target.targetType === 'ENERGYPERCENT') {
             return {
               nutrientId: target.nutrientId,
-              targetType: 'EnergyPercentage' as const,
-              // Clear absolute values for EnergyPercentage type
+              targetType: 'ENERGYPERCENT' as const,
+              // Clear absolute values for ENERGYPERCENT type
               minValue: 0,
               maxValue: 0,
               medianValue: 0,
@@ -290,8 +290,8 @@ export function HealthGoalFormDialog({ goal, isOpen, onClose }: HealthGoalFormDi
           }
 
           // Default to Absolute for macronutrients
-          const defaultTargetType: 'Absolute' | 'EnergyPercentage' =
-            target.targetType === 'ENERGYPERCENT' ? 'EnergyPercentage' : 'Absolute';
+          const defaultTargetType: 'Absolute' | 'ENERGYPERCENT' =
+            target.targetType === 'ENERGYPERCENT' ? 'ENERGYPERCENT' : 'Absolute';
 
           return {
             nutrientId: target.nutrientId,

@@ -50,6 +50,7 @@ export default function HomePage() {
   const [selectedRecipeIds, setSelectedRecipeIds] = useState<string[]>([]);
   const [suggestionLimit, setSuggestionLimit] = useState(10);
   const [selectedRecipes, setSelectedRecipes] = useState<RecommendedRecipeResponse[]>([]);
+  const [isRestoringMeal, setIsRestoringMeal] = useState(true);
 
   // Meal Planner Query
   const {
@@ -104,7 +105,58 @@ export default function HomePage() {
   const handleClearMeal = () => {
     setSelectedRecipeIds([]);
     setSelectedRecipes([]);
+    // Clear from localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('mealPlanner_selectedRecipes');
+    }
+    toast.success('Đã xóa tất cả công thức khỏi bữa ăn');
   };
+
+  // Restore meal planner selections from localStorage on mount
+  useEffect(() => {
+    if (!user) {
+      setIsRestoringMeal(false);
+      return;
+    }
+
+    try {
+      const stored = localStorage.getItem('mealPlanner_selectedRecipes');
+      if (stored) {
+        const parsed = JSON.parse(stored) as {
+          recipeIds: string[];
+          recipes: RecommendedRecipeResponse[];
+        };
+        setSelectedRecipeIds(parsed.recipeIds);
+        setSelectedRecipes(parsed.recipes);
+      }
+    } catch (error) {
+      console.warn('Error restoring meal planner data:', error);
+      localStorage.removeItem('mealPlanner_selectedRecipes');
+    } finally {
+      setIsRestoringMeal(false);
+    }
+  }, [user]);
+
+  // Save meal planner selections to localStorage whenever they change
+  useEffect(() => {
+    if (!user || isRestoringMeal) return;
+
+    if (selectedRecipeIds.length > 0) {
+      try {
+        localStorage.setItem(
+          'mealPlanner_selectedRecipes',
+          JSON.stringify({
+            recipeIds: selectedRecipeIds,
+            recipes: selectedRecipes,
+          }),
+        );
+      } catch (error) {
+        console.warn('Error saving meal planner data:', error);
+      }
+    } else {
+      localStorage.removeItem('mealPlanner_selectedRecipes');
+    }
+  }, [selectedRecipeIds, selectedRecipes, user, isRestoringMeal]);
 
   // Handle search with debouncing
   const handleSearchInput = (value: string) => {
@@ -552,7 +604,7 @@ export default function HomePage() {
                           </p>
                           {recipe.score !== null && (
                             <span className="mt-1 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-                              Điểm: {recipe.score.toFixed(1)}
+                              Điểm: {(recipe.score * 10).toFixed(1)}
                             </span>
                           )}
                         </div>
