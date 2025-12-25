@@ -5,6 +5,7 @@ import {
   ChevronRightIcon,
   Flame,
   History,
+  Info,
   Leaf,
   Minus,
   Plus,
@@ -16,15 +17,23 @@ import {
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { Pie, PieChart, Tooltip } from 'recharts';
 import { toast } from 'sonner';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
 import { Button } from '@/base/components/ui/button';
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+} from '@/base/components/ui/chart';
 import { IngredientCard } from '@/base/components/ui/ingredient-card';
 import { Input } from '@/base/components/ui/input';
 import { RecipeCard } from '@/base/components/ui/recipe-card';
 import { useAuth } from '@/modules/auth';
 import { IngredientDetailsResponse, ingredientPublicService } from '@/modules/ingredients';
+import { NutrientInfo, nutrientService } from '@/modules/nutrients/services/nutrient.service';
 import { recipeService } from '@/modules/recipes/services/recipe.service';
 import { recommendationService } from '@/modules/recipes/services/recommendation.service';
 import { MyRecipeResponse } from '@/modules/recipes/types/my-recipe.types';
@@ -51,6 +60,8 @@ export default function HomePage() {
   const [suggestionLimit, setSuggestionLimit] = useState(10);
   const [selectedRecipes, setSelectedRecipes] = useState<RecommendedRecipeResponse[]>([]);
   const [isRestoringMeal, setIsRestoringMeal] = useState(true);
+  const [showNutrientDetails, setShowNutrientDetails] = useState(false);
+  const [nutrientsMap, setNutrientsMap] = useState<Record<string, NutrientInfo>>({});
 
   // Meal Planner Query
   const {
@@ -258,6 +269,96 @@ export default function HomePage() {
 
     fetchRecipeHistory();
   }, [user]);
+
+  // Fetch nutrients mapping for logged-in users
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchNutrients = async () => {
+      try {
+        const nutrients = await nutrientService.getNutrients();
+        const map: Record<string, NutrientInfo> = {};
+        nutrients.forEach((n) => {
+          map[n.id] = n;
+        });
+        setNutrientsMap(map);
+      } catch (error) {
+        console.warn('Error fetching nutrients:', error);
+      }
+    };
+
+    fetchNutrients();
+  }, [user]);
+
+  // Helper function to get nutrient name
+  const getNutrientName = (id: string): string => {
+    return nutrientsMap[id]?.vietnameseName || id;
+  };
+
+  // Helper function to get nutrient unit
+  const getNutrientUnit = (id: string): string => {
+    return nutrientsMap[id]?.unit || '';
+  };
+
+  // Chart colors - using explicit colors for macronutrients
+  const CHART_COLORS = [
+    '#ff6384', // Pink/Red for Protein
+    '#36a2eb', // Blue for Carbs
+    '#ffce56', // Yellow for Fat
+    '#4bc0c0', // Teal
+    '#9966ff', // Purple
+  ];
+
+  // Prepare chart data for macronutrients (Protein, Carbs, Fat)
+  const getMacroNutrientChartData = () => {
+    if (!mealPlannerData?.currentNutrients) return [];
+
+    const macroNutrients: { name: string; value: number; id: string; fill: string }[] = [];
+    let colorIndex = 0;
+
+    Object.entries(mealPlannerData.currentNutrients).forEach(([id, value]) => {
+      const name = getNutrientName(id).toLowerCase();
+      // Filter for main macronutrients (Protein, Carbohydrate/Carbs, Fat/Lipid)
+      if (
+        name.includes('protein') ||
+        name.includes('chất đạm') ||
+        name.includes('carbohydrat') ||
+        name.includes('chất bột đường') ||
+        name.includes('tinh bột') ||
+        name.includes('fat') ||
+        name.includes('lipid') ||
+        name.includes('chất béo')
+      ) {
+        const nutrientName = getNutrientName(id);
+        macroNutrients.push({
+          name: nutrientName,
+          value: Number(value.toFixed(2)),
+          id,
+          fill: CHART_COLORS[colorIndex % CHART_COLORS.length],
+        });
+        colorIndex++;
+      }
+    });
+
+    return macroNutrients;
+  };
+
+  // Prepare chart config for macronutrients
+  const getMacroChartConfig = (): ChartConfig => {
+    const data = getMacroNutrientChartData();
+    const config: ChartConfig = {
+      value: { label: 'Giá trị' },
+    };
+
+    data.forEach((item) => {
+      config[item.name] = {
+        label: item.name,
+        color: item.fill,
+      };
+    });
+
+    return config;
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -582,7 +683,9 @@ export default function HomePage() {
                     <p className="mt-3 text-sm text-gray-500">Đang phân tích...</p>
                   </div>
                 ) : mealPlannerData?.suggestions && mealPlannerData.suggestions.length > 0 ? (
-                  <div className="max-h-[500px] space-y-3 overflow-y-auto pr-2">
+                  <div
+                    className={`space-y-3 overflow-y-auto pr-2 ${showNutrientDetails ? 'max-h-[1000px]' : 'max-h-[500px]'}`}
+                  >
                     {mealPlannerData.suggestions.map((recipe) => (
                       <div
                         key={recipe.id}
@@ -604,7 +707,7 @@ export default function HomePage() {
                           </p>
                           {recipe.score !== null && (
                             <span className="mt-1 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-                              Điểm: {(recipe.score * 10).toFixed(1)}
+                              Điểm phù hợp: {(recipe.score * 100).toFixed(0)}%
                             </span>
                           )}
                         </div>
@@ -665,46 +768,195 @@ export default function HomePage() {
 
                 {/* Nutrition Summary */}
                 {mealPlannerData && (
-                  <div className="mb-4 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 p-4">
-                    <div className="mb-3 flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700">Tiến độ Calo</span>
-                      <span className="text-sm font-bold text-orange-600">
-                        {mealPlannerData.currentCalories.toFixed(0)} /{' '}
-                        {mealPlannerData.targetCalories.toFixed(0)} kcal
-                      </span>
+                  <div className="mb-4 space-y-4">
+                    {/* Calorie Progress */}
+                    <div className="rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 p-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">Tiến độ Calo</span>
+                        <span className="text-sm font-bold text-orange-600">
+                          {mealPlannerData.currentCalories.toFixed(0)} /{' '}
+                          {mealPlannerData.targetCalories.toFixed(0)} kcal
+                        </span>
+                      </div>
+                      <div className="h-3 overflow-hidden rounded-full bg-gray-200">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            mealPlannerData.energyCoveragePercent > 110
+                              ? 'bg-red-500'
+                              : mealPlannerData.energyCoveragePercent > 90
+                                ? 'bg-green-500'
+                                : 'bg-orange-400'
+                          }`}
+                          style={{
+                            width: `${Math.min(100, mealPlannerData.energyCoveragePercent)}%`,
+                          }}
+                        />
+                      </div>
+                      <div className="mt-2 flex justify-between text-xs">
+                        <span
+                          className={`font-medium ${
+                            mealPlannerData.energyCoveragePercent > 110
+                              ? 'text-red-600'
+                              : mealPlannerData.energyCoveragePercent > 90
+                                ? 'text-green-600'
+                                : 'text-orange-600'
+                          }`}
+                        >
+                          {mealPlannerData.energyCoveragePercent.toFixed(1)}%
+                        </span>
+                        <span className="text-gray-500">
+                          {mealPlannerData.remainingCalories > 0
+                            ? `Còn thiếu ${mealPlannerData.remainingCalories.toFixed(0)} kcal`
+                            : `Vượt ${Math.abs(mealPlannerData.remainingCalories).toFixed(0)} kcal`}
+                        </span>
+                      </div>
                     </div>
-                    <div className="h-3 overflow-hidden rounded-full bg-gray-200">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          mealPlannerData.energyCoveragePercent > 110
-                            ? 'bg-red-500'
-                            : mealPlannerData.energyCoveragePercent > 90
-                              ? 'bg-green-500'
-                              : 'bg-orange-400'
-                        }`}
-                        style={{
-                          width: `${Math.min(100, mealPlannerData.energyCoveragePercent)}%`,
-                        }}
-                      />
-                    </div>
-                    <div className="mt-2 flex justify-between text-xs">
-                      <span
-                        className={`font-medium ${
-                          mealPlannerData.energyCoveragePercent > 110
-                            ? 'text-red-600'
-                            : mealPlannerData.energyCoveragePercent > 90
-                              ? 'text-green-600'
-                              : 'text-orange-600'
-                        }`}
-                      >
-                        {mealPlannerData.energyCoveragePercent.toFixed(1)}%
-                      </span>
-                      <span className="text-gray-500">
-                        {mealPlannerData.remainingCalories > 0
-                          ? `Còn thiếu ${mealPlannerData.remainingCalories.toFixed(0)} kcal`
-                          : `Vượt ${Math.abs(mealPlannerData.remainingCalories).toFixed(0)} kcal`}
-                      </span>
-                    </div>
+
+                    {/* Nutrient Details Toggle */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full gap-2 border-amber-200 text-amber-700 hover:bg-amber-50"
+                      onClick={() => setShowNutrientDetails(!showNutrientDetails)}
+                    >
+                      <Info className="h-4 w-4" />
+                      {showNutrientDetails ? 'Ẩn chi tiết dinh dưỡng' : 'Xem chi tiết dinh dưỡng'}
+                    </Button>
+
+                    {/* Nutrient Details Panel */}
+                    {showNutrientDetails && (
+                      <div className="space-y-4 rounded-xl border border-amber-200 bg-amber-50/30 p-4">
+                        {/* Macronutrient Pie Chart */}
+                        {getMacroNutrientChartData().length > 0 && (
+                          <div>
+                            <h4 className="mb-2 text-sm font-semibold text-gray-700">
+                              Phân bổ Chất dinh dưỡng đa lượng
+                            </h4>
+                            <ChartContainer
+                              config={getMacroChartConfig()}
+                              className="mx-auto aspect-square max-h-[200px]"
+                            >
+                              <PieChart>
+                                <Tooltip
+                                  formatter={(value: number, name: string) => [
+                                    `${value.toFixed(1)}g`,
+                                    name,
+                                  ]}
+                                  contentStyle={{
+                                    borderRadius: '8px',
+                                    border: '1px solid #e5e7eb',
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                  }}
+                                />
+                                <Pie
+                                  data={getMacroNutrientChartData()}
+                                  dataKey="value"
+                                  nameKey="name"
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius={40}
+                                  outerRadius={70}
+                                  paddingAngle={2}
+                                />
+                                <ChartLegend
+                                  content={<ChartLegendContent nameKey="name" />}
+                                  className="-translate-y-2 flex-wrap gap-2 text-xs"
+                                />
+                              </PieChart>
+                            </ChartContainer>
+                          </div>
+                        )}
+
+                        {/* Target vs Current Nutrients */}
+                        {Object.keys(mealPlannerData.targetNutrients).length > 0 && (
+                          <div>
+                            <h4 className="mb-2 text-sm font-semibold text-gray-700">
+                              Mục tiêu dinh dưỡng
+                            </h4>
+                            <div className="space-y-2">
+                              {Object.entries(mealPlannerData.targetNutrients).map(
+                                ([id, target]) => {
+                                  const current = mealPlannerData.currentNutrients[id] || 0;
+                                  const percent = target > 0 ? (current / target) * 100 : 0;
+                                  return (
+                                    <div key={id} className="text-xs">
+                                      <div className="mb-1 flex justify-between">
+                                        <span className="text-gray-600">{getNutrientName(id)}</span>
+                                        <span className="font-medium text-gray-800">
+                                          {current.toFixed(1)} / {target.toFixed(1)}{' '}
+                                          {getNutrientUnit(id)}
+                                        </span>
+                                      </div>
+                                      <div className="h-1.5 overflow-hidden rounded-full bg-gray-200">
+                                        <div
+                                          className={`h-full rounded-full transition-all ${
+                                            percent > 110
+                                              ? 'bg-red-400'
+                                              : percent > 90
+                                                ? 'bg-green-400'
+                                                : 'bg-amber-400'
+                                          }`}
+                                          style={{ width: `${Math.min(100, percent)}%` }}
+                                        />
+                                      </div>
+                                    </div>
+                                  );
+                                },
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* All Current Nutrients */}
+                        <div>
+                          <h4 className="mb-2 text-sm font-semibold text-gray-700">
+                            Tổng dinh dưỡng hiện tại
+                          </h4>
+                          <div className="grid grid-cols-2 gap-2">
+                            {Object.entries(mealPlannerData.currentNutrients)
+                              .sort(([, a], [, b]) => b - a)
+                              .map(([id, value]) => (
+                                <div
+                                  key={id}
+                                  className="flex items-center justify-between rounded-lg bg-white/60 px-2 py-1.5 text-xs"
+                                >
+                                  <span className="truncate text-gray-600">
+                                    {getNutrientName(id)}
+                                  </span>
+                                  <span className="ml-2 font-medium text-gray-800">
+                                    {value.toFixed(1)} {getNutrientUnit(id)}
+                                  </span>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+
+                        {/* Remaining Nutrients */}
+                        {Object.keys(mealPlannerData.remainingNutrients).length > 0 && (
+                          <div>
+                            <h4 className="mb-2 text-sm font-semibold text-gray-700">
+                              Dinh dưỡng còn thiếu
+                            </h4>
+                            <div className="space-y-1.5">
+                              {Object.entries(mealPlannerData.remainingNutrients).map(
+                                ([id, range]) => (
+                                  <div
+                                    key={id}
+                                    className="flex items-center justify-between rounded-lg bg-white/60 px-2 py-1.5 text-xs"
+                                  >
+                                    <span className="text-gray-600">{getNutrientName(id)}</span>
+                                    <span className="font-medium text-amber-600">
+                                      {range.min.toFixed(1)} - {range.max.toFixed(1)}{' '}
+                                      {getNutrientUnit(id)}
+                                    </span>
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -714,7 +966,8 @@ export default function HomePage() {
                     {selectedRecipes.map((recipe) => (
                       <div
                         key={recipe.id}
-                        className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50/50 p-3"
+                        onClick={() => handleRecipeClick(recipe.id)}
+                        className="flex cursor-pointer items-center gap-3 rounded-xl border border-green-200 bg-green-50/50 p-3 transition-all hover:bg-green-100"
                       >
                         <Image
                           src={recipe.imageUrl || '/outline-illustration-card.png'}
@@ -730,14 +983,16 @@ export default function HomePage() {
                             {recipe.ration && ` • ${recipe.ration} phần`}
                           </p>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
-                          onClick={() => handleRemoveFromMeal(recipe.id)}
+                        <button
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-red-500 transition-all hover:bg-red-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveFromMeal(recipe.id);
+                          }}
+                          type="button"
                         >
                           <X className="h-4 w-4" />
-                        </Button>
+                        </button>
                       </div>
                     ))}
                   </div>
