@@ -1,6 +1,10 @@
 import { HttpClient } from '@/base/lib';
 
-import { PagedResultRecommendedRecipe } from '../types/recommendation.types';
+import {
+  MealAnalyzeRequest,
+  MealAnalyzeResponse,
+  PagedResultRecommendedRecipe,
+} from '../types/recommendation.types';
 
 interface PaginationParams {
   pageNumber?: number;
@@ -57,6 +61,50 @@ class RecommendationService extends HttpClient {
       ...result,
       totalPages: Math.ceil(result.totalCount / result.pageSize),
     };
+  }
+
+  /**
+   * Analyze current meal and get suggestions to complete nutritional goals
+   * Based on:
+   * - Current time (determines meal type: Breakfast, Lunch, Dinner)
+   * - User's TDEE and health goals
+   * - Currently selected recipes
+   *
+   * @param params - Current recipe IDs and suggestion limit
+   * @returns Meal analysis with nutritional info and recipe suggestions
+   */
+  public async analyzeMeal(params: MealAnalyzeRequest = {}): Promise<MealAnalyzeResponse> {
+    const queryParams: Record<string, string> = {};
+
+    if (params.currentRecipeIds && params.currentRecipeIds.length > 0) {
+      params.currentRecipeIds.forEach((id) => {
+        queryParams[`CurrentRecipeIds`] = id;
+      });
+    }
+
+    if (params.suggestionLimit) {
+      queryParams['SuggestionLimit'] = params.suggestionLimit.toString();
+    }
+
+    // Build query string manually to support array params
+    const searchParams = new URLSearchParams();
+    if (params.currentRecipeIds) {
+      params.currentRecipeIds.forEach((id) => {
+        searchParams.append('CurrentRecipeIds', id);
+      });
+    }
+    if (params.suggestionLimit) {
+      searchParams.append('SuggestionLimit', params.suggestionLimit.toString());
+    }
+
+    const queryString = searchParams.toString();
+    const url = queryString
+      ? `api/Recommendation/meal-planner?${queryString}`
+      : 'api/Recommendation/meal-planner';
+
+    return this.get<MealAnalyzeResponse>(url, {
+      isPrivateRoute: true,
+    });
   }
 }
 

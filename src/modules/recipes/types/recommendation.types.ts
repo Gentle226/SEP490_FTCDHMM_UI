@@ -53,3 +53,34 @@ export interface PagedResultRecommendedRecipe {
   pageSize: number;
   totalPages?: number;
 }
+
+/**
+ * Meal Planner Types
+ */
+export enum MealType {
+  Breakfast = 0,
+  Lunch = 1,
+  Dinner = 2,
+}
+
+export interface MealAnalyzeRequest {
+  currentRecipeIds?: string[];
+  suggestionLimit?: number;
+}
+
+export interface NutrientRange {
+  min: number;
+  max: number;
+}
+
+export interface MealAnalyzeResponse {
+  mealType: MealType;
+  targetCalories: number;
+  currentCalories: number;
+  remainingCalories: number;
+  energyCoveragePercent: number;
+  targetNutrients: Record<string, number>;
+  currentNutrients: Record<string, number>;
+  remainingNutrients: Record<string, NutrientRange>;
+  suggestions: RecommendedRecipeResponse[];
+}

@@ -1,11 +1,21 @@
 'use client';
 
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { ChevronRightIcon, History, Leaf, SearchIcon, SparklesIcon } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  ChevronRightIcon,
+  Flame,
+  History,
+  Leaf,
+  Minus,
+  Plus,
+  SearchIcon,
+  SparklesIcon,
+  Utensils,
+  X,
+} from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { useInView } from 'react-intersection-observer';
 import { toast } from 'sonner';
 
 import { DashboardLayout } from '@/base/components/layout/dashboard-layout';
@@ -13,12 +23,12 @@ import { Button } from '@/base/components/ui/button';
 import { IngredientCard } from '@/base/components/ui/ingredient-card';
 import { Input } from '@/base/components/ui/input';
 import { RecipeCard } from '@/base/components/ui/recipe-card';
-import { RecipeCardHorizontal } from '@/base/components/ui/recipe-card-horizontal';
 import { useAuth } from '@/modules/auth';
 import { IngredientDetailsResponse, ingredientPublicService } from '@/modules/ingredients';
 import { recipeService } from '@/modules/recipes/services/recipe.service';
 import { recommendationService } from '@/modules/recipes/services/recommendation.service';
 import { MyRecipeResponse } from '@/modules/recipes/types/my-recipe.types';
+import { MealType, RecommendedRecipeResponse } from '@/modules/recipes/types/recommendation.types';
 
 export default function HomePage() {
   const router = useRouter();
@@ -36,98 +46,117 @@ export default function HomePage() {
   const [isLoadingIngredients, setIsLoadingIngredients] = useState(true);
   const [recentRecipes, setRecentRecipes] = useState<MyRecipeResponse['items']>([]);
 
-  // Infinite query for all recipes (for non-logged-in users or when recommendations fail)
-  const {
-    data: recipesData,
-    fetchNextPage: fetchNextRecipesPage,
-    hasNextPage: hasNextRecipesPage,
-    isFetchingNextPage: isFetchingNextRecipesPage,
-    isLoading: isLoadingRecipes,
-  } = useInfiniteQuery({
-    queryKey: ['allRecipes'],
-    queryFn: async ({ pageParam }) => {
-      const response = await recipeService.searchRecipes({
-        pageNumber: pageParam,
-        pageSize: 20,
-      });
-      return response;
-    },
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      if (lastPage.pageNumber < lastPage.totalPages) {
-        return lastPage.pageNumber + 1;
-      }
-      return undefined;
-    },
-    enabled: !user, // Only fetch all recipes when not logged in
-  });
+  // Meal Planner State
+  const [selectedRecipeIds, setSelectedRecipeIds] = useState<string[]>([]);
+  const [suggestionLimit, setSuggestionLimit] = useState(10);
+  const [selectedRecipes, setSelectedRecipes] = useState<RecommendedRecipeResponse[]>([]);
+  const [isRestoringMeal, setIsRestoringMeal] = useState(true);
 
-  // Query for pre-computed recommendations (logged-in users only)
-  // This returns a fixed pre-computed list, not paginated
+  // Meal Planner Query
   const {
-    data: preComputedData,
-    isLoading: _isLoadingPreComputed,
-    isError: _isPreComputedError,
+    data: mealPlannerData,
+    isLoading: isLoadingMealPlanner,
+    refetch: _refetchMealPlanner,
   } = useQuery({
-    queryKey: ['preComputedRecipes'],
+    queryKey: ['mealPlanner', selectedRecipeIds, suggestionLimit],
     queryFn: async () => {
-      const response = await recommendationService.getPreComputedRecommendations();
-      return response;
-    },
-    enabled: !!user, // Only fetch when logged in
-    retry: 1,
-  });
-
-  // Infinite query for recommended recipes (for logged-in users)
-  const {
-    data: recommendedData,
-    fetchNextPage: fetchNextRecommendedPage,
-    hasNextPage: hasNextRecommendedPage,
-    isFetchingNextPage: isFetchingNextRecommendedPage,
-    isLoading: isLoadingRecommended,
-    isError: isRecommendedError,
-  } = useInfiniteQuery({
-    queryKey: ['recommendedRecipes'],
-    queryFn: async ({ pageParam }) => {
-      const response = await recommendationService.getRecommendations({
-        pageNumber: pageParam,
-        pageSize: 20,
+      const response = await recommendationService.analyzeMeal({
+        currentRecipeIds: selectedRecipeIds,
+        suggestionLimit,
       });
       return response;
     },
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      if (lastPage.pageNumber < (lastPage.totalPages || 1)) {
-        return lastPage.pageNumber + 1;
-      }
-      return undefined;
-    },
-    enabled: !!user, // Only fetch recommendations when logged in
+    enabled: !!user,
     retry: 1,
   });
 
-  // Determine which data to use based on login state and error state
-  const isUsingRecommendations = !!user && !isRecommendedError;
-  const displayData = isUsingRecommendations ? recommendedData : recipesData;
-  const isLoadingDisplay = isUsingRecommendations ? isLoadingRecommended : isLoadingRecipes;
-  const hasNextPage = isUsingRecommendations ? hasNextRecommendedPage : hasNextRecipesPage;
-  const isFetchingNextPage = isUsingRecommendations
-    ? isFetchingNextRecommendedPage
-    : isFetchingNextRecipesPage;
-  const fetchNextPage = isUsingRecommendations ? fetchNextRecommendedPage : fetchNextRecipesPage;
-
-  // Intersection observer for infinite scroll
-  const { ref: loadMoreRef, inView } = useInView({
-    threshold: 0,
-  });
-
-  // Fetch next page when intersection observer triggers
-  useEffect(() => {
-    if (inView && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
+  // Get meal type name
+  const getMealTypeName = (mealType: MealType) => {
+    switch (mealType) {
+      case MealType.Breakfast:
+        return 'Bữa sáng';
+      case MealType.Lunch:
+        return 'Bữa trưa';
+      case MealType.Dinner:
+        return 'Bữa tối';
+      default:
+        return 'Bữa ăn';
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inView, hasNextPage, isFetchingNextPage]);
+  };
+
+  // Add recipe to meal
+  const handleAddToMeal = (recipe: RecommendedRecipeResponse) => {
+    if (selectedRecipeIds.includes(recipe.id)) {
+      toast.info('Công thức đã có trong bữa ăn');
+      return;
+    }
+    setSelectedRecipeIds((prev) => [...prev, recipe.id]);
+    setSelectedRecipes((prev) => [...prev, recipe]);
+    toast.success(`Đã thêm "${recipe.name}" vào bữa ăn`);
+  };
+
+  // Remove recipe from meal
+  const handleRemoveFromMeal = (recipeId: string) => {
+    setSelectedRecipeIds((prev) => prev.filter((id) => id !== recipeId));
+    setSelectedRecipes((prev) => prev.filter((r) => r.id !== recipeId));
+  };
+
+  // Clear all recipes from meal
+  const handleClearMeal = () => {
+    setSelectedRecipeIds([]);
+    setSelectedRecipes([]);
+    // Clear from localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('mealPlanner_selectedRecipes');
+    }
+    toast.success('Đã xóa tất cả công thức khỏi bữa ăn');
+  };
+
+  // Restore meal planner selections from localStorage on mount
+  useEffect(() => {
+    if (!user) {
+      setIsRestoringMeal(false);
+      return;
+    }
+
+    try {
+      const stored = localStorage.getItem('mealPlanner_selectedRecipes');
+      if (stored) {
+        const parsed = JSON.parse(stored) as {
+          recipeIds: string[];
+          recipes: RecommendedRecipeResponse[];
+        };
+        setSelectedRecipeIds(parsed.recipeIds);
+        setSelectedRecipes(parsed.recipes);
+      }
+    } catch (error) {
+      console.warn('Error restoring meal planner data:', error);
+      localStorage.removeItem('mealPlanner_selectedRecipes');
+    } finally {
+      setIsRestoringMeal(false);
+    }
+  }, [user]);
+
+  // Save meal planner selections to localStorage whenever they change
+  useEffect(() => {
+    if (!user || isRestoringMeal) return;
+
+    if (selectedRecipeIds.length > 0) {
+      try {
+        localStorage.setItem(
+          'mealPlanner_selectedRecipes',
+          JSON.stringify({
+            recipeIds: selectedRecipeIds,
+            recipes: selectedRecipes,
+          }),
+        );
+      } catch (error) {
+        console.warn('Error saving meal planner data:', error);
+      }
+    } else {
+      localStorage.removeItem('mealPlanner_selectedRecipes');
+    }
+  }, [selectedRecipeIds, selectedRecipes, user, isRestoringMeal]);
 
   // Handle search with debouncing
   const handleSearchInput = (value: string) => {
@@ -491,176 +520,240 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* All Recipes Section */}
-        <section>
-          <div className="mb-5 flex items-center gap-3 sm:mb-6">
-            <div
-              className={`flex h-10 w-10 items-center justify-center rounded-xl shadow-md ${
-                isUsingRecommendations
-                  ? 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-amber-500/30'
-                  : 'bg-gradient-to-br from-purple-500 to-pink-500 shadow-purple-500/30'
-              }`}
-            >
-              <SparklesIcon className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-800 sm:text-xl">
-                {isUsingRecommendations ? 'Gợi Ý Cho Bạn' : 'Khám Phá Công Thức'}
-              </h2>
-              <p className="hidden text-xs text-gray-500 sm:block">
-                {isUsingRecommendations
-                  ? 'Các món ăn được gợi ý phù hợp với thói quen, mục tiêu và chỉ số sức khỏe của bạn'
-                  : 'Khám phá các món ăn mới mỗi ngày'}
-              </p>
-            </div>
-          </div>
-          {user ? (
-            <div className="space-y-4">
-              {isLoadingDisplay ? (
-                // Show skeleton loaders while initial load
-                Array.from({ length: 5 }, (_, i) => (
-                  <RecipeCardHorizontal key={i} isLoading={true} />
-                ))
-              ) : (
-                <>
-                  {/* Pre-computed recommendations section - only show if data exists */}
-                  {preComputedData && preComputedData.totalCount > 0 && (
-                    <div className="space-y-4">
-                      {preComputedData.items.map((recipe) => (
-                        <button
-                          key={recipe.id}
-                          onClick={() => handleRecipeClick(recipe.id)}
-                          className="w-full text-left transition-all hover:scale-[1.01] hover:shadow-lg active:scale-[0.99]"
-                          title={recipe.name}
-                        >
-                          <RecipeCardHorizontal
-                            id={recipe.id}
-                            title={recipe.name}
-                            author={recipe.author}
-                            image={recipe.imageUrl}
-                            cookTime={recipe.cookTime}
-                            ration={recipe.ration}
-                            difficulty={recipe.difficulty?.name}
-                            ingredients={recipe.ingredients}
-                            labels={recipe.labels}
-                            createdAtUtc={recipe.createdAtUtc}
-                            isLoading={false}
-                            score={recipe.score ?? undefined}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Divider between pre-computed and personalized */}
-                  {preComputedData &&
-                    preComputedData.totalCount > 0 &&
-                    recommendedData &&
-                    recommendedData.pages[0]?.totalCount > 0 && (
-                      <div className="relative my-8 flex items-center justify-center">
-                        <div className="absolute inset-0 flex items-center">
-                          <div className="w-full border-t-2 border-dashed border-gray-200"></div>
-                        </div>
-                        <div className="relative z-10 flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-2 shadow-sm">
-                          <SparklesIcon className="h-4 w-4 text-amber-500" />
-                          <span className="text-sm font-semibold text-amber-700">
-                            Đề xuất món ăn cho riêng bạn
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                  {/* Personalized recommendations section */}
-                  {recommendedData?.pages.map((page, pageIndex) => (
-                    <div key={`personalized-page-${pageIndex}`} className="space-y-4">
-                      {page.items.map((recipe) => (
-                        <button
-                          key={recipe.id}
-                          onClick={() => handleRecipeClick(recipe.id)}
-                          className="w-full text-left transition-all hover:scale-[1.01] hover:shadow-lg active:scale-[0.99]"
-                          title={recipe.name}
-                        >
-                          <RecipeCardHorizontal
-                            id={recipe.id}
-                            title={recipe.name}
-                            author={recipe.author}
-                            image={recipe.imageUrl}
-                            cookTime={recipe.cookTime}
-                            ration={recipe.ration}
-                            difficulty={recipe.difficulty?.name}
-                            ingredients={recipe.ingredients}
-                            labels={recipe.labels}
-                            createdAtUtc={recipe.createdAtUtc}
-                            isLoading={false}
-                            score={recipe.score ?? undefined}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  ))}
-
-                  {/* Loading more indicator */}
-                  {isFetchingNextPage &&
-                    Array.from({ length: 3 }, (_, i) => (
-                      <RecipeCardHorizontal key={`loading-${i}`} isLoading={true} />
-                    ))}
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-5">
-              {isLoadingDisplay ? (
-                // Show skeleton loaders while initial load
-                Array.from({ length: 10 }, (_, i) => <RecipeCard key={i} isLoading={true} />)
-              ) : (
-                <>
-                  {recipesData?.pages.map((page) =>
-                    page.items.map((recipe) => (
-                      <button
-                        key={recipe.id}
-                        onClick={() => handleRecipeClick(recipe.id)}
-                        className="transition-all hover:scale-105 hover:shadow-xl active:scale-95"
-                        title={recipe.name}
-                      >
-                        <RecipeCard
-                          title={recipe.name}
-                          author={
-                            recipe.author
-                              ? `${recipe.author.firstName} ${recipe.author.lastName}`
-                              : ''
-                          }
-                          authorAvatar={recipe.author?.avatarUrl}
-                          image={recipe.imageUrl}
-                          isLoading={false}
-                        />
-                      </button>
-                    )),
-                  )}
-                </>
-              )}
-            </div>
-          )}
-          {/* Infinite scroll trigger */}
-          {hasNextPage && (
-            <div ref={loadMoreRef} className="flex justify-center py-10">
-              {isFetchingNextPage && (
-                <div className="flex items-center gap-3 rounded-full bg-[#99b94a]/10 px-5 py-2.5 text-[#99b94a]">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#99b94a] border-t-transparent"></div>
-                  <span className="text-sm font-medium">Đang tải thêm...</span>
+        {/* Meal Planner Section - Only for logged in users */}
+        {user && (
+          <section className="mb-8 sm:mb-12">
+            <div className="mb-5 flex items-center justify-between sm:mb-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-md shadow-amber-500/30">
+                  <Utensils className="h-5 w-5 text-white" />
                 </div>
-              )}
-            </div>
-          )}
-          {/* No more data message */}
-          {!hasNextPage && displayData && displayData.pages[0].totalCount > 0 && (
-            <div className="py-10 text-center">
-              <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-sm text-gray-500">
-                <SparklesIcon className="h-4 w-4" />
-                Đã hiển thị tất cả {displayData.pages[0].totalCount} công thức
+                <div>
+                  <h2 className="text-lg font-bold text-gray-800 sm:text-xl">
+                    Lập Kế Hoạch Bữa Ăn -{' '}
+                    {mealPlannerData ? getMealTypeName(mealPlannerData.mealType) : 'Đang tải...'}
+                  </h2>
+                  <p className="hidden text-xs text-gray-500 sm:block">
+                    Chọn công thức để hoàn thiện bữa ăn theo mục tiêu dinh dưỡng của bạn
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">Số gợi ý:</span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => setSuggestionLimit((prev) => Math.max(1, prev - 5))}
+                    disabled={suggestionLimit <= 5}
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <span className="w-8 text-center text-sm font-medium">{suggestionLimit}</span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => setSuggestionLimit((prev) => Math.min(50, prev + 5))}
+                    disabled={suggestionLimit >= 50}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
             </div>
-          )}
-        </section>
+
+            {/* Two-column layout */}
+            <div className="grid gap-6 lg:grid-cols-2">
+              {/* Left Column - Suggestions */}
+              <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="mb-4 flex items-center gap-2">
+                  <SparklesIcon className="h-5 w-5 text-amber-500" />
+                  <h3 className="font-semibold text-gray-800">Gợi Ý Công Thức</h3>
+                  <span className="ml-auto text-xs text-gray-500">
+                    {mealPlannerData?.suggestions.length || 0} gợi ý
+                  </span>
+                </div>
+
+                {isLoadingMealPlanner ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#99b94a] border-t-transparent"></div>
+                    <p className="mt-3 text-sm text-gray-500">Đang phân tích...</p>
+                  </div>
+                ) : mealPlannerData?.suggestions && mealPlannerData.suggestions.length > 0 ? (
+                  <div className="max-h-[500px] space-y-3 overflow-y-auto pr-2">
+                    {mealPlannerData.suggestions.map((recipe) => (
+                      <div
+                        key={recipe.id}
+                        className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50/50 p-3 transition-all hover:bg-gray-100"
+                      >
+                        <Image
+                          src={recipe.imageUrl || '/outline-illustration-card.png'}
+                          alt={recipe.name}
+                          width={64}
+                          height={64}
+                          className="h-16 w-16 rounded-xl object-cover shadow-sm"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="line-clamp-1 font-medium text-gray-800">{recipe.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {recipe.author
+                              ? `${recipe.author.firstName} ${recipe.author.lastName}`
+                              : 'Tác giả không xác định'}
+                          </p>
+                          {recipe.score !== null && (
+                            <span className="mt-1 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                              Điểm: {(recipe.score * 10).toFixed(1)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Button
+                            size="sm"
+                            className="h-8 bg-[#99b94a] hover:bg-[#7a8f3a]"
+                            onClick={() => handleAddToMeal(recipe)}
+                            disabled={selectedRecipeIds.includes(recipe.id)}
+                          >
+                            <Plus className="mr-1 h-3 w-3" />
+                            Thêm
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8"
+                            onClick={() => handleRecipeClick(recipe.id)}
+                          >
+                            Chi tiết
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                    <SparklesIcon className="mb-3 h-10 w-10 text-gray-300" />
+                    <p className="text-sm">Không có gợi ý phù hợp</p>
+                    <p className="mt-1 text-xs text-gray-400">
+                      {mealPlannerData && mealPlannerData.energyCoveragePercent > 100
+                        ? 'Bạn đã vượt quá mục tiêu calo cho bữa ăn này'
+                        : 'Thử thay đổi số lượng gợi ý hoặc bỏ bớt công thức'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column - Current Meal */}
+              <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Flame className="h-5 w-5 text-orange-500" />
+                    <h3 className="font-semibold text-gray-800">Bữa Ăn Của Bạn</h3>
+                  </div>
+                  {selectedRecipes.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-red-500 hover:bg-red-50 hover:text-red-600"
+                      onClick={handleClearMeal}
+                    >
+                      <X className="mr-1 h-3 w-3" />
+                      Xóa tất cả
+                    </Button>
+                  )}
+                </div>
+
+                {/* Nutrition Summary */}
+                {mealPlannerData && (
+                  <div className="mb-4 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 p-4">
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">Tiến độ Calo</span>
+                      <span className="text-sm font-bold text-orange-600">
+                        {mealPlannerData.currentCalories.toFixed(0)} /{' '}
+                        {mealPlannerData.targetCalories.toFixed(0)} kcal
+                      </span>
+                    </div>
+                    <div className="h-3 overflow-hidden rounded-full bg-gray-200">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          mealPlannerData.energyCoveragePercent > 110
+                            ? 'bg-red-500'
+                            : mealPlannerData.energyCoveragePercent > 90
+                              ? 'bg-green-500'
+                              : 'bg-orange-400'
+                        }`}
+                        style={{
+                          width: `${Math.min(100, mealPlannerData.energyCoveragePercent)}%`,
+                        }}
+                      />
+                    </div>
+                    <div className="mt-2 flex justify-between text-xs">
+                      <span
+                        className={`font-medium ${
+                          mealPlannerData.energyCoveragePercent > 110
+                            ? 'text-red-600'
+                            : mealPlannerData.energyCoveragePercent > 90
+                              ? 'text-green-600'
+                              : 'text-orange-600'
+                        }`}
+                      >
+                        {mealPlannerData.energyCoveragePercent.toFixed(1)}%
+                      </span>
+                      <span className="text-gray-500">
+                        {mealPlannerData.remainingCalories > 0
+                          ? `Còn thiếu ${mealPlannerData.remainingCalories.toFixed(0)} kcal`
+                          : `Vượt ${Math.abs(mealPlannerData.remainingCalories).toFixed(0)} kcal`}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Selected Recipes */}
+                {selectedRecipes.length > 0 ? (
+                  <div className="max-h-[320px] space-y-3 overflow-y-auto pr-2">
+                    {selectedRecipes.map((recipe) => (
+                      <div
+                        key={recipe.id}
+                        className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50/50 p-3"
+                      >
+                        <Image
+                          src={recipe.imageUrl || '/outline-illustration-card.png'}
+                          alt={recipe.name}
+                          width={56}
+                          height={56}
+                          className="h-14 w-14 rounded-xl object-cover shadow-sm"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="line-clamp-1 font-medium text-gray-800">{recipe.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {recipe.cookTime && `${recipe.cookTime} phút`}
+                            {recipe.ration && ` • ${recipe.ration} phần`}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
+                          onClick={() => handleRemoveFromMeal(recipe.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                    <Utensils className="mb-3 h-10 w-10 text-gray-300" />
+                    <p className="text-sm">Chưa có công thức nào</p>
+                    <p className="mt-1 text-xs text-gray-400">
+                      Thêm công thức từ danh sách gợi ý bên trái
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );

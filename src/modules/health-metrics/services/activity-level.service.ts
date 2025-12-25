@@ -82,13 +82,13 @@ class ActivityLevelService extends HttpClient {
   /**
    * Get user's current activity level
    * GET /api/User/activity-level
-   * Note: Backend returns uppercase values (e.g., "MODERATE"), converts to PascalCase
+   * Note: Backend returns object with { "value": "ACTIVE", "factor": 1.725 }, converts to PascalCase
    */
   public async getActivityLevel(): Promise<ActivityLevel> {
-    const response = await this.get<{ activityLevel: string }>('api/User/activity-level', {
+    const response = await this.get<{ value: string; factor: number }>('api/User/activity-level', {
       isPrivateRoute: true,
     });
-    return normalizeActivityLevel(response.activityLevel);
+    return normalizeActivityLevel(response.value);
   }
 
   /**
