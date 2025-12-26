@@ -33,11 +33,12 @@ import { Input } from '@/base/components/ui/input';
 import { RecipeCard } from '@/base/components/ui/recipe-card';
 import { useAuth } from '@/modules/auth';
 import { IngredientDetailsResponse, ingredientPublicService } from '@/modules/ingredients';
+import { MealSlotResponse, mealSlotService } from '@/modules/meal-slots';
 import { NutrientInfo, nutrientService } from '@/modules/nutrients/services/nutrient.service';
 import { recipeService } from '@/modules/recipes/services/recipe.service';
 import { recommendationService } from '@/modules/recipes/services/recommendation.service';
 import { MyRecipeResponse } from '@/modules/recipes/types/my-recipe.types';
-import { MealType, RecommendedRecipeResponse } from '@/modules/recipes/types/recommendation.types';
+import { RecommendedRecipeResponse } from '@/modules/recipes/types/recommendation.types';
 
 export default function HomePage() {
   const router = useRouter();
@@ -62,6 +63,9 @@ export default function HomePage() {
   const [isRestoringMeal, setIsRestoringMeal] = useState(true);
   const [showNutrientDetails, setShowNutrientDetails] = useState(false);
   const [nutrientsMap, setNutrientsMap] = useState<Record<string, NutrientInfo>>({});
+  const [mealSlots, setMealSlots] = useState<MealSlotResponse[]>([]);
+  const [selectedMealSlotId, setSelectedMealSlotId] = useState<string | null>(null);
+  const [isLoadingMealSlots, setIsLoadingMealSlots] = useState(true);
 
   // Meal Planner Query
   const {
@@ -69,31 +73,46 @@ export default function HomePage() {
     isLoading: isLoadingMealPlanner,
     refetch: _refetchMealPlanner,
   } = useQuery({
-    queryKey: ['mealPlanner', selectedRecipeIds, suggestionLimit],
+    queryKey: ['mealPlanner', selectedMealSlotId, selectedRecipeIds, suggestionLimit],
     queryFn: async () => {
+      if (!selectedMealSlotId) return null;
       const response = await recommendationService.analyzeMeal({
+        mealSlotId: selectedMealSlotId,
         currentRecipeIds: selectedRecipeIds,
         suggestionLimit,
       });
       return response;
     },
-    enabled: !!user,
+    enabled: !!user && !!selectedMealSlotId,
     retry: 1,
   });
 
-  // Get meal type name
-  const getMealTypeName = (mealType: MealType) => {
-    switch (mealType) {
-      case MealType.Breakfast:
-        return 'Bữa sáng';
-      case MealType.Lunch:
-        return 'Bữa trưa';
-      case MealType.Dinner:
-        return 'Bữa tối';
-      default:
-        return 'Bữa ăn';
+  // Fetch meal slots for logged-in users
+  useEffect(() => {
+    if (!user) {
+      setIsLoadingMealSlots(false);
+      return;
     }
-  };
+
+    const fetchMealSlots = async () => {
+      try {
+        setIsLoadingMealSlots(true);
+        const slots = await mealSlotService.getMealSlots();
+        setMealSlots(slots);
+        // Auto-select first slot if none selected
+        if (slots.length > 0) {
+          setSelectedMealSlotId((current) => current || slots[0].id);
+        }
+      } catch (error) {
+        console.warn('Error fetching meal slots:', error);
+        setMealSlots([]);
+      } finally {
+        setIsLoadingMealSlots(false);
+      }
+    };
+
+    fetchMealSlots();
+  }, [user]);
 
   // Add recipe to meal
   const handleAddToMeal = (recipe: RecommendedRecipeResponse) => {
@@ -631,36 +650,61 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-gray-800 sm:text-xl">
-                    Lập Kế Hoạch Bữa Ăn -{' '}
-                    {mealPlannerData ? getMealTypeName(mealPlannerData.mealType) : 'Đang tải...'}
+                    Lập Kế Hoạch Bữa Ăn
                   </h2>
                   <p className="hidden text-xs text-gray-500 sm:block">
                     Chọn công thức để hoàn thiện bữa ăn theo mục tiêu dinh dưỡng của bạn
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">Số gợi ý:</span>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => setSuggestionLimit((prev) => Math.max(1, prev - 5))}
-                    disabled={suggestionLimit <= 5}
+              <div className="flex items-center gap-3">
+                {/* Meal Slot Selector */}
+                <div className="flex items-center gap-2">
+                  <span className="hidden text-xs text-gray-500 sm:inline">Bữa ăn:</span>
+                  <select
+                    aria-label="Chọn bữa ăn"
+                    value={selectedMealSlotId || ''}
+                    onChange={(e) => setSelectedMealSlotId(e.target.value || null)}
+                    className="h-8 rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                    disabled={isLoadingMealSlots || mealSlots.length === 0}
                   >
-                    <Minus className="h-3 w-3" />
-                  </Button>
-                  <span className="w-8 text-center text-sm font-medium">{suggestionLimit}</span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => setSuggestionLimit((prev) => Math.min(50, prev + 5))}
-                    disabled={suggestionLimit >= 50}
-                  >
-                    <Plus className="h-3 w-3" />
-                  </Button>
+                    {isLoadingMealSlots ? (
+                      <option value="">Đang tải...</option>
+                    ) : mealSlots.length === 0 ? (
+                      <option value="">Chưa có bữa ăn</option>
+                    ) : (
+                      mealSlots.map((slot) => (
+                        <option key={slot.id} value={slot.id}>
+                          {slot.name} ({(slot.energyPercent * 100).toFixed(0)}%)
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+                {/* Suggestion Limit */}
+                <div className="flex items-center gap-2">
+                  <span className="hidden text-xs text-gray-500 sm:inline">Số gợi ý:</span>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => setSuggestionLimit((prev) => Math.max(1, prev - 5))}
+                      disabled={suggestionLimit <= 5}
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <span className="w-8 text-center text-sm font-medium">{suggestionLimit}</span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => setSuggestionLimit((prev) => Math.min(50, prev + 5))}
+                      disabled={suggestionLimit >= 50}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -677,10 +721,18 @@ export default function HomePage() {
                   </span>
                 </div>
 
-                {isLoadingMealPlanner ? (
+                {isLoadingMealPlanner || isLoadingMealSlots ? (
                   <div className="flex flex-col items-center justify-center py-12">
                     <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#99b94a] border-t-transparent"></div>
                     <p className="mt-3 text-sm text-gray-500">Đang phân tích...</p>
+                  </div>
+                ) : !selectedMealSlotId ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                    <SparklesIcon className="mb-3 h-10 w-10 text-gray-300" />
+                    <p className="text-sm">Vui lòng chọn bữa ăn</p>
+                    <p className="mt-1 text-xs text-gray-400">
+                      Chọn một bữa ăn từ menu để xem gợi ý công thức
+                    </p>
                   </div>
                 ) : mealPlannerData?.suggestions && mealPlannerData.suggestions.length > 0 ? (
                   <div
@@ -984,6 +1036,7 @@ export default function HomePage() {
                           </p>
                         </div>
                         <button
+                          aria-label="Remove recipe from meal"
                           className="flex h-8 w-8 items-center justify-center rounded-lg text-red-500 transition-all hover:bg-red-50"
                           onClick={(e) => {
                             e.stopPropagation();

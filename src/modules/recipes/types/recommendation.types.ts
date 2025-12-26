@@ -57,6 +57,10 @@ export interface PagedResultRecommendedRecipe {
 /**
  * Meal Planner Types
  */
+
+/**
+ * @deprecated MealType enum is no longer used. Use user-defined meal slots instead.
+ */
 export enum MealType {
   Breakfast = 0,
   Lunch = 1,
@@ -64,6 +68,7 @@ export enum MealType {
 }
 
 export interface MealAnalyzeRequest {
+  mealSlotId: string;
   currentRecipeIds?: string[];
   suggestionLimit?: number;
 }
@@ -74,7 +79,6 @@ export interface NutrientRange {
 }
 
 export interface MealAnalyzeResponse {
-  mealType: MealType;
   targetCalories: number;
   currentCalories: number;
   remainingCalories: number;

@@ -24,6 +24,7 @@ import {
   Tags,
   Target,
   Users,
+  Utensils,
   Warehouse,
   WheatOff,
 } from 'lucide-react';
@@ -256,6 +257,11 @@ export function DashboardLayout({
           title: 'Chỉ Số Sức Khỏe',
           url: '/profile/health-metrics',
           icon: SquareActivity,
+        },
+        {
+          title: 'Bữa Ăn Của Tôi',
+          url: '/meal-slots',
+          icon: Utensils,
         },
         {
           title: 'Hạn Chế Thành Phần',

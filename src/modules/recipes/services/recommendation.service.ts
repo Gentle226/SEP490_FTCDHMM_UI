@@ -66,28 +66,20 @@ class RecommendationService extends HttpClient {
   /**
    * Analyze current meal and get suggestions to complete nutritional goals
    * Based on:
-   * - Current time (determines meal type: Breakfast, Lunch, Dinner)
+   * - User's selected meal slot (determines energy allocation)
    * - User's TDEE and health goals
    * - Currently selected recipes
    *
-   * @param params - Current recipe IDs and suggestion limit
+   * @param params - Meal slot ID, current recipe IDs and suggestion limit
    * @returns Meal analysis with nutritional info and recipe suggestions
    */
-  public async analyzeMeal(params: MealAnalyzeRequest = {}): Promise<MealAnalyzeResponse> {
-    const queryParams: Record<string, string> = {};
-
-    if (params.currentRecipeIds && params.currentRecipeIds.length > 0) {
-      params.currentRecipeIds.forEach((id) => {
-        queryParams[`CurrentRecipeIds`] = id;
-      });
-    }
-
-    if (params.suggestionLimit) {
-      queryParams['SuggestionLimit'] = params.suggestionLimit.toString();
-    }
-
+  public async analyzeMeal(params: MealAnalyzeRequest): Promise<MealAnalyzeResponse> {
     // Build query string manually to support array params
     const searchParams = new URLSearchParams();
+
+    // MealSlotId is required
+    searchParams.append('MealSlotId', params.mealSlotId);
+
     if (params.currentRecipeIds) {
       params.currentRecipeIds.forEach((id) => {
         searchParams.append('CurrentRecipeIds', id);
@@ -98,9 +90,7 @@ class RecommendationService extends HttpClient {
     }
 
     const queryString = searchParams.toString();
-    const url = queryString
-      ? `api/Recommendation/meal-planner?${queryString}`
-      : 'api/Recommendation/meal-planner';
+    const url = `api/Recommendation/meal-planner?${queryString}`;
 
     return this.get<MealAnalyzeResponse>(url, {
       isPrivateRoute: true,
