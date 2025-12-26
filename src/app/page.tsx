@@ -730,8 +730,11 @@ export default function HomePage() {
                   <div className="flex flex-col items-center justify-center py-12 text-gray-500">
                     <SparklesIcon className="mb-3 h-10 w-10 text-gray-300" />
                     <p className="text-sm">Vui lòng chọn bữa ăn</p>
-                    <p className="mt-1 text-xs text-gray-400">
+                    <p className="mt-1 text-center text-xs text-gray-400">
                       Chọn một bữa ăn từ menu để xem gợi ý công thức
+                    </p>
+                    <p className="mt-2 text-center text-xs text-gray-400">
+                      Cập nhật thông tin sức khỏe để nhận được gợi ý phù hợp hơn
                     </p>
                   </div>
                 ) : mealPlannerData?.suggestions && mealPlannerData.suggestions.length > 0 ? (

@@ -1,8 +1,10 @@
 'use client';
 
+import { AlertCircle, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { Alert, AlertDescription } from '@/base/components/ui/alert';
 import { Button } from '@/base/components/ui/button';
 import { DatePickerWithDaysDisplay } from '@/base/components/ui/date-picker-with-days-display';
 import {
@@ -13,6 +15,7 @@ import {
   DialogTitle,
 } from '@/base/components/ui/dialog';
 import { Label } from '@/base/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/base/components/ui/radio-group';
 
 import { useCurrentHealthGoal, useSetHealthGoal } from '../hooks';
 import { UserHealthGoalResponse } from '../types';
@@ -26,29 +29,99 @@ interface GoalSelectionDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+type DurationType = '4weeks' | '8weeks' | '12weeks' | 'custom';
+
 export function GoalSelectionDialog({ goal, type, open, onOpenChange }: GoalSelectionDialogProps) {
-  const [expirationDate, setExpirationDate] = useState<Date | undefined>(undefined);
+  const [durationType, setDurationType] = useState<DurationType>('4weeks');
+  const [customDate, setCustomDate] = useState<Date | undefined>(undefined);
+  const [dateValidation, setDateValidation] = useState<{
+    type: 'error' | 'warning' | null;
+    message: string;
+  }>({ type: null, message: '' });
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const setGoal = useSetHealthGoal();
   const { data: currentGoal } = useCurrentHealthGoal();
 
   const hasCurrentGoal = currentGoal && currentGoal.name;
 
+  const getExpirationDate = (): Date | undefined => {
+    const today = new Date();
+
+    switch (durationType) {
+      case '4weeks':
+        const fourWeeks = new Date(today);
+        fourWeeks.setDate(fourWeeks.getDate() + 28);
+        return fourWeeks;
+      case '8weeks':
+        const eightWeeks = new Date(today);
+        eightWeeks.setDate(eightWeeks.getDate() + 56);
+        return eightWeeks;
+      case '12weeks':
+        const twelveWeeks = new Date(today);
+        twelveWeeks.setDate(twelveWeeks.getDate() + 84);
+        return twelveWeeks;
+      case 'custom':
+        return customDate;
+      default:
+        return undefined;
+    }
+  };
+
+  const validateCustomDate = (date: Date | undefined) => {
+    if (!date) {
+      setDateValidation({ type: null, message: '' });
+      return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(date);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    const daysDifference = Math.floor(
+      (selectedDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    if (daysDifference < 7) {
+      setDateValidation({
+        type: 'error',
+        message: 'Mục tiêu sức khỏe cần ít nhất 7 ngày để thấy hiệu quả.',
+      });
+    } else if (daysDifference <= 21) {
+      setDateValidation({
+        type: 'warning',
+        message:
+          'Thời gian này khá ngắn, kết quả có thể chưa rõ rệt. Chúng tôi khuyên bạn nên thử ít nhất 4 tuần.',
+      });
+    } else {
+      setDateValidation({ type: null, message: '' });
+    }
+  };
+
+  const handleCustomDateChange = (date: Date | undefined) => {
+    setCustomDate(date);
+    validateCustomDate(date);
+  };
+
   const handleOpen = (isOpen: boolean) => {
     if (isOpen) {
-      // Set default expiration date to 30 days from now
-      const defaultDate = new Date();
-      defaultDate.setDate(defaultDate.getDate() + 30);
-      setExpirationDate(defaultDate);
-    } else {
-      setExpirationDate(undefined);
+      setDurationType('4weeks');
+      setCustomDate(undefined);
+      setDateValidation({ type: null, message: '' });
     }
     onOpenChange(isOpen);
   };
 
   const handleSubmit = () => {
+    const expirationDate = getExpirationDate();
+
     if (!expirationDate) {
-      toast.error('Vui lòng chọn ngày hết hạn');
+      toast.error('Vui lòng chọn thời gian cho mục tiêu');
+      return;
+    }
+
+    if (durationType === 'custom' && dateValidation.type === 'error') {
+      toast.error('Vui lòng chọn ngày hợp lệ (ít nhất 7 ngày)');
       return;
     }
 
@@ -61,8 +134,10 @@ export function GoalSelectionDialog({ goal, type, open, onOpenChange }: GoalSele
   };
 
   const handleConfirm = async () => {
+    const expirationDate = getExpirationDate();
+
     if (!expirationDate) {
-      toast.error('Vui lòng chọn ngày hết hạn');
+      toast.error('Vui lòng chọn thời gian cho mục tiêu');
       return;
     }
 
@@ -138,18 +213,89 @@ export function GoalSelectionDialog({ goal, type, open, onOpenChange }: GoalSele
             </div>
 
             {/* Expiration Date Picker */}
-            <div className="space-y-2">
-              <Label htmlFor="expiration-date" className="font-semibold">
-                Ngày Hết Hạn <span className="text-red-500">*</span>
+            <div className="space-y-4">
+              <Label className="font-semibold">
+                Bạn muốn duy trì mục tiêu này trong bao lâu? <span className="text-red-500">*</span>
               </Label>
-              <DatePickerWithDaysDisplay
-                date={expirationDate}
-                onDateChange={setExpirationDate}
-                placeholder="Chọn ngày"
-                themeColor="#99b94a"
-                disabledDays={disableExpiredDates}
-              />
-              <p className="text-xs text-gray-600">Chọn khi nào mục tiêu này sẽ hết hạn</p>
+
+              <RadioGroup
+                value={durationType}
+                onValueChange={(value) => setDurationType(value as DurationType)}
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50">
+                    <RadioGroupItem value="4weeks" id="4weeks" />
+                    <Label htmlFor="4weeks" className="flex-1 cursor-pointer font-normal">
+                      <span className="font-medium">4 Tuần</span>
+                      <span className="ml-2 text-xs text-[#99b94a]">(Khuyên dùng)</span>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50">
+                    <RadioGroupItem value="8weeks" id="8weeks" />
+                    <Label htmlFor="8weeks" className="flex-1 cursor-pointer font-normal">
+                      <span className="font-medium">8 Tuần</span>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50">
+                    <RadioGroupItem value="12weeks" id="12weeks" />
+                    <Label htmlFor="12weeks" className="flex-1 cursor-pointer font-normal">
+                      <span className="font-medium">12 Tuần</span>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50">
+                    <RadioGroupItem value="custom" id="custom" />
+                    <Label htmlFor="custom" className="flex-1 cursor-pointer font-normal">
+                      <span className="font-medium">Tùy chọn ngày</span>
+                    </Label>
+                  </div>
+                </div>
+              </RadioGroup>
+
+              {durationType === 'custom' && (
+                <div className="space-y-2 pl-1">
+                  <DatePickerWithDaysDisplay
+                    date={customDate}
+                    onDateChange={handleCustomDateChange}
+                    placeholder="Chọn ngày hết hạn"
+                    themeColor="#99b94a"
+                    disabledDays={disableExpiredDates}
+                  />
+
+                  {dateValidation.type === 'error' && (
+                    <Alert variant="danger" className="py-2">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        {dateValidation.message}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {dateValidation.type === 'warning' && (
+                    <Alert className="border-amber-200 bg-amber-50 py-2 text-amber-900">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      <AlertDescription className="text-xs text-amber-800">
+                        {dateValidation.message}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              )}
+
+              {durationType !== 'custom' && (
+                <p className="text-xs text-gray-600">
+                  Mục tiêu sẽ hết hạn vào ngày{' '}
+                  <span className="font-medium text-gray-900">
+                    {getExpirationDate()?.toLocaleDateString('vi-VN', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                    })}
+                  </span>
+                </p>
+              )}
             </div>
           </div>
 
@@ -166,7 +312,10 @@ export function GoalSelectionDialog({ goal, type, open, onOpenChange }: GoalSele
             <Button
               className="flex-1 bg-[#99b94a] hover:bg-[#7a8f3a]"
               onClick={handleSubmit}
-              disabled={setGoal.isPending || !expirationDate}
+              disabled={
+                setGoal.isPending ||
+                (durationType === 'custom' && (!customDate || dateValidation.type === 'error'))
+              }
             >
               {setGoal.isPending ? 'Đang Lưu...' : 'Xác Nhận'}
             </Button>
