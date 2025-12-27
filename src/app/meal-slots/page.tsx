@@ -146,7 +146,7 @@ export default function MealSlotsPage() {
   // Form states
   const [formData, setFormData] = useState<MealSlotRequest>({
     name: '',
-    energyPercent: 0.25,
+    energyPercent: 25,
     orderIndex: 1,
   });
 
@@ -186,15 +186,15 @@ export default function MealSlotsPage() {
       return;
     }
 
-    if (formData.energyPercent <= 0 || formData.energyPercent > 1) {
+    if (formData.energyPercent < 1 || formData.energyPercent > 100) {
       toast.error('Phần trăm năng lượng phải từ 1% đến 100%');
       return;
     }
 
     const newTotal = totalEnergyPercent + formData.energyPercent;
-    if (newTotal > 1) {
+    if (newTotal > 100) {
       toast.error(
-        `Tổng năng lượng không được vượt quá 100% (hiện tại: ${(totalEnergyPercent * 100).toFixed(0)}%)`,
+        `Tổng năng lượng không được vượt quá 100% (hiện tại: ${totalEnergyPercent.toFixed(0)}%)`,
       );
       return;
     }
@@ -222,7 +222,7 @@ export default function MealSlotsPage() {
       return;
     }
 
-    if (formData.energyPercent <= 0 || formData.energyPercent > 1) {
+    if (formData.energyPercent < 1 || formData.energyPercent > 100) {
       toast.error('Phần trăm năng lượng phải từ 1% đến 100%');
       return;
     }
@@ -231,7 +231,7 @@ export default function MealSlotsPage() {
       .filter((s) => s.id !== selectedSlot.id)
       .reduce((sum, slot) => sum + slot.energyPercent, 0);
 
-    if (otherSlotsTotal + formData.energyPercent > 1) {
+    if (otherSlotsTotal + formData.energyPercent > 100) {
       toast.error(`Tổng năng lượng không được vượt quá 100%`);
       return;
     }
@@ -273,7 +273,7 @@ export default function MealSlotsPage() {
   const openCreateDialog = () => {
     setFormData({
       name: '',
-      energyPercent: 0.25,
+      energyPercent: 25,
       orderIndex: getNextOrderIndex(),
     });
     setShowCreateDialog(true);
@@ -333,13 +333,13 @@ export default function MealSlotsPage() {
                     <Button
                       onClick={openCreateDialog}
                       className="gap-2 bg-gradient-to-r from-[#99b94a] to-[#7a8f3a] shadow-lg shadow-green-500/20 transition-all hover:shadow-green-500/40"
-                      disabled={totalEnergyPercent >= 1}
+                      disabled={totalEnergyPercent >= 100}
                     >
                       <Plus className="h-4 w-4" />
                       <span className="hidden sm:inline">Thêm bữa ăn</span>
                     </Button>
                   </TooltipTrigger>
-                  {totalEnergyPercent >= 1 && (
+                  {totalEnergyPercent >= 100 && (
                     <TooltipContent className="bg-[#99b94a] text-white [--tooltip-fill:#99b94a]">
                       <p>Đã phân bổ hết 100% năng lượng</p>
                     </TooltipContent>
@@ -364,14 +364,14 @@ export default function MealSlotsPage() {
                 <span className="text-sm text-gray-600">Tổng đã phân bổ</span>
                 <Badge
                   variant={
-                    totalEnergyPercent > 1
+                    totalEnergyPercent > 100
                       ? 'danger'
-                      : totalEnergyPercent === 1
+                      : totalEnergyPercent === 100
                         ? 'success'
                         : 'warning'
                   }
                 >
-                  {(totalEnergyPercent * 100).toFixed(0)}% / 100%
+                  {totalEnergyPercent.toFixed(0)}% / 100%
                 </Badge>
               </div>
 
@@ -389,12 +389,12 @@ export default function MealSlotsPage() {
                               <TooltipTrigger asChild>
                                 <div
                                   className={`h-full bg-gradient-to-r ${style.gradient} transition-all first:rounded-l-full last:rounded-r-full`}
-                                  style={{ width: `${slot.energyPercent * 100}%` }}
+                                  style={{ width: `${slot.energyPercent}%` }}
                                 />
                               </TooltipTrigger>
                               <TooltipContent className="bg-[#99b94a] text-white [--tooltip-fill:#99b94a]">
                                 <p>
-                                  {slot.name}: {(slot.energyPercent * 100).toFixed(0)}%
+                                  {slot.name}: {slot.energyPercent.toFixed(0)}%
                                 </p>
                               </TooltipContent>
                             </Tooltip>
@@ -417,33 +417,33 @@ export default function MealSlotsPage() {
                           className={`h-3 w-3 rounded-full bg-gradient-to-r ${style.gradient}`}
                         />
                         <span className="text-xs text-gray-600">
-                          {slot.name} ({(slot.energyPercent * 100).toFixed(0)}%)
+                          {slot.name} ({slot.energyPercent.toFixed(0)}%)
                         </span>
                       </div>
                     );
                   })}
-                {totalEnergyPercent < 1 && (
+                {totalEnergyPercent < 100 && (
                   <div className="flex items-center gap-1.5">
                     <div className="h-3 w-3 rounded-full bg-gray-200" />
                     <span className="text-xs text-gray-400">
-                      Chưa phân bổ ({((1 - totalEnergyPercent) * 100).toFixed(0)}%)
+                      Chưa phân bổ ({(100 - totalEnergyPercent).toFixed(0)}%)
                     </span>
                   </div>
                 )}
               </div>
 
-              {totalEnergyPercent < 1 && (
+              {totalEnergyPercent < 100 && (
                 <div className="flex items-start gap-2 rounded-lg bg-amber-50 p-3">
                   <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500" />
                   <p className="text-sm text-amber-700">
-                    Bạn còn <strong>{((1 - totalEnergyPercent) * 100).toFixed(0)}%</strong> năng
-                    lượng chưa được phân bổ. Hãy thêm bữa ăn hoặc điều chỉnh phần trăm để tối ưu hóa
-                    chế độ ăn.
+                    Bạn còn <strong>{(100 - totalEnergyPercent).toFixed(0)}%</strong> năng lượng
+                    chưa được phân bổ. Hãy thêm bữa ăn hoặc điều chỉnh phần trăm để tối ưu hóa chế
+                    độ ăn.
                   </p>
                 </div>
               )}
 
-              {totalEnergyPercent === 1 && (
+              {totalEnergyPercent === 100 && (
                 <div className="flex items-start gap-2 rounded-lg bg-green-50 p-3">
                   <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" />
                   <p className="text-sm text-green-700">
@@ -530,7 +530,7 @@ export default function MealSlotsPage() {
                             <div className="flex items-center gap-1.5">
                               <Zap className={`h-4 w-4 ${style.textColor}`} />
                               <span className={`text-sm font-medium ${style.textColor}`}>
-                                {(slot.energyPercent * 100).toFixed(0)}%
+                                {slot.energyPercent.toFixed(0)}%
                               </span>
                               <span className="text-sm text-gray-500">năng lượng</span>
                             </div>
@@ -539,7 +539,7 @@ export default function MealSlotsPage() {
                           <div className="mt-2 h-1.5 w-32 overflow-hidden rounded-full bg-gray-200">
                             <div
                               className={`h-full rounded-full bg-gradient-to-r ${style.gradient}`}
-                              style={{ width: `${slot.energyPercent * 100}%` }}
+                              style={{ width: `${slot.energyPercent}%` }}
                             />
                           </div>
                         </div>
@@ -623,11 +623,11 @@ export default function MealSlotsPage() {
                       type="number"
                       min="1"
                       max={100}
-                      value={Math.round(formData.energyPercent * 100)}
+                      value={Math.round(formData.energyPercent)}
                       onChange={(e) => {
                         let val = Number(e.target.value);
                         val = Math.min(100, Math.max(1, val));
-                        setFormData({ ...formData, energyPercent: val / 100 });
+                        setFormData({ ...formData, energyPercent: val });
                       }}
                       className="h-8 w-16 text-center [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     />
@@ -636,10 +636,8 @@ export default function MealSlotsPage() {
                 </div>
                 <div className="[&_[data-slot=slider-range]]:bg-[#99b94a] [&_[data-slot=slider-thumb]]:border-[#99b94a] [&_[data-slot=slider-thumb]]:bg-[#99b94a]">
                   <Slider
-                    value={[Math.round(formData.energyPercent * 100)]}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, energyPercent: value[0] / 100 })
-                    }
+                    value={[Math.round(formData.energyPercent)]}
+                    onValueChange={(value) => setFormData({ ...formData, energyPercent: value[0] })}
                     min={1}
                     max={100}
                     step={1}
@@ -649,7 +647,7 @@ export default function MealSlotsPage() {
                 <div className="flex items-center justify-between text-xs text-gray-500">
                   <span>1%</span>
                   <span className="rounded bg-amber-100 px-2 py-0.5 text-amber-700">
-                    Còn lại: {((1 - totalEnergyPercent) * 100).toFixed(0)}%
+                    Còn lại: {(100 - totalEnergyPercent).toFixed(0)}%
                   </span>
                   <span>100%</span>
                 </div>
@@ -762,11 +760,11 @@ export default function MealSlotsPage() {
                       type="number"
                       min="1"
                       max={100}
-                      value={Math.round(formData.energyPercent * 100)}
+                      value={Math.round(formData.energyPercent)}
                       onChange={(e) => {
                         let val = Number(e.target.value);
                         val = Math.min(100, Math.max(1, val));
-                        setFormData({ ...formData, energyPercent: val / 100 });
+                        setFormData({ ...formData, energyPercent: val });
                       }}
                       className="h-8 w-16 text-center [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     />
@@ -775,10 +773,8 @@ export default function MealSlotsPage() {
                 </div>
                 <div className="[&_[data-slot=slider-range]]:bg-[#99b94a] [&_[data-slot=slider-thumb]]:border-[#99b94a] [&_[data-slot=slider-thumb]]:bg-[#99b94a]">
                   <Slider
-                    value={[Math.round(formData.energyPercent * 100)]}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, energyPercent: value[0] / 100 })
-                    }
+                    value={[Math.round(formData.energyPercent)]}
+                    onValueChange={(value) => setFormData({ ...formData, energyPercent: value[0] })}
                     min={1}
                     max={100}
                     step={1}
@@ -870,10 +866,7 @@ export default function MealSlotsPage() {
                 <br />
                 <span className="text-amber-600">
                   {selectedSlot && (
-                    <>
-                      ({(selectedSlot.energyPercent * 100).toFixed(0)}% năng lượng sẽ được giải
-                      phóng)
-                    </>
+                    <>({selectedSlot.energyPercent.toFixed(0)}% năng lượng sẽ được giải phóng)</>
                   )}
                 </span>
               </AlertDialogDescription>

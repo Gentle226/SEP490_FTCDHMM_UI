@@ -2,10 +2,11 @@
 
 import { useQuery } from '@tanstack/react-query';
 import {
+  ChevronDown,
   ChevronRightIcon,
+  ChevronUp,
   Flame,
   History,
-  Info,
   Leaf,
   Minus,
   Plus,
@@ -61,7 +62,7 @@ export default function HomePage() {
   const [suggestionLimit, setSuggestionLimit] = useState(10);
   const [selectedRecipes, setSelectedRecipes] = useState<RecommendedRecipeResponse[]>([]);
   const [isRestoringMeal, setIsRestoringMeal] = useState(true);
-  const [showNutrientDetails, setShowNutrientDetails] = useState(false);
+  const [showDetailedNutrients, setShowDetailedNutrients] = useState(false);
   const [nutrientsMap, setNutrientsMap] = useState<Record<string, NutrientInfo>>({});
   const [mealSlots, setMealSlots] = useState<MealSlotResponse[]>([]);
   const [selectedMealSlotId, setSelectedMealSlotId] = useState<string | null>(null);
@@ -675,7 +676,7 @@ export default function HomePage() {
                     ) : (
                       mealSlots.map((slot) => (
                         <option key={slot.id} value={slot.id}>
-                          {slot.name} ({(slot.energyPercent * 100).toFixed(0)}%)
+                          {slot.name} ({slot.energyPercent.toFixed(0)}%)
                         </option>
                       ))
                     )}
@@ -739,7 +740,7 @@ export default function HomePage() {
                   </div>
                 ) : mealPlannerData?.suggestions && mealPlannerData.suggestions.length > 0 ? (
                   <div
-                    className={`space-y-3 overflow-y-auto pr-2 ${showNutrientDetails ? 'max-h-[1000px]' : 'max-h-[500px]'}`}
+                    className={`space-y-3 overflow-y-auto pr-2 ${showDetailedNutrients ? 'max-h-[1000px]' : 'max-h-[500px]'}`}
                   >
                     {mealPlannerData.suggestions.map((recipe) => (
                       <div
@@ -762,7 +763,7 @@ export default function HomePage() {
                           </p>
                           {recipe.score !== null && (
                             <span className="mt-1 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-                              Điểm phù hợp: {(recipe.score * 100).toFixed(0)}%
+                              Điểm phù hợp cá nhân hóa: {(recipe.score * 100).toFixed(0)}%
                             </span>
                           )}
                         </div>
@@ -867,101 +868,107 @@ export default function HomePage() {
                       </div>
                     </div>
 
-                    {/* Nutrient Details Toggle */}
+                    {/* Always Visible: Macronutrient Chart */}
+                    {getMacroNutrientChartData().length > 0 && (
+                      <div className="rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 p-4">
+                        <h4 className="mb-2 text-sm font-semibold text-gray-700">
+                          Phân bổ Chất dinh dưỡng đa lượng
+                        </h4>
+                        <ChartContainer
+                          config={getMacroChartConfig()}
+                          className="mx-auto aspect-square max-h-[200px]"
+                        >
+                          <PieChart>
+                            <Tooltip
+                              formatter={(value: number, name: string) => [
+                                `${value.toFixed(1)}g`,
+                                name,
+                              ]}
+                              contentStyle={{
+                                borderRadius: '8px',
+                                border: '1px solid #e5e7eb',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                              }}
+                            />
+                            <Pie
+                              data={getMacroNutrientChartData()}
+                              dataKey="value"
+                              nameKey="name"
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={40}
+                              outerRadius={70}
+                              paddingAngle={2}
+                            />
+                            <ChartLegend
+                              content={<ChartLegendContent nameKey="name" />}
+                              className="-translate-y-2 flex-wrap gap-2 text-xs"
+                            />
+                          </PieChart>
+                        </ChartContainer>
+                      </div>
+                    )}
+
+                    {/* Always Visible: Nutrition Goals */}
+                    {Object.keys(mealPlannerData.targetNutrients).length > 0 && (
+                      <div className="rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+                        <h4 className="mb-2 text-sm font-semibold text-gray-700">
+                          Mục tiêu dinh dưỡng
+                        </h4>
+                        <div className="space-y-2">
+                          {Object.entries(mealPlannerData.targetNutrients).map(([id, target]) => {
+                            const current = mealPlannerData.currentNutrients[id] || 0;
+                            const percent = target > 0 ? (current / target) * 100 : 0;
+                            return (
+                              <div key={id} className="text-xs">
+                                <div className="mb-1 flex justify-between">
+                                  <span className="text-gray-600">{getNutrientName(id)}</span>
+                                  <span className="font-medium text-gray-800">
+                                    {current.toFixed(1)} / {target.toFixed(1)} {getNutrientUnit(id)}
+                                  </span>
+                                </div>
+                                <div className="h-1.5 overflow-hidden rounded-full bg-gray-200">
+                                  <div
+                                    className={`h-full rounded-full transition-all ${
+                                      percent > 110
+                                        ? 'bg-red-400'
+                                        : percent > 90
+                                          ? 'bg-green-400'
+                                          : 'bg-amber-400'
+                                    }`}
+                                    style={{ width: `${Math.min(100, percent)}%` }}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Toggle Button for Detailed Nutrients */}
                     <Button
                       variant="outline"
                       size="sm"
                       className="w-full gap-2 border-amber-200 text-amber-700 hover:bg-amber-50"
-                      onClick={() => setShowNutrientDetails(!showNutrientDetails)}
+                      onClick={() => setShowDetailedNutrients(!showDetailedNutrients)}
                     >
-                      <Info className="h-4 w-4" />
-                      {showNutrientDetails ? 'Ẩn chi tiết dinh dưỡng' : 'Xem chi tiết dinh dưỡng'}
+                      {showDetailedNutrients ? (
+                        <>
+                          <ChevronUp className="h-4 w-4" />
+                          Ẩn chi tiết dinh dưỡng
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-4 w-4" />
+                          Xem chi tiết dinh dưỡng
+                        </>
+                      )}
                     </Button>
 
-                    {/* Nutrient Details Panel */}
-                    {showNutrientDetails && (
+                    {/* Toggleable: Detailed Nutrient Information */}
+                    {showDetailedNutrients && (
                       <div className="space-y-4 rounded-xl border border-amber-200 bg-amber-50/30 p-4">
-                        {/* Macronutrient Pie Chart */}
-                        {getMacroNutrientChartData().length > 0 && (
-                          <div>
-                            <h4 className="mb-2 text-sm font-semibold text-gray-700">
-                              Phân bổ Chất dinh dưỡng đa lượng
-                            </h4>
-                            <ChartContainer
-                              config={getMacroChartConfig()}
-                              className="mx-auto aspect-square max-h-[200px]"
-                            >
-                              <PieChart>
-                                <Tooltip
-                                  formatter={(value: number, name: string) => [
-                                    `${value.toFixed(1)}g`,
-                                    name,
-                                  ]}
-                                  contentStyle={{
-                                    borderRadius: '8px',
-                                    border: '1px solid #e5e7eb',
-                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                                  }}
-                                />
-                                <Pie
-                                  data={getMacroNutrientChartData()}
-                                  dataKey="value"
-                                  nameKey="name"
-                                  cx="50%"
-                                  cy="50%"
-                                  innerRadius={40}
-                                  outerRadius={70}
-                                  paddingAngle={2}
-                                />
-                                <ChartLegend
-                                  content={<ChartLegendContent nameKey="name" />}
-                                  className="-translate-y-2 flex-wrap gap-2 text-xs"
-                                />
-                              </PieChart>
-                            </ChartContainer>
-                          </div>
-                        )}
-
-                        {/* Target vs Current Nutrients */}
-                        {Object.keys(mealPlannerData.targetNutrients).length > 0 && (
-                          <div>
-                            <h4 className="mb-2 text-sm font-semibold text-gray-700">
-                              Mục tiêu dinh dưỡng
-                            </h4>
-                            <div className="space-y-2">
-                              {Object.entries(mealPlannerData.targetNutrients).map(
-                                ([id, target]) => {
-                                  const current = mealPlannerData.currentNutrients[id] || 0;
-                                  const percent = target > 0 ? (current / target) * 100 : 0;
-                                  return (
-                                    <div key={id} className="text-xs">
-                                      <div className="mb-1 flex justify-between">
-                                        <span className="text-gray-600">{getNutrientName(id)}</span>
-                                        <span className="font-medium text-gray-800">
-                                          {current.toFixed(1)} / {target.toFixed(1)}{' '}
-                                          {getNutrientUnit(id)}
-                                        </span>
-                                      </div>
-                                      <div className="h-1.5 overflow-hidden rounded-full bg-gray-200">
-                                        <div
-                                          className={`h-full rounded-full transition-all ${
-                                            percent > 110
-                                              ? 'bg-red-400'
-                                              : percent > 90
-                                                ? 'bg-green-400'
-                                                : 'bg-amber-400'
-                                          }`}
-                                          style={{ width: `${Math.min(100, percent)}%` }}
-                                        />
-                                      </div>
-                                    </div>
-                                  );
-                                },
-                              )}
-                            </div>
-                          </div>
-                        )}
-
                         {/* All Current Nutrients */}
                         <div>
                           <h4 className="mb-2 text-sm font-semibold text-gray-700">

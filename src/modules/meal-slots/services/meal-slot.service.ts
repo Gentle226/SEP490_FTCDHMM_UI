@@ -22,7 +22,12 @@ class MealSlotService extends HttpClient {
    * @param request Meal slot data
    */
   public async createMealSlot(request: MealSlotRequest): Promise<void> {
-    return this.post('api/user-meals', request, {
+    // Convert percentage (25) to decimal (0.25) for backend
+    const payload = {
+      ...request,
+      energyPercent: request.energyPercent / 100,
+    };
+    return this.post('api/user-meals', payload, {
       isPrivateRoute: true,
     });
   }
@@ -33,7 +38,12 @@ class MealSlotService extends HttpClient {
    * @param request Updated meal slot data
    */
   public async updateMealSlot(slotId: string, request: MealSlotRequest): Promise<void> {
-    return this.put(`api/user-meals/${slotId}`, request, {
+    // Convert percentage (25) to decimal (0.25) for backend
+    const payload = {
+      ...request,
+      energyPercent: request.energyPercent / 100,
+    };
+    return this.put(`api/user-meals/${slotId}`, payload, {
       isPrivateRoute: true,
     });
   }
